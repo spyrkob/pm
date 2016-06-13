@@ -42,7 +42,8 @@
         <version.org.apache.maven.maven-core>3.1.0</version.org.apache.maven.maven-core>
         <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.2.0</version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>${version.plugin.plugin}</version.org.apache.maven.plugin-tools>
-        <version.org.apache.maven.plugins.maven-invoker-plugin>2.0.0</version.org.apache.maven.plugins.maven-invoker-plugin>
+        <version.org.apache.maven.shared.maven-invoker>2.2</version.org.apache.maven.shared.maven-invoker>
+        <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
 
         <!-- Checkstyle configuration -->
         <linkXRef>false</linkXRef>
@@ -51,6 +52,7 @@
     </properties>
 
     <modules>
+        <module>feature-pack-build-maven-plugin</module>
         <module>pm-tool</module>
     </modules>
 
@@ -164,16 +166,79 @@
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>jboss-pm-tool</artifactId>
+                <artifactId>feature-pack-build-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>pm-tool</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- External Dependencies -->
 
             <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.maven</groupId>
+                        <artifactId>maven-model</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.maven</groupId>
+                        <artifactId>maven-model-builder</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.maven</groupId>
+                        <artifactId>maven-repository-metadata</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model-builder</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${version.org.apache.maven.plugin-tools}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.maven</groupId>
+                        <artifactId>maven-artifact</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.maven.shared</groupId>
                 <artifactId>maven-invoker</artifactId>
-                <version>2.2</version>
+                <version>${version.org.apache.maven.shared.maven-invoker}</version>
+            </dependency>
+
+            <!-- generated help mojo has a dependency to plexus-utils -->
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>${version.org.codehaus.plexus.plexus-utils}</version>
             </dependency>
 
             <dependency>
