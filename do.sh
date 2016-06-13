@@ -15,7 +15,7 @@ if [ $# -gt 0 ]; then
 fi
 
 if [[ -n $BUILD ]]; then
-    mvn clean package
+    mvn clean install
 fi
 
 if [[ -n $RUN ]]; then

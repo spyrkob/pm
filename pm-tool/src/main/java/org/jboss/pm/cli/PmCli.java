@@ -81,7 +81,7 @@ public class PmCli {
                 throw new IllegalStateException("maven/pom.xml not found");
             }
 
-            final File tmpPom = File.createTempFile("jboss", "pm");
+            final File tmpPom = new File("jbosspm-pom.xml");
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(tmpPom);
@@ -91,6 +91,7 @@ public class PmCli {
                 IOUtil.close(fos);
             }
 
+            System.out.println("PmCli " + new File(".").getAbsolutePath());
             try {
                 InvocationRequest request = new DefaultInvocationRequest();
                 request.setPomFile(tmpPom);
