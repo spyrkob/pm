@@ -46,6 +46,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.jboss.pm.Constants;
 
 /**
  *
@@ -70,11 +71,13 @@ public class FeaturePackBuildMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         System.out.println("FEATURE PACK: build");
-        System.out.println("  repo " + repoSystem);
-        System.out.println("  session " + repoSession);
-        System.out.println("  repos " + remoteRepos);
-        System.out.println("  project " + project);
-        System.out.println("  basedir " + project.getBasedir().getAbsolutePath());
+
+        System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.TOOL_BASE_DIR));
+
+        final File provisioningFile = new File(project.getBasedir(), Constants.PROVISIONING_XML);
+        if(!provisioningFile.exists()) {
+            throw new MojoExecutionException("Provisioning file does not exist: " + provisioningFile.getAbsolutePath());
+        }
 
         Artifact artifact = new DefaultArtifact("org.jboss.modules:jboss-modules:1.5.1.Final");
         ArtifactRequest request = new ArtifactRequest();

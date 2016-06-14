@@ -22,19 +22,6 @@
 
 package org.jboss.pm.cli;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.codehaus.plexus.util.IOUtil;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -66,52 +53,6 @@ public class PmCli {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             invocation.stop();
-            return CommandResult.SUCCESS;
-        }
-    }
-
-    @CommandDefinition(name="pm", description="pm description")
-    public static class PmCommand implements Command<CommandInvocation> {
-        @Override
-        public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
-
-            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            final InputStream pomIs = cl.getResourceAsStream("maven/pom.xml");
-            if(pomIs == null) {
-                throw new IllegalStateException("maven/pom.xml not found");
-            }
-
-            final File tmpPom = new File("jbosspm-pom.xml");
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(tmpPom);
-                IOUtil.copy(pomIs, fos);
-            } finally {
-                IOUtil.close(pomIs);
-                IOUtil.close(fos);
-            }
-
-            System.out.println("PmCli " + new File(".").getAbsolutePath());
-            try {
-                InvocationRequest request = new DefaultInvocationRequest();
-                request.setPomFile(tmpPom);
-                request.setGoals(Collections.singletonList("package"));
-
-                Invoker invoker = new DefaultInvoker();
-                InvocationResult result;
-                try {
-                    result = invoker.execute(request);
-                    if (result.getExitCode() != 0) {
-                        throw new IllegalStateException("Build failed.");
-                    }
-                } catch (MavenInvocationException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            } finally {
-                tmpPom.delete();
-            }
-
             return CommandResult.SUCCESS;
         }
     }
