@@ -22,13 +22,28 @@
 
 package org.jboss.pm;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface Constants {
+public class Package {
 
-    String PM_INSTALL_DIR = "pm.target.dir";
-    String PM_TOOL_HOME_DIR = "pm.tool.home";
-    String PROVISIONING_XML = "provisioning.xml";
+    private final String name;
+    private List<Package> dependencies = Collections.emptyList();
+
+    Package(String name) {
+        assert name != null : "name is null";
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    List<Package> getDependencies() {
+        return dependencies;
+    }
 }

@@ -42,10 +42,21 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.resolution.VersionRequest;
+import org.eclipse.aether.resolution.VersionResolutionException;
+import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.pm.Constants;
 
 /**
@@ -72,14 +83,84 @@ public class FeaturePackBuildMojo extends AbstractMojo {
 
         System.out.println("FEATURE PACK: build");
 
-        System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.TOOL_BASE_DIR));
+        System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.PM_TOOL_HOME_DIR));
 
         final File provisioningFile = new File(project.getBasedir(), Constants.PROVISIONING_XML);
         if(!provisioningFile.exists()) {
             throw new MojoExecutionException("Provisioning file does not exist: " + provisioningFile.getAbsolutePath());
         }
 
-        Artifact artifact = new DefaultArtifact("org.jboss.modules:jboss-modules:1.5.1.Final");
+        final String artifactGAV = "org.wildfly.core:wildfly-patching:LATEST";//:3.0.0.Alpha2-SNAPSHOT";
+        final Artifact artifact = new DefaultArtifact(artifactGAV);
+
+        collectDependencies(artifact);
+        //resolveDependencies(artifact);
+        //versionRequest(artifact);
+        //artifactRequest(artifact);
+    }
+
+    private void collectDependencies(final Artifact artifact) throws MojoExecutionException {
+        CollectResult cRes = null;
+        try {
+            cRes = repoSystem.collectDependencies(repoSession, new CollectRequest(new Dependency(artifact, null), remoteRepos));
+        } catch (DependencyCollectionException e) {
+            throw new MojoExecutionException("Failed to collect", e);
+        }
+        printDeps(cRes.getRoot());
+    }
+
+    private static void printDeps(DependencyNode dep) {
+        printDeps(dep, 0);
+    }
+
+    private static void printDeps(DependencyNode dep, int level) {
+        final StringBuilder buf = new StringBuilder();
+        for(int i = 0; i < level; ++i) {
+            buf.append("  ");
+        }
+        buf.append(dep.getArtifact().getGroupId())
+            .append(':')
+            .append(dep.getArtifact().getArtifactId())
+            .append(':')
+            .append(dep.getArtifact().getVersion());
+        System.out.println(buf.toString());
+        for(DependencyNode child : dep.getChildren()) {
+            printDeps(child, level + 1);
+        }
+    }
+
+    private void resolveDependencies(final Artifact artifact) throws MojoExecutionException {
+        DependencyRequest dReq = new DependencyRequest().setCollectRequest(new CollectRequest(new Dependency(artifact, null), remoteRepos));
+        DependencyResult dRes;
+        try {
+            dRes = repoSystem.resolveDependencies(repoSession, dReq);
+        } catch (DependencyResolutionException e) {
+            throw new MojoExecutionException("Failed to resolve dependency", e);
+        }
+
+        System.out.println("   root " + dRes.getRoot());
+        System.out.println("deps " + dRes.getArtifactResults());
+        for(ArtifactResult aRes : dRes.getArtifactResults()) {
+            System.out.println("  - " + aRes.getArtifact());
+        }
+    }
+
+    private void versionRequest(final Artifact artifact) throws MojoExecutionException {
+        VersionRequest vReq = new VersionRequest()
+            .setArtifact(artifact)
+            .setRepositories(remoteRepos);
+
+        VersionResult vRes;
+        try {
+            vRes = repoSystem.resolveVersion(repoSession, vReq);
+        } catch (VersionResolutionException e) {
+            throw new MojoExecutionException("Failed to resolve version", e);
+        }
+
+        System.out.println("  version=" + vRes.getVersion());
+    }
+
+    private void artifactRequest(final Artifact artifact) {
         ArtifactRequest request = new ArtifactRequest();
         request.setArtifact(artifact);
         request.setRepositories(remoteRepos);

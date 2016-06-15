@@ -22,13 +22,35 @@
 
 package org.jboss.pm;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface Constants {
+public class FeaturePack {
 
-    String PM_INSTALL_DIR = "pm.target.dir";
-    String PM_TOOL_HOME_DIR = "pm.tool.home";
-    String PROVISIONING_XML = "provisioning.xml";
+    private final GAV gav;
+    private Map<String, Package> packages = Collections.emptyMap();
+    private List<FeaturePack> dependencies = Collections.emptyList();
+
+    FeaturePack(GAV gav) {
+        assert gav != null : "gav is null";
+        this.gav = gav;
+    }
+
+    public GAV getGAV() {
+        return gav;
+    }
+
+    public Collection<Package> getPackages() {
+        return packages.values();
+    }
+
+    public List<FeaturePack> getDependencies() {
+        return dependencies;
+    }
 }

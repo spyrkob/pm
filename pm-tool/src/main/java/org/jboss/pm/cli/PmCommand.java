@@ -26,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -52,25 +51,37 @@ import org.jboss.pm.Constants;
 class PmCommand implements Command<CommandInvocation> {
 
     @Option(name="provisioning-xml")
-    private String provisioningXml;
+    private String provisioningXmlArg;
+
+    @Option(name="install-dir")
+    private String installDirArg;
 
     @Override
     public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
 
+        final String toolHome = new File("").getAbsolutePath();
+
         final File provisioningFile;
-        if(provisioningXml == null) {
-            provisioningFile = new File(Constants.PROVISIONING_XML);
+        if(provisioningXmlArg == null) {
+            provisioningFile = new File(toolHome, Constants.PROVISIONING_XML);
         } else {
-            provisioningFile = new File(provisioningXml);
+            provisioningFile = new File(provisioningXmlArg);
         }
         if(!provisioningFile.exists()) {
-            if(provisioningXml == null) {
+            if(provisioningXmlArg == null) {
                 ci.println("Error: failed to locate provisioning file at default location " + provisioningFile.getAbsolutePath());
                 ci.println("Hint: use --provisioning-xml argument to point to the desired provisioning spec");
             } else {
                 ci.println("Error: failed to locate provisioning file " + provisioningFile.getAbsolutePath());
             }
             return CommandResult.FAILURE;
+        }
+
+        final File installDir;
+        if(installDirArg == null) {
+            installDir = new File(toolHome);
+        } else {
+            installDir = new File(installDirArg);
         }
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -87,7 +98,8 @@ class PmCommand implements Command<CommandInvocation> {
             InvocationRequest request = new DefaultInvocationRequest();
 
             final Properties props = new Properties();
-            props.setProperty(Constants.TOOL_BASE_DIR, Paths.get("").toAbsolutePath().toString());
+            props.setProperty(Constants.PM_TOOL_HOME_DIR, toolHome);
+            props.setProperty(Constants.PM_INSTALL_DIR, installDir.getAbsolutePath());
             request.setProperties(props);
 
             request.setPomFile(extractPom(pomIs, workDir));
