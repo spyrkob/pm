@@ -10,10 +10,11 @@
   </parent>
 
   <artifactId>feature-pack-build-maven-plugin</artifactId>
-  <name>Feature pack building maven plugin</name>
+  <name>Feature Pack building Maven plugin</name>
   <packaging>maven-plugin</packaging>
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
@@ -52,6 +53,11 @@
         </exclusion>
       </exclusions>
       <scope>provided</scope>
+    </dependency>
+  
+    <dependency>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>feature-pack-api</artifactId>
     </dependency>
   
     <dependency>

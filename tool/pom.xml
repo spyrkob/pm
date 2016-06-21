@@ -9,9 +9,9 @@
     <version>1.0.0.Alpha-SNAPSHOT</version>
   </parent>
 
-  <artifactId>pm-tool</artifactId>
+  <artifactId>tool</artifactId>
   <packaging>jar</packaging>
-  <name>Provisioning Manager CLI tool</name>
+  <name>Provisioning CLI</name>
 
   <url>http://maven.apache.org</url>
  
@@ -19,6 +19,11 @@
     <dependency>
       <groupId>org.jboss.aesh</groupId>
       <artifactId>aesh</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>feature-pack-api</artifactId>
     </dependency>
 
     <dependency>

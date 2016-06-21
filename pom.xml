@@ -13,8 +13,7 @@
     <artifactId>pm-parent</artifactId>
     <version>1.0.0.Alpha-SNAPSHOT</version>
 
-    <name>pm</name>
-    <description>Provisioning manager</description>
+    <name>Provisioning tool parent</name>
 
     <packaging>pom</packaging>
 
@@ -54,7 +53,8 @@
 
     <modules>
         <module>feature-pack-build-maven-plugin</module>
-        <module>pm-tool</module>
+        <module>feature-pack-api</module>
+        <module>tool</module>
     </modules>
 
     <build>
@@ -173,7 +173,13 @@
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>pm-tool</artifactId>
+                <artifactId>feature-pack-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>tool</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
