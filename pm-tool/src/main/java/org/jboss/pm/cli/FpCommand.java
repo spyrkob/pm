@@ -22,39 +22,40 @@
 
 package org.jboss.pm.cli;
 
+import java.io.File;
+import java.io.IOException;
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.pm.GAV;
+import org.jboss.pm.def.InstallationDef;
+import org.jboss.pm.def.InstallationDefBuilder;
+import org.jboss.pm.def.InstallationDefException;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PmCli {
+@CommandDefinition(name="fp", description = "fp builder")
+public class FpCommand implements Command<CommandInvocation> {
 
-    public static void main(String[] args) throws Exception {
-        Settings settings = new SettingsBuilder().logging(true).create();
-        AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(new Prompt("[pm] "))
-                .addCommand(new ExitCommand())
-                .addCommand(new PmCommand())
-                .addCommand(new FpCommand())
-                .create();
+    @Override
+    public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
 
-        aeshConsole.start();
-    }
+        final String toolHome = new File("").getAbsolutePath();
 
-    @CommandDefinition(name="exit", description = "exit the program")
-    public static class ExitCommand implements Command<CommandInvocation> {
-        @Override
-        public CommandResult execute(CommandInvocation invocation) {
-            invocation.stop();
-            return CommandResult.SUCCESS;
+        ci.println("home: " + toolHome);
+
+        try {
+            final InstallationDef installDef = InstallationDefBuilder.newInstance(new GAV("org.jboss.pm", "test", "1.0.0-SNAPSHOT"), new File(toolHome)).build();
+            ci.println(installDef.logContent());
+        } catch (InstallationDefException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
+
+        return CommandResult.SUCCESS;
     }
+
 }

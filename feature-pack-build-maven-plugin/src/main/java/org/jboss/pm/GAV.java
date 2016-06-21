@@ -32,6 +32,10 @@ public class GAV {
     private final String artifactId;
     private final String version;
 
+    public GAV(String groupId, String artifactId) {
+        this(groupId, artifactId, null);
+    }
+
     public GAV(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -52,7 +56,18 @@ public class GAV {
 
     @Override
     public String toString() {
-        return groupId + ':' + artifactId + ':' + version;
+        final StringBuilder buf = new StringBuilder();
+        if(groupId != null) {
+            buf.append(groupId);
+        }
+        buf.append(':');
+        if(artifactId != null) {
+            buf.append(artifactId);
+        }
+        if(version != null) {
+            buf.append(':').append(version);
+        }
+        return buf.toString();
     }
 
     @Override
