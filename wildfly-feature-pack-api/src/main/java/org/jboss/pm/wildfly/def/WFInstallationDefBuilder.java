@@ -22,6 +22,7 @@
 
 package org.jboss.pm.wildfly.def;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,10 +66,16 @@ public class WFInstallationDefBuilder {
         }
     }
 
-    public InstallationDef build() throws InstallationDefException {
+    public String getModulesPath() {
+        return modulesPath;
+    }
+
+    public InstallationDef build(File installationHome) throws InstallationDefException {
+
+        final DefBuildContext ctx = new DefBuildContext(installationHome, modulesPath);
         final InstallationDefBuilder builder = InstallationDefBuilder.newInstance();
         for(WFFeaturePackDefBuilder fpBuilder : featurePacks) {
-            builder.addFeaturePack(fpBuilder.build());
+            builder.addFeaturePack(fpBuilder.build(ctx));
         }
         return builder.build();
     }

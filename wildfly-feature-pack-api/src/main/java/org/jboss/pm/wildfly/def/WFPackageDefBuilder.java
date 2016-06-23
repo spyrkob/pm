@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
 
@@ -35,13 +36,15 @@ import org.jboss.pm.def.PackageDef.PackageDefBuilder;
  */
 public class WFPackageDefBuilder {
 
+    private final WFFeaturePackDefBuilder fpBuilder;
     private final String name;
     private List<String> relativePaths = Collections.emptyList();
-    private List<String> modules = Collections.emptyList();
+    private List<WFModulesDefBuilder> modules = Collections.emptyList();
     private List<String> packageRefs = Collections.emptyList();
 
-    public WFPackageDefBuilder(String name) {
+    public WFPackageDefBuilder(String name, WFFeaturePackDefBuilder fpBuilder) {
         this.name = name;
+        this.fpBuilder = fpBuilder;
     }
 
     public void addRelativePath(String path) {
@@ -56,15 +59,15 @@ public class WFPackageDefBuilder {
         }
     }
 
-    public void addModule(String module) {
+    public void addModule(WFModulesDefBuilder modulesDef) {
         switch(modules.size()) {
             case 0:
-                modules = Collections.singletonList(module);
+                modules = Collections.singletonList(modulesDef);
                 break;
             case 1:
-                modules = new ArrayList<String>(modules);
+                modules = new ArrayList<WFModulesDefBuilder>(modules);
             default:
-                modules.add(module);
+                modules.add(modulesDef);
         }
     }
 
@@ -80,13 +83,18 @@ public class WFPackageDefBuilder {
         }
     }
 
-    public PackageDef build() {
+    public PackageDef build(FeaturePackDefBuilder fpBuilder, DefBuildContext ctx) {
         final PackageDefBuilder builder = PackageDef.packageBuilder(name);
         for(String relativePath : relativePaths) {
             builder.addContentPath(relativePath);
         }
         for(String packageRef : packageRefs) {
             builder.addDependency(packageRef);
+        }
+        if(!modules.isEmpty()) {
+            for(WFModulesDefBuilder modulesBuilder : modules) {
+                modulesBuilder.processModules(fpBuilder, builder, ctx);
+            }
         }
         return builder.build();
     }

@@ -29,8 +29,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.pm.def.InstallationDef;
-import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.wildfly.def.WFInstallationDefBuilder;
 import org.jboss.staxmapper.XMLMapper;
 
@@ -50,7 +48,7 @@ public class WFInstallationDefParser {
         mapper.registerRootElement(ROOT_1_0, new WFInstallationDefParser10());
     }
 
-    public InstallationDef parse(final InputStream input) throws XMLStreamException {
+    public WFInstallationDefBuilder parse(final InputStream input) throws XMLStreamException {
 
         final XMLInputFactory inputFactory = INPUT_FACTORY;
         setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
@@ -58,11 +56,7 @@ public class WFInstallationDefParser {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final WFInstallationDefBuilder builder = WFInstallationDefBuilder.newInstance();
         mapper.parseDocument(builder, streamReader);
-        try {
-            return builder.build();
-        } catch (InstallationDefException e) {
-            throw new XMLStreamException(e);
-        }
+        return builder;
     }
 
     private void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {

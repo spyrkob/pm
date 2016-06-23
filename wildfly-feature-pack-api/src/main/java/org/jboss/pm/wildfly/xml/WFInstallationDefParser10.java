@@ -35,6 +35,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.pm.GAV;
 import org.jboss.pm.wildfly.def.WFFeaturePackDefBuilder;
 import org.jboss.pm.wildfly.def.WFInstallationDefBuilder;
+import org.jboss.pm.wildfly.def.WFModulesDefBuilder;
 import org.jboss.pm.wildfly.def.WFPackageDefBuilder;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -161,7 +162,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case MODULES:
-                            parseModules(reader, wfBuilder);
+                            wfBuilder.setModulesPath(parseRelativePath(reader));
                             break;
                         case FEATURE_PACKS:
                             parseFeaturePacks(reader, wfBuilder);
@@ -177,34 +178,6 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void parseModules(XMLExtendedStreamReader reader, WFInstallationDefBuilder wfBuilder) throws XMLStreamException {
-        if(reader.getAttributeCount() != 0) {
-            throw ParsingUtils.unexpectedContent(reader);
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PATH:
-                            wfBuilder.setModulesPath(parseRelativePath(reader));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
     }
 
     private String parseRelativePath(final XMLExtendedStreamReader reader) throws XMLStreamException {
@@ -284,7 +257,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        final WFFeaturePackDefBuilder fpBuilder = new WFFeaturePackDefBuilder(new GAV(groupId, artifactId, version));
+        final WFFeaturePackDefBuilder fpBuilder = new WFFeaturePackDefBuilder(new GAV(groupId, artifactId, version), wfBuilder);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -328,7 +301,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final WFPackageDefBuilder pkgBuilder = new WFPackageDefBuilder(name);
+        final WFPackageDefBuilder pkgBuilder = new WFPackageDefBuilder(name, fpBuilder);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -339,8 +312,8 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case MODULE:
-                            pkgBuilder.addModule(parseName(reader));
+                        case MODULES:
+                            pkgBuilder.addModule(new WFModulesDefBuilder(parseRelativePath(reader)));
                             break;
                         case PATH:
                             pkgBuilder.addRelativePath(parseRelativePath(reader));

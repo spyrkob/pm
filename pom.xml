@@ -43,6 +43,7 @@
         <version.org.apache.maven.plugin-tools>${version.plugin.plugin}</version.org.apache.maven.plugin-tools>
         <version.org.apache.maven.shared.maven-invoker>2.2</version.org.apache.maven.shared.maven-invoker>
         <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
+        <version.org.jboss.modules.jboss-modules>1.5.1.Final</version.org.jboss.modules.jboss-modules>
         <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
 
         <!-- Checkstyle configuration -->
@@ -265,6 +266,12 @@
                 <groupId>org.jboss.aesh</groupId>
                 <artifactId>aesh</artifactId>
                 <version>0.66.8</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.modules</groupId>
+                <artifactId>jboss-modules</artifactId>
+                <version>${version.org.jboss.modules.jboss-modules}</version>
             </dependency>
 
             <dependency>

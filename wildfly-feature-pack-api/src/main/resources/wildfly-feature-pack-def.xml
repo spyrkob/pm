@@ -1,8 +1,6 @@
 <installation xmlns="urn:wildfly:pm-install-def:1.0">
 
-    <modules>
-        <path relative="modules/system/layers/base"/>
-    </modules>
+    <modules relative="modules/system/layers/base"/>
 
   <feature-packs>
     <feature-pack group-id="org.wildfly.feature-pack" artifact-id="wildfly-core" version="3.0.0.Alpha3-SNAPSHOT">
@@ -11,11 +9,24 @@
         <package name="mypackage">
             <path relative="relative/path1"/>
             <path relative="another/relative/path"/>
-            <module name="org.some.module"/>
-            <module name="org.another.module"/>
+
+            <modules>
+                <module name="org.some.module"/>
+                <module name="org.another.module"/>
+            </modules>
+            <modules relative="custom/path">
+                <module name="org.some.module"/>
+                <module name="org.another.module"/>
+            </modules>
+            <modules relative="all/modules/at"/>
+
             <package-ref name="other-package"/>
         </package>
 -->
+        <package name="wildfly-core-modules">
+            <modules relative="modules/system/layers/base"/>
+        </package>
+
         <package name="appclient">
             <path relative="appclient"/>
         </package>

@@ -29,10 +29,12 @@ import java.io.InputStream;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.pm.def.InstallationDef;
+import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
 /**
@@ -42,10 +44,15 @@ import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 @CommandDefinition(name="fp", description = "fp builder")
 public class FpCommand implements Command<CommandInvocation> {
 
+    @Option(name="install-dir", required=true)
+    private String installDirArg;
+
     @Override
     public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
 
         final String toolHome = new File("").getAbsolutePath();
+
+        final File installDir = new File(installDirArg);
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final InputStream wfInstallDef = cl.getResourceAsStream("wildfly-feature-pack-def.xml");
@@ -55,11 +62,14 @@ public class FpCommand implements Command<CommandInvocation> {
         }
 
         try {
-            final InstallationDef wfInstallation = new WFInstallationDefParser().parse(wfInstallDef);
+            final InstallationDef wfInstallation = new WFInstallationDefParser().parse(wfInstallDef).build(installDir);
             ci.println(wfInstallation.logContent());
         } catch (XMLStreamException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
+        } catch (InstallationDefException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
 /*        try {

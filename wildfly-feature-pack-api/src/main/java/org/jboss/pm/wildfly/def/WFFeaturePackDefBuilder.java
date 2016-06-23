@@ -36,11 +36,13 @@ import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
  */
 public class WFFeaturePackDefBuilder {
 
+    private final WFInstallationDefBuilder wfBuilder;
     private final GAV gav;
     private List<WFPackageDefBuilder> packages = Collections.emptyList();
 
-    public WFFeaturePackDefBuilder(GAV gav) {
+    public WFFeaturePackDefBuilder(GAV gav, WFInstallationDefBuilder wfBuilder) {
         this.gav = gav;
+        this.wfBuilder = wfBuilder;
     }
 
     public void addPackage(WFPackageDefBuilder pkgBuilder) {
@@ -55,10 +57,14 @@ public class WFFeaturePackDefBuilder {
         }
     }
 
-    public FeaturePackDef build() {
+    public WFInstallationDefBuilder getInstallationBuilder() {
+        return wfBuilder;
+    }
+
+    public FeaturePackDef build(DefBuildContext ctx) {
         final FeaturePackDefBuilder builder = FeaturePackDef.builder(gav);
         for(WFPackageDefBuilder pkgBuilder : packages) {
-            builder.addGroup(pkgBuilder.build());
+            builder.addGroup(pkgBuilder.build(builder, ctx));
         }
         return builder.build();
     }
