@@ -20,42 +20,41 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.wildfly;
 
-import java.io.IOException;
-import java.util.Map;
-
-import org.jboss.pm.GAV;
+import java.io.File;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDef {
+public class Installation {
 
-    private final Map<GAV, FeaturePackDef> featurePacks;
+    public static class InstallationBuilder {
+        private final File home;
 
-    InstallationDef(Map<GAV, FeaturePackDef> featurePacks) {
-        assert featurePacks != null : "featurePacks is null";
-        this.featurePacks = featurePacks;
-    }
-
-    public boolean hasFeaturePacks() {
-        return !featurePacks.isEmpty();
-    }
-
-    public FeaturePackDef getFeaturePack(GAV gav) {
-        return featurePacks.get(gav);
-    }
-
-    public String logContent() throws IOException {
-        final DefLogger logger = new DefLogger();
-        logger.println("Installation");
-        logger.increaseOffset();
-        for(FeaturePackDef fp : featurePacks.values()) {
-            fp.logContent(logger);
+        private InstallationBuilder(File home) {
+            assert home != null : "home is null";
+            this.home = home;
         }
-        logger.decreaseOffset();
-        return logger.toString();
+
+        Installation build() {
+            return new Installation(home);
+        }
+    }
+
+    public static InstallationBuilder builder(File home) {
+        return new InstallationBuilder(home);
+    }
+
+    private final File home;
+
+    private Installation(File home) {
+        assert home != null : "home is null";
+        this.home = home;
+    }
+
+    public File getHome() {
+        return home;
     }
 }

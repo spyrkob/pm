@@ -17,6 +17,11 @@
  
   <dependencies>
     <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-invoker</artifactId>
+    </dependency>
+  
+    <dependency>
       <groupId>org.jboss.aesh</groupId>
       <artifactId>aesh</artifactId>
     </dependency>
@@ -32,8 +37,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.maven.shared</groupId>
-      <artifactId>maven-invoker</artifactId>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>wildfly-feature-pack-api</artifactId>
     </dependency>
   </dependencies>
 

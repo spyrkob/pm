@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class PackageDef extends GroupDef {
 
-    static class PackageDefBuilder extends GroupDef.GroupDefBuilder {
+    public static class PackageDefBuilder extends GroupDef.GroupDefBuilder {
 
         private List<String> contentPaths = Collections.emptyList();
 
@@ -41,7 +41,7 @@ public class PackageDef extends GroupDef {
             super(name);
         }
 
-        PackageDefBuilder addContentPath(String contentPath) {
+        public PackageDefBuilder addContentPath(String contentPath) {
             assert contentPath != null : "contentPath is null";
             switch(contentPaths.size()) {
                 case 0:
@@ -56,12 +56,12 @@ public class PackageDef extends GroupDef {
         }
 
         @Override
-        PackageDef build() {
+        public PackageDef build() {
             return new PackageDef(name, dependencies, Collections.unmodifiableList(contentPaths));
         }
     }
 
-    static PackageDefBuilder packageBuilder(String name) {
+    public static PackageDefBuilder packageBuilder(String name) {
         return new PackageDefBuilder(name);
     }
 
@@ -87,5 +87,25 @@ public class PackageDef extends GroupDef {
     void logContent(DefLogger logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
+        if(!contentPaths.isEmpty()) {
+            logger.increaseOffset();
+            logger.println("Content");
+            logger.increaseOffset();
+            for(String path : contentPaths) {
+                logger.println(path);
+            }
+            logger.decreaseOffset();
+            logger.decreaseOffset();
+        }
+        if(!dependencies.isEmpty()) {
+            logger.increaseOffset();
+            logger.println("Dependencies");
+            logger.increaseOffset();
+            for(String dependency : dependencies) {
+                logger.println(dependency);
+            }
+            logger.decreaseOffset();
+            logger.decreaseOffset();
+        }
     }
 }

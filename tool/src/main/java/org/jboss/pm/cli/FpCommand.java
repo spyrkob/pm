@@ -24,14 +24,16 @@ package org.jboss.pm.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.pm.GAV;
 import org.jboss.pm.def.InstallationDef;
-import org.jboss.pm.def.InstallationDefBuilder;
-import org.jboss.pm.def.InstallationDefException;
+import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
 /**
  *
@@ -45,16 +47,31 @@ public class FpCommand implements Command<CommandInvocation> {
 
         final String toolHome = new File("").getAbsolutePath();
 
-        ci.println("home: " + toolHome);
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        final InputStream wfInstallDef = cl.getResourceAsStream("wildfly-feature-pack-def.xml");
+        if(wfInstallDef == null) {
+            ci.println("Error: wildfly-feature-pack-def.xml not found");
+            return CommandResult.FAILURE;
+        }
 
         try {
-            final InstallationDef installDef = InstallationDefBuilder.newInstance(new GAV("org.jboss.pm", "test", "1.0.0-SNAPSHOT"), new File(toolHome)).build();
+            final InstallationDef wfInstallation = new WFInstallationDefParser().parse(wfInstallDef);
+            ci.println(wfInstallation.logContent());
+        } catch (XMLStreamException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+/*        try {
+            final InstallationDef installDef = InstallationDefBuilder.newInstance()
+                    .defineFeaturePack(new GAV("org.jboss.pm", "test", "1.0.0-SNAPSHOT"), new File(toolHome))
+                    .build();
             ci.println(installDef.logContent());
         } catch (InstallationDefException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+*/
         return CommandResult.SUCCESS;
     }
 

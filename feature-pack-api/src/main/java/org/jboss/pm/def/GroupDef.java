@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class GroupDef {
 
-    static class GroupDefBuilder {
+    public static class GroupDefBuilder {
 
         protected final String name;
         protected List<String> dependencies = Collections.emptyList();
@@ -43,7 +43,7 @@ public class GroupDef {
             this.name = name;
         }
 
-        GroupDefBuilder addDependency(String dependencyName) {
+        public GroupDefBuilder addDependency(String dependencyName) {
             assert dependencyName != null : "dependency is null";
             switch(dependencies.size()) {
                 case 0:
@@ -57,12 +57,12 @@ public class GroupDef {
             return this;
         }
 
-        GroupDef build() {
+        public GroupDef build() {
             return new GroupDef(name, Collections.unmodifiableList(dependencies));
         }
     }
 
-    static GroupDefBuilder groupBuilder(String name) {
+    public static GroupDefBuilder groupBuilder(String name) {
         return new GroupDefBuilder(name);
     }
 
@@ -99,5 +99,15 @@ public class GroupDef {
     void logContent(DefLogger logger) throws IOException {
         logger.print("Group ");
         logger.println(name);
+        if(!dependencies.isEmpty()) {
+            logger.increaseOffset();
+            logger.println("Dependencies");
+            logger.increaseOffset();
+            for(String dependency : dependencies) {
+                logger.println(dependency);
+            }
+            logger.decreaseOffset();
+            logger.decreaseOffset();
+        }
     }
 }

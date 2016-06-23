@@ -38,11 +38,10 @@ import org.jboss.pm.def.PackageDef.PackageDefBuilder;
  */
 public class InstallationDefBuilder {
 
-    public static InstallationDefBuilder newInstance(GAV gav, File homeDir) {
-        return new InstallationDefBuilder(gav, homeDir);
+    public static InstallationDefBuilder newInstance() {
+        return new InstallationDefBuilder();
     }
 
-    private final File homeDir;
     private FileFilter contentFilter = new FileFilter() {
         @Override
         public boolean accept(File pathname) {
@@ -50,14 +49,9 @@ public class InstallationDefBuilder {
         }
     };
 
-    private final GAV gav;
     private Map<GAV, FeaturePackDef> featurePacks = Collections.emptyMap();
 
-    InstallationDefBuilder(GAV gav, File homeDir) {
-        assert gav != null : "GAV is null";
-        assert homeDir != null : "homeDir is null";
-        this.gav = gav;
-        this.homeDir = homeDir;
+    InstallationDefBuilder() {
     }
 
     public InstallationDefBuilder setContentFilter(FileFilter filter) {
@@ -98,8 +92,7 @@ public class InstallationDefBuilder {
     }
 
     public InstallationDef build() throws InstallationDefException {
-        defineFeaturePack(new GAV(gav.getGroupId() + '.' + gav.getArtifactId(), gav.getArtifactId() + "-feature-pack", gav.getVersion()), homeDir);
-        return new InstallationDef(gav, Collections.unmodifiableMap(featurePacks));
+        return new InstallationDef(Collections.unmodifiableMap(featurePacks));
     }
 
     private void defineGroup(FeaturePackDefBuilder fpBuilder, String name, File path) throws InstallationDefException {

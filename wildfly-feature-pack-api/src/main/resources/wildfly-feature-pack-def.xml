@@ -1,0 +1,60 @@
+<installation xmlns="urn:wildfly:pm-install-def:1.0">
+
+    <modules>
+        <path relative="modules/system/layers/base"/>
+    </modules>
+
+  <feature-packs>
+    <feature-pack group-id="org.wildfly.feature-pack" artifact-id="wildfly-core" version="3.0.0.Alpha3-SNAPSHOT">
+
+<!-- example of a package
+        <package name="mypackage">
+            <path relative="relative/path1"/>
+            <path relative="another/relative/path"/>
+            <module name="org.some.module"/>
+            <module name="org.another.module"/>
+            <package-ref name="other-package"/>
+        </package>
+-->
+        <package name="appclient">
+            <path relative="appclient"/>
+        </package>
+
+        <package name="bin">
+            <path relative="bin"/>
+        </package>
+
+        <package name="docs">
+            <path relative="docs"/>
+        </package>
+
+        <package name="welcome-content">
+            <path relative="welcome-content"/>
+        </package>
+
+        <package name="domain-config">
+            <path relative="domain"/>
+        </package>
+
+        <package name="standalone-config">
+            <path relative="standalone"/>
+        </package>
+
+        <package name="license">
+            <path relative="LICENSE.txt"/>
+        </package>
+
+        <package name="copyright">
+            <path relative="copyright.txt"/>
+        </package>
+
+        <package name="readme">
+            <path relative="README.txt"/>
+        </package>
+
+        <package name="jboss-modules">
+            <path relative="jboss-modules.jar"/>
+        </package>
+    </feature-pack>
+  </feature-packs>
+</installation>

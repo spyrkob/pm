@@ -20,42 +20,46 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.wildfly.def;
 
-import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.jboss.pm.GAV;
+import org.jboss.pm.def.FeaturePackDef;
+import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDef {
+public class WFFeaturePackDefBuilder {
 
-    private final Map<GAV, FeaturePackDef> featurePacks;
+    private final GAV gav;
+    private List<WFPackageDefBuilder> packages = Collections.emptyList();
 
-    InstallationDef(Map<GAV, FeaturePackDef> featurePacks) {
-        assert featurePacks != null : "featurePacks is null";
-        this.featurePacks = featurePacks;
+    public WFFeaturePackDefBuilder(GAV gav) {
+        this.gav = gav;
     }
 
-    public boolean hasFeaturePacks() {
-        return !featurePacks.isEmpty();
-    }
-
-    public FeaturePackDef getFeaturePack(GAV gav) {
-        return featurePacks.get(gav);
-    }
-
-    public String logContent() throws IOException {
-        final DefLogger logger = new DefLogger();
-        logger.println("Installation");
-        logger.increaseOffset();
-        for(FeaturePackDef fp : featurePacks.values()) {
-            fp.logContent(logger);
+    public void addPackage(WFPackageDefBuilder pkgBuilder) {
+        switch(packages.size()) {
+            case 0:
+                packages = Collections.singletonList(pkgBuilder);
+                break;
+            case 1:
+                packages = new ArrayList<WFPackageDefBuilder>(packages);
+            default:
+                packages.add(pkgBuilder);
         }
-        logger.decreaseOffset();
-        return logger.toString();
+    }
+
+    public FeaturePackDef build() {
+        final FeaturePackDefBuilder builder = FeaturePackDef.builder(gav);
+        for(WFPackageDefBuilder pkgBuilder : packages) {
+            builder.addGroup(pkgBuilder.build());
+        }
+        return builder.build();
     }
 }

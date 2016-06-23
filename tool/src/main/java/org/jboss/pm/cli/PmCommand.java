@@ -87,7 +87,8 @@ class PmCommand implements Command<CommandInvocation> {
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final InputStream pomIs = cl.getResourceAsStream("maven/pom.xml");
         if(pomIs == null) {
-            throw new IllegalStateException("maven/pom.xml not found");
+            ci.println("Error: maven/pom.xml not found");
+            return CommandResult.FAILURE;
         }
 
         final File workDir = Util.createRandomTmpDir();

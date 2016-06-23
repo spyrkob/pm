@@ -39,7 +39,7 @@ import org.jboss.pm.GAV;
  */
 public class FeaturePackDef {
 
-    static class FeaturePackDefBuilder {
+    public static class FeaturePackDefBuilder {
 
         private final GAV gav;
         private Map<String, GroupDef> groups = Collections.emptyMap();
@@ -50,7 +50,7 @@ public class FeaturePackDef {
             this.gav = gav;
         }
 
-        FeaturePackDefBuilder addGroup(GroupDef group) {
+        public FeaturePackDefBuilder addGroup(GroupDef group) {
             assert group != null : "group is null";
             switch(groups.size()) {
                 case 0:
@@ -64,7 +64,7 @@ public class FeaturePackDef {
             return this;
         }
 
-        FeaturePackDefBuilder addDependency(GAV gav) {
+        public FeaturePackDefBuilder addDependency(GAV gav) {
             assert gav != null : "GAV is null";
             switch(dependencies.size()) {
                 case 0:
@@ -78,12 +78,12 @@ public class FeaturePackDef {
             return this;
         }
 
-        FeaturePackDef build() {
+        public FeaturePackDef build() {
             return new FeaturePackDef(gav, Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
         }
     }
 
-    static FeaturePackDefBuilder builder(GAV gav) {
+    public static FeaturePackDefBuilder builder(GAV gav) {
         return new FeaturePackDefBuilder(gav);
     }
 
@@ -137,11 +137,8 @@ public class FeaturePackDef {
             }
         }
 
-        logger.print("Dependencies:");
-        if(dependencies.isEmpty()) {
-            logger.println(" n/a");
-        } else {
-            logger.newLine();
+        if(!dependencies.isEmpty()) {
+            logger.println("Dependencies:");
             logger.increaseOffset();
             for(GAV gav : dependencies) {
                 logger.println(gav.toString());
