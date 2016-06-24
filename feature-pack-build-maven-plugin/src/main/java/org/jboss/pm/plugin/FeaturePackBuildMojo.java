@@ -81,9 +81,8 @@ public class FeaturePackBuildMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        System.out.println("FEATURE PACK: build");
-
-        System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.PM_TOOL_HOME_DIR));
+        //System.out.println("FEATURE PACK: build");
+        //System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.PM_TOOL_HOME_DIR));
 
         final File provisioningFile = new File(project.getBasedir(), Constants.PROVISIONING_XML);
         if(!provisioningFile.exists()) {

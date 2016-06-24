@@ -30,11 +30,12 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.pm.build.FeaturePackBuild;
+import org.jboss.pm.build.PMBuildException;
 import org.jboss.pm.def.InstallationDef;
 import org.jboss.pm.def.InstallationDefException;
+import org.jboss.pm.util.IoUtils;
 import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
 /**
@@ -42,47 +43,56 @@ import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name="fp", description = "fp builder")
-public class FpCommand implements Command<CommandInvocation> {
+public class FpCommand extends CommandBase {
+
+    private static final String WF_FP_DEF_XML = "wildfly-feature-pack-def.xml";
 
     @Option(name="install-dir", required=true)
     private String installDirArg;
 
     @Override
-    public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
-
-        final String toolHome = new File("").getAbsolutePath();
+    protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
 
         final File installDir = new File(installDirArg);
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final InputStream wfInstallDef = cl.getResourceAsStream("wildfly-feature-pack-def.xml");
+        final InputStream wfInstallDef = cl.getResourceAsStream(WF_FP_DEF_XML);
         if(wfInstallDef == null) {
-            ci.println("Error: wildfly-feature-pack-def.xml not found");
-            return CommandResult.FAILURE;
+            throw new CommandExecutionException(WF_FP_DEF_XML + " not found");
         }
 
+        final InstallationDef wfInstallation;
         try {
-            final InstallationDef wfInstallation = new WFInstallationDefParser().parse(wfInstallDef).build(installDir);
-            ci.println(wfInstallation.logContent());
-        } catch (XMLStreamException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            wfInstallation = new WFInstallationDefParser().parse(wfInstallDef).build(installDir);
+        } catch (XMLStreamException e) {
+            throw new CommandExecutionException("failed to parse " + WF_FP_DEF_XML, e);
         } catch (InstallationDefException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new CommandExecutionException("failed to build feature packs", e);
         }
 
 /*        try {
-            final InstallationDef installDef = InstallationDefBuilder.newInstance()
-                    .defineFeaturePack(new GAV("org.jboss.pm", "test", "1.0.0-SNAPSHOT"), new File(toolHome))
-                    .build();
-            ci.println(installDef.logContent());
-        } catch (InstallationDefException e) {
+            ci.println(wfInstallation.logContent());
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 */
-        return CommandResult.SUCCESS;
-    }
+        final File workDir = Util.createRandomTmpDir();
+        try {
+            FeaturePackBuild fpBuild = new FeaturePackBuild(wfInstallation, installDir, workDir);
+            fpBuild.buildFeaturePacks();
 
+            final File tmpDir = new File(new File("").getAbsolutePath(), "workdir");
+            tmpDir.mkdir();
+            IoUtils.copyFile(workDir, tmpDir);
+        } catch (PMBuildException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            Util.recursiveDelete(workDir);
+        }
+    }
 }

@@ -20,47 +20,39 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.cli;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
-import org.jboss.pm.GAV;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDef {
+public abstract class CommandBase implements Command<CommandInvocation> {
 
-    private final Map<GAV, FeaturePackDef> featurePacks;
-
-    InstallationDef(Map<GAV, FeaturePackDef> featurePacks) {
-        assert featurePacks != null : "featurePacks is null";
-        this.featurePacks = featurePacks;
-    }
-
-    public boolean hasFeaturePacks() {
-        return !featurePacks.isEmpty();
-    }
-
-    public FeaturePackDef getFeaturePack(GAV gav) {
-        return featurePacks.get(gav);
-    }
-
-    public Collection<FeaturePackDef> getFeaturePackDefs() {
-        return featurePacks.values();
-    }
-
-    public String logContent() throws IOException {
-        final DefLogger logger = new DefLogger();
-        logger.println("Installation");
-        logger.increaseOffset();
-        for(FeaturePackDef fp : featurePacks.values()) {
-            fp.logContent(logger);
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        try {
+            runCommand(commandInvocation);
+            return CommandResult.SUCCESS;
+        } catch (Throwable t) {
+            final StringBuilder buf = new StringBuilder("Error");
+            while(t != null) {
+                buf.append(": ");
+                if(t.getLocalizedMessage() == null) {
+                    buf.append(t.getClass().getName());
+                } else {
+                    buf.append(t.getLocalizedMessage());
+                }
+            }
+            commandInvocation.println(buf.toString());
+            return CommandResult.FAILURE;
         }
-        logger.decreaseOffset();
-        return logger.toString();
     }
+
+    protected abstract void runCommand(CommandInvocation ci) throws CommandExecutionException;
 }

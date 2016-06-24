@@ -20,24 +20,28 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.build;
 
 import org.jboss.pm.PMException;
 
+
 /**
+ * @author olubyans
  *
- * @author Alexey Loubyansky
  */
-public class InstallationDefException extends PMException {
+public class PMBuildException extends PMException {
 
     private static final long serialVersionUID = 1L;
 
-    public InstallationDefException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public InstallationDefException(String message) {
+    public PMBuildException(String message) {
         super(message);
     }
 
+    public PMBuildException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public PMBuildException(Throwable cause) {
+        super(cause);
+    }
 }
