@@ -301,7 +301,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final WFPackageDefBuilder pkgBuilder = new WFPackageDefBuilder(name, fpBuilder);
+        final WFPackageDefBuilder pkgBuilder = new WFPackageDefBuilder(name);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

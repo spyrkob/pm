@@ -29,6 +29,7 @@ import java.util.List;
 import org.jboss.pm.GAV;
 import org.jboss.pm.def.FeaturePackDef;
 import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
+import org.jboss.pm.def.InstallationDefException;
 
 /**
  *
@@ -61,7 +62,7 @@ public class WFFeaturePackDefBuilder {
         return wfBuilder;
     }
 
-    public FeaturePackDef build(DefBuildContext ctx) {
+    public FeaturePackDef build(DefBuildContext ctx) throws InstallationDefException {
         final FeaturePackDefBuilder builder = FeaturePackDef.builder(gav);
         for(WFPackageDefBuilder pkgBuilder : packages) {
             builder.addGroup(pkgBuilder.build(builder, ctx));

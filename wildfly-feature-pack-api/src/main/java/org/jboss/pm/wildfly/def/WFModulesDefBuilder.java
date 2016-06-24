@@ -65,13 +65,16 @@ public class WFModulesDefBuilder {
         }
         if(names.isEmpty()) {
             // all
+            final List<String> path = new ArrayList<String>();
             for(File dir : modulesDir.listFiles()) {
                 if(dir.isDirectory()) {
+                    path.add(dir.getName());
                     for(File child : dir.listFiles()) {
                         if(child.isDirectory()) {
-                            processModules(fpBuilder, pkgBuilder, dir.getName(), child);
+                            processModules(fpBuilder, pkgBuilder, relativeDir, path, child);
                         }
                     }
+                    path.remove(path.size() - 1);
                 }
             }
         } else {
@@ -79,21 +82,42 @@ public class WFModulesDefBuilder {
         }
     }
 
-    private void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, String moduleName, File dir) {
+    private void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, String modulesPath, List<String> path, File dir) {
 
         final File moduleXml = new File(dir, "module.xml");
         if(!moduleXml.exists()) {
             for(File child : dir.listFiles()) {
                 if (child.isDirectory()) {
-                    processModules(fpBuilder, pkgBuilder, moduleName + '.' + dir.getName(), child);
+                    path.add(dir.getName());
+                    processModules(fpBuilder, pkgBuilder, relativeDir, path, child);
+                    path.remove(path.size() - 1);
                 }
             }
             return;
         }
 
-        final PackageDefBuilder moduleBuilder = PackageDef.packageBuilder(moduleName);
-        moduleBuilder.addContentPath(dir.getAbsolutePath());
+        final StringBuilder moduleName = new StringBuilder();
+        final StringBuilder contentPath = new StringBuilder(relativeDir).append('/');
+        moduleName.append(path.get(0));
+        contentPath.append(path.get(0));
+        for(int i = 1; i < path.size(); ++i) {
+            final String part = path.get(i);
+            moduleName.append('.').append(part);
+            contentPath.append('/').append(part);
+        }
+        final PackageDefBuilder moduleBuilder = PackageDef.packageBuilder(moduleName.toString());
+        addContent(moduleBuilder, dir, contentPath.toString());
         fpBuilder.addGroup(moduleBuilder.build());
-        pkgBuilder.addDependency(moduleName);
+        pkgBuilder.addDependency(moduleName.toString());
+    }
+
+    private void addContent(PackageDefBuilder builder, File f, String relativePath) {
+        if(f.isDirectory()) {
+            for(File c : f.listFiles()) {
+                addContent(builder, c, relativePath + '/' + f.getName());
+            }
+        } else {
+            builder.addContentPath(relativePath + '/' + f.getName());
+        }
     }
 }

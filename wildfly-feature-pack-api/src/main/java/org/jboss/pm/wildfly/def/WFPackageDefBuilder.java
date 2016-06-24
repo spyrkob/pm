@@ -22,11 +22,13 @@
 
 package org.jboss.pm.wildfly.def;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
+import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
 
@@ -36,15 +38,13 @@ import org.jboss.pm.def.PackageDef.PackageDefBuilder;
  */
 public class WFPackageDefBuilder {
 
-    private final WFFeaturePackDefBuilder fpBuilder;
     private final String name;
     private List<String> relativePaths = Collections.emptyList();
     private List<WFModulesDefBuilder> modules = Collections.emptyList();
     private List<String> packageRefs = Collections.emptyList();
 
-    public WFPackageDefBuilder(String name, WFFeaturePackDefBuilder fpBuilder) {
+    public WFPackageDefBuilder(String name) {
         this.name = name;
-        this.fpBuilder = fpBuilder;
     }
 
     public void addRelativePath(String path) {
@@ -83,19 +83,45 @@ public class WFPackageDefBuilder {
         }
     }
 
-    public PackageDef build(FeaturePackDefBuilder fpBuilder, DefBuildContext ctx) {
+    public PackageDef build(FeaturePackDefBuilder fpBuilder, DefBuildContext ctx) throws InstallationDefException {
         final PackageDefBuilder builder = PackageDef.packageBuilder(name);
-        for(String relativePath : relativePaths) {
-            builder.addContentPath(relativePath);
-        }
-        for(String packageRef : packageRefs) {
-            builder.addDependency(packageRef);
-        }
         if(!modules.isEmpty()) {
             for(WFModulesDefBuilder modulesBuilder : modules) {
                 modulesBuilder.processModules(fpBuilder, builder, ctx);
             }
         }
+        for(String relativePath : relativePaths) {
+            final File f = new File(ctx.getHomeDir(), relativePath);
+            if(!f.exists()) {
+                throw new InstallationDefException("Failed to locate " + f.getAbsolutePath());
+            }
+            if(f.isDirectory()) {
+                final File[] children = f.listFiles();
+                if(children.length == 0) {
+                    builder.addContentPath(relativePath);
+                } else {
+                    for (File c : children) {
+                        addContent(builder, c, f.getName());
+                    }
+                }
+
+            } else {
+                builder.addContentPath(relativePath);
+            }
+        }
+        for(String packageRef : packageRefs) {
+            builder.addDependency(packageRef);
+        }
         return builder.build();
+    }
+
+    private void addContent(PackageDefBuilder builder, File f, String relativePath) {
+        if(f.isDirectory()) {
+            for(File c : f.listFiles()) {
+                addContent(builder, c, relativePath + '/' + f.getName());
+            }
+        } else {
+            builder.addContentPath(relativePath + '/' + f.getName());
+        }
     }
 }
