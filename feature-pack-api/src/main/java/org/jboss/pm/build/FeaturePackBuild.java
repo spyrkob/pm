@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.jboss.pm.Constants;
 import org.jboss.pm.GAV;
 import org.jboss.pm.def.FeaturePackDef;
 import org.jboss.pm.def.GroupDef;
@@ -69,17 +70,20 @@ public class FeaturePackBuild {
 
     private void buildFeaturePack(FeaturePackDef fpDef) throws PMBuildException {
 
-        File fpDir = workDir;
+        File fpZip = new File(workDir, Constants.FEATURE_PACKS);
         final GAV gav = fpDef.getGAV();
-        String[] parts = gav.getGroupId().split(".");
-        for(String part : parts) {
-            fpDir = new File(fpDir, part);
-        }
+//        String[] parts = gav.getGroupId().split("\\.");
+//        for(String part : parts) {
+//            fpZip = new File(fpZip, part);
+//        }
+        fpZip = new File(fpZip, gav.getGroupId());
+        fpZip = new File(fpZip, gav.getArtifactId());
+        fpZip.mkdirs();
 
-        fpDir = new File(fpDir, gav.getArtifactId() + '-' + gav.getVersion() + ".zip");
+        fpZip = new File(fpZip, gav.getVersion());
         ZipOutputStream zos = null;
         try {
-            zos = new ZipOutputStream(new FileOutputStream(fpDir));
+            zos = new ZipOutputStream(new FileOutputStream(fpZip));
             final Set<String> groupNames = fpDef.getGroupNames();
             for(String groupName : groupNames) {
                 final GroupDef groupDef = fpDef.getGroupDef(groupName);

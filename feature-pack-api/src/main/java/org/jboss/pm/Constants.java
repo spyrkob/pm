@@ -28,7 +28,9 @@ package org.jboss.pm;
  */
 public interface Constants {
 
+    String FEATURE_PACKS = "featurepacks";
     String PM_INSTALL_DIR = "pm.target.dir";
+    String PM_INSTALL_WORK_DIR = "pm.install.workdir";
     String PM_TOOL_HOME_DIR = "pm.tool.home";
     String PROVISIONING_XML = "provisioning.xml";
 }

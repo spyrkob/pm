@@ -22,8 +22,6 @@
 package org.jboss.pm.cli;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -35,7 +33,6 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.codehaus.plexus.util.IOUtil;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.Command;
@@ -85,7 +82,7 @@ class PmCommand implements Command<CommandInvocation> {
         }
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final InputStream pomIs = cl.getResourceAsStream("maven/pom.xml");
+        final InputStream pomIs = cl.getResourceAsStream("maven/build-pom.xml");
         if(pomIs == null) {
             ci.println("Error: maven/pom.xml not found");
             return CommandResult.FAILURE;
@@ -103,8 +100,8 @@ class PmCommand implements Command<CommandInvocation> {
             props.setProperty(Constants.PM_INSTALL_DIR, installDir.getAbsolutePath());
             request.setProperties(props);
 
-            request.setPomFile(extractPom(pomIs, workDir));
-            request.setGoals(Collections.singletonList("package"));
+            request.setPomFile(Util.saveAs(pomIs, new File(workDir, "pom.xml")));
+            request.setGoals(Collections.singletonList("compile"));
 
             Invoker invoker = new DefaultInvoker();
             InvocationResult result;
@@ -122,18 +119,5 @@ class PmCommand implements Command<CommandInvocation> {
         }
 
         return CommandResult.SUCCESS;
-    }
-
-    private File extractPom(final InputStream pomIs, final File workDir) throws FileNotFoundException, IOException {
-        final File tmpPom = new File(workDir, "pom.xml");
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(tmpPom);
-            IOUtil.copy(pomIs, fos);
-        } finally {
-            IOUtil.close(pomIs);
-            IOUtil.close(fos);
-        }
-        return tmpPom;
     }
 }

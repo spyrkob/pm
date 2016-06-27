@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
+import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
 
@@ -56,7 +57,7 @@ public class WFModulesDefBuilder {
         }
     }
 
-    void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, DefBuildContext ctx) {
+    void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, DefBuildContext ctx) throws InstallationDefException {
         final File modulesDir;
         if(relativeDir != null) {
             modulesDir = new File(ctx.getHomeDir(), relativeDir);
@@ -64,6 +65,9 @@ public class WFModulesDefBuilder {
             modulesDir = ctx.getModulesDir();
         }
         if(names.isEmpty()) {
+            if(!modulesDir.exists()) {
+                throw new InstallationDefException("Modules directory " + modulesDir.getAbsolutePath() + " does not exist.");
+            }
             // all
             final List<String> path = new ArrayList<String>();
             for(File dir : modulesDir.listFiles()) {

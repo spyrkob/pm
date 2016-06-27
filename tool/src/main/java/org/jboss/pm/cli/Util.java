@@ -24,8 +24,10 @@ package org.jboss.pm.cli;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 import org.codehaus.plexus.util.IOUtil;
@@ -79,5 +81,26 @@ class Util {
             IOUtil.close(input);
             IOUtil.close(output);
         }
+    }
+
+    static InputStream getResourceStream(String resource) throws CommandExecutionException {
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        final InputStream pomIs = cl.getResourceAsStream(resource);
+        if(pomIs == null) {
+            throw new CommandExecutionException(resource + " not found");
+        }
+        return pomIs;
+    }
+
+    static File saveAs(final InputStream is, final File f) throws FileNotFoundException, IOException {
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(f);
+            IOUtil.copy(is, fos);
+        } finally {
+            IOUtil.close(is);
+            IOUtil.close(fos);
+        }
+        return f;
     }
 }

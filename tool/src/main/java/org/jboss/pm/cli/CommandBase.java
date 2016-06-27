@@ -40,6 +40,7 @@ public abstract class CommandBase implements Command<CommandInvocation> {
             runCommand(commandInvocation);
             return CommandResult.SUCCESS;
         } catch (Throwable t) {
+            //t.printStackTrace();
             final StringBuilder buf = new StringBuilder("Error");
             while(t != null) {
                 buf.append(": ");
@@ -48,6 +49,7 @@ public abstract class CommandBase implements Command<CommandInvocation> {
                 } else {
                     buf.append(t.getLocalizedMessage());
                 }
+                t = t.getCause();
             }
             commandInvocation.println(buf.toString());
             return CommandResult.FAILURE;

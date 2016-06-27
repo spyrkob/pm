@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>20</version>
+  </parent>
+
+  <artifactId>pm-build</artifactId>
+  <packaging>pom</packaging>
+  <name>Provisioned Software</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jboss.pm</groupId>
+        <artifactId>feature-pack-build-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>feature-pack-install</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>install</goal>
+            </goals>
+            <configuration>
+              <config-file>feature-pack-build.xml</config-file>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

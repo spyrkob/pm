@@ -34,6 +34,8 @@ class DefBuildContext {
     private final File modulesDir;
 
     DefBuildContext(File homeDir, String modulesDir) {
+        assert homeDir != null : "Home directory is missing";
+        assert homeDir != null : "Modules directory is missing";
         this.homeDir = homeDir;
         this.modulesDir = new File(homeDir, modulesDir);
     }

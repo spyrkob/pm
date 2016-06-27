@@ -25,17 +25,25 @@ package org.jboss.pm.cli;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.Properties;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.pm.Constants;
 import org.jboss.pm.build.FeaturePackBuild;
 import org.jboss.pm.build.PMBuildException;
 import org.jboss.pm.def.InstallationDef;
 import org.jboss.pm.def.InstallationDefException;
-import org.jboss.pm.util.IoUtils;
 import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
 /**
@@ -44,6 +52,8 @@ import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
  */
 @CommandDefinition(name="fp", description = "fp builder")
 public class FpCommand extends CommandBase {
+
+    private static final String INSTALL_FEATURE_PACKS_POM = "maven/install-feature-packs-pom.xml";
 
     private static final String WF_FP_DEF_XML = "wildfly-feature-pack-def.xml";
 
@@ -81,18 +91,43 @@ public class FpCommand extends CommandBase {
         try {
             FeaturePackBuild fpBuild = new FeaturePackBuild(wfInstallation, installDir, workDir);
             fpBuild.buildFeaturePacks();
-
-            final File tmpDir = new File(new File("").getAbsolutePath(), "workdir");
-            tmpDir.mkdir();
-            IoUtils.copyFile(workDir, tmpDir);
+//            final File tmpDir = new File(new File("").getAbsolutePath(), "workdir");
+//            tmpDir.mkdir();
+//            IoUtils.copyFile(workDir, tmpDir);
+            install(workDir);
         } catch (PMBuildException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
             Util.recursiveDelete(workDir);
+        }
+
+    }
+
+    private void install(final File workDir) throws CommandExecutionException {
+        final InputStream pomIs = Util.getResourceStream(INSTALL_FEATURE_PACKS_POM);
+        try {
+            InvocationRequest request = new DefaultInvocationRequest();
+
+            final Properties props = new Properties();
+            props.setProperty(Constants.PM_INSTALL_WORK_DIR, workDir.getAbsolutePath());
+            request.setProperties(props);
+
+            request.setPomFile(Util.saveAs(pomIs, new File(workDir, "pom.xml")));
+            request.setGoals(Collections.singletonList("compile"));
+
+            Invoker invoker = new DefaultInvoker();
+            InvocationResult result;
+            try {
+                result = invoker.execute(request);
+                if (result.getExitCode() != 0) {
+                    throw new IllegalStateException("Build failed.");
+                }
+            } catch (MavenInvocationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            throw new CommandExecutionException("Failed to copy " + INSTALL_FEATURE_PACKS_POM);
         }
     }
 }
