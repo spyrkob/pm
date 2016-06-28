@@ -33,6 +33,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.pm.GAV;
+import org.jboss.pm.util.ParsingUtils;
 import org.jboss.pm.wildfly.def.WFFeaturePackDefBuilder;
 import org.jboss.pm.wildfly.def.WFInstallationDefBuilder;
 import org.jboss.pm.wildfly.def.WFModulesDefBuilder;

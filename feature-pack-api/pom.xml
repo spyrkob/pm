@@ -15,4 +15,10 @@
 
   <url>http://maven.apache.org</url>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>staxmapper</artifactId>
+    </dependency>
+  </dependencies>
 </project>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.pm.wildfly.xml;
+package org.jboss.pm.util;
 
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 

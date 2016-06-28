@@ -39,7 +39,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
-import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.pm.Constants;
@@ -88,7 +87,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
         }
 
         try {
-            InstallResult installRes = repoSystem.install(repoSession, installReq);
+            repoSystem.install(repoSession, installReq);
         } catch (InstallationException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
