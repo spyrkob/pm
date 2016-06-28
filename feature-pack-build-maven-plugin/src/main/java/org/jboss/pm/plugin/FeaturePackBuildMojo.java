@@ -41,7 +41,6 @@ import org.codehaus.plexus.util.IOUtil;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -81,18 +80,19 @@ public class FeaturePackBuildMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        //System.out.println("FEATURE PACK: build");
-        //System.out.println("  tool dir: " + repoSession.getSystemProperties().get(Constants.PM_TOOL_HOME_DIR));
+        System.out.println("FEATURE PACK: build");
 
-        final File provisioningFile = new File(project.getBasedir(), Constants.PROVISIONING_XML);
-        if(!provisioningFile.exists()) {
-            throw new MojoExecutionException("Provisioning file does not exist: " + provisioningFile.getAbsolutePath());
+        final String provXmlArg = repoSession.getSystemProperties().get(Constants.PROVISIONING_XML);
+        if(provXmlArg == null) {
+            throw new MojoExecutionException("Provisioning file has not been provided.");
         }
+        final File provXml = new File(provXmlArg);
+        if(!provXml.exists()) {
+            throw new MojoExecutionException("Provisioning file does not exist: " + provXml.getAbsolutePath());
+        }
+        System.out.println("  prov xml: " + provXmlArg);
 
-        final String artifactGAV = "org.wildfly.core:wildfly-patching:LATEST";//:3.0.0.Alpha2-SNAPSHOT";
-        final Artifact artifact = new DefaultArtifact(artifactGAV);
-
-        collectDependencies(artifact);
+        //collectDependencies(artifact);
         //resolveDependencies(artifact);
         //versionRequest(artifact);
         //artifactRequest(artifact);

@@ -1,0 +1,5 @@
+<provisioning>
+    <universe name="org.wildfly.feature-pack">
+        <feature-pack name="wildfly"/>
+    </universe>
+</provisioning>

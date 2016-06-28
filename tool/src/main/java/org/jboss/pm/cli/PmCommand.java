@@ -35,8 +35,6 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.pm.Constants;
 
@@ -45,7 +43,9 @@ import org.jboss.pm.Constants;
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name="pm", description="pm description")
-class PmCommand implements Command<CommandInvocation> {
+class PmCommand extends CommandBase {
+
+    private static final String PROVISIONING_POM_XML = "maven/provisioning-pom.xml";
 
     @Option(name="provisioning-xml")
     private String provisioningXmlArg;
@@ -54,7 +54,7 @@ class PmCommand implements Command<CommandInvocation> {
     private String installDirArg;
 
     @Override
-    public CommandResult execute(CommandInvocation ci) throws IOException, InterruptedException {
+    protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
 
         final String toolHome = new File("").getAbsolutePath();
 
@@ -66,12 +66,10 @@ class PmCommand implements Command<CommandInvocation> {
         }
         if(!provisioningFile.exists()) {
             if(provisioningXmlArg == null) {
-                ci.println("Error: failed to locate provisioning file at default location " + provisioningFile.getAbsolutePath());
-                ci.println("Hint: use --provisioning-xml argument to point to the desired provisioning spec");
+                throw new CommandExecutionException("Failed to locate provisioning file at default location " + provisioningFile.getAbsolutePath());
             } else {
-                ci.println("Error: failed to locate provisioning file " + provisioningFile.getAbsolutePath());
+                throw new CommandExecutionException("Failed to locate provisioning file " + provisioningFile.getAbsolutePath());
             }
-            return CommandResult.FAILURE;
         }
 
         final File installDir;
@@ -82,22 +80,24 @@ class PmCommand implements Command<CommandInvocation> {
         }
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final InputStream pomIs = cl.getResourceAsStream("maven/build-pom.xml");
+        final InputStream pomIs = cl.getResourceAsStream(PROVISIONING_POM_XML);
         if(pomIs == null) {
-            ci.println("Error: maven/pom.xml not found");
-            return CommandResult.FAILURE;
+            throw new CommandExecutionException(PROVISIONING_POM_XML + " not found");
         }
 
         final File workDir = Util.createRandomTmpDir();
-
         try {
             Util.copy(provisioningFile, new File(workDir, Constants.PROVISIONING_XML));
+        } catch(IOException e) {
+            throw new CommandExecutionException("Failed to copy " + provisioningFile.getAbsolutePath() + " to the work dir.");
+        }
 
+        try {
             InvocationRequest request = new DefaultInvocationRequest();
 
             final Properties props = new Properties();
-            props.setProperty(Constants.PM_TOOL_HOME_DIR, toolHome);
             props.setProperty(Constants.PM_INSTALL_DIR, installDir.getAbsolutePath());
+            props.setProperty(Constants.PROVISIONING_XML, provisioningFile.getAbsolutePath());
             request.setProperties(props);
 
             request.setPomFile(Util.saveAs(pomIs, new File(workDir, "pom.xml")));
@@ -114,10 +114,11 @@ class PmCommand implements Command<CommandInvocation> {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+        } catch (IOException e1) {
+            throw new CommandExecutionException("Failed to copy pom.xml to the work dir.");
         } finally {
             Util.recursiveDelete(workDir);
         }
 
-        return CommandResult.SUCCESS;
     }
 }
