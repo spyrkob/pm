@@ -93,7 +93,7 @@ public class WFModulesDefBuilder {
             for(File child : dir.listFiles()) {
                 if (child.isDirectory()) {
                     path.add(dir.getName());
-                    processModules(fpBuilder, pkgBuilder, relativeDir, path, child);
+                    processModules(fpBuilder, pkgBuilder, modulesPath, path, child);
                     path.remove(path.size() - 1);
                 }
             }
@@ -101,7 +101,7 @@ public class WFModulesDefBuilder {
         }
 
         final StringBuilder moduleName = new StringBuilder();
-        final StringBuilder contentPath = new StringBuilder(relativeDir).append('/');
+        final StringBuilder contentPath = new StringBuilder(modulesPath).append('/');
         moduleName.append(path.get(0));
         contentPath.append(path.get(0));
         for(int i = 1; i < path.size(); ++i) {
@@ -109,6 +109,7 @@ public class WFModulesDefBuilder {
             moduleName.append('.').append(part);
             contentPath.append('/').append(part);
         }
+        moduleName.append(dir.getName()); // adding the slot to the name (hibernate modules in wildfly)
         final PackageDefBuilder moduleBuilder = PackageDef.packageBuilder(moduleName.toString());
         addContent(moduleBuilder, dir, contentPath.toString());
         fpBuilder.addGroup(moduleBuilder.build());
