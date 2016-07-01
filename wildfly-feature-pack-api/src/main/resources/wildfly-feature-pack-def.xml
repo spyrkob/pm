@@ -3,7 +3,8 @@
     <modules relative="modules/system/layers/base"/>
 
   <feature-packs>
-    <feature-pack group-id="org.wildfly.feature-pack" artifact-id="wildfly" version="10.1.0.Final-SNAPSHOT">
+    <!-- <feature-pack group-id="org.wildfly.feature-pack" artifact-id="wildfly" version="10.1.0.Final-SNAPSHOT"> -->
+    <feature-pack group-id="org.wildfly.feature-pack">
 
 <!-- example of a package
         <package name="mypackage">

@@ -24,6 +24,8 @@ package org.jboss.pm.wildfly.def;
 
 import java.io.File;
 
+import org.jboss.pm.def.PackageDef.PackageDefBuilder;
+
 /**
  *
  * @author Alexey Loubyansky
@@ -32,6 +34,9 @@ class DefBuildContext {
 
     private final File homeDir;
     private final File modulesDir;
+
+    WFFeaturePackDefBuilder fpBuilder;
+    PackageDefBuilder pkgBuilder;
 
     DefBuildContext(File homeDir, String modulesDir) {
         assert homeDir != null : "Home directory is missing";

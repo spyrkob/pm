@@ -28,8 +28,8 @@ import java.util.List;
 
 import org.jboss.pm.GAV;
 import org.jboss.pm.def.FeaturePackDef;
-import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
 import org.jboss.pm.def.InstallationDefException;
+import org.jboss.pm.def.PackageDef;
 
 /**
  *
@@ -38,11 +38,19 @@ import org.jboss.pm.def.InstallationDefException;
 public class WFFeaturePackDefBuilder {
 
     private final WFInstallationDefBuilder wfBuilder;
-    private final GAV gav;
     private List<WFPackageDefBuilder> packages = Collections.emptyList();
+    private final String groupId;
+    private String artifactId;
+    private String version;
 
-    public WFFeaturePackDefBuilder(GAV gav, WFInstallationDefBuilder wfBuilder) {
-        this.gav = gav;
+    private FeaturePackDef.FeaturePackDefBuilder fpBuilder;
+
+
+    public WFFeaturePackDefBuilder(String groupId, String artifactId, String version, WFInstallationDefBuilder wfBuilder) {
+        assert groupId != null : "groupId is null";
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.version = version;
         this.wfBuilder = wfBuilder;
     }
 
@@ -63,10 +71,32 @@ public class WFFeaturePackDefBuilder {
     }
 
     public FeaturePackDef build(DefBuildContext ctx) throws InstallationDefException {
-        final FeaturePackDefBuilder builder = FeaturePackDef.builder(gav);
-        for(WFPackageDefBuilder pkgBuilder : packages) {
-            builder.addGroup(pkgBuilder.build(builder, ctx));
+        fpBuilder = FeaturePackDef.builder();
+        ctx.fpBuilder = this;
+        try {
+            for(WFPackageDefBuilder pkgBuilder : packages) {
+                fpBuilder.addGroup(pkgBuilder.build(ctx));
+            }
+            return fpBuilder.setGAV(new GAV(groupId, artifactId, version)).build();
+        } finally {
+            fpBuilder = null;
+            ctx.fpBuilder = null;
         }
-        return builder.build();
+    }
+
+    void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
+
+    String getArtifactId() {
+        return artifactId;
+    }
+
+    void setVersion(String version) {
+        this.version = version;
+    }
+
+    void addModulePackage(PackageDef module) {
+        fpBuilder.addGroup(module);
     }
 }

@@ -41,13 +41,21 @@ public class FeaturePackDef {
 
     public static class FeaturePackDefBuilder {
 
-        private final GAV gav;
+        private GAV gav;
         private Map<String, GroupDef> groups = Collections.emptyMap();
         private Set<GAV> dependencies = Collections.emptySet();
 
+        protected FeaturePackDefBuilder() {
+            this(null);
+        }
+
         protected FeaturePackDefBuilder(GAV gav) {
-            assert gav != null : "GAV is null";
             this.gav = gav;
+        }
+
+        public FeaturePackDefBuilder setGAV(GAV gav) {
+            this.gav = gav;
+            return this;
         }
 
         public FeaturePackDefBuilder addGroup(GroupDef group) {
@@ -81,6 +89,10 @@ public class FeaturePackDef {
         public FeaturePackDef build() {
             return new FeaturePackDef(gav, Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
         }
+    }
+
+    public static FeaturePackDefBuilder builder() {
+        return builder(null);
     }
 
     public static FeaturePackDefBuilder builder(GAV gav) {

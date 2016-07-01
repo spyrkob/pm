@@ -23,20 +23,28 @@
 package org.jboss.pm.wildfly.def;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
-import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
 import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
+import org.jboss.pm.util.IoUtils;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 public class WFModulesDefBuilder {
+
+    private static final List<String> PRODUCT_MODULE = Arrays.asList("org", "jboss", "as", "product");
+    //private static final String RELEASE_NAME = "JBoss-Product-Release-Name";
+    private static final String RELEASE_VERSION = "JBoss-Product-Release-Version";
 
     private final String relativeDir;
     private List<String> names = Collections.emptyList();
@@ -57,7 +65,7 @@ public class WFModulesDefBuilder {
         }
     }
 
-    void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, DefBuildContext ctx) throws InstallationDefException {
+    void processModules(DefBuildContext ctx) throws InstallationDefException {
         final File modulesDir;
         if(relativeDir != null) {
             modulesDir = new File(ctx.getHomeDir(), relativeDir);
@@ -75,7 +83,7 @@ public class WFModulesDefBuilder {
                     path.add(dir.getName());
                     for(File child : dir.listFiles()) {
                         if(child.isDirectory()) {
-                            processModules(fpBuilder, pkgBuilder, relativeDir, path, child);
+                            processModules(ctx, relativeDir, path, child);
                         }
                     }
                     path.remove(path.size() - 1);
@@ -86,14 +94,14 @@ public class WFModulesDefBuilder {
         }
     }
 
-    private void processModules(FeaturePackDefBuilder fpBuilder, PackageDefBuilder pkgBuilder, String modulesPath, List<String> path, File dir) {
+    private void processModules(DefBuildContext ctx, String modulesPath, List<String> path, File dir) throws InstallationDefException {
 
         final File moduleXml = new File(dir, "module.xml");
         if(!moduleXml.exists()) {
             for(File child : dir.listFiles()) {
                 if (child.isDirectory()) {
                     path.add(dir.getName());
-                    processModules(fpBuilder, pkgBuilder, modulesPath, path, child);
+                    processModules(ctx, modulesPath, path, child);
                     path.remove(path.size() - 1);
                 }
             }
@@ -109,11 +117,26 @@ public class WFModulesDefBuilder {
             moduleName.append('.').append(part);
             contentPath.append('/').append(part);
         }
-        moduleName.append(dir.getName()); // adding the slot to the name (hibernate modules in wildfly)
+        if(ctx.fpBuilder.getArtifactId() == null && PRODUCT_MODULE.equals(path)) {
+            ctx.fpBuilder.setArtifactId(dir.getName());
+            final File manifest = new File(dir, "dir/META-INF/MANIFEST.MF");
+            final Properties props = new Properties();
+            FileReader reader = null;
+            try {
+                reader = new FileReader(manifest);
+                props.load(reader);
+            } catch(IOException e) {
+                throw new InstallationDefException("Failed to read product info from " + manifest.getAbsolutePath(), e);
+            } finally {
+                IoUtils.safeClose(reader);
+            }
+            ctx.fpBuilder.setVersion(props.getProperty(RELEASE_VERSION));
+        }
+        moduleName.append('.').append(dir.getName()); // adding the slot to the name (hibernate modules in wildfly)
         final PackageDefBuilder moduleBuilder = PackageDef.packageBuilder(moduleName.toString());
         addContent(moduleBuilder, dir, contentPath.toString());
-        fpBuilder.addGroup(moduleBuilder.build());
-        pkgBuilder.addDependency(moduleName.toString());
+        ctx.fpBuilder.addModulePackage(moduleBuilder.build());
+        ctx.pkgBuilder.addDependency(moduleName.toString());
     }
 
     private void addContent(PackageDefBuilder builder, File f, String relativePath) {

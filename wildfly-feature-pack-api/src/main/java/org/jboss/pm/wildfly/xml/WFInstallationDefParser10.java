@@ -32,7 +32,6 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.pm.GAV;
 import org.jboss.pm.util.ParsingUtils;
 import org.jboss.pm.wildfly.def.WFFeaturePackDefBuilder;
 import org.jboss.pm.wildfly.def.WFInstallationDefBuilder;
@@ -236,7 +235,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
         String artifactId = null;
         String version = null;
         final int count = reader.getAttributeCount();
-        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID, Attribute.VERSION);
+        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID);
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             required.remove(attribute);
@@ -258,7 +257,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDefBui
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        final WFFeaturePackDefBuilder fpBuilder = new WFFeaturePackDefBuilder(new GAV(groupId, artifactId, version), wfBuilder);
+        final WFFeaturePackDefBuilder fpBuilder = new WFFeaturePackDefBuilder(groupId, artifactId, version, wfBuilder);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
 import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
@@ -83,11 +82,12 @@ public class WFPackageDefBuilder {
         }
     }
 
-    public PackageDef build(FeaturePackDefBuilder fpBuilder, DefBuildContext ctx) throws InstallationDefException {
-        final PackageDefBuilder builder = PackageDef.packageBuilder(name);
+    public PackageDef build(DefBuildContext ctx) throws InstallationDefException {
+        ctx.pkgBuilder = PackageDef.packageBuilder(name);
+        try {
         if(!modules.isEmpty()) {
             for(WFModulesDefBuilder modulesBuilder : modules) {
-                modulesBuilder.processModules(fpBuilder, builder, ctx);
+                modulesBuilder.processModules(ctx);
             }
         }
         for(String relativePath : relativePaths) {
@@ -98,21 +98,24 @@ public class WFPackageDefBuilder {
             if(f.isDirectory()) {
                 final File[] children = f.listFiles();
                 if(children.length == 0) {
-                    builder.addContentPath(relativePath);
+                    ctx.pkgBuilder.addContentPath(relativePath);
                 } else {
                     for (File c : children) {
-                        addContent(builder, c, f.getName());
+                        addContent(ctx.pkgBuilder, c, f.getName());
                     }
                 }
 
             } else {
-                builder.addContentPath(relativePath);
+                ctx.pkgBuilder.addContentPath(relativePath);
             }
         }
         for(String packageRef : packageRefs) {
-            builder.addDependency(packageRef);
+            ctx.pkgBuilder.addDependency(packageRef);
         }
-        return builder.build();
+        return ctx.pkgBuilder.build();
+        } finally {
+            ctx.pkgBuilder = null;
+        }
     }
 
     private void addContent(PackageDefBuilder builder, File f, String relativePath) {
