@@ -67,7 +67,6 @@ import org.jboss.pm.Constants;
 import org.jboss.pm.GAV;
 import org.jboss.pm.provisioning.ProvisioningMetaData;
 import org.jboss.pm.provisioning.xml.ProvisioningXmlParser;
-import org.jboss.pm.util.IoUtils;
 
 /**
  *
@@ -109,16 +108,14 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         final File installDir = new File(installDirArg);
 
         ProvisioningMetaData metadata;
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(provXml);
+        try(FileInputStream fis = new FileInputStream(provXml)) {
             metadata = new ProvisioningXmlParser().parse(fis);
         } catch (FileNotFoundException e) {
             throw new MojoExecutionException("File not found " + provXml.getAbsolutePath(), e);
         } catch (XMLStreamException e) {
             throw new MojoExecutionException("Failed to parse " + provXml.getAbsolutePath(), e);
-        } finally {
-            IoUtils.safeClose(fis);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to close input stream for " + provXml.getAbsolutePath(), e);
         }
 
         System.out.println("Feature packs: " + metadata);

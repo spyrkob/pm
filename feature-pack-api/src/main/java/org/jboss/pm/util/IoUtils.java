@@ -22,7 +22,6 @@
 
 package org.jboss.pm.util;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,7 +30,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.zip.ZipFile;
 
 /**
  *
@@ -42,28 +40,6 @@ public class IoUtils {
     public static byte[] NO_CONTENT = new byte[0];
 
     private static final int DEFAULT_BUFFER_SIZE = 65536;
-
-    /**
-     * Copy input stream to output stream and close them both
-     *
-     * @param is input stream
-     * @param os output stream
-     *
-     * @throws IOException for any error
-     */
-    public static void copyStreamAndClose(InputStream is, OutputStream os) throws IOException {
-        try {
-            copyStream(is, os, DEFAULT_BUFFER_SIZE);
-            // throw an exception if the close fails since some data might be lost
-            is.close();
-            os.close();
-        }
-        finally {
-            // ...but still guarantee that they're both closed
-            safeClose(is);
-            safeClose(os);
-        }
-    }
 
     /**
      * Copy input stream to output stream without closing streams. Flushes output stream when done.
@@ -144,26 +120,6 @@ public class IoUtils {
         }
     }
 
-    public static void safeClose(final Closeable closeable) {
-        if(closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                //
-            }
-        }
-    }
-
-    public static void safeClose(final ZipFile closeable) {
-        if(closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                //
-            }
-        }
-    }
-
     public static boolean recursiveDelete(File root) {
         if (root == null) {
             return true;
@@ -202,5 +158,4 @@ public class IoUtils {
         }
         return f;
     }
-
 }

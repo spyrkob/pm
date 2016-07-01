@@ -34,7 +34,6 @@ import java.util.Properties;
 import org.jboss.pm.def.InstallationDefException;
 import org.jboss.pm.def.PackageDef;
 import org.jboss.pm.def.PackageDef.PackageDefBuilder;
-import org.jboss.pm.util.IoUtils;
 
 /**
  *
@@ -121,14 +120,10 @@ public class WFModulesDefBuilder {
             ctx.fpBuilder.setArtifactId(dir.getName());
             final File manifest = new File(dir, "dir/META-INF/MANIFEST.MF");
             final Properties props = new Properties();
-            FileReader reader = null;
-            try {
-                reader = new FileReader(manifest);
+            try(FileReader reader = new FileReader(manifest)) {
                 props.load(reader);
             } catch(IOException e) {
                 throw new InstallationDefException("Failed to read product info from " + manifest.getAbsolutePath(), e);
-            } finally {
-                IoUtils.safeClose(reader);
             }
             ctx.fpBuilder.setVersion(props.getProperty(RELEASE_VERSION));
         }
