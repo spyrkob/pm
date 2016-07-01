@@ -40,7 +40,20 @@ public class WFInstallationDefParser {
 
     private static final QName ROOT_1_0 = new QName(WFInstallationDefParser10.NAMESPACE_1_0, WFInstallationDefParser10.Element.INSTALLATION.getLocalName());
 
-    private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
+    private static final XMLInputFactory inputFactory;
+    static {
+        final XMLInputFactory tmpIF = XMLInputFactory.newInstance();
+        setIfSupported(tmpIF, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
+        setIfSupported(tmpIF, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+        inputFactory = tmpIF;
+    }
+
+    private static void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
+        if (inputFactory.isPropertySupported(property)) {
+            inputFactory.setProperty(property, value);
+        }
+    }
+
     private final XMLMapper mapper;
 
     public WFInstallationDefParser() {
@@ -50,18 +63,9 @@ public class WFInstallationDefParser {
 
     public WFInstallationDefBuilder parse(final InputStream input) throws XMLStreamException {
 
-        final XMLInputFactory inputFactory = INPUT_FACTORY;
-        setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(inputFactory, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final WFInstallationDefBuilder builder = WFInstallationDefBuilder.newInstance();
         mapper.parseDocument(builder, streamReader);
         return builder;
-    }
-
-    private void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
     }
 }

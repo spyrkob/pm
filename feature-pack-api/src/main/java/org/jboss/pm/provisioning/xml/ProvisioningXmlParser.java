@@ -40,7 +40,20 @@ public class ProvisioningXmlParser {
 
     private static final QName ROOT_1_0 = new QName(ProvisioningXmlParser10.NAMESPACE_1_0, ProvisioningXmlParser10.Element.INSTALLATION.getLocalName());
 
-    private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
+    private static final XMLInputFactory inputFactory;
+    static {
+        final XMLInputFactory tmpIF = XMLInputFactory.newInstance();
+        setIfSupported(tmpIF, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
+        setIfSupported(tmpIF, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+        inputFactory = tmpIF;
+    }
+
+    private static void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
+        if (inputFactory.isPropertySupported(property)) {
+            inputFactory.setProperty(property, value);
+        }
+    }
+
     private final XMLMapper mapper;
 
     public ProvisioningXmlParser() {
@@ -50,18 +63,9 @@ public class ProvisioningXmlParser {
 
     public ProvisioningMetaData parse(final InputStream input) throws XMLStreamException {
 
-        final XMLInputFactory inputFactory = INPUT_FACTORY;
-        setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(inputFactory, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final ProvisioningMetaData metadata = new ProvisioningMetaData();
         mapper.parseDocument(metadata, streamReader);
         return metadata;
-    }
-
-    private void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
     }
 }

@@ -1,0 +1,85 @@
+Provisioning Manager Tool
+
+Contents:
+* Project modules
+* CLI commands
+* Building and launching the tool
+
+
+PROJECT MODULES
+
+
+MODULE: pm-parent
+
+  Defines main version and common dependencies of the project.
+
+
+MODULE: feature-pack-api
+
+  General provisioning and feature-pack API.
+  
+
+MODULE: wildfly-feature-pack-api
+
+  WildFly-specific provisioning and feature-pack API is basically a façade
+  over the general provisioning and feature-pack API which makes
+  it easier to build WildFly-specific provisioning config.
+
+
+MODULE: feature-pack-build-maven-plugin
+
+  Maven Mojo implementations (i.e. goals in Maven plugins).
+   
+
+MODULE: tool
+
+  Command line interface which allows to:
+  
+  - build feature-packs and install them into the Maven repository;
+  
+  - provision an installation by pulling the feature-packs from the
+    Maven repository and installing them at the specified location.
+
+  The Maven assembly plug-in is configured to create a single executable JAR
+  file which contains all the dependencies.
+
+
+CLI COMMANDS
+
+
+COMMAND fp
+
+  Builds a feature pack for the specified WildFly-based installation and
+  installs the feature pack into the Maven repository.
+  
+  Arguments:
+  
+  --install-dir  - filesystem path to the WildFly-based installation for which
+                   the feature pack should be built.
+                   
+COMMAND pm
+
+  Provisions an installation at the specified location by reading its
+  specification from the specified provisioning XML file.
+  
+  Arguments:
+  
+  --provisioning-xml  - filesystem path to the provisioning XML file which
+                        defines an installation in terms of the feature-packs.
+
+  --install-dir       - root directory for the installation to be provisioned.
+ 
+ 
+ BUILDING AND LAUNCHING THE TOOL
+ 
+   The tool can be built by executing the following Maven command:
+   
+   mvn clean install
+   
+   The executable JAR will be built in pm/tool/target/pm-tool.jar
+   
+   There is also a convenience do.sh script in the root directory
+   of the project. If executed w/o arguments, it'll build and launch the tool.
+   
+   './do.sh package' will only build the tool.
+   './do.sh run' will only launch the already built tool.
