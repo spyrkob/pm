@@ -22,14 +22,11 @@
 
 package org.jboss.pm.build;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -49,10 +46,10 @@ public class FeaturePackBuild {
     private static final int DEFAULT_BUFFER_SIZE = 65536;
 
     private final InstallationDef installation;
-    private final File workDir;
-    private final File homeDir;
+    private final Path workDir;
+    private final Path homeDir;
 
-    public FeaturePackBuild(InstallationDef installation, File homeDir, File workDir) {
+    public FeaturePackBuild(InstallationDef installation, Path homeDir, Path workDir) {
         this.installation = installation;
         this.workDir = workDir;
         this.homeDir = homeDir;
@@ -70,32 +67,29 @@ public class FeaturePackBuild {
 
     private void buildFeaturePack(FeaturePackDef fpDef) throws PMBuildException {
 
-        File fpZip = new File(workDir, Constants.FEATURE_PACKS);
+        Path fpZip = workDir.resolve(Constants.FEATURE_PACKS);
         final GAV gav = fpDef.getGAV();
 //        String[] parts = gav.getGroupId().split("\\.");
 //        for(String part : parts) {
 //            fpZip = new File(fpZip, part);
 //        }
-        fpZip = new File(fpZip, gav.getGroupId());
-        fpZip = new File(fpZip, gav.getArtifactId());
-        fpZip.mkdirs();
-
-        fpZip = new File(fpZip, gav.getVersion());
-        ZipOutputStream zos = null;
+        fpZip = fpZip.resolve(gav.getGroupId());
+        fpZip = fpZip.resolve(gav.getArtifactId());
         try {
-            zos = new ZipOutputStream(new FileOutputStream(fpZip));
+            Files.createDirectories(fpZip);
+        } catch (IOException e1) {
+            throw new PMBuildException("Failed to create directory " + fpZip.toAbsolutePath());
+        }
+
+        fpZip = fpZip.resolve(gav.getVersion());
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(fpZip))) {
             final Set<String> groupNames = fpDef.getGroupNames();
             for(String groupName : groupNames) {
                 final GroupDef groupDef = fpDef.getGroupDef(groupName);
                 copyGroupContent(zos, groupDef);
             }
-        } catch (FileNotFoundException e) {
+        } catch(IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                zos.close();
-            } catch(IOException e) {
-            }
         }
     }
 
@@ -106,22 +100,22 @@ public class FeaturePackBuild {
             return;
         }
         for(String relativePath : groupDef.getContentPaths()) {
-            final File src = new File(homeDir, relativePath);
-            if(!src.exists()) {
-                throw new PMBuildException("Failed to locate " + src.getAbsolutePath());
+            final Path src = homeDir.resolve(relativePath);
+            if(!Files.exists(src)) {
+                throw new PMBuildException("Failed to locate " + src.toAbsolutePath());
             }
             try {
                 zos.putNextEntry(new ZipEntry(relativePath));
                 copy(src, zos);
                 zos.closeEntry();
             } catch (IOException e) {
-                throw new PMBuildException("Failed to copy " + src.getAbsolutePath() + " to ZIP", e);
+                throw new PMBuildException("Failed to copy " + src.toAbsolutePath() + " to ZIP", e);
             }
         }
     }
 
-    private static void copy(File src, ZipOutputStream zos) throws IOException {
-        try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(src))){
+    private static void copy(Path src, ZipOutputStream zos) throws IOException {
+        try (final InputStream bis = Files.newInputStream(src)) {
             copyStream(bis, zos);
         }
     }

@@ -29,7 +29,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.pm.wildfly.def.WFInstallationDefBuilder;
+import org.jboss.pm.wildfly.descr.WFInstallationDescription;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
@@ -61,11 +61,11 @@ public class WFInstallationDefParser {
         mapper.registerRootElement(ROOT_1_0, new WFInstallationDefParser10());
     }
 
-    public WFInstallationDefBuilder parse(final InputStream input) throws XMLStreamException {
+    public WFInstallationDescription parse(final InputStream input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final WFInstallationDefBuilder builder = WFInstallationDefBuilder.newInstance();
+        final WFInstallationDescription.Builder builder = WFInstallationDescription.builder();
         mapper.parseDocument(builder, streamReader);
-        return builder;
+        return builder.build();
     }
 }

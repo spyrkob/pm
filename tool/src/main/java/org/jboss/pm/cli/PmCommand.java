@@ -24,6 +24,9 @@ package org.jboss.pm.cli;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -56,19 +59,19 @@ class PmCommand extends CommandBase {
     @Override
     protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
 
-        final String toolHome = new File("").getAbsolutePath();
+        final String toolHome = Paths.get("").toAbsolutePath().toString();
 
-        final File provisioningFile;
+        final Path provisioningFile;
         if(provisioningXmlArg == null) {
-            provisioningFile = new File(toolHome, Constants.PROVISIONING_XML);
+            provisioningFile = Paths.get(toolHome, Constants.PROVISIONING_XML);
         } else {
-            provisioningFile = new File(provisioningXmlArg);
+            provisioningFile = Paths.get(provisioningXmlArg);
         }
-        if(!provisioningFile.exists()) {
+        if(!Files.exists(provisioningFile)) {
             if(provisioningXmlArg == null) {
-                throw new CommandExecutionException("Failed to locate provisioning file at default location " + provisioningFile.getAbsolutePath());
+                throw new CommandExecutionException("Failed to locate provisioning file at default location " + provisioningFile.toAbsolutePath());
             } else {
-                throw new CommandExecutionException("Failed to locate provisioning file " + provisioningFile.getAbsolutePath());
+                throw new CommandExecutionException("Failed to locate provisioning file " + provisioningFile.toAbsolutePath());
             }
         }
 
@@ -85,11 +88,11 @@ class PmCommand extends CommandBase {
             throw new CommandExecutionException(PROVISIONING_POM_XML + " not found");
         }
 
-        final File workDir = Util.createRandomTmpDir();
+        final Path workDir = Util.createRandomTmpDir();
         try {
-            Util.copy(provisioningFile, new File(workDir, Constants.PROVISIONING_XML));
+            Util.copy(provisioningFile, workDir.resolve(Constants.PROVISIONING_XML));
         } catch(IOException e) {
-            throw new CommandExecutionException("Failed to copy " + provisioningFile.getAbsolutePath() + " to the work dir.");
+            throw new CommandExecutionException("Failed to copy " + provisioningFile.toAbsolutePath() + " to the work dir.");
         }
 
         try {
@@ -97,10 +100,10 @@ class PmCommand extends CommandBase {
 
             final Properties props = new Properties();
             props.setProperty(Constants.PM_INSTALL_DIR, installDir.getAbsolutePath());
-            props.setProperty(Constants.PROVISIONING_XML, provisioningFile.getAbsolutePath());
+            props.setProperty(Constants.PROVISIONING_XML, provisioningFile.toAbsolutePath().toString());
             request.setProperties(props);
 
-            request.setPomFile(Util.saveAs(pomIs, new File(workDir, "pom.xml")));
+            request.setPomFile(Util.saveAs(pomIs, workDir.resolve("pom.xml").toFile()));
             request.setGoals(Collections.singletonList("compile"));
 
             Invoker invoker = new DefaultInvoker();

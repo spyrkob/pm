@@ -22,9 +22,10 @@
 
 package org.jboss.pm.cli;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -44,6 +45,8 @@ import org.jboss.pm.build.FeaturePackBuild;
 import org.jboss.pm.build.PMBuildException;
 import org.jboss.pm.def.InstallationDef;
 import org.jboss.pm.def.InstallationDefException;
+import org.jboss.pm.wildfly.descr.WFFeaturePackLayoutBuilder;
+import org.jboss.pm.wildfly.descr.WFInstallationDescription;
 import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
 /**
@@ -60,10 +63,13 @@ public class FpCommand extends CommandBase {
     @Option(name="install-dir", required=true)
     private String installDirArg;
 
+    @Option(name="workdir", required=false)
+    private String fpWorkDir;
+
     @Override
     protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
 
-        final File installDir = new File(installDirArg);
+        final Path installDir = Paths.get(installDirArg);
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final InputStream wfInstallDef = cl.getResourceAsStream(WF_FP_DEF_XML);
@@ -71,11 +77,27 @@ public class FpCommand extends CommandBase {
             throw new CommandExecutionException(WF_FP_DEF_XML + " not found");
         }
 
-        final InstallationDef wfInstallation;
+        final WFInstallationDescription wfDescr;
         try {
-            wfInstallation = new WFInstallationDefParser().parse(wfInstallDef).build(installDir);
+            wfDescr = new WFInstallationDefParser().parse(wfInstallDef);
         } catch (XMLStreamException e) {
             throw new CommandExecutionException("failed to parse " + WF_FP_DEF_XML, e);
+        }
+
+/*        if(fpWorkDir != null) {
+            final Path workDirPath = Paths.get(fpWorkDir);
+            final Path installDirPath = Paths.get(installDirArg);
+            for(WFFeaturePackDescription fpDef : wfDescr.getFeaturePacks()) {
+                new FPLayoutBuilder(fpDef, installDirPath).layout(
+                        workDirPath.resolve(fpDef.getGAV().getGroupId().replace('.', '/')).
+                            resolve(fpDef.getGAV().getArtifactId()));
+            }
+            return;
+        }
+*/
+        final InstallationDef wfInstallation;
+        try {
+            wfInstallation = new WFFeaturePackLayoutBuilder().build(wfDescr, installDir);
         } catch (InstallationDefException e) {
             throw new CommandExecutionException("failed to build feature packs", e);
         }
@@ -87,7 +109,8 @@ public class FpCommand extends CommandBase {
             e.printStackTrace();
         }
 */
-        final File workDir = Util.createRandomTmpDir();
+
+        final Path workDir = Util.createRandomTmpDir();
         try {
             FeaturePackBuild fpBuild = new FeaturePackBuild(wfInstallation, installDir, workDir);
             fpBuild.buildFeaturePacks();
@@ -103,16 +126,16 @@ public class FpCommand extends CommandBase {
 
     }
 
-    private void install(final File workDir) throws CommandExecutionException {
+    private void install(final Path workDir) throws CommandExecutionException {
         final InputStream pomIs = Util.getResourceStream(INSTALL_FEATURE_PACKS_POM);
         try {
             InvocationRequest request = new DefaultInvocationRequest();
 
             final Properties props = new Properties();
-            props.setProperty(Constants.PM_INSTALL_WORK_DIR, workDir.getAbsolutePath());
+            props.setProperty(Constants.PM_INSTALL_WORK_DIR, workDir.toAbsolutePath().toString());
             request.setProperties(props);
 
-            request.setPomFile(Util.saveAs(pomIs, new File(workDir, "pom.xml")));
+            request.setPomFile(Util.saveAs(pomIs, workDir.resolve("pom.xml").toFile()));
             request.setGoals(Collections.singletonList("compile"));
 
             Invoker invoker = new DefaultInvoker();

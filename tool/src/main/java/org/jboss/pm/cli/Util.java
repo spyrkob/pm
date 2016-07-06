@@ -23,11 +23,15 @@
 package org.jboss.pm.cli;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 import org.codehaus.plexus.util.IOUtil;
@@ -39,47 +43,45 @@ import org.codehaus.plexus.util.IOUtil;
  */
 class Util {
 
-    private static final File TMP_DIR = new File(PropertyUtils.getSystemProperty("java.io.tmpdir"));
+    private static final Path TMP_DIR = Paths.get(PropertyUtils.getSystemProperty("java.io.tmpdir"));
 
-    static File createTmpDir(String name) {
-        final File dir = new File(TMP_DIR, name);
-        if(!dir.mkdirs()) {
-            throw new IllegalStateException("Failed to create " + dir.getAbsolutePath());
+    static Path createTmpDir(String name) {
+        final Path dir = TMP_DIR.resolve(name);
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create " + dir.toAbsolutePath());
         }
         return dir;
     }
 
-    static File createRandomTmpDir() {
+    static Path createRandomTmpDir() {
         return createTmpDir(UUID.randomUUID().toString());
     }
 
-    static boolean recursiveDelete(File root) {
+    static void recursiveDelete(Path root) {
         if (root == null) {
-            return true;
+            return;
         }
-        boolean ok = true;
-        if (root.isDirectory()) {
-            final File[] files = root.listFiles();
-            for (File file : files) {
-                ok &= recursiveDelete(file);
+        if(Files.isDirectory(root)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(root)) {
+                for(Path entry : stream) {
+                    recursiveDelete(entry);
+                }
+            } catch(IOException e) {
             }
-            return ok && (root.delete() || !root.exists());
         } else {
-            ok &= root.delete() || !root.exists();
+            try {
+                Files.delete(root);
+            } catch (IOException e) {
+            }
         }
-        return ok;
     }
 
-    static void copy(File src, File trg) throws IOException {
-        FileInputStream input = null;
-        FileOutputStream output = null;
-        try {
-            input = new FileInputStream(src);
-            output = new FileOutputStream(trg);
+    static void copy(Path src, Path trg) throws IOException {
+        try (InputStream input = Files.newInputStream(src);
+                OutputStream output = Files.newOutputStream(trg)) {
             IOUtil.copy(input, output);
-        } finally {
-            IOUtil.close(input);
-            IOUtil.close(output);
         }
     }
 

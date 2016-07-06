@@ -40,7 +40,7 @@ public abstract class CommandBase implements Command<CommandInvocation> {
             runCommand(commandInvocation);
             return CommandResult.SUCCESS;
         } catch (Throwable t) {
-            //t.printStackTrace();
+            t.printStackTrace();
             final StringBuilder buf = new StringBuilder("Error");
             while(t != null) {
                 buf.append(": ");
