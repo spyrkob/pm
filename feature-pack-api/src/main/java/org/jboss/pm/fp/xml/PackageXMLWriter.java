@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.cli.fp.layout;
+package org.jboss.pm.fp.xml;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,9 +30,8 @@ import java.nio.file.StandardOpenOption;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.pm.def.FeaturePackDef;
-import org.jboss.pm.fp.xml.FeaturePackXMLParser10;
-import org.jboss.pm.fp.xml.FeaturePackXMLParser10.Element;
+import org.jboss.pm.descr.PackageDescription;
+import org.jboss.pm.fp.xml.PackageXMLParser10.Element;
 import org.jboss.pm.provisioning.xml.ElementNode;
 import org.jboss.pm.provisioning.xml.FormattingXMLStreamWriter;
 
@@ -40,16 +39,16 @@ import org.jboss.pm.provisioning.xml.FormattingXMLStreamWriter;
  *
  * @author Alexey Loubyansky
  */
-class FeaturePackXmlWriter {
+public class PackageXMLWriter {
 
-    static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
+    public static final PackageXMLWriter INSTANCE = new PackageXMLWriter();
 
-    private FeaturePackXmlWriter() {
+    private PackageXMLWriter() {
     }
 
-    public void write(FeaturePackDef fpDef, Path outputFile) throws XMLStreamException, IOException {
+    public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
 
-        final ElementNode featurePackElementNode = new ElementNode(null, Element.FEATURE_PACK.getLocalName(), FeaturePackXMLParser10.NAMESPACE_1_0);
+        final ElementNode featurePackElementNode = new ElementNode(null, Element.PACKAGE.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
 
         try (FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(

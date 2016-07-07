@@ -27,16 +27,12 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.jboss.pm.Constants;
 import org.jboss.pm.GAV;
 import org.jboss.pm.descr.FeaturePackDescription;
 import org.jboss.pm.descr.InstallationDescription;
@@ -45,20 +41,17 @@ import org.jboss.pm.descr.InstallationDescriptionException;
 import org.jboss.pm.descr.PackageDescription;
 import org.jboss.pm.descr.FeaturePackDescription.FeaturePackDefBuilder;
 import org.jboss.pm.descr.PackageDescription.PackageDefBuilder;
-import org.jboss.pm.fp.xml.FeaturePackXMLWriter;
-import org.jboss.pm.fp.xml.PackageXMLWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class WFFeaturePackLayoutBuilder {
+public class WFInstallationDescriptionBuilder {
 
     private static final List<String> PRODUCT_MODULE = Arrays.asList("org", "jboss", "as", "product");
     //private static final String RELEASE_NAME = "JBoss-Product-Release-Name";
     private static final String RELEASE_VERSION = "JBoss-Product-Release-Version";
 
-    private Path workDir;
     private Path homeDir;
     private String modulesPath;
     private Path modulesDir;
@@ -68,13 +61,10 @@ public class WFFeaturePackLayoutBuilder {
     private String fpArtifactId;
     private String fpVersion;
     private FeaturePackDefBuilder fpBuilder;
-    private Path fpDir;
 
     private PackageDefBuilder pkgBuilder;
 
-    public InstallationDescription build(WFInstallationDescription wfDescr, Path homeDir, Path workDir) throws InstallationDescriptionException {
-        this.workDir = workDir;
-        mkdirs(workDir);
+    public InstallationDescription build(WFInstallationDescription wfDescr, Path homeDir) throws InstallationDescriptionException {
         this.homeDir = homeDir;
         modulesPath = wfDescr.getModulesPath();
         modulesDir = homeDir.resolve(modulesPath);
@@ -85,69 +75,26 @@ public class WFFeaturePackLayoutBuilder {
         return installBuilder.build();
     }
 
-    private void mkdirs(Path dir) throws InstallationDescriptionException {
-        try {
-            Files.createDirectories(dir);
-        } catch (IOException e) {
-            throw new InstallationDescriptionException("Failed to create directory " + dir.toAbsolutePath(), e);
-        }
-    }
-
-    void build(WFFeaturePackDescription wfFPDescr) throws InstallationDescriptionException {
+    void build(WFFeaturePackDescription fpDescr) throws InstallationDescriptionException {
         fpBuilder = FeaturePackDescription.builder();
-        fpGroupId = wfFPDescr.getGroupId();
-        fpArtifactId = wfFPDescr.getArtifactId();
-        fpVersion = wfFPDescr.getVersion();
+        fpGroupId = fpDescr.getGroupId();
+        fpArtifactId = fpDescr.getArtifactId();
+        fpVersion = fpDescr.getVersion();
 
-        boolean move = false;
-        fpDir = workDir.resolve(fpGroupId);
-        if(fpArtifactId != null) {
-            fpDir = fpDir.resolve(fpArtifactId);
-            fpDir = fpDir.resolve(fpVersion);
-        } else {
-            fpDir = workDir.resolve("tmp");
-            mkdirs(fpDir);
-            move = true;
-        }
-
-        for(WFPackageDescription wfPkg : wfFPDescr.getPackages()) {
+        for(WFPackageDescription wfPkg : fpDescr.getPackages()) {
             build(wfPkg);
         }
 
-        if(move) {
-            Path fpTarget = workDir.resolve(fpGroupId);
-            fpTarget = fpTarget.resolve(fpArtifactId);
-            fpTarget = fpTarget.resolve(fpVersion);
-            mkdirs(fpTarget);
-            try {
-                Files.move(fpDir, fpTarget, StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException e) {
-                throw new InstallationDescriptionException("Failed to move feature pack dir " + fpDir.toAbsolutePath() + " to " + fpTarget.toAbsolutePath(), e);
-            }
-            fpDir = fpTarget;
-        }
         fpBuilder.setGAV(new GAV(fpGroupId, fpArtifactId, fpVersion));
-        FeaturePackDescription fpDescr = fpBuilder.build();
-        installBuilder.addFeaturePack(fpDescr);
-
-        try {
-            FeaturePackXMLWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
-        } catch (XMLStreamException | IOException e) {
-            throw new InstallationDescriptionException("Failed to write " + fpDir.resolve(Constants.FEATURE_PACK_XML).toAbsolutePath(), e);
-        }
+        installBuilder.addFeaturePack(fpBuilder.build());
 
         fpBuilder = null;
         fpGroupId = null;
         fpArtifactId = null;
         fpVersion = null;
-        fpDir = null;
     }
 
     void build(WFPackageDescription wfPkg) throws InstallationDescriptionException {
-
-        final Path pkgDir = fpDir.resolve(wfPkg.getName());
-        mkdirs(pkgDir);
-
         pkgBuilder = PackageDescription.packageBuilder(wfPkg.getName());
         for(WFModulesDescription wfModules : wfPkg.getModules()) {
             build(wfModules);
@@ -158,27 +105,21 @@ public class WFFeaturePackLayoutBuilder {
             if(!Files.exists(f)) {
                 throw new InstallationDescriptionException("Failed to locate " + f);
             }
-            final Path pkgContent = pkgDir.resolve("content");
-            mkdirs(pkgContent);
             if(Files.isDirectory(f)) {
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(f)) {
                     final Iterator<Path> children = stream.iterator();
                     if(children.hasNext()) {
-                        Path child = children.next();
-                        addContent(pkgBuilder, child, f.getFileName().toString(), pkgContent.resolve(child.getFileName().toString()));
+                        addContent(pkgBuilder, children.next(), f.getFileName().toString());
                         while(children.hasNext()) {
-                            child = children.next();
-                            addContent(pkgBuilder, child, f.getFileName().toString(), pkgContent.resolve(child.getFileName().toString()));
+                            addContent(pkgBuilder, children.next(), f.getFileName().toString());
                         }
                     } else {
-                        mkdirs(pkgContent.resolve(f.getFileName().toString()));
                         pkgBuilder.addContentPath(relativePath);
                     }
                 } catch(IOException e) {
                     failedToReadDirectory(f, e);
                 }
             } else {
-                copy(f, pkgContent.resolve(f.getFileName().toString()));
                 pkgBuilder.addContentPath(relativePath);
             }
         }
@@ -186,20 +127,8 @@ public class WFFeaturePackLayoutBuilder {
             pkgBuilder.addDependency(packageRef);
         }
 
-        final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addGroup(pkgDescr);
-
-        writePackageXml(pkgDescr, pkgDir);
-
+        fpBuilder.addGroup(pkgBuilder.build());
         pkgBuilder = null;
-    }
-
-    private void writePackageXml(final PackageDescription pkgDescr, final Path pkgDir) throws InstallationDescriptionException {
-        try {
-            PackageXMLWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
-        } catch (XMLStreamException | IOException e) {
-            throw new InstallationDescriptionException("Failed to write " + pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath(), e);
-        }
     }
 
     void build(WFModulesDescription wfModules) throws InstallationDescriptionException {
@@ -209,7 +138,7 @@ public class WFFeaturePackLayoutBuilder {
             modulesDir = homeDir.resolve(relativePath);
         } else {
             relativePath = modulesPath;
-            modulesDir = WFFeaturePackLayoutBuilder.this.modulesDir;
+            modulesDir = WFInstallationDescriptionBuilder.this.modulesDir;
         }
         if(wfModules.getNames().isEmpty()) {
             if(!Files.exists(modulesDir)) {
@@ -239,6 +168,7 @@ public class WFFeaturePackLayoutBuilder {
         } else {
             // TODO preselected
         }
+
     }
 
     private void processModules(String modulesPath, List<String> path, Path dir) throws InstallationDescriptionException {
@@ -280,39 +210,23 @@ public class WFFeaturePackLayoutBuilder {
             fpVersion = props.getProperty(RELEASE_VERSION);
         }
         moduleName.append('.').append(dir.getFileName().toString()); // adding the slot to the name (hibernate modules in wildfly)
-
-        final Path pkgDir = fpDir.resolve(moduleName.toString());
-        mkdirs(pkgDir);
         final PackageDefBuilder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
-        addContent(moduleBuilder, dir, contentPath.toString(), pkgDir.resolve("content"));
-        final PackageDescription pkgDescr = moduleBuilder.build();
-        fpBuilder.addGroup(pkgDescr);
+        addContent(moduleBuilder, dir, contentPath.toString());
+        fpBuilder.addGroup(moduleBuilder.build());
         pkgBuilder.addDependency(moduleName.toString());
-
-        writePackageXml(pkgDescr, pkgDir);
     }
 
-    private void addContent(PackageDefBuilder builder, Path src, String relativePath, Path target) throws InstallationDescriptionException {
-        if(Files.isDirectory(src)) {
-            mkdirs(target);
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(src)) {
+    private void addContent(PackageDefBuilder builder, Path f, String relativePath) throws InstallationDescriptionException {
+        if(Files.isDirectory(f)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(f)) {
                 for (Path entry: stream) {
-                    addContent(builder, entry, relativePath + '/' + src.getFileName(), target.resolve(entry.getFileName().toString()));
+                    addContent(builder, entry, relativePath + '/' + f.getFileName());
                 }
             } catch(IOException e) {
-                failedToReadDirectory(src, e);
+                failedToReadDirectory(f, e);
             }
         } else {
-            copy(src, target);
-            builder.addContentPath(relativePath + '/' + src.getFileName());
-        }
-    }
-
-    private void copy(Path src, Path target) throws InstallationDescriptionException {
-        try {
-            Files.copy(src, target);
-        } catch (IOException e) {
-            throw new InstallationDescriptionException("Failed to copy " + src.toAbsolutePath() + " to " + target.toAbsolutePath());
+            builder.addContentPath(relativePath + '/' + f.getFileName());
         }
     }
 

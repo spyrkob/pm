@@ -33,9 +33,9 @@ import java.util.zip.ZipOutputStream;
 
 import org.jboss.pm.Constants;
 import org.jboss.pm.GAV;
-import org.jboss.pm.def.FeaturePackDef;
-import org.jboss.pm.def.GroupDef;
-import org.jboss.pm.def.InstallationDef;
+import org.jboss.pm.descr.FeaturePackDescription;
+import org.jboss.pm.descr.GroupDescription;
+import org.jboss.pm.descr.InstallationDescription;
 
 /**
  *
@@ -45,11 +45,11 @@ public class FeaturePackBuild {
 
     private static final int DEFAULT_BUFFER_SIZE = 65536;
 
-    private final InstallationDef installation;
+    private final InstallationDescription installation;
     private final Path workDir;
     private final Path homeDir;
 
-    public FeaturePackBuild(InstallationDef installation, Path homeDir, Path workDir) {
+    public FeaturePackBuild(InstallationDescription installation, Path homeDir, Path workDir) {
         this.installation = installation;
         this.workDir = workDir;
         this.homeDir = homeDir;
@@ -60,12 +60,12 @@ public class FeaturePackBuild {
             return;
         }
 
-        for(FeaturePackDef fpDef : installation.getFeaturePackDefs()) {
+        for(FeaturePackDescription fpDef : installation.getFeaturePackDefs()) {
             buildFeaturePack(fpDef);
         }
     }
 
-    private void buildFeaturePack(FeaturePackDef fpDef) throws PMBuildException {
+    private void buildFeaturePack(FeaturePackDescription fpDef) throws PMBuildException {
 
         Path fpZip = workDir.resolve(Constants.FEATURE_PACKS);
         final GAV gav = fpDef.getGAV();
@@ -85,7 +85,7 @@ public class FeaturePackBuild {
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(fpZip))) {
             final Set<String> groupNames = fpDef.getGroupNames();
             for(String groupName : groupNames) {
-                final GroupDef groupDef = fpDef.getGroupDef(groupName);
+                final GroupDescription groupDef = fpDef.getGroupDef(groupName);
                 copyGroupContent(zos, groupDef);
             }
         } catch(IOException e) {
@@ -93,7 +93,7 @@ public class FeaturePackBuild {
         }
     }
 
-    private void copyGroupContent(ZipOutputStream zos, GroupDef groupDef) throws PMBuildException {
+    private void copyGroupContent(ZipOutputStream zos, GroupDescription groupDef) throws PMBuildException {
         if(!groupDef.hasContent()) {
             // for now it's skipped due to assumption the group simply references other groups
             // defined in the same feature pack

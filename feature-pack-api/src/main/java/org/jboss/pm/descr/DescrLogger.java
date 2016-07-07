@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.descr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.io.StringWriter;
  *
  * @author Alexey Loubyansky
  */
-class DefLogger {
+class DescrLogger {
 
     private final StringWriter writer = new StringWriter();
     private BufferedWriter buf = new BufferedWriter(writer);

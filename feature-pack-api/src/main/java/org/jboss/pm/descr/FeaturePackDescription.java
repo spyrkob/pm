@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.descr;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,12 +37,12 @@ import org.jboss.pm.GAV;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDef {
+public class FeaturePackDescription {
 
     public static class FeaturePackDefBuilder {
 
         private GAV gav;
-        private Map<String, GroupDef> groups = Collections.emptyMap();
+        private Map<String, GroupDescription> groups = Collections.emptyMap();
         private Set<GAV> dependencies = Collections.emptySet();
 
         protected FeaturePackDefBuilder() {
@@ -58,14 +58,14 @@ public class FeaturePackDef {
             return this;
         }
 
-        public FeaturePackDefBuilder addGroup(GroupDef group) {
+        public FeaturePackDefBuilder addGroup(GroupDescription group) {
             assert group != null : "group is null";
             switch(groups.size()) {
                 case 0:
                     groups = Collections.singletonMap(group.getName(), group);
                     break;
                 case 1:
-                    groups = new HashMap<String, GroupDef>(groups);
+                    groups = new HashMap<String, GroupDescription>(groups);
                 default:
                     groups.put(group.getName(), group);
             }
@@ -86,8 +86,8 @@ public class FeaturePackDef {
             return this;
         }
 
-        public FeaturePackDef build() {
-            return new FeaturePackDef(gav, Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
+        public FeaturePackDescription build() {
+            return new FeaturePackDescription(gav, Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
         }
     }
 
@@ -100,10 +100,10 @@ public class FeaturePackDef {
     }
 
     private final GAV gav;
-    private final Map<String, GroupDef> groups;
+    private final Map<String, GroupDescription> groups;
     private final Set<GAV> dependencies;
 
-    protected FeaturePackDef(GAV gav, Map<String, GroupDef> groups, Set<GAV> dependencies) {
+    protected FeaturePackDescription(GAV gav, Map<String, GroupDescription> groups, Set<GAV> dependencies) {
         assert gav != null : "GAV is null";
         assert groups != null : "groups is null";
         assert dependencies != null : "dependencies is null";
@@ -124,7 +124,7 @@ public class FeaturePackDef {
         return groups.keySet();
     }
 
-    public GroupDef getGroupDef(String name) {
+    public GroupDescription getGroupDef(String name) {
         return groups.get(name);
     }
 
@@ -136,7 +136,7 @@ public class FeaturePackDef {
         return dependencies;
     }
 
-    void logContent(DefLogger logger) throws IOException {
+    void logContent(DescrLogger logger) throws IOException {
         logger.print("FeaturePack ");
         logger.println(gav.toString());
         logger.increaseOffset();

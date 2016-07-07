@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.descr;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -29,17 +29,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.pm.GAV;
-import org.jboss.pm.def.FeaturePackDef.FeaturePackDefBuilder;
-import org.jboss.pm.def.PackageDef.PackageDefBuilder;
+import org.jboss.pm.descr.FeaturePackDescription.FeaturePackDefBuilder;
+import org.jboss.pm.descr.PackageDescription.PackageDefBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDefBuilder {
+public class InstallationDescriptionBuilder {
 
-    public static InstallationDefBuilder newInstance() {
-        return new InstallationDefBuilder();
+    public static InstallationDescriptionBuilder newInstance() {
+        return new InstallationDescriptionBuilder();
     }
 
     private FileFilter contentFilter = new FileFilter() {
@@ -49,22 +49,22 @@ public class InstallationDefBuilder {
         }
     };
 
-    private Map<GAV, FeaturePackDef> featurePacks = Collections.emptyMap();
+    private Map<GAV, FeaturePackDescription> featurePacks = Collections.emptyMap();
 
-    InstallationDefBuilder() {
+    InstallationDescriptionBuilder() {
     }
 
-    public InstallationDefBuilder setContentFilter(FileFilter filter) {
+    public InstallationDescriptionBuilder setContentFilter(FileFilter filter) {
         this.contentFilter = filter;
         return this;
     }
 
-    public InstallationDefBuilder defineFeaturePack(GAV gav, File path) throws InstallationDefException {
+    public InstallationDescriptionBuilder defineFeaturePack(GAV gav, File path) throws InstallationDescriptionException {
 
-        final FeaturePackDefBuilder fpBuilder = FeaturePackDef.builder(gav);
+        final FeaturePackDefBuilder fpBuilder = FeaturePackDescription.builder(gav);
         if(path.exists()) {
             if(path.isFile()) {
-                fpBuilder.addGroup(PackageDef.packageBuilder(path.getName()).addContentPath(path.getAbsolutePath()).build());
+                fpBuilder.addGroup(PackageDescription.packageBuilder(path.getName()).addContentPath(path.getAbsolutePath()).build());
             } else {
                 for(File f : path.listFiles()) {
                     if(contentFilter.accept(f)) {
@@ -77,35 +77,35 @@ public class InstallationDefBuilder {
         return this;
     }
 
-    public InstallationDefBuilder addFeaturePack(FeaturePackDef fp) {
+    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp) {
         assert fp != null : "fp is null";
         switch(featurePacks.size()) {
             case 0:
                 featurePacks = Collections.singletonMap(fp.getGAV(), fp);
                 break;
             case 1:
-                featurePacks = new HashMap<GAV, FeaturePackDef>(featurePacks);
+                featurePacks = new HashMap<GAV, FeaturePackDescription>(featurePacks);
             default:
                 featurePacks.put(fp.getGAV(), fp);
         }
         return this;
     }
 
-    public InstallationDef build() throws InstallationDefException {
-        return new InstallationDef(Collections.unmodifiableMap(featurePacks));
+    public InstallationDescription build() throws InstallationDescriptionException {
+        return new InstallationDescription(Collections.unmodifiableMap(featurePacks));
     }
 
-    private void defineGroup(FeaturePackDefBuilder fpBuilder, String name, File path) throws InstallationDefException {
+    private void defineGroup(FeaturePackDefBuilder fpBuilder, String name, File path) throws InstallationDescriptionException {
         if(path.isFile()) {
-            fpBuilder.addGroup(PackageDef.packageBuilder(name).addContentPath(path.getAbsolutePath()).build());
+            fpBuilder.addGroup(PackageDescription.packageBuilder(name).addContentPath(path.getAbsolutePath()).build());
             return;
         }
         final File[] children = path.listFiles();
         if(children.length == 0) {
-            fpBuilder.addGroup(GroupDef.groupBuilder(name).build());
+            fpBuilder.addGroup(GroupDescription.groupBuilder(name).build());
             return;
         }
-        final PackageDefBuilder pkgBuilder = PackageDef.packageBuilder(name);
+        final PackageDefBuilder pkgBuilder = PackageDescription.packageBuilder(name);
         for(File child : children) {
             if(!contentFilter.accept(child)) {
                 continue;

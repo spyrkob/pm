@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.descr;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,77 +28,75 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public class GroupDef {
+public class PackageDescription extends GroupDescription {
 
-    public static class GroupDefBuilder {
+    public static class PackageDefBuilder extends GroupDescription.GroupDefBuilder {
 
-        protected final String name;
-        protected List<String> dependencies = Collections.emptyList();
+        private List<String> contentPaths = Collections.emptyList();
 
-        protected GroupDefBuilder(String name) {
-            assert name != null : "name is null";
-            this.name = name;
+        protected PackageDefBuilder(String name) {
+            super(name);
         }
 
-        public GroupDefBuilder addDependency(String dependencyName) {
-            assert dependencyName != null : "dependency is null";
-            switch(dependencies.size()) {
+        public PackageDefBuilder addContentPath(String contentPath) {
+            assert contentPath != null : "contentPath is null";
+            switch(contentPaths.size()) {
                 case 0:
-                    dependencies = Collections.singletonList(dependencyName);
+                    contentPaths = Collections.singletonList(contentPath);
                     break;
                 case 1:
-                    dependencies = new ArrayList<String>(dependencies);
+                    contentPaths = new ArrayList<String>(contentPaths);
                 default:
-                    dependencies.add(dependencyName);
+                    contentPaths.add(contentPath);
             }
             return this;
         }
 
-        public GroupDef build() {
-            return new GroupDef(name, Collections.unmodifiableList(dependencies));
+        @Override
+        public PackageDescription build() {
+            return new PackageDescription(name, dependencies, Collections.unmodifiableList(contentPaths));
         }
     }
 
-    public static GroupDefBuilder groupBuilder(String name) {
-        return new GroupDefBuilder(name);
+    public static PackageDefBuilder packageBuilder(String name) {
+        return new PackageDefBuilder(name);
     }
 
-    protected final String name;
-    protected final List<String> dependencies;
+    private final List<String> contentPaths;
 
-    protected GroupDef(String name, List<String> dependencies) {
-        assert name != null : "name is null";
-        assert dependencies != null : "dependencies is null";
-        this.name = name;
-        this.dependencies = dependencies;
+    protected PackageDescription(String name, List<String> dependencies, List<String> contentPaths) {
+        super(name, dependencies);
+        assert contentPaths != null : "contentPaths is null";
+        this.contentPaths = contentPaths;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public boolean hasDependencies() {
-        return !dependencies.isEmpty();
-    }
-
-    public List<String> getDependencies() {
-        return dependencies;
-    }
-
+    @Override
     public boolean hasContent() {
-        return false;
+        return !contentPaths.isEmpty();
     }
 
+    @Override
     public List<String> getContentPaths() {
-        throw new UnsupportedOperationException();
+        return contentPaths;
     }
 
-    void logContent(DefLogger logger) throws IOException {
-        logger.print("Group ");
+    @Override
+    void logContent(DescrLogger logger) throws IOException {
+        logger.print("Package ");
         logger.println(name);
+        if(!contentPaths.isEmpty()) {
+            logger.increaseOffset();
+            logger.println("Content");
+            logger.increaseOffset();
+            for(String path : contentPaths) {
+                logger.println(path);
+            }
+            logger.decreaseOffset();
+            logger.decreaseOffset();
+        }
         if(!dependencies.isEmpty()) {
             logger.increaseOffset();
             logger.println("Dependencies");

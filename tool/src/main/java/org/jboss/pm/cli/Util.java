@@ -22,19 +22,13 @@
 
 package org.jboss.pm.cli;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
-
-import org.codehaus.plexus.util.IOUtil;
 
 
 /**
@@ -78,13 +72,6 @@ class Util {
         }
     }
 
-    static void copy(Path src, Path trg) throws IOException {
-        try (InputStream input = Files.newInputStream(src);
-                OutputStream output = Files.newOutputStream(trg)) {
-            IOUtil.copy(input, output);
-        }
-    }
-
     static InputStream getResourceStream(String resource) throws CommandExecutionException {
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final InputStream pomIs = cl.getResourceAsStream(resource);
@@ -92,17 +79,5 @@ class Util {
             throw new CommandExecutionException(resource + " not found");
         }
         return pomIs;
-    }
-
-    static File saveAs(final InputStream is, final File f) throws FileNotFoundException, IOException {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(f);
-            IOUtil.copy(is, fos);
-        } finally {
-            IOUtil.close(is);
-            IOUtil.close(fos);
-        }
-        return f;
     }
 }

@@ -90,7 +90,7 @@ class PmCommand extends CommandBase {
 
         final Path workDir = Util.createRandomTmpDir();
         try {
-            Util.copy(provisioningFile, workDir.resolve(Constants.PROVISIONING_XML));
+            Files.copy(provisioningFile, workDir.resolve(Constants.PROVISIONING_XML));
         } catch(IOException e) {
             throw new CommandExecutionException("Failed to copy " + provisioningFile.toAbsolutePath() + " to the work dir.");
         }
@@ -103,7 +103,9 @@ class PmCommand extends CommandBase {
             props.setProperty(Constants.PROVISIONING_XML, provisioningFile.toAbsolutePath().toString());
             request.setProperties(props);
 
-            request.setPomFile(Util.saveAs(pomIs, workDir.resolve("pom.xml").toFile()));
+            final Path pomXml = workDir.resolve("pom.xml");
+            Files.copy(pomIs, pomXml);
+            request.setPomFile(pomXml.toFile());
             request.setGoals(Collections.singletonList("compile"));
 
             Invoker invoker = new DefaultInvoker();

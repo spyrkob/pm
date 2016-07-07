@@ -20,24 +20,47 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.def;
+package org.jboss.pm.descr;
 
-import org.jboss.pm.PMException;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+
+import org.jboss.pm.GAV;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDefException extends PMException {
+public class InstallationDescription {
 
-    private static final long serialVersionUID = 1L;
+    private final Map<GAV, FeaturePackDescription> featurePacks;
 
-    public InstallationDefException(String message, Throwable cause) {
-        super(message, cause);
+    InstallationDescription(Map<GAV, FeaturePackDescription> featurePacks) {
+        assert featurePacks != null : "featurePacks is null";
+        this.featurePacks = featurePacks;
     }
 
-    public InstallationDefException(String message) {
-        super(message);
+    public boolean hasFeaturePacks() {
+        return !featurePacks.isEmpty();
     }
 
+    public FeaturePackDescription getFeaturePack(GAV gav) {
+        return featurePacks.get(gav);
+    }
+
+    public Collection<FeaturePackDescription> getFeaturePackDefs() {
+        return featurePacks.values();
+    }
+
+    public String logContent() throws IOException {
+        final DescrLogger logger = new DescrLogger();
+        logger.println("Installation");
+        logger.increaseOffset();
+        for(FeaturePackDescription fp : featurePacks.values()) {
+            fp.logContent(logger);
+        }
+        logger.decreaseOffset();
+        return logger.toString();
+    }
 }
