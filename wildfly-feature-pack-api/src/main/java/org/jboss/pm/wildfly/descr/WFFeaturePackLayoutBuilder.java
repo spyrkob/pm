@@ -275,6 +275,7 @@ public class WFFeaturePackLayoutBuilder {
                 relativePathBuf.append('/').append(part);
             }
             moduleNameBuf.append('.').append(dir.getFileName().toString()); // adding the slot to the name (hibernate modules in wildfly)
+            relativePathBuf.append('/').append(dir.getFileName().toString());
             moduleName = moduleNameBuf.toString();
             relativePath = relativePathBuf.toString();
         }

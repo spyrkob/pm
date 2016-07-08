@@ -35,7 +35,7 @@ public class FeaturePack {
 
     private final GAV gav;
     private Map<String, Package> packages = Collections.emptyMap();
-    private List<FeaturePack> dependencies = Collections.emptyList();
+    private List<GAV> dependencies = Collections.emptyList();
 
     FeaturePack(GAV gav) {
         assert gav != null : "gav is null";
@@ -50,7 +50,7 @@ public class FeaturePack {
         return packages.values();
     }
 
-    public List<FeaturePack> getDependencies() {
+    public List<GAV> getDependencies() {
         return dependencies;
     }
 }

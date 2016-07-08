@@ -22,14 +22,15 @@
 
 package org.jboss.pm.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 
 /**
  *
@@ -37,125 +38,55 @@ import java.nio.file.StandardCopyOption;
  */
 public class IoUtils {
 
-    public static byte[] NO_CONTENT = new byte[0];
-
-    private static final int DEFAULT_BUFFER_SIZE = 65536;
-
-    /**
-     * Copy input stream to output stream without closing streams. Flushes output stream when done.
-     *
-     * @param is input stream
-     * @param os output stream
-     *
-     * @throws IOException for any error
-     */
-    public static void copyStream(InputStream is, OutputStream os) throws IOException {
-        copyStream(is, os, DEFAULT_BUFFER_SIZE);
-    }
-
-    /**
-     * Copy input stream to output stream without closing streams. Flushes output stream when done.
-     *
-     * @param is input stream
-     * @param os output stream
-     * @param bufferSize the buffer size to use
-     *
-     * @throws IOException for any error
-     */
-    private static void copyStream(InputStream is, OutputStream os, int bufferSize)
-            throws IOException {
-        assert is != null : "input stream is null";
-        assert os != null : "output stream is null";
-        byte[] buff = new byte[bufferSize];
-        int rc;
-        while ((rc = is.read(buff)) != -1) os.write(buff, 0, rc);
-        os.flush();
-    }
-
-    public static void copyFile(File sourceFile, File targetFile) throws IOException {
-        if (sourceFile.isDirectory()) {
-            copyDir(sourceFile, targetFile);
-        } else {
-            File parent = targetFile.getParentFile();
-            if (!parent.exists()) {
-                if (!parent.mkdirs()) {
-                    throw new IOException("Failed to create directory " + parent.getAbsolutePath());
-                }
-            }
-            try {
-                Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                throw new IOException("Failed to copy " + sourceFile.getAbsolutePath() + " to " + targetFile.getAbsolutePath(), e);
-            }
-        }
-    }
-
-    private static void copyDir(File sourceDir, File targetDir) throws IOException {
-        if (targetDir.exists()) {
-            if (!targetDir.isDirectory()) {
-                throw new IOException("Not a directory " + targetDir.getAbsolutePath());
-            }
-        } else if (!targetDir.mkdirs()) {
-            throw new IOException("Failed to create directory " + targetDir.getAbsolutePath());
-        }
-
-        File[] children = sourceDir.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                copyFile(child, new File(targetDir, child.getName()));
-            }
-        }
-    }
-
-    public static void copy(final InputStream is, final File target) throws IOException {
-        if(! target.getParentFile().exists()) {
-            target.getParentFile().mkdirs(); // Hmm
-        }
-        copyStream(is, new FileOutputStream(target));
-    }
-
-    public static void copy(File source, File target) throws IOException {
-        try (final FileInputStream is = new FileInputStream(source)){
-            copy(is, target);
-        }
-    }
-
-    public static boolean recursiveDelete(File root) {
+    public static void recursiveDelete(Path root) {
         if (root == null) {
-            return true;
+            return;
         }
-        boolean ok = true;
-        if (root.isDirectory()) {
-            final File[] files = root.listFiles();
-            for (File file : files) {
-                ok &= recursiveDelete(file);
-            }
-            return ok && (root.delete() || !root.exists());
-        } else {
-            ok &= root.delete() || !root.exists();
+        try {
+            Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                    throws IOException {
+                    if (e == null) {
+                        Files.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        // directory iteration failed
+                        throw e;
+                    }
+                }
+            });
+        } catch (IOException e) {
         }
-        return ok;
     }
 
-    public static File mkdir(File parent, String... segments) throws IOException {
-        File dir = parent;
-        for (String segment : segments) {
-            dir = new File(dir, segment);
-        }
-        dir.mkdirs();
-        return dir;
-    }
-
-    /**
-     * Return a new File object based on the baseDir and the segments.
-     *
-     * This method does not perform any operation on the file system.
-     */
-    public static File newFile(File baseDir, String... segments) {
-        File f = baseDir;
-        for (String segment : segments) {
-            f = new File(f, segment);
-        }
-        return f;
+    public static void copy(Path source, Path target) throws IOException {
+        Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                        throws IOException {
+                        final Path targetDir = target.resolve(source.relativize(dir));
+                        try {
+                            Files.copy(dir, targetDir);
+                        } catch (FileAlreadyExistsException e) {
+                             if (!Files.isDirectory(targetDir))
+                                 throw e;
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                        Files.copy(file, target.resolve(source.relativize(file)));
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
     }
 }

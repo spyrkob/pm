@@ -24,11 +24,12 @@ package org.jboss.pm.cli;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+
+import org.jboss.pm.util.IoUtils;
 
 
 /**
@@ -54,22 +55,7 @@ class Util {
     }
 
     static void recursiveDelete(Path root) {
-        if (root == null) {
-            return;
-        }
-        if(Files.isDirectory(root)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(root)) {
-                for(Path entry : stream) {
-                    recursiveDelete(entry);
-                }
-            } catch(IOException e) {
-            }
-        } else {
-            try {
-                Files.delete(root);
-            } catch (IOException e) {
-            }
-        }
+        IoUtils.recursiveDelete(root);
     }
 
     static InputStream getResourceStream(String resource) throws CommandExecutionException {

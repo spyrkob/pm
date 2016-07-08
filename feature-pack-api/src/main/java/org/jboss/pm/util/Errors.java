@@ -20,23 +20,29 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm;
+package org.jboss.pm.util;
+
+import java.nio.file.Path;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface Constants {
+public interface Errors {
 
-    String FEATURE_PACKS = "featurepacks";
-    String PM_INSTALL_DIR = "pm.target.dir";
-    String PM_INSTALL_WORK_DIR = "pm.install.workdir";
-    String PM_TOOL_HOME_DIR = "pm.tool.home";
+    // GENERAL MESSAGES
 
-    String CONTENT = "content";
-    String FEATURE_PACK_XML = "feature-pack.xml";
-    String MODULES_XML = "module.xml";
-    String PACKAGE_XML = "package.xml";
-    String PACKAGES = "packages";
-    String PROVISIONING_XML = "provisioning.xml";
+    static String pathDoesNotExist(Path p) {
+        return "Failed to locate " + p.toAbsolutePath();
+    }
+
+    // FEATURE PACK INSTALL MESSAGES
+
+    static String packageContentCopyFailed(String packageName) {
+        return "Failed to copy package " + packageName + " content";
+    }
+
+    static String packageNotFound(String packageName) {
+        return "Failed to resolve package " + packageName;
+    }
 }

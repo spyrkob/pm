@@ -44,8 +44,11 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.pm.Constants;
 import org.jboss.pm.build.FeaturePackBuild;
 import org.jboss.pm.build.PMBuildException;
+import org.jboss.pm.descr.FeaturePackDescription;
 import org.jboss.pm.descr.InstallationDescription;
 import org.jboss.pm.descr.InstallationDescriptionException;
+import org.jboss.pm.util.FeaturePackInstallException;
+import org.jboss.pm.util.FeaturePackInstaller;
 import org.jboss.pm.wildfly.descr.WFFeaturePackLayoutBuilder;
 import org.jboss.pm.wildfly.descr.WFInstallationDescriptionBuilder;
 import org.jboss.pm.wildfly.descr.WFInstallationDescription;
@@ -88,12 +91,29 @@ public class FpCommand extends CommandBase {
 
         if(fpWorkDir != null) {
             final Path workDirPath = Paths.get(fpWorkDir);
+            final Path fpsDir = workDirPath.resolve("fps");
+            final Path inDir = workDirPath.resolve("in");
+
             WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
+            InstallationDescription descr;
             try {
-                layoutBuilder.build(wfDescr, installDir, workDirPath);
+                descr = layoutBuilder.build(wfDescr, installDir, fpsDir);
             } catch (InstallationDescriptionException e) {
                 throw new CommandExecutionException("Failed to layout feature packs", e);
             }
+
+            for(FeaturePackDescription fp : descr.getFeaturePackDefs()) {
+                final Path fpDir = fpsDir.resolve(fp.getGAV().getGroupId())
+                        .resolve(fp.getGAV().getArtifactId())
+                        .resolve(fp.getGAV().getVersion());
+                try {
+                    new FeaturePackInstaller().install(fp, fpDir, inDir);
+                } catch (FeaturePackInstallException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
             return;
         }
 

@@ -20,23 +20,21 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm;
+package org.jboss.pm.util;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface Constants {
+public class FeaturePackInstallException extends Exception {
 
-    String FEATURE_PACKS = "featurepacks";
-    String PM_INSTALL_DIR = "pm.target.dir";
-    String PM_INSTALL_WORK_DIR = "pm.install.workdir";
-    String PM_TOOL_HOME_DIR = "pm.tool.home";
+    private static final long serialVersionUID = 1L;
 
-    String CONTENT = "content";
-    String FEATURE_PACK_XML = "feature-pack.xml";
-    String MODULES_XML = "module.xml";
-    String PACKAGE_XML = "package.xml";
-    String PACKAGES = "packages";
-    String PROVISIONING_XML = "provisioning.xml";
+    public FeaturePackInstallException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public FeaturePackInstallException(String message) {
+        super(message);
+    }
 }
