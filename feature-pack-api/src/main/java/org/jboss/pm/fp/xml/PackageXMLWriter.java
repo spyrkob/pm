@@ -31,7 +31,9 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.pm.descr.PackageDescription;
+import org.jboss.pm.fp.xml.PackageXMLParser10.Attribute;
 import org.jboss.pm.fp.xml.PackageXMLParser10.Element;
+import org.jboss.pm.provisioning.xml.AttributeValue;
 import org.jboss.pm.provisioning.xml.ElementNode;
 import org.jboss.pm.provisioning.xml.FormattingXMLStreamWriter;
 
@@ -48,14 +50,34 @@ public class PackageXMLWriter {
 
     public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
 
-        final ElementNode featurePackElementNode = new ElementNode(null, Element.PACKAGE.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
+        final ElementNode pkg = newElement(null, Element.PACKAGE);
+        addAttribute(pkg, Attribute.NAME, pkgDescr.getName());
+
+        if(pkgDescr.hasDependencies()) {
+            final ElementNode deps = newElement(pkg, Element.DEPENDENCIES);
+            for(String name : pkgDescr.getDependencies()) {
+                writeDependency(deps, name);
+            }
+        }
 
         try (FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(
                         Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
             writer.writeStartDocument();
-            featurePackElementNode.marshall(writer);
+            pkg.marshall(writer);
             writer.writeEndDocument();
         }
+    }
+
+    private static void writeDependency(ElementNode deps, String name) {
+        addAttribute(newElement(deps, Element.DEPENDENCY), Attribute.NAME, name);
+    }
+
+    private static ElementNode newElement(ElementNode parent, Element e) {
+        return new ElementNode(parent, e.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
+    }
+
+    private static void addAttribute(ElementNode e, Attribute a, String value) {
+        e.addAttribute(a.getLocalName(), new AttributeValue(value));
     }
 }

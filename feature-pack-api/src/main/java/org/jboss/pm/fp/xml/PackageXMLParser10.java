@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+
 /**
  *
  * @author Alexey Loubyansky
@@ -37,6 +38,8 @@ public class PackageXMLParser10 {
 
     public enum Element {
 
+        DEPENDENCIES("dependencies"),
+        DEPENDENCY("dependency"),
         PACKAGE("package"),
 
         // default unknown element
@@ -46,8 +49,14 @@ public class PackageXMLParser10 {
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.PACKAGE.getLocalName()), Element.PACKAGE);
+            addElement(elementsMap, Element.DEPENDENCIES);
+            addElement(elementsMap, Element.DEPENDENCY);
+            addElement(elementsMap, Element.PACKAGE);
             elements = elementsMap;
+        }
+
+        private static void addElement(Map<QName, Element> map, Element e) {
+            map.put(new QName(NAMESPACE_1_0,  e.getLocalName()), e);
         }
 
         static Element of(QName qName) {
@@ -79,11 +88,6 @@ public class PackageXMLParser10 {
 
     enum Attribute {
 
-        GROUP_ID("groupId"),
-        ARTIFACT_ID("artifactId"),
-        CLASSIFIER("classifier"),
-        EXTENSION("extension"),
-        VERSION("version"),
         NAME("name"),
         // default unknown attribute
         UNKNOWN(null);
@@ -92,11 +96,6 @@ public class PackageXMLParser10 {
 
         static {
             Map<QName, Attribute> attributesMap = new HashMap<QName, Attribute>();
-            attributesMap.put(new QName(GROUP_ID.getLocalName()), GROUP_ID);
-            attributesMap.put(new QName(ARTIFACT_ID.getLocalName()), ARTIFACT_ID);
-            attributesMap.put(new QName(CLASSIFIER.getLocalName()), CLASSIFIER);
-            attributesMap.put(new QName(EXTENSION.getLocalName()), EXTENSION);
-            attributesMap.put(new QName(VERSION.getLocalName()), VERSION);
             attributesMap.put(new QName(NAME.getLocalName()), NAME);
             attributes = attributesMap;
         }

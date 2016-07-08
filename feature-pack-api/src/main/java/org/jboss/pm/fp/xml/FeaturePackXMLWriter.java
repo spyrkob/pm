@@ -30,8 +30,12 @@ import java.nio.file.StandardOpenOption;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.pm.GAV;
 import org.jboss.pm.descr.FeaturePackDescription;
+import org.jboss.pm.descr.GroupDescription;
+import org.jboss.pm.fp.xml.FeaturePackXMLParser10.Attribute;
 import org.jboss.pm.fp.xml.FeaturePackXMLParser10.Element;
+import org.jboss.pm.provisioning.xml.AttributeValue;
 import org.jboss.pm.provisioning.xml.ElementNode;
 import org.jboss.pm.provisioning.xml.FormattingXMLStreamWriter;
 
@@ -46,16 +50,54 @@ public class FeaturePackXMLWriter {
     private FeaturePackXMLWriter() {
     }
 
-    public void write(FeaturePackDescription fpDef, Path outputFile) throws XMLStreamException, IOException {
+    public void write(FeaturePackDescription fpDescr, Path outputFile) throws XMLStreamException, IOException {
 
-        final ElementNode featurePackElementNode = new ElementNode(null, Element.FEATURE_PACK.getLocalName(), FeaturePackXMLParser10.NAMESPACE_1_0);
+        final ElementNode fp = newElement(null, Element.FEATURE_PACK);
+        addAttribute(fp, Attribute.GROUP_ID, fpDescr.getGAV().getGroupId());
+        addAttribute(fp, Attribute.ARTIFACT_ID, fpDescr.getGAV().getArtifactId());
+        addAttribute(fp, Attribute.VERSION, fpDescr.getGAV().getVersion());
+
+        if(fpDescr.hasDependencies()) {
+            final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
+            for(GAV gav : fpDescr.getDependencies()) {
+                write(deps, gav);
+            }
+        }
+
+        if(fpDescr.hasGroups()) {
+            final ElementNode pkgs = newElement(fp, Element.PACKAGES);
+            for (String groupName : fpDescr.getGroupNames()) {
+                write(pkgs, fpDescr.getGroupDescription(groupName));
+            }
+        }
 
         try (FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(
                         Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
             writer.writeStartDocument();
-            featurePackElementNode.marshall(writer);
+            fp.marshall(writer);
             writer.writeEndDocument();
         }
+    }
+
+    private static void write(ElementNode pkgs, GroupDescription group) {
+        addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, group.getName());
+    }
+
+    private static void write(ElementNode deps, GAV gav) {
+        final ElementNode dep = newElement(deps, Element.DEPENDENCY);
+        addAttribute(dep, Attribute.GROUP_ID, gav.getGroupId());
+        addAttribute(dep, Attribute.ARTIFACT_ID, gav.getArtifactId());
+        if(gav.getVersion() != null) {
+            addAttribute(dep, Attribute.VERSION, gav.getVersion());
+        }
+    }
+
+    private static ElementNode newElement(ElementNode parent, Element e) {
+        return new ElementNode(parent, e.getLocalName(), FeaturePackXMLParser10.NAMESPACE_1_0);
+    }
+
+    private static void addAttribute(ElementNode e, Attribute a, String value) {
+        e.addAttribute(a.getLocalName(), new AttributeValue(value));
     }
 }

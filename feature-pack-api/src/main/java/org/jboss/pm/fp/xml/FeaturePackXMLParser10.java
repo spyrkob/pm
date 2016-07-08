@@ -37,7 +37,11 @@ public class FeaturePackXMLParser10 {
 
     public enum Element {
 
+        DEPENDENCIES("dependencies"),
+        DEPENDENCY("dependency"),
         FEATURE_PACK("feature-pack"),
+        PACKAGES("packages"),
+        PACKAGE("package"),
 
         // default unknown element
         UNKNOWN(null);
@@ -46,8 +50,16 @@ public class FeaturePackXMLParser10 {
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.FEATURE_PACK.getLocalName()), Element.FEATURE_PACK);
+            addElement(elementsMap, Element.DEPENDENCIES);
+            addElement(elementsMap, Element.DEPENDENCY);
+            addElement(elementsMap, Element.FEATURE_PACK);
+            addElement(elementsMap, Element.PACKAGES);
+            addElement(elementsMap, Element.PACKAGE);
             elements = elementsMap;
+        }
+
+        private static void addElement(Map<QName, Element> map, Element e) {
+            map.put(new QName(NAMESPACE_1_0,  e.getLocalName()), e);
         }
 
         static Element of(QName qName) {

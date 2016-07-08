@@ -85,7 +85,7 @@ public class FeaturePackBuild {
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(fpZip))) {
             final Set<String> groupNames = fpDef.getGroupNames();
             for(String groupName : groupNames) {
-                final GroupDescription groupDef = fpDef.getGroupDef(groupName);
+                final GroupDescription groupDef = fpDef.getGroupDescription(groupName);
                 copyGroupContent(zos, groupDef);
             }
         } catch(IOException e) {

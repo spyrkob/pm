@@ -124,7 +124,7 @@ public class FeaturePackDescription {
         return groups.keySet();
     }
 
-    public GroupDescription getGroupDef(String name) {
+    public GroupDescription getGroupDescription(String name) {
         return groups.get(name);
     }
 

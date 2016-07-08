@@ -46,6 +46,9 @@ public class ElementNode extends Node {
         this.parent = parent;
         this.name = name;
         this.namespace = namespace == null ? namespace : namespace.isEmpty() ? null : namespace;
+        if(parent != null) {
+            parent.addChild(this);
+        }
     }
 
     public String getNamespace() {
