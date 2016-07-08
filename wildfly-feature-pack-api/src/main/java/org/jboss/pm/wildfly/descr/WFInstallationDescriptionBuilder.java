@@ -39,8 +39,6 @@ import org.jboss.pm.descr.InstallationDescription;
 import org.jboss.pm.descr.InstallationDescriptionBuilder;
 import org.jboss.pm.descr.InstallationDescriptionException;
 import org.jboss.pm.descr.PackageDescription;
-import org.jboss.pm.descr.FeaturePackDescription.FeaturePackDefBuilder;
-import org.jboss.pm.descr.PackageDescription.PackageDefBuilder;
 
 /**
  *
@@ -60,9 +58,9 @@ public class WFInstallationDescriptionBuilder {
     private String fpGroupId;
     private String fpArtifactId;
     private String fpVersion;
-    private FeaturePackDefBuilder fpBuilder;
+    private FeaturePackDescription.Builder fpBuilder;
 
-    private PackageDefBuilder pkgBuilder;
+    private PackageDescription.Builder pkgBuilder;
 
     public InstallationDescription build(WFInstallationDescription wfDescr, Path homeDir) throws InstallationDescriptionException {
         this.homeDir = homeDir;
@@ -127,7 +125,7 @@ public class WFInstallationDescriptionBuilder {
             pkgBuilder.addDependency(packageRef);
         }
 
-        fpBuilder.addGroup(pkgBuilder.build());
+        fpBuilder.addTopGroup(pkgBuilder.build());
         pkgBuilder = null;
     }
 
@@ -210,13 +208,13 @@ public class WFInstallationDescriptionBuilder {
             fpVersion = props.getProperty(RELEASE_VERSION);
         }
         moduleName.append('.').append(dir.getFileName().toString()); // adding the slot to the name (hibernate modules in wildfly)
-        final PackageDefBuilder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
+        final PackageDescription.Builder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
         addContent(moduleBuilder, dir, contentPath.toString());
         fpBuilder.addGroup(moduleBuilder.build());
         pkgBuilder.addDependency(moduleName.toString());
     }
 
-    private void addContent(PackageDefBuilder builder, Path f, String relativePath) throws InstallationDescriptionException {
+    private void addContent(PackageDescription.Builder builder, Path f, String relativePath) throws InstallationDescriptionException {
         if(Files.isDirectory(f)) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(f)) {
                 for (Path entry: stream) {

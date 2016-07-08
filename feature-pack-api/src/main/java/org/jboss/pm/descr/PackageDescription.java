@@ -33,15 +33,15 @@ import java.util.List;
  */
 public class PackageDescription extends GroupDescription {
 
-    public static class PackageDefBuilder extends GroupDescription.GroupDefBuilder {
+    public static class Builder extends GroupDescription.Builder {
 
         private List<String> contentPaths = Collections.emptyList();
 
-        protected PackageDefBuilder(String name) {
+        protected Builder(String name) {
             super(name);
         }
 
-        public PackageDefBuilder addContentPath(String contentPath) {
+        public Builder addContentPath(String contentPath) {
             assert contentPath != null : "contentPath is null";
             switch(contentPaths.size()) {
                 case 0:
@@ -61,8 +61,8 @@ public class PackageDescription extends GroupDescription {
         }
     }
 
-    public static PackageDefBuilder packageBuilder(String name) {
-        return new PackageDefBuilder(name);
+    public static Builder packageBuilder(String name) {
+        return new Builder(name);
     }
 
     private final List<String> contentPaths;

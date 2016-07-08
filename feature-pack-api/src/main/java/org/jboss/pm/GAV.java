@@ -26,7 +26,7 @@ package org.jboss.pm;
  *
  * @author Alexey Loubyansky
  */
-public class GAV {
+public class GAV implements Comparable<GAV> {
 
     private final String groupId;
     private final String artifactId;
@@ -105,5 +105,27 @@ public class GAV {
         } else if (!version.equals(other.version))
             return false;
         return true;
+    }
+
+    @Override
+    public int compareTo(GAV o) {
+        if(o == null) {
+            return 1;
+        }
+        int i = groupId.compareTo(o.getGroupId());
+        if(i != 0) {
+            return i;
+        }
+        i = artifactId.compareTo(o.getArtifactId());
+        if(i != 0) {
+            return i;
+        }
+        if(version == null) {
+            return o.getVersion() == null ? 0 : -1;
+        }
+        if(o.getVersion() == null) {
+            return 1;
+        }
+        return version.compareTo(o.getVersion());
     }
 }

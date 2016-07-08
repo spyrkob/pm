@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -55,7 +56,9 @@ public class PackageXMLWriter {
 
         if(pkgDescr.hasDependencies()) {
             final ElementNode deps = newElement(pkg, Element.DEPENDENCIES);
-            for(String name : pkgDescr.getDependencies()) {
+            final String[] names = pkgDescr.getDependencies().toArray(new String[0]);
+            Arrays.sort(names);
+            for(String name : names) {
                 writeDependency(deps, name);
             }
         }

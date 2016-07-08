@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.pm.GAV;
-import org.jboss.pm.descr.FeaturePackDescription.FeaturePackDefBuilder;
-import org.jboss.pm.descr.PackageDescription.PackageDefBuilder;
 
 /**
  *
@@ -61,14 +59,14 @@ public class InstallationDescriptionBuilder {
 
     public InstallationDescriptionBuilder defineFeaturePack(GAV gav, File path) throws InstallationDescriptionException {
 
-        final FeaturePackDefBuilder fpBuilder = FeaturePackDescription.builder(gav);
+        final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder(gav);
         if(path.exists()) {
             if(path.isFile()) {
-                fpBuilder.addGroup(PackageDescription.packageBuilder(path.getName()).addContentPath(path.getAbsolutePath()).build());
+                fpBuilder.addTopGroup(PackageDescription.packageBuilder(path.getName()).addContentPath(path.getAbsolutePath()).build());
             } else {
                 for(File f : path.listFiles()) {
                     if(contentFilter.accept(f)) {
-                        defineGroup(fpBuilder, f.getName(), f);
+                        defineGroup(fpBuilder, f.getName(), f, true);
                     }
                 }
             }
@@ -95,17 +93,25 @@ public class InstallationDescriptionBuilder {
         return new InstallationDescription(Collections.unmodifiableMap(featurePacks));
     }
 
-    private void defineGroup(FeaturePackDefBuilder fpBuilder, String name, File path) throws InstallationDescriptionException {
+    private void defineGroup(FeaturePackDescription.Builder fpBuilder, String name, File path, boolean top) throws InstallationDescriptionException {
         if(path.isFile()) {
-            fpBuilder.addGroup(PackageDescription.packageBuilder(name).addContentPath(path.getAbsolutePath()).build());
+            if(top) {
+                fpBuilder.addTopGroup(PackageDescription.packageBuilder(name).addContentPath(path.getAbsolutePath()).build());
+            } else {
+                fpBuilder.addGroup(PackageDescription.packageBuilder(name).addContentPath(path.getAbsolutePath()).build());
+            }
             return;
         }
         final File[] children = path.listFiles();
         if(children.length == 0) {
-            fpBuilder.addGroup(GroupDescription.groupBuilder(name).build());
+            if(top) {
+                fpBuilder.addTopGroup(GroupDescription.groupBuilder(name).build());
+            } else {
+                fpBuilder.addGroup(GroupDescription.groupBuilder(name).build());
+            }
             return;
         }
-        final PackageDefBuilder pkgBuilder = PackageDescription.packageBuilder(name);
+        final PackageDescription.Builder pkgBuilder = PackageDescription.packageBuilder(name);
         for(File child : children) {
             if(!contentFilter.accept(child)) {
                 continue;
@@ -114,10 +120,14 @@ public class InstallationDescriptionBuilder {
                 pkgBuilder.addContentPath(child.getAbsolutePath());
             } else {
                 final String childName = name + '.' + child.getName();
-                defineGroup(fpBuilder, childName, child);
+                defineGroup(fpBuilder, childName, child, false);
                 pkgBuilder.addDependency(childName);
             }
         }
-        fpBuilder.addGroup(pkgBuilder.build());
+        if(top) {
+            fpBuilder.addTopGroup(pkgBuilder.build());
+        } else {
+            fpBuilder.addGroup(pkgBuilder.build());
+        }
     }
 }

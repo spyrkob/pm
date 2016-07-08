@@ -39,26 +39,42 @@ import org.jboss.pm.GAV;
  */
 public class FeaturePackDescription {
 
-    public static class FeaturePackDefBuilder {
+    public static class Builder {
 
         private GAV gav;
-        private Map<String, GroupDescription> groups = Collections.emptyMap();
         private Set<GAV> dependencies = Collections.emptySet();
+        private Set<String> topGroups = Collections.emptySet();
+        private Map<String, GroupDescription> groups = Collections.emptyMap();
 
-        protected FeaturePackDefBuilder() {
+        protected Builder() {
             this(null);
         }
 
-        protected FeaturePackDefBuilder(GAV gav) {
+        protected Builder(GAV gav) {
             this.gav = gav;
         }
 
-        public FeaturePackDefBuilder setGAV(GAV gav) {
+        public Builder setGAV(GAV gav) {
             this.gav = gav;
             return this;
         }
 
-        public FeaturePackDefBuilder addGroup(GroupDescription group) {
+        public Builder addTopGroup(GroupDescription group) {
+            assert group != null : "group is null";
+            switch(topGroups.size()) {
+                case 0:
+                    topGroups = Collections.singleton(group.getName());
+                    break;
+                case 1:
+                    topGroups = new HashSet<String>(topGroups);
+                default:
+                    topGroups.add(group.getName());
+            }
+            addGroup(group);
+            return this;
+        }
+
+        public Builder addGroup(GroupDescription group) {
             assert group != null : "group is null";
             switch(groups.size()) {
                 case 0:
@@ -72,7 +88,7 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public FeaturePackDefBuilder addDependency(GAV gav) {
+        public Builder addDependency(GAV gav) {
             assert gav != null : "GAV is null";
             switch(dependencies.size()) {
                 case 0:
@@ -87,33 +103,44 @@ public class FeaturePackDescription {
         }
 
         public FeaturePackDescription build() {
-            return new FeaturePackDescription(gav, Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
+            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topGroups), Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
         }
     }
 
-    public static FeaturePackDefBuilder builder() {
+    public static Builder builder() {
         return builder(null);
     }
 
-    public static FeaturePackDefBuilder builder(GAV gav) {
-        return new FeaturePackDefBuilder(gav);
+    public static Builder builder(GAV gav) {
+        return new Builder(gav);
     }
 
     private final GAV gav;
-    private final Map<String, GroupDescription> groups;
     private final Set<GAV> dependencies;
+    private final Set<String> topGroups;
+    private final Map<String, GroupDescription> groups;
 
-    protected FeaturePackDescription(GAV gav, Map<String, GroupDescription> groups, Set<GAV> dependencies) {
+    protected FeaturePackDescription(GAV gav, Set<String> topGroups, Map<String, GroupDescription> groups, Set<GAV> dependencies) {
         assert gav != null : "GAV is null";
-        assert groups != null : "groups is null";
         assert dependencies != null : "dependencies is null";
+        assert topGroups != null : "topGroups is null";
+        assert groups != null : "groups is null";
         this.gav = gav;
+        this.topGroups = topGroups;
         this.groups = groups;
         this.dependencies = dependencies;
     }
 
     public GAV getGAV() {
         return gav;
+    }
+
+    public boolean hasTopGroups() {
+        return !topGroups.isEmpty();
+    }
+
+    public Set<String> getTopGroupNames() {
+        return topGroups;
     }
 
     public boolean hasGroups() {

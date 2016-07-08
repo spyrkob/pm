@@ -24,9 +24,6 @@
             <package-ref name="other-package"/>
         </package>
 -->
-        <package name="wildfly-core-modules">
-            <modules relative="modules/system/layers/base"/>
-        </package>
 
         <package name="appclient">
             <path relative="appclient"/>
@@ -67,6 +64,11 @@
         <package name="jboss-modules">
             <path relative="jboss-modules.jar"/>
         </package>
+        
+        <package name="modules">
+            <modules relative="modules/system/layers/base"/>
+        </package>
+        
     </feature-pack>
   </feature-packs>
 </installation>

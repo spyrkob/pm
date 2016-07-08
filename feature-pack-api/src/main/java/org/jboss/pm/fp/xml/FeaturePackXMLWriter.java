@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -59,14 +60,18 @@ public class FeaturePackXMLWriter {
 
         if(fpDescr.hasDependencies()) {
             final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
-            for(GAV gav : fpDescr.getDependencies()) {
+            final GAV[] gavs = fpDescr.getDependencies().toArray(new GAV[0]);
+            Arrays.sort(gavs);
+            for(GAV gav : gavs) {
                 write(deps, gav);
             }
         }
 
-        if(fpDescr.hasGroups()) {
+        if(fpDescr.hasTopGroups()) {
             final ElementNode pkgs = newElement(fp, Element.PACKAGES);
-            for (String groupName : fpDescr.getGroupNames()) {
+            final String[] groupNames = fpDescr.getTopGroupNames().toArray(new String[0]);
+            Arrays.sort(groupNames);
+            for (String groupName : groupNames) {
                 write(pkgs, fpDescr.getGroupDescription(groupName));
             }
         }

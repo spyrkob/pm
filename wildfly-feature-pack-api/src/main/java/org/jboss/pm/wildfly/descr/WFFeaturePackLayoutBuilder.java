@@ -43,8 +43,7 @@ import org.jboss.pm.descr.InstallationDescription;
 import org.jboss.pm.descr.InstallationDescriptionBuilder;
 import org.jboss.pm.descr.InstallationDescriptionException;
 import org.jboss.pm.descr.PackageDescription;
-import org.jboss.pm.descr.FeaturePackDescription.FeaturePackDefBuilder;
-import org.jboss.pm.descr.PackageDescription.PackageDefBuilder;
+import org.jboss.pm.descr.FeaturePackDescription.Builder;
 import org.jboss.pm.fp.xml.FeaturePackXMLWriter;
 import org.jboss.pm.fp.xml.PackageXMLWriter;
 
@@ -58,6 +57,8 @@ public class WFFeaturePackLayoutBuilder {
     //private static final String RELEASE_NAME = "JBoss-Product-Release-Name";
     private static final String RELEASE_VERSION = "JBoss-Product-Release-Version";
 
+    private static final String CONTENT = "content";
+
     private Path workDir;
     private Path homeDir;
     private String modulesPath;
@@ -67,10 +68,10 @@ public class WFFeaturePackLayoutBuilder {
     private String fpGroupId;
     private String fpArtifactId;
     private String fpVersion;
-    private FeaturePackDefBuilder fpBuilder;
+    private Builder fpBuilder;
     private Path fpDir;
 
-    private PackageDefBuilder pkgBuilder;
+    private PackageDescription.Builder pkgBuilder;
 
     public InstallationDescription build(WFInstallationDescription wfDescr, Path homeDir, Path workDir) throws InstallationDescriptionException {
         this.workDir = workDir;
@@ -145,7 +146,7 @@ public class WFFeaturePackLayoutBuilder {
 
     void build(WFPackageDescription wfPkg) throws InstallationDescriptionException {
 
-        final Path pkgDir = fpDir.resolve(wfPkg.getName());
+        final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(wfPkg.getName());
         mkdirs(pkgDir);
 
         pkgBuilder = PackageDescription.packageBuilder(wfPkg.getName());
@@ -158,9 +159,11 @@ public class WFFeaturePackLayoutBuilder {
             if(!Files.exists(f)) {
                 throw new InstallationDescriptionException("Failed to locate " + f);
             }
-            final Path pkgContent = pkgDir.resolve("content");
+            Path pkgContent = pkgDir.resolve(CONTENT);
             mkdirs(pkgContent);
+            pkgContent = pkgContent.resolve(f.getFileName().toString());
             if(Files.isDirectory(f)) {
+                mkdirs(pkgContent);
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(f)) {
                     final Iterator<Path> children = stream.iterator();
                     if(children.hasNext()) {
@@ -178,7 +181,7 @@ public class WFFeaturePackLayoutBuilder {
                     failedToReadDirectory(f, e);
                 }
             } else {
-                copy(f, pkgContent.resolve(f.getFileName().toString()));
+                copy(f, pkgContent);
                 pkgBuilder.addContentPath(relativePath);
             }
         }
@@ -187,7 +190,7 @@ public class WFFeaturePackLayoutBuilder {
         }
 
         final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addGroup(pkgDescr);
+        fpBuilder.addTopGroup(pkgDescr);
 
         writePackageXml(pkgDescr, pkgDir);
 
@@ -243,7 +246,7 @@ public class WFFeaturePackLayoutBuilder {
 
     private void processModules(String modulesPath, List<String> path, Path dir) throws InstallationDescriptionException {
 
-        final Path moduleXml = dir.resolve("module.xml");
+        final Path moduleXml = dir.resolve(Constants.MODULES_XML);
         if(!Files.exists(moduleXml)) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
                 for (Path entry: stream) {
@@ -259,15 +262,23 @@ public class WFFeaturePackLayoutBuilder {
             return;
         }
 
-        final StringBuilder moduleName = new StringBuilder();
-        final StringBuilder contentPath = new StringBuilder(modulesPath).append('/');
-        moduleName.append(path.get(0));
-        contentPath.append(path.get(0));
-        for(int i = 1; i < path.size(); ++i) {
-            final String part = path.get(i);
-            moduleName.append('.').append(part);
-            contentPath.append('/').append(part);
+        final String moduleName;
+        final String relativePath;
+        {
+            final StringBuilder moduleNameBuf = new StringBuilder();
+            final StringBuilder relativePathBuf = new StringBuilder(modulesPath).append('/');
+            moduleNameBuf.append(path.get(0));
+            relativePathBuf.append(path.get(0));
+            for (int i = 1; i < path.size(); ++i) {
+                final String part = path.get(i);
+                moduleNameBuf.append('.').append(part);
+                relativePathBuf.append('/').append(part);
+            }
+            moduleNameBuf.append('.').append(dir.getFileName().toString()); // adding the slot to the name (hibernate modules in wildfly)
+            moduleName = moduleNameBuf.toString();
+            relativePath = relativePathBuf.toString();
         }
+
         if(fpArtifactId == null && PRODUCT_MODULE.equals(path)) {
             fpArtifactId = dir.getFileName().toString();
             final Path manifest = dir.resolve("dir/META-INF/MANIFEST.MF");
@@ -279,12 +290,11 @@ public class WFFeaturePackLayoutBuilder {
             }
             fpVersion = props.getProperty(RELEASE_VERSION);
         }
-        moduleName.append('.').append(dir.getFileName().toString()); // adding the slot to the name (hibernate modules in wildfly)
 
-        final Path pkgDir = fpDir.resolve(moduleName.toString());
+        final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(moduleName.toString());
         mkdirs(pkgDir);
-        final PackageDefBuilder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
-        addContent(moduleBuilder, dir, contentPath.toString(), pkgDir.resolve("content"));
+        final PackageDescription.Builder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
+        addContent(moduleBuilder, dir, relativePath.toString(), pkgDir.resolve(CONTENT).resolve(relativePath.toString()));
         final PackageDescription pkgDescr = moduleBuilder.build();
         fpBuilder.addGroup(pkgDescr);
         pkgBuilder.addDependency(moduleName.toString());
@@ -292,7 +302,7 @@ public class WFFeaturePackLayoutBuilder {
         writePackageXml(pkgDescr, pkgDir);
     }
 
-    private void addContent(PackageDefBuilder builder, Path src, String relativePath, Path target) throws InstallationDescriptionException {
+    private void addContent(PackageDescription.Builder builder, Path src, String relativePath, Path target) throws InstallationDescriptionException {
         if(Files.isDirectory(src)) {
             mkdirs(target);
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(src)) {

@@ -33,17 +33,17 @@ import java.util.List;
  */
 public class GroupDescription {
 
-    public static class GroupDefBuilder {
+    public static class Builder {
 
         protected final String name;
         protected List<String> dependencies = Collections.emptyList();
 
-        protected GroupDefBuilder(String name) {
+        protected Builder(String name) {
             assert name != null : "name is null";
             this.name = name;
         }
 
-        public GroupDefBuilder addDependency(String dependencyName) {
+        public Builder addDependency(String dependencyName) {
             assert dependencyName != null : "dependency is null";
             switch(dependencies.size()) {
                 case 0:
@@ -62,8 +62,8 @@ public class GroupDescription {
         }
     }
 
-    public static GroupDefBuilder groupBuilder(String name) {
-        return new GroupDefBuilder(name);
+    public static Builder groupBuilder(String name) {
+        return new Builder(name);
     }
 
     protected final String name;
