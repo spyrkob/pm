@@ -39,6 +39,7 @@ import org.jboss.pm.descr.InstallationDescription;
 import org.jboss.pm.descr.InstallationDescriptionBuilder;
 import org.jboss.pm.descr.InstallationDescriptionException;
 import org.jboss.pm.descr.PackageDescription;
+import org.jboss.pm.util.Errors;
 
 /**
  *
@@ -229,6 +230,6 @@ public class WFInstallationDescriptionBuilder {
     }
 
     private void failedToReadDirectory(Path p, IOException e) throws InstallationDescriptionException {
-        throw new InstallationDescriptionException("Failed to read directory " + p.toAbsolutePath(), e);
+        throw new InstallationDescriptionException(Errors.readDirectory(p), e);
     }
 }

@@ -131,9 +131,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, ProvisioningMetaData metadata) throws XMLStreamException {
-        if(reader.getAttributeCount() != 0) {
-            throw ParsingUtils.unexpectedContent(reader);
-        }
+        ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {

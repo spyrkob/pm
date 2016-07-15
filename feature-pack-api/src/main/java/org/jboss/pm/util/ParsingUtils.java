@@ -19,6 +19,7 @@ import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 
 import java.util.Map;
 import java.util.Set;
+
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -73,6 +74,12 @@ public class ParsingUtils {
             }
         }
         throw endOfDocument(reader.getLocation());
+    }
+
+    public static void parseNoAttributes(final XMLStreamReader reader) throws XMLStreamException {
+        if(reader.getAttributeCount() != 0) {
+            throw ParsingUtils.unexpectedContent(reader);
+        }
     }
 
     public static XMLStreamException unexpectedContent(final XMLStreamReader reader) {

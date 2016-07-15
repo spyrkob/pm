@@ -22,16 +22,28 @@
 
 package org.jboss.pm.fp.xml;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+
+import org.jboss.pm.GAV;
+import org.jboss.pm.descr.FeaturePackDescription;
+import org.jboss.pm.descr.FeaturePackDescription.Builder;
+import org.jboss.pm.util.ParsingUtils;
+import org.jboss.staxmapper.XMLElementReader;
+import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXMLParser10 {
+public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
 
@@ -132,5 +144,169 @@ public class FeaturePackXMLParser10 {
         public String getLocalName() {
             return name;
         }
+    }
+
+    @Override
+    public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        String groupId = null;
+        String artifactId = null;
+        String version = null;
+        final int count = reader.getAttributeCount();
+        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            required.remove(attribute);
+            switch (attribute) {
+                case GROUP_ID:
+                    groupId = reader.getAttributeValue(i);
+                    break;
+                case ARTIFACT_ID:
+                    artifactId = reader.getAttributeValue(i);
+                    break;
+                case VERSION:
+                    version = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!required.isEmpty()) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
+        }
+        fpBuilder.setGAV(new GAV(groupId, artifactId, version));
+
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCIES:
+                            readDependencies(reader, fpBuilder);
+                            break;
+                        case PACKAGES:
+                            readPackages(reader, fpBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCY:
+                            readDependency(reader, fpBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readDependency(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        String groupId = null;
+        String artifactId = null;
+        String version = null;
+        final int count = reader.getAttributeCount();
+        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            required.remove(attribute);
+            switch (attribute) {
+                case GROUP_ID:
+                    groupId = reader.getAttributeValue(i);
+                    break;
+                case ARTIFACT_ID:
+                    artifactId = reader.getAttributeValue(i);
+                    break;
+                case VERSION:
+                    version = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!required.isEmpty()) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
+        }
+        ParsingUtils.parseNoContent(reader);
+        fpBuilder.addDependency(new GAV(groupId, artifactId, version));
+    }
+
+    private void readPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            readPackage(reader, fpBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readPackage(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        fpBuilder.addTopGroupName(parseName(reader));
+    }
+
+    private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        String path = null;
+        boolean parsedTarget = false;
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    path = reader.getAttributeValue(i);
+                    parsedTarget = true;
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!parsedTarget) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+        ParsingUtils.parseNoContent(reader);
+        return path;
     }
 }

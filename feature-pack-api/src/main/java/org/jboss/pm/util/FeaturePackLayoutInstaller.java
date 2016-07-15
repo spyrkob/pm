@@ -20,47 +20,29 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.descr;
+package org.jboss.pm.util;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
+import java.nio.file.Path;
 
-import org.jboss.pm.GAV;
+import org.jboss.pm.descr.FeaturePackDescription;
+import org.jboss.pm.descr.InstallationDescription;
+import org.jboss.pm.descr.InstallationDescriptionException;
 
 /**
+ * Turns feature-pack layout into a target installation.
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDescription {
+public class FeaturePackLayoutInstaller {
 
-    private final Map<GAV, FeaturePackDescription> featurePacks;
-
-    InstallationDescription(Map<GAV, FeaturePackDescription> featurePacks) {
-        assert featurePacks != null : "featurePacks is null";
-        this.featurePacks = featurePacks;
-    }
-
-    public boolean hasFeaturePacks() {
-        return !featurePacks.isEmpty();
-    }
-
-    public FeaturePackDescription getFeaturePack(GAV gav) {
-        return featurePacks.get(gav);
-    }
-
-    public Collection<FeaturePackDescription> getFeaturePacks() {
-        return featurePacks.values();
-    }
-
-    public String logContent() throws IOException {
-        final DescrLogger logger = new DescrLogger();
-        logger.println("Installation");
-        logger.increaseOffset();
-        for(FeaturePackDescription fp : featurePacks.values()) {
-            fp.logContent(logger);
+    public static void install(Path fpLayoutDir, Path installDir)
+            throws InstallationDescriptionException, FeaturePackInstallException {
+        final InstallationDescription installDescr = FeaturePackLayoutAnalyzer.describe(fpLayoutDir);
+        for(FeaturePackDescription fp : installDescr.getFeaturePacks()) {
+            final Path fpDir = fpLayoutDir.resolve(fp.getGAV().getGroupId())
+                    .resolve(fp.getGAV().getArtifactId())
+                    .resolve(fp.getGAV().getVersion());
+            new FeaturePackInstaller().install(fp, fpDir, installDir);
         }
-        logger.decreaseOffset();
-        return logger.toString();
     }
 }

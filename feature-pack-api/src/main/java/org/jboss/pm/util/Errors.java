@@ -36,6 +36,22 @@ public interface Errors {
         return "Failed to locate " + p.toAbsolutePath();
     }
 
+    static String readDirectory(Path p) {
+        return "Failed to read directory " + p.toAbsolutePath();
+    }
+
+    static String notADir(Path p) {
+        return p.toAbsolutePath() + " is not a directory";
+    }
+
+    static String openFile(Path p) {
+        return "Failed to open " + p.toAbsolutePath();
+    }
+
+    static String parseXml(Path p) {
+        return "Failed to parse " + p.toAbsolutePath();
+    }
+
     // FEATURE PACK INSTALL MESSAGES
 
     static String packageContentCopyFailed(String packageName) {

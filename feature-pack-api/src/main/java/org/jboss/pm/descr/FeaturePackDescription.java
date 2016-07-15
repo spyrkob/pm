@@ -60,18 +60,22 @@ public class FeaturePackDescription {
         }
 
         public Builder addTopGroup(GroupDescription group) {
-            assert group != null : "group is null";
+            addTopGroupName(group.getName());
+            addGroup(group);
+            return this;
+        }
+
+        public void addTopGroupName(String groupName) {
+            assert groupName != null : "groupName is null";
             switch(topGroups.size()) {
                 case 0:
-                    topGroups = Collections.singleton(group.getName());
+                    topGroups = Collections.singleton(groupName);
                     break;
                 case 1:
                     topGroups = new HashSet<String>(topGroups);
                 default:
-                    topGroups.add(group.getName());
+                    topGroups.add(groupName);
             }
-            addGroup(group);
-            return this;
         }
 
         public Builder addGroup(GroupDescription group) {

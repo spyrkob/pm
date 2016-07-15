@@ -22,17 +22,26 @@
 
 package org.jboss.pm.fp.xml;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+
+import org.jboss.pm.descr.PackageDescription;
+import org.jboss.pm.descr.PackageDescription.Builder;
+import org.jboss.pm.util.ParsingUtils;
+import org.jboss.staxmapper.XMLElementReader;
+import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PackageXMLParser10 {
+public class PackageXMLParser10 implements XMLElementReader<PackageDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
 
@@ -119,5 +128,90 @@ public class PackageXMLParser10 {
         public String getLocalName() {
             return name;
         }
+    }
+
+    @Override
+    public void readElement(XMLExtendedStreamReader reader, PackageDescription.Builder pkgBuilder) throws XMLStreamException {
+        pkgBuilder.setName(parseName(reader, false));
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCIES:
+                            readDependencies(reader, pkgBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readDependencies(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCY:
+                            readDependency(reader, pkgBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+        pkgBuilder.addDependency(parseName(reader));
+    }
+
+    private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {
+        return parseName(reader, true);
+    }
+
+    private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        String path = null;
+        boolean parsedTarget = false;
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    path = reader.getAttributeValue(i);
+                    parsedTarget = true;
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!parsedTarget) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+        if(exclusive) {
+            ParsingUtils.parseNoContent(reader);
+        }
+        return path;
     }
 }

@@ -37,6 +37,10 @@ public class PackageDescription extends GroupDescription {
 
         private List<String> contentPaths = Collections.emptyList();
 
+        protected Builder() {
+            super();
+        }
+
         protected Builder(String name) {
             super(name);
         }
@@ -59,6 +63,10 @@ public class PackageDescription extends GroupDescription {
         public PackageDescription build() {
             return new PackageDescription(name, dependencies, Collections.unmodifiableList(contentPaths));
         }
+    }
+
+    public static Builder packageBuilder() {
+        return new Builder();
     }
 
     public static Builder packageBuilder(String name) {

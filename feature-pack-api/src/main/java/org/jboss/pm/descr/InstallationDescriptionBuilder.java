@@ -31,6 +31,8 @@ import java.util.Map;
 import org.jboss.pm.GAV;
 
 /**
+ * This class collects feature packs descriptions and produces an installation
+ * description.
  *
  * @author Alexey Loubyansky
  */

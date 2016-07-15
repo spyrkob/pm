@@ -35,12 +35,20 @@ public class GroupDescription {
 
     public static class Builder {
 
-        protected final String name;
+        protected String name;
         protected List<String> dependencies = Collections.emptyList();
 
+        protected Builder() {
+            this(null);
+        }
+
         protected Builder(String name) {
-            assert name != null : "name is null";
             this.name = name;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
         }
 
         public Builder addDependency(String dependencyName) {

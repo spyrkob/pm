@@ -69,9 +69,8 @@ public class FeaturePackInstaller {
                 }
             }
         }
-        if(group.hasContent()) {
-            final Path groupSrcDir = fpPackagesDir.resolve(group.getName()).resolve(Constants.CONTENT);
-            assertExists(groupSrcDir);
+        final Path groupSrcDir = fpPackagesDir.resolve(group.getName()).resolve(Constants.CONTENT);
+        if (Files.exists(groupSrcDir)) {
             try {
                 IoUtils.copy(groupSrcDir, installDir);
             } catch (IOException e) {
@@ -82,11 +81,5 @@ public class FeaturePackInstaller {
 
     private boolean isGroupInstalled(String name) {
         return installedPackages.contains(name);
-    }
-
-    private void assertExists(Path path) throws FeaturePackInstallException {
-        if(!Files.exists(path)) {
-            throw new FeaturePackInstallException(Errors.pathDoesNotExist(path));
-        }
     }
 }

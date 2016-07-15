@@ -60,7 +60,7 @@ public class FeaturePackBuild {
             return;
         }
 
-        for(FeaturePackDescription fpDef : installation.getFeaturePackDefs()) {
+        for(FeaturePackDescription fpDef : installation.getFeaturePacks()) {
             buildFeaturePack(fpDef);
         }
     }
