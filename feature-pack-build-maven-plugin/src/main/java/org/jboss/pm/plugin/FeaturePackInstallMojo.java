@@ -22,7 +22,11 @@
 
 package org.jboss.pm.plugin;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -42,6 +46,7 @@ import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.pm.Constants;
+import org.jboss.pm.util.Errors;
 
 /**
  *
@@ -65,32 +70,43 @@ public class FeaturePackInstallMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        System.out.println("FEATURE PACK: install");
         final String workdirPath = repoSession.getSystemProperties().get(Constants.PM_INSTALL_WORK_DIR);
         if(workdirPath == null) {
-            throw new MojoExecutionException("work dir is missing");
+            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PM_INSTALL_WORK_DIR));
         }
-        final File workDir = new File(workdirPath, Constants.FEATURE_PACKS);
-        if(!workDir.exists()) {
-            throw new MojoExecutionException("work dir does not exist: " + workDir.getAbsolutePath());
+        final Path workDir = Paths.get(workdirPath, Constants.FEATURE_PACKS);
+        if(!Files.exists(workDir)) {
+            throw new MojoExecutionException(Errors.pathDoesNotExist(workDir.toAbsolutePath()));
         }
 
         final InstallRequest installReq = new InstallRequest();
-        for(File groupDir : workDir.listFiles()) {
-            for(File artifactDir : groupDir.listFiles()) {
-                for(File versionFile : artifactDir.listFiles()) {
-                    final Artifact artifact = new DefaultArtifact(groupDir.getName(), artifactDir.getName(), null, "zip", versionFile.getName(), null, versionFile);
-                    System.out.println("FP: " + artifact);
-                    installReq.addArtifact(artifact);
+        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(workDir)) {
+            for (Path groupDir : wdStream) {
+                try (DirectoryStream<Path> groupStream = Files.newDirectoryStream(groupDir)) {
+                    for (Path artifactDir : groupStream) {
+                        try (DirectoryStream<Path> artifactStream = Files.newDirectoryStream(artifactDir)) {
+                            for (Path versionDir : artifactStream) {
+                                System.out.println("FP: " + versionDir.toAbsolutePath());
+                                final Path zippedFP = workDir.getParent().resolve(versionDir.getFileName().toString() + ".zip");
+                                org.jboss.pm.util.ZipUtils.zip(versionDir, zippedFP);
+                                final Artifact artifact = new DefaultArtifact(
+                                        groupDir.getFileName().toString(),
+                                        artifactDir.getFileName().toString(), null,
+                                        "zip", versionDir.getFileName().toString(), null, zippedFP.toFile());
+                                installReq.addArtifact(artifact);
+                            }
+                        }
+                    }
                 }
             }
+        } catch (IOException e) {
+            throw new MojoExecutionException(FPMavenErrors.featurePackBuild(), e);
         }
 
         try {
             repoSystem.install(repoSession, installReq);
         } catch (InstallationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
         }
     }
 }

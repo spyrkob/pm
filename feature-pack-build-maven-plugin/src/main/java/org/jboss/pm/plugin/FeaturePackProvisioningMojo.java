@@ -27,6 +27,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,8 +69,13 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.pm.Constants;
 import org.jboss.pm.GAV;
+import org.jboss.pm.descr.InstallationDescriptionException;
 import org.jboss.pm.provisioning.ProvisioningMetaData;
 import org.jboss.pm.provisioning.xml.ProvisioningXmlParser;
+import org.jboss.pm.util.Errors;
+import org.jboss.pm.util.FeaturePackInstallException;
+import org.jboss.pm.util.FeaturePackLayoutInstaller;
+import org.jboss.pm.util.IoUtils;
 
 /**
  *
@@ -94,28 +103,28 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
         final String provXmlArg = repoSession.getSystemProperties().get(Constants.PROVISIONING_XML);
         if(provXmlArg == null) {
-            throw new MojoExecutionException("Provisioning file has not been provided.");
+            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PROVISIONING_XML));
         }
-        final File provXml = new File(provXmlArg);
-        if(!provXml.exists()) {
-            throw new MojoExecutionException("Provisioning file does not exist: " + provXml.getAbsolutePath());
+        final Path provXml = Paths.get(provXmlArg);
+        if(!Files.exists(provXml)) {
+            throw new MojoExecutionException(Errors.pathDoesNotExist(provXml));
         }
 
         final String installDirArg = repoSession.getSystemProperties().get(Constants.PM_INSTALL_DIR);
         if(installDirArg == null) {
-            throw new MojoExecutionException("Installation directory has not been provided.");
+            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PM_INSTALL_DIR));
         }
-        final File installDir = new File(installDirArg);
+        final Path installDir = Paths.get(installDirArg);
 
         ProvisioningMetaData metadata;
-        try(FileInputStream fis = new FileInputStream(provXml)) {
+        try(InputStream fis = Files.newInputStream(provXml)) {
             metadata = new ProvisioningXmlParser().parse(fis);
         } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("File not found " + provXml.getAbsolutePath(), e);
+            throw new MojoExecutionException(Errors.pathDoesNotExist(provXml), e);
         } catch (XMLStreamException e) {
-            throw new MojoExecutionException("Failed to parse " + provXml.getAbsolutePath(), e);
+            throw new MojoExecutionException(Errors.parseXml(provXml), e);
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to close input stream for " + provXml.getAbsolutePath(), e);
+            throw new MojoExecutionException(Errors.openFile(provXml), e);
         }
 
         System.out.println("Feature packs: " + metadata);
@@ -138,25 +147,55 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         try {
             results = repoSystem.resolveArtifacts(repoSession, requests);
         } catch ( ArtifactResolutionException e ) {
-            throw new MojoExecutionException("Failed to resolve artifacts " + featurePacks, e);
+            throw new MojoExecutionException(FPMavenErrors.artifactResolution(featurePacks), e);
         }
 
-        if(!installDir.exists()) {
-            installDir.mkdirs();
+        if(!Files.exists(installDir)) {
+            mkdirs(installDir);
         }
-        for(ArtifactResult res : results) {
-            try {
-                ZipUtils.unzip(res.getArtifact().getFile(), installDir);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to unzip " + res.getArtifact().getFile().getAbsolutePath() + " to " + installDir.getAbsolutePath(), e);
+
+        final Path workDir = IoUtils.createRandomTmpDir();
+        try {
+            for (ArtifactResult res : results) {
+                final Artifact fpArtifact = res.getArtifact();
+                final Path fpWorkDir = workDir.resolve(fpArtifact.getGroupId())
+                        .resolve(fpArtifact.getArtifactId())
+                        .resolve(fpArtifact.getVersion());
+                mkdirs(fpWorkDir);
+                try {
+                    org.jboss.pm.util.ZipUtils.unzip(Paths.get(fpArtifact.getFile().getAbsolutePath()), fpWorkDir);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Failed to unzip " + fpArtifact.getFile().getAbsolutePath()
+                            + " to " + installDir, e);
+                }
             }
+            try {
+                FeaturePackLayoutInstaller.install(workDir, installDir);
+            } catch (InstallationDescriptionException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (FeaturePackInstallException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } finally {
+            IoUtils.recursiveDelete(workDir);
         }
+
         //collectDependencies(artifact);
         //resolveDependencies(artifact);
         //versionRequest(artifact);
         //artifactRequest(new DefaultArtifact("org.wildfly.core", "wildfly-cli", "jar", "3.0.0.Alpha3-SNAPSHOT"));
         //artifactRequest(new DefaultArtifact("org.wildfly.core", "wildfly-cli", "jar", "LATEST"));
         //artifactRequest(new DefaultArtifact("org.wildfly.feature-pack", "wildfly", "zip", "10.1.0.Final-SNAPSHOT"));
+    }
+
+    private void mkdirs(final Path path) throws MojoExecutionException {
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            throw new MojoExecutionException(Errors.mkdirs(path));
+        }
     }
 
     private void collectDependencies(final Artifact artifact) throws MojoExecutionException {

@@ -42,14 +42,9 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.pm.Constants;
-import org.jboss.pm.build.FeaturePackBuild;
-import org.jboss.pm.build.PMBuildException;
-import org.jboss.pm.descr.InstallationDescription;
 import org.jboss.pm.descr.InstallationDescriptionException;
-import org.jboss.pm.util.FeaturePackInstallException;
-import org.jboss.pm.util.FeaturePackLayoutInstaller;
+import org.jboss.pm.util.IoUtils;
 import org.jboss.pm.wildfly.descr.WFFeaturePackLayoutBuilder;
-import org.jboss.pm.wildfly.descr.WFInstallationDescriptionBuilder;
 import org.jboss.pm.wildfly.descr.WFInstallationDescription;
 import org.jboss.pm.wildfly.xml.WFInstallationDefParser;
 
@@ -88,60 +83,30 @@ public class FpCommand extends CommandBase {
             throw new CommandExecutionException("failed to parse " + WF_FP_DEF_XML, e);
         }
 
+        final Path workDir;
+        final boolean deleteWorkDir;
         if(fpWorkDir != null) {
-            final Path workDirPath = Paths.get(fpWorkDir);
-            final Path fpsDir = workDirPath.resolve("fps");
-            final Path inDir = workDirPath.resolve("in");
+            workDir = Paths.get(fpWorkDir);
+            deleteWorkDir = false;
+        } else {
+            workDir = IoUtils.createRandomTmpDir();
+            deleteWorkDir = true;
+        }
 
+        try {
+            final Path fpsDir = workDir.resolve(Constants.FEATURE_PACKS);
             WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
             try {
                 layoutBuilder.build(wfDescr, installDir, fpsDir);
             } catch (InstallationDescriptionException e) {
                 throw new CommandExecutionException("Failed to layout feature packs", e);
             }
-
-            try {
-                FeaturePackLayoutInstaller.install(fpsDir, inDir);
-            } catch (InstallationDescriptionException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (FeaturePackInstallException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            return;
-        }
-
-        final InstallationDescription wfInstallation;
-        try {
-            wfInstallation = new WFInstallationDescriptionBuilder().build(wfDescr, installDir);
-        } catch (InstallationDescriptionException e) {
-            throw new CommandExecutionException("failed to build feature packs", e);
-        }
-
-/*        try {
-            ci.println(wfInstallation.logContent());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-*/
-
-        final Path workDir = Util.createRandomTmpDir();
-        try {
-            FeaturePackBuild fpBuild = new FeaturePackBuild(wfInstallation, installDir, workDir);
-            fpBuild.buildFeaturePacks();
-//            final File tmpDir = new File(new File("").getAbsolutePath(), "workdir");
-//            tmpDir.mkdir();
-//            IoUtils.copyFile(workDir, tmpDir);
             install(workDir);
-        } catch (PMBuildException e) {
-            e.printStackTrace();
         } finally {
-            Util.recursiveDelete(workDir);
+            if (deleteWorkDir) {
+                IoUtils.recursiveDelete(workDir);
+            }
         }
-
     }
 
     private void install(final Path workDir) throws CommandExecutionException {

@@ -22,14 +22,7 @@
 
 package org.jboss.pm.cli;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
-
-import org.jboss.pm.util.IoUtils;
 
 
 /**
@@ -37,26 +30,6 @@ import org.jboss.pm.util.IoUtils;
  * @author Alexey Loubyansky
  */
 class Util {
-
-    private static final Path TMP_DIR = Paths.get(PropertyUtils.getSystemProperty("java.io.tmpdir"));
-
-    static Path createTmpDir(String name) {
-        final Path dir = TMP_DIR.resolve(name);
-        try {
-            Files.createDirectories(dir);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to create " + dir.toAbsolutePath());
-        }
-        return dir;
-    }
-
-    static Path createRandomTmpDir() {
-        return createTmpDir(UUID.randomUUID().toString());
-    }
-
-    static void recursiveDelete(Path root) {
-        IoUtils.recursiveDelete(root);
-    }
 
     static InputStream getResourceStream(String resource) throws CommandExecutionException {
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();

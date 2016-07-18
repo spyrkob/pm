@@ -28,15 +28,33 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
+import java.util.UUID;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 public class IoUtils {
+
+    private static final Path TMP_DIR = Paths.get(PropertyUtils.getSystemProperty("java.io.tmpdir"));
+
+    public static Path createTmpDir(String name) {
+        final Path dir = TMP_DIR.resolve(name);
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create " + dir.toAbsolutePath());
+        }
+        return dir;
+    }
+
+    public static Path createRandomTmpDir() {
+        return createTmpDir(UUID.randomUUID().toString());
+    }
 
     public static void recursiveDelete(Path root) {
         if (root == null) {

@@ -20,49 +20,31 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.pm.util;
+package org.jboss.pm.plugin;
 
-import java.nio.file.Path;
+import java.util.Collection;
+
+import org.jboss.pm.GAV;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface Errors {
+public interface FPMavenErrors {
 
-    // GENERAL MESSAGES
-
-    static String pathDoesNotExist(Path p) {
-        return "Failed to locate " + p.toAbsolutePath();
+    static String propertyMissing(String prop) {
+        return "Property " + prop + " is missing";
     }
 
-    static String mkdirs(Path p) {
-        return "Failed to make directories " + p.toAbsolutePath();
+    static String featurePackBuild() {
+        return "Failed to build feature-pack";
     }
 
-    static String readDirectory(Path p) {
-        return "Failed to read directory " + p.toAbsolutePath();
+    static String featurePackInstallation() {
+        return "Failed to install feature-pack into repository";
     }
 
-    static String notADir(Path p) {
-        return p.toAbsolutePath() + " is not a directory";
-    }
-
-    static String openFile(Path p) {
-        return "Failed to open " + p.toAbsolutePath();
-    }
-
-    static String parseXml(Path p) {
-        return "Failed to parse " + p.toAbsolutePath();
-    }
-
-    // FEATURE PACK INSTALL MESSAGES
-
-    static String packageContentCopyFailed(String packageName) {
-        return "Failed to copy package " + packageName + " content";
-    }
-
-    static String packageNotFound(String packageName) {
-        return "Failed to resolve package " + packageName;
+    static String artifactResolution(Collection<GAV> artifacts) {
+        return "Failed to resolve artifacts: " + artifacts;
     }
 }

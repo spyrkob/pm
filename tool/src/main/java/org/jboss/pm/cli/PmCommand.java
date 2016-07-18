@@ -40,6 +40,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.pm.Constants;
+import org.jboss.pm.util.IoUtils;
 
 /**
  *
@@ -88,7 +89,7 @@ class PmCommand extends CommandBase {
             throw new CommandExecutionException(PROVISIONING_POM_XML + " not found");
         }
 
-        final Path workDir = Util.createRandomTmpDir();
+        final Path workDir = IoUtils.createRandomTmpDir();
         try {
             Files.copy(provisioningFile, workDir.resolve(Constants.PROVISIONING_XML));
         } catch(IOException e) {
@@ -122,7 +123,7 @@ class PmCommand extends CommandBase {
         } catch (IOException e1) {
             throw new CommandExecutionException("Failed to copy pom.xml to the work dir.");
         } finally {
-            Util.recursiveDelete(workDir);
+            IoUtils.recursiveDelete(workDir);
         }
 
     }
