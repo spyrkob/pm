@@ -23,8 +23,6 @@
 package org.jboss.pm.descr;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,8 +33,6 @@ public class PackageDescription extends GroupDescription {
 
     public static class Builder extends GroupDescription.Builder {
 
-        private List<String> contentPaths = Collections.emptyList();
-
         protected Builder() {
             super();
         }
@@ -45,23 +41,9 @@ public class PackageDescription extends GroupDescription {
             super(name);
         }
 
-        public Builder addContentPath(String contentPath) {
-            assert contentPath != null : "contentPath is null";
-            switch(contentPaths.size()) {
-                case 0:
-                    contentPaths = Collections.singletonList(contentPath);
-                    break;
-                case 1:
-                    contentPaths = new ArrayList<String>(contentPaths);
-                default:
-                    contentPaths.add(contentPath);
-            }
-            return this;
-        }
-
         @Override
         public PackageDescription build() {
-            return new PackageDescription(name, dependencies, Collections.unmodifiableList(contentPaths));
+            return new PackageDescription(name, dependencies);
         }
     }
 
@@ -73,38 +55,14 @@ public class PackageDescription extends GroupDescription {
         return new Builder(name);
     }
 
-    private final List<String> contentPaths;
-
-    protected PackageDescription(String name, List<String> dependencies, List<String> contentPaths) {
+    protected PackageDescription(String name, List<String> dependencies) {
         super(name, dependencies);
-        assert contentPaths != null : "contentPaths is null";
-        this.contentPaths = contentPaths;
-    }
-
-    @Override
-    public boolean hasContent() {
-        return !contentPaths.isEmpty();
-    }
-
-    @Override
-    public List<String> getContentPaths() {
-        return contentPaths;
     }
 
     @Override
     void logContent(DescrLogger logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
-        if(!contentPaths.isEmpty()) {
-            logger.increaseOffset();
-            logger.println("Content");
-            logger.increaseOffset();
-            for(String path : contentPaths) {
-                logger.println(path);
-            }
-            logger.decreaseOffset();
-            logger.decreaseOffset();
-        }
         if(!dependencies.isEmpty()) {
             logger.increaseOffset();
             logger.println("Dependencies");

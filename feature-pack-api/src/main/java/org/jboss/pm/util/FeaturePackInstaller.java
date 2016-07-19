@@ -41,13 +41,14 @@ public class FeaturePackInstaller {
     private Path installDir;
     private Path fpPackagesDir;
     private FeaturePackDescription featurePack;
-    private Set<String> installedPackages = new HashSet<String>();
+    private Set<String> installedPackages;
 
     public void install(FeaturePackDescription featurePack, Path fpDir, Path installDir) throws FeaturePackInstallException {
 
         fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
         this.installDir = installDir;
         this.featurePack = featurePack;
+        installedPackages = new HashSet<String>();
 
         for(String name : featurePack.getTopGroupNames()) {
             if(!isGroupInstalled(name)) {

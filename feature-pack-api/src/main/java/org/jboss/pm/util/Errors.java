@@ -48,12 +48,28 @@ public interface Errors {
         return p.toAbsolutePath() + " is not a directory";
     }
 
+    static String copyFile(Path src, Path target) {
+        return "Failed to copy " + src.toAbsolutePath() + " to " + target.toAbsolutePath();
+    }
+
+    static String moveFile(Path src, Path target) {
+        return "Failed to move " + src.toAbsolutePath() + " to " + target.toAbsolutePath();
+    }
+
     static String openFile(Path p) {
         return "Failed to open " + p.toAbsolutePath();
     }
 
+    static String readFile(Path p) {
+        return "Failed to read " + p.toAbsolutePath();
+    }
+
     static String parseXml(Path p) {
         return "Failed to parse " + p.toAbsolutePath();
+    }
+
+    static String writeXml(Path p) {
+        return "Failed to write to " + p.toAbsolutePath();
     }
 
     // FEATURE PACK INSTALL MESSAGES

@@ -96,14 +96,6 @@ public class GroupDescription {
         return dependencies;
     }
 
-    public boolean hasContent() {
-        return false;
-    }
-
-    public List<String> getContentPaths() {
-        throw new UnsupportedOperationException();
-    }
-
     void logContent(DescrLogger logger) throws IOException {
         logger.print("Group ");
         logger.println(name);

@@ -38,11 +38,12 @@ public class FeaturePackLayoutInstaller {
     public static void install(Path fpLayoutDir, Path installDir)
             throws InstallationDescriptionException, FeaturePackInstallException {
         final InstallationDescription installDescr = FeaturePackLayoutAnalyzer.describe(fpLayoutDir);
+        final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : installDescr.getFeaturePacks()) {
             final Path fpDir = fpLayoutDir.resolve(fp.getGAV().getGroupId())
                     .resolve(fp.getGAV().getArtifactId())
                     .resolve(fp.getGAV().getVersion());
-            new FeaturePackInstaller().install(fp, fpDir, installDir);
+            fpInstaller.install(fp, fpDir, installDir);
         }
     }
 }
