@@ -47,6 +47,7 @@ import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.pm.Constants;
 import org.jboss.pm.util.Errors;
+import org.jboss.pm.util.ZipUtils;
 
 /**
  *
@@ -82,13 +83,16 @@ public class FeaturePackInstallMojo extends AbstractMojo {
         final InstallRequest installReq = new InstallRequest();
         try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(workDir)) {
             for (Path groupDir : wdStream) {
+                final String groupId = groupDir.getFileName().toString();
                 try (DirectoryStream<Path> groupStream = Files.newDirectoryStream(groupDir)) {
                     for (Path artifactDir : groupStream) {
+                        final String artifactId = artifactDir.getFileName().toString();
                         try (DirectoryStream<Path> artifactStream = Files.newDirectoryStream(artifactDir)) {
                             for (Path versionDir : artifactStream) {
                                 System.out.println("FP: " + versionDir.toAbsolutePath());
-                                final Path zippedFP = workDir.getParent().resolve(versionDir.getFileName().toString() + ".zip");
-                                org.jboss.pm.util.ZipUtils.zip(versionDir, zippedFP);
+                                final Path zippedFP = workDir.getParent().resolve(
+                                        groupId + '_' + artifactId + '_' + versionDir.getFileName().toString() + ".zip");
+                                ZipUtils.zip(versionDir, zippedFP);
                                 final Artifact artifact = new DefaultArtifact(
                                         groupDir.getFileName().toString(),
                                         artifactDir.getFileName().toString(), null,

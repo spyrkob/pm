@@ -110,6 +110,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         ARTIFACT_ID("artifact-id"),
         GROUP_ID("group-id"),
         NAME("name"),
+        OPTIONAL("optional"),
         RELATIVE("relative"),
         VERSION("version"),
         // default unknown attribute
@@ -122,6 +123,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
             attributesMap.put(new QName(ARTIFACT_ID.getLocalName()), ARTIFACT_ID);
             attributesMap.put(new QName(GROUP_ID.getLocalName()), GROUP_ID);
             attributesMap.put(new QName(NAME.getLocalName()), NAME);
+            attributesMap.put(new QName(OPTIONAL.getLocalName()), OPTIONAL);
             attributesMap.put(new QName(RELATIVE.getLocalName()), RELATIVE);
             attributesMap.put(new QName(VERSION.getLocalName()), VERSION);
             attributes = attributesMap;
@@ -288,6 +290,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
 
     private void parsePackage(XMLExtendedStreamReader reader, WFFeaturePackDescription.Builder fpBuilder) throws XMLStreamException {
         String name = null;
+        boolean optional = false;
         final int count = reader.getAttributeCount();
         final Set<Attribute> required = EnumSet.of(Attribute.NAME);
         for (int i = 0; i < count; i++) {
@@ -296,6 +299,9 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
             switch (attribute) {
                 case NAME:
                     name = reader.getAttributeValue(i);
+                    break;
+                case OPTIONAL:
+                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -306,6 +312,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         }
         final WFPackageDescription.Builder pkgBuilder = WFPackageDescription.builder();
         pkgBuilder.setName(name);
+        pkgBuilder.setOptional(optional);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

@@ -147,44 +147,47 @@ public class WFFeaturePackLayoutBuilder {
 
     void build(WFPackageDescription wfPkg) throws InstallationDescriptionException {
 
-        final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(wfPkg.getName());
-        mkdirs(pkgDir);
-
         pkgBuilder = PackageDescription.packageBuilder(wfPkg.getName());
-        for(WFModulesDescription wfModules : wfPkg.getModules()) {
+        for (WFModulesDescription wfModules : wfPkg.getModules()) {
             build(wfModules);
         }
 
-        for(String relativePath : wfPkg.getRelativePaths()) {
+        final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(wfPkg.getName());
+
+        for (String relativePath : wfPkg.getRelativePaths()) {
             final Path f = homeDir.resolve(relativePath);
-            if(!Files.exists(f)) {
+            if (!Files.exists(f)) {
+                if(wfPkg.isOptional()) {
+                    pkgBuilder = null;
+                    return;
+                }
                 throw new InstallationDescriptionException(Errors.pathDoesNotExist(f));
             }
             Path pkgContent = pkgDir.resolve(CONTENT);
             mkdirs(pkgContent);
             pkgContent = pkgContent.resolve(f.getFileName().toString());
-            if(Files.isDirectory(f)) {
+            if (Files.isDirectory(f)) {
                 mkdirs(pkgContent);
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(f)) {
                     final Iterator<Path> children = stream.iterator();
-                    if(children.hasNext()) {
+                    if (children.hasNext()) {
                         Path child = children.next();
                         copy(child, pkgContent.resolve(child.getFileName().toString()));
-                        while(children.hasNext()) {
+                        while (children.hasNext()) {
                             child = children.next();
                             copy(child, pkgContent.resolve(child.getFileName().toString()));
                         }
                     } else {
                         mkdirs(pkgContent.resolve(f.getFileName().toString()));
                     }
-                } catch(IOException e) {
+                } catch (IOException e) {
                     failedToReadDirectory(f, e);
                 }
             } else {
                 copy(f, pkgContent);
             }
         }
-        for(String packageRef : wfPkg.getPackageRefs()) {
+        for (String packageRef : wfPkg.getPackageRefs()) {
             pkgBuilder.addDependency(packageRef);
         }
 
@@ -192,11 +195,13 @@ public class WFFeaturePackLayoutBuilder {
         fpBuilder.addTopGroup(pkgDescr);
 
         writePackageXml(pkgDescr, pkgDir);
-
         pkgBuilder = null;
     }
 
     private void writePackageXml(final PackageDescription pkgDescr, final Path pkgDir) throws InstallationDescriptionException {
+        if(!Files.exists(pkgDir)) {
+            mkdirs(pkgDir);
+        }
         try {
             PackageXMLWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
@@ -303,8 +308,8 @@ public class WFFeaturePackLayoutBuilder {
     }
 
     private void copy(Path src, Path target) throws InstallationDescriptionException {
-        if(Files.isDirectory(src)) {
-            mkdirs(target);
+        if(!Files.exists(target.getParent())) {
+            mkdirs(target.getParent());
         }
         try {
             IoUtils.copy(src, target);

@@ -25,7 +25,7 @@
         </package>
 -->
 
-        <package name="appclient">
+        <package name="appclient" optional="true">
             <path relative="appclient"/>
         </package>
 
@@ -37,7 +37,7 @@
             <path relative="docs"/>
         </package>
 
-        <package name="welcome-content">
+        <package name="welcome-content" optional="true">
             <path relative="welcome-content"/>
         </package>
 

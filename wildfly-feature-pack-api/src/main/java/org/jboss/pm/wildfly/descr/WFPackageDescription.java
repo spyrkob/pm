@@ -38,12 +38,17 @@ public class WFPackageDescription {
         private List<String> relativePaths = Collections.emptyList();
         private List<WFModulesDescription> modules = Collections.emptyList();
         private List<String> packageRefs = Collections.emptyList();
+        private boolean optional;
 
         Builder() {
         }
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public void setOptional(boolean optional) {
+            this.optional = optional;
         }
 
         public void addRelativePath(String path) {
@@ -83,7 +88,10 @@ public class WFPackageDescription {
         }
 
         public WFPackageDescription build() {
-            return new WFPackageDescription(name, Collections.unmodifiableList(relativePaths), Collections.unmodifiableList(modules), Collections.unmodifiableList(packageRefs));
+            return new WFPackageDescription(name, optional,
+                    Collections.unmodifiableList(relativePaths),
+                    Collections.unmodifiableList(modules),
+                    Collections.unmodifiableList(packageRefs));
         }
     }
 
@@ -92,12 +100,14 @@ public class WFPackageDescription {
     }
 
     private final String name;
+    private final boolean optional;
     private final List<String> relativePaths;
     private final List<WFModulesDescription> modules;
     private final List<String> packageRefs;
 
-    public WFPackageDescription(String name, List<String> relativePaths, List<WFModulesDescription> modules, List<String> packageRefs) {
+    public WFPackageDescription(String name, boolean optional, List<String> relativePaths, List<WFModulesDescription> modules, List<String> packageRefs) {
         this.name = name;
+        this.optional = optional;
         this.relativePaths = relativePaths;
         this.modules = modules;
         this.packageRefs = packageRefs;
@@ -105,6 +115,10 @@ public class WFPackageDescription {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     public List<String> getRelativePaths() {
