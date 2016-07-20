@@ -80,7 +80,7 @@
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>org.jboss.pm.cli.PmCli</mainClass>
+                  <mainClass>org.jboss.provisioning.cli.CliMain</mainClass>
                 </manifest>
               </archive>
             </configuration>
