@@ -46,7 +46,7 @@ import org.jboss.provisioning.xml.PackageXMLParser;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackLayoutAnalyzer {
+public class FeaturePackLayoutDescriber {
 
     public static InstallationDescription describe(Path fpLayout) throws InstallationDescriptionException {
         if(!Files.exists(fpLayout)) {

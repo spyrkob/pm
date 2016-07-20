@@ -34,6 +34,7 @@ import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.GroupDescription;
 
 /**
+ * Installs feature pack content to the target directory.
  *
  * @author Alexey Loubyansky
  */
@@ -44,6 +45,14 @@ public class FeaturePackInstaller {
     private FeaturePackDescription featurePack;
     private Set<String> installedPackages;
 
+    /**
+     * Installs feature pack content to the specified directory.
+     *
+     * @param featurePack  feature-pack description
+     * @param fpDir  feature-pack source directory
+     * @param installDir  target installation directory
+     * @throws FeaturePackInstallException
+     */
     public void install(FeaturePackDescription featurePack, Path fpDir, Path installDir) throws FeaturePackInstallException {
 
         fpPackagesDir = fpDir.resolve(Constants.PACKAGES);

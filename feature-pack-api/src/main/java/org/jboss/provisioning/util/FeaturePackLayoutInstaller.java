@@ -35,9 +35,18 @@ import org.jboss.provisioning.descr.InstallationDescriptionException;
  */
 public class FeaturePackLayoutInstaller {
 
+    /**
+     * Provisions an installation at the specified location by processing
+     * the feature-pack layout.
+     *
+     * @param fpLayoutDir  feature-pack layout directory
+     * @param installDir  target installation directory
+     * @throws InstallationDescriptionException
+     * @throws FeaturePackInstallException
+     */
     public static void install(Path fpLayoutDir, Path installDir)
             throws InstallationDescriptionException, FeaturePackInstallException {
-        final InstallationDescription installDescr = FeaturePackLayoutAnalyzer.describe(fpLayoutDir);
+        final InstallationDescription installDescr = FeaturePackLayoutDescriber.describe(fpLayoutDir);
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : installDescr.getFeaturePacks()) {
             final Path fpDir = fpLayoutDir.resolve(fp.getGAV().getGroupId())
