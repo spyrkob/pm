@@ -48,7 +48,7 @@ import org.jboss.provisioning.xml.PackageXMLParser;
  */
 public class FeaturePackLayoutDescriber {
 
-    public static InstallationDescription describe(Path fpLayout) throws InstallationDescriptionException {
+    public static InstallationDescription describeLayout(Path fpLayout) throws InstallationDescriptionException {
         if(!Files.exists(fpLayout)) {
             throw new InstallationDescriptionException(Errors.pathDoesNotExist(fpLayout));
         }
@@ -82,14 +82,14 @@ public class FeaturePackLayoutDescriber {
         assertDirectory(artifactDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(artifactDir)) {
             for(Path p : stream) {
-                processFeaturePack(installBuilder, p);
+                installBuilder.addFeaturePack(describeFeaturePack(p));
             }
         } catch (IOException e) {
             failedToReadDirectory(artifactDir, e);
         }
     }
 
-    private static void processFeaturePack(final InstallationDescriptionBuilder installBuilder, Path fpDir) throws InstallationDescriptionException {
+    public static FeaturePackDescription describeFeaturePack(Path fpDir) throws InstallationDescriptionException {
         assertDirectory(fpDir);
         final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
         if(!Files.exists(fpXml)) {
@@ -108,7 +108,7 @@ public class FeaturePackLayoutDescriber {
         if(Files.exists(packagesDir)) {
             processPackages(fpBuilder, packagesDir);
         }
-        installBuilder.addFeaturePack(fpBuilder.build());
+        return fpBuilder.build();
     }
 
     private static void processPackages(FeaturePackDescription.Builder fpBuilder, Path packagesDir) throws InstallationDescriptionException {

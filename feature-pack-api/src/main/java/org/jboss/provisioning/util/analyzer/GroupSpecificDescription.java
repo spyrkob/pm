@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.util.analyzer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,31 +29,25 @@ import java.util.List;
 
 import org.jboss.provisioning.util.DescrFormatter;
 
+
 /**
+ * Describes what is different in a given group comparing to another group.
  *
  * @author Alexey Loubyansky
  */
-public class GroupDescription {
+public class GroupSpecificDescription {
 
-    public static class Builder {
+    static class Builder {
 
-        protected String name;
-        protected List<String> dependencies = Collections.emptyList();
+        private final String name;
+        private List<String> dependencies = Collections.emptyList();
+        private boolean contentDifferent;
 
-        protected Builder() {
-            this(null);
-        }
-
-        protected Builder(String name) {
+        private Builder(String name) {
             this.name = name;
         }
 
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder addDependency(String dependencyName) {
+        Builder addDependency(String dependencyName) {
             assert dependencyName != null : "dependency is null";
             switch(dependencies.size()) {
                 case 0:
@@ -67,49 +61,60 @@ public class GroupDescription {
             return this;
         }
 
-        public GroupDescription build() {
-            return new GroupDescription(name, Collections.unmodifiableList(dependencies));
+        Builder setContentDifferent(boolean contentDifferent) {
+            this.contentDifferent = contentDifferent;
+            return this;
+        }
+
+        GroupSpecificDescription build() {
+            return new GroupSpecificDescription(name, Collections.unmodifiableList(dependencies), contentDifferent);
         }
     }
 
-    public static Builder groupBuilder(String name) {
+    static Builder builder(String name) {
         return new Builder(name);
     }
 
-    protected final String name;
-    protected final List<String> dependencies;
+    private final String name;
+    private final List<String> dependencies;
+    private final boolean contentDifferent;
 
-    protected GroupDescription(String name, List<String> dependencies) {
-        assert name != null : "name is null";
-        assert dependencies != null : "dependencies is null";
+    public GroupSpecificDescription(String name, List<String> dependencies, boolean contentDifferent) {
+        super();
         this.name = name;
         this.dependencies = dependencies;
+        this.contentDifferent = contentDifferent;
     }
 
     public String getName() {
         return name;
     }
 
-    public boolean hasDependencies() {
-        return !dependencies.isEmpty();
-    }
-
     public List<String> getDependencies() {
         return dependencies;
     }
 
-    void logContent(DescrFormatter logger) throws IOException {
-        logger.print("Group ");
-        logger.println(name);
+    public boolean isContentDifferent() {
+        return contentDifferent;
+    }
+
+    public String logContent() throws IOException {
+        final DescrFormatter out = new DescrFormatter();
+        logContent(out);
+        return out.toString();
+    }
+
+    void logContent(DescrFormatter out) throws IOException {
+        out.print("GroupSpecificDescription ").println(name);
         if(!dependencies.isEmpty()) {
-            logger.increaseOffset();
-            logger.println("Dependencies");
-            logger.increaseOffset();
+            out.increaseOffset();
+            out.println("Dependencies");
+            out.increaseOffset();
             for(String dependency : dependencies) {
-                logger.println(dependency);
+                out.println(dependency);
             }
-            logger.decreaseOffset();
-            logger.decreaseOffset();
+            out.decreaseOffset();
+            out.decreaseOffset();
         }
     }
 }

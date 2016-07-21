@@ -25,6 +25,8 @@ package org.jboss.provisioning.descr;
 import java.io.IOException;
 import java.util.List;
 
+import org.jboss.provisioning.util.DescrFormatter;
+
 /**
  * @author Alexey Loubyansky
  *
@@ -60,7 +62,7 @@ public class PackageDescription extends GroupDescription {
     }
 
     @Override
-    void logContent(DescrLogger logger) throws IOException {
+    void logContent(DescrFormatter logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
         if(!dependencies.isEmpty()) {

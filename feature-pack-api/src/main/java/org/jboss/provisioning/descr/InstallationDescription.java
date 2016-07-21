@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.util.DescrFormatter;
 
 /**
  *
@@ -54,7 +55,7 @@ public class InstallationDescription {
     }
 
     public String logContent() throws IOException {
-        final DescrLogger logger = new DescrLogger();
+        final DescrFormatter logger = new DescrFormatter();
         logger.println("Installation");
         logger.increaseOffset();
         for(FeaturePackDescription fp : featurePacks.values()) {

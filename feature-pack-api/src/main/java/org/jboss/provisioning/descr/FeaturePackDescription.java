@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.util.DescrFormatter;
 
 /**
  *
@@ -167,7 +168,13 @@ public class FeaturePackDescription {
         return dependencies;
     }
 
-    void logContent(DescrLogger logger) throws IOException {
+    public String logContent() throws IOException {
+        final DescrFormatter logger = new DescrFormatter();
+        logContent(logger);
+        return logger.toString();
+    }
+
+    void logContent(DescrFormatter logger) throws IOException {
         logger.print("FeaturePack ");
         logger.println(gav.toString());
         logger.increaseOffset();

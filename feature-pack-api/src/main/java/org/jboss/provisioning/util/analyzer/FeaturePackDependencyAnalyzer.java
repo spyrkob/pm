@@ -20,14 +20,17 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util;
+package org.jboss.provisioning.util.analyzer;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 
 /**
  * Analyzes feature pack layouts with the goal to identify dependencies between
@@ -41,6 +44,17 @@ public class FeaturePackDependencyAnalyzer {
 
         final Path fp1Path = getFeaturePackDir(fpLayoutDir, gav1);
         final Path fp2Path = getFeaturePackDir(fpLayoutDir, gav2);
+
+        final FeaturePackDescription fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp1Path);
+        final FeaturePackDescription fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp2Path);
+
+        try {
+            System.out.println(fp1Descr.logContent());
+            System.out.println(fp2Descr.logContent());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws PMException {

@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.util;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.io.StringWriter;
  *
  * @author Alexey Loubyansky
  */
-class DescrLogger {
+public class DescrFormatter {
 
     private final StringWriter writer = new StringWriter();
     private BufferedWriter buf = new BufferedWriter(writer);
@@ -38,32 +38,37 @@ class DescrLogger {
     private int offset;
     private boolean doOffset;
 
-    void increaseOffset() {
+    public DescrFormatter increaseOffset() {
         offset += offsetStep;
+        return this;
     }
 
-    void decreaseOffset() {
+    public DescrFormatter decreaseOffset() {
         if(offset >= offsetStep) {
             offset -= offsetStep;
         }
+        return this;
     }
 
-    void print(String str) throws IOException {
+    public DescrFormatter print(String str) throws IOException {
         if(doOffset) {
             offset();
             doOffset = false;
         }
         buf.write(str);
+        return this;
     }
 
-    void newLine() throws IOException {
+    public DescrFormatter newLine() throws IOException {
         buf.newLine();
         doOffset = true;
+        return this;
     }
 
-    void println(String str) throws IOException {
+    public DescrFormatter println(String str) throws IOException {
         print(str);
         newLine();
+        return this;
     }
 
     private void offset() throws IOException {
