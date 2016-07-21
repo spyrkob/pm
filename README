@@ -47,7 +47,7 @@ MODULE: tool
 CLI COMMANDS
 
 
-COMMAND fp
+COMMAND feature-pack --action install
 
   Builds a feature pack for the specified WildFly-based installation and
   installs the feature pack into the Maven repository.

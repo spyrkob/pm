@@ -89,7 +89,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
                         final String artifactId = artifactDir.getFileName().toString();
                         try (DirectoryStream<Path> artifactStream = Files.newDirectoryStream(artifactDir)) {
                             for (Path versionDir : artifactStream) {
-                                System.out.println("FP: " + versionDir.toAbsolutePath());
+                                System.out.println("Preparing feature-pack " + versionDir.toAbsolutePath());
                                 final Path zippedFP = workDir.getParent().resolve(
                                         groupId + '_' + artifactId + '_' + versionDir.getFileName().toString() + ".zip");
                                 ZipUtils.zip(versionDir, zippedFP);

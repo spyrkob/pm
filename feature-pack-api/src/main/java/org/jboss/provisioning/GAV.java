@@ -28,6 +28,23 @@ package org.jboss.provisioning;
  */
 public class GAV implements Comparable<GAV> {
 
+    public static GAV fromString(String str) {
+        int i = str.indexOf(':');
+        if(i <= 0) {
+            throw new IllegalArgumentException("groupId is missing in '" + str + "'");
+        }
+        final String groupId = str.substring(0, i);
+        i = str.indexOf(':', i + 1);
+        if(i < 0) {
+            throw new IllegalArgumentException("artifactId is missing in '" + str + "'");
+        }
+        final String artifactId = str.substring(groupId.length() + 1, i);
+        if(i == str.length() - 1) {
+            throw new IllegalArgumentException("version is missing in '" + str + "'");
+        }
+        return new GAV(groupId, artifactId, str.substring(i + 1));
+    }
+
     private final String groupId;
     private final String artifactId;
     private final String version;

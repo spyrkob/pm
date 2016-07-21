@@ -49,7 +49,7 @@ public interface Errors {
     }
 
     static String copyFile(Path src, Path target) {
-        return "Failed to copy " + src.toAbsolutePath() + " to " + target.toAbsolutePath();
+        return "Failed to copy " + src + " to " + target;
     }
 
     static String moveFile(Path src, Path target) {

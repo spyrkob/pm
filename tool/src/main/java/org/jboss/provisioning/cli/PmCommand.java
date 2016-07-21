@@ -38,6 +38,7 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.util.IoUtils;
@@ -51,10 +52,10 @@ class PmCommand extends CommandBase {
 
     private static final String PROVISIONING_POM_XML = "maven/provisioning-pom.xml";
 
-    @Option(name="provisioning-xml")
+    @Option(name="provisioning-xml", completer=FileOptionCompleter.class)
     private String provisioningXmlArg;
 
-    @Option(name="install-dir")
+    @Option(name="install-dir", completer=FileOptionCompleter.class)
     private String installDirArg;
 
     @Override

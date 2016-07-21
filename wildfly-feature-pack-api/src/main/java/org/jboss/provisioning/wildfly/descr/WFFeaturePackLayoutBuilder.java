@@ -314,7 +314,7 @@ public class WFFeaturePackLayoutBuilder {
         try {
             IoUtils.copy(src, target);
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.copyFile(src, target));
+            throw new InstallationDescriptionException(Errors.copyFile(src.toAbsolutePath(), target.toAbsolutePath()));
         }
     }
 
