@@ -54,10 +54,10 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.PMException;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackDependencyAnalyzer;
+import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
 import org.jboss.provisioning.wildfly.descr.WFFeaturePackLayoutBuilder;
 import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
 import org.jboss.provisioning.wildfly.xml.WFInstallationDefParser;
@@ -234,18 +234,16 @@ public class FpCommand extends CommandBase {
 
     @Override
     protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
-
         if(INSTALL.equals(actionArg)) {
             installAction();
         } else if(ANALYZE.equals(actionArg)) {
-            analyzeAction();
+            analyzeAction(ci);
         } else {
             throw new CommandExecutionException("Unrecognized action '" + actionArg + "'");
         }
-
     }
 
-    private void analyzeAction() throws CommandExecutionException {
+    private void analyzeAction(CommandInvocation ci) throws CommandExecutionException {
 
         if(workDirArg == null) {
             argumentMissing(WORK_DIR_ARG_NAME);
@@ -261,10 +259,18 @@ public class FpCommand extends CommandBase {
             throw new CommandExecutionException(Errors.pathDoesNotExist(workDir));
         }
 
+        final FeaturePackDescriptionDiffs diff;
         try {
-            new FeaturePackDependencyAnalyzer().analyze(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
-        } catch (PMException e) {
+            diff = FeaturePackDependencyAnalyzer.compare(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+        } catch (InstallationDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
+        }
+
+        try {
+            ci.println(diff.getFeaturePackDiff1().logContent());
+            ci.println(diff.getFeaturePackDiff2().logContent());
+        } catch(IOException e) {
+            e.printStackTrace();
         }
     }
 

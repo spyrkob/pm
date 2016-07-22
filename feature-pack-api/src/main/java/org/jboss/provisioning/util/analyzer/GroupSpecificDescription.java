@@ -24,6 +24,7 @@ package org.jboss.provisioning.util.analyzer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +42,8 @@ public class GroupSpecificDescription {
 
         private final String name;
         private List<String> dependencies = Collections.emptyList();
-        private boolean contentDifferent;
+        private Boolean contentExists;
+        private ContentDiff contentDiff;
 
         private Builder(String name) {
             this.name = name;
@@ -61,13 +63,32 @@ public class GroupSpecificDescription {
             return this;
         }
 
-        Builder setContentDifferent(boolean contentDifferent) {
-            this.contentDifferent = contentDifferent;
+        public Builder addAllDependencies(Collection<String> dependencies) {
+            if(dependencies.isEmpty()) {
+                return this;
+            }
+            for(String dep : dependencies) {
+                addDependency(dep);
+            }
             return this;
         }
 
-        GroupSpecificDescription build() {
-            return new GroupSpecificDescription(name, Collections.unmodifiableList(dependencies), contentDifferent);
+        public Builder setContentExists(boolean contentDifferent) {
+            this.contentExists = contentDifferent;
+            return this;
+        }
+
+        public Builder setContentDiff(ContentDiff contentDiff) {
+            this.contentDiff = contentDiff;
+            return this;
+        }
+
+        public boolean hasRecords() {
+            return contentDiff != null || contentExists != null || !dependencies.isEmpty();
+        }
+
+        public GroupSpecificDescription build() {
+            return new GroupSpecificDescription(name, Collections.unmodifiableList(dependencies), contentExists, contentDiff);
         }
     }
 
@@ -77,13 +98,14 @@ public class GroupSpecificDescription {
 
     private final String name;
     private final List<String> dependencies;
-    private final boolean contentDifferent;
+    private final Boolean contentExists;
+    private final ContentDiff contentDiff;
 
-    public GroupSpecificDescription(String name, List<String> dependencies, boolean contentDifferent) {
-        super();
+    public GroupSpecificDescription(String name, List<String> dependencies, Boolean contentExists, ContentDiff contentDiff) {
         this.name = name;
         this.dependencies = dependencies;
-        this.contentDifferent = contentDifferent;
+        this.contentExists = contentExists;
+        this.contentDiff = contentDiff;
     }
 
     public String getName() {
@@ -94,8 +116,12 @@ public class GroupSpecificDescription {
         return dependencies;
     }
 
-    public boolean isContentDifferent() {
-        return contentDifferent;
+    public Boolean getContentExists() {
+        return contentExists;
+    }
+
+    public ContentDiff getContentDiff() {
+        return contentDiff;
     }
 
     public String logContent() throws IOException {
@@ -105,15 +131,25 @@ public class GroupSpecificDescription {
     }
 
     void logContent(DescrFormatter out) throws IOException {
-        out.print("GroupSpecificDescription ").println(name);
+        out.print("Package ").println(name);
         if(!dependencies.isEmpty()) {
             out.increaseOffset();
-            out.println("Dependencies");
+            out.println("Unique dependencies");
             out.increaseOffset();
             for(String dependency : dependencies) {
                 out.println(dependency);
             }
             out.decreaseOffset();
+            out.decreaseOffset();
+        }
+        if(contentExists != null) {
+            out.increaseOffset();
+            out.print("Content exists: ").println(contentExists.toString());
+            out.decreaseOffset();
+        }
+        if(contentDiff != null) {
+            out.increaseOffset();
+            contentDiff.logContent(out);
             out.decreaseOffset();
         }
     }
