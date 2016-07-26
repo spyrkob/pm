@@ -340,7 +340,7 @@ public class FpCommand extends CommandBase {
             try {
                 result = invoker.execute(request);
                 if (result.getExitCode() != 0) {
-                    throw new IllegalStateException("Build failed.");
+                    throw new CommandExecutionException("Build failed.");
                 }
             } catch (MavenInvocationException e) {
                 // TODO Auto-generated catch block

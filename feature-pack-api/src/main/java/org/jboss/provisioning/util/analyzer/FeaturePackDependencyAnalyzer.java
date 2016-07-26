@@ -193,6 +193,11 @@ public class FeaturePackDependencyAnalyzer {
                         } else if (Files.isDirectory(c2)) {
                             c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
                             c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                        } else if (c1.getFileName().toString().endsWith(".jar")) {
+                            if(!Arrays.equals(HashUtils.hashJar(c1, true), HashUtils.hashJar(c2, true))) {
+                                c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
+                                c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                            }
                         } else if (!Arrays.equals(hashPath(c1), hashPath(c2))) {
                             c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
                             c2Builder.addConflictPath(group2Dir.relativize(c2).toString());

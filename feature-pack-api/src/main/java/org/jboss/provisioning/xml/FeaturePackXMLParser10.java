@@ -103,8 +103,8 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
 
     enum Attribute {
 
-        GROUP_ID("groupId"),
-        ARTIFACT_ID("artifactId"),
+        GROUP_ID("group-id"),
+        ARTIFACT_ID("artifact-id"),
         CLASSIFIER("classifier"),
         EXTENSION("extension"),
         VERSION("version"),
