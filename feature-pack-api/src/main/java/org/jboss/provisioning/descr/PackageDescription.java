@@ -23,45 +23,85 @@
 package org.jboss.provisioning.descr;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
- * @author Alexey Loubyansky
  *
+ * @author Alexey Loubyansky
  */
-public class PackageDescription extends GroupDescription {
+public class PackageDescription {
 
-    public static class Builder extends GroupDescription.Builder {
+    public static class Builder {
+
+        protected String name;
+        protected List<String> dependencies = Collections.emptyList();
 
         protected Builder() {
-            super();
+            this(null);
         }
 
         protected Builder(String name) {
-            super(name);
+            this.name = name;
         }
 
-        @Override
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder addDependency(String dependencyName) {
+            assert dependencyName != null : "dependency is null";
+            switch(dependencies.size()) {
+                case 0:
+                    dependencies = Collections.singletonList(dependencyName);
+                    break;
+                case 1:
+                    dependencies = new ArrayList<String>(dependencies);
+                default:
+                    dependencies.add(dependencyName);
+            }
+            return this;
+        }
+
         public PackageDescription build() {
-            return new PackageDescription(name, dependencies);
+            return new PackageDescription(name, Collections.unmodifiableList(dependencies));
         }
     }
 
-    public static Builder packageBuilder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    public static Builder packageBuilder(String name) {
+    public static Builder builder(String name) {
         return new Builder(name);
     }
 
+    protected final String name;
+    protected final List<String> dependencies;
+
     protected PackageDescription(String name, List<String> dependencies) {
-        super(name, dependencies);
+        assert name != null : "name is null";
+        assert dependencies != null : "dependencies is null";
+        this.name = name;
+        this.dependencies = dependencies;
     }
 
-    @Override
+    public String getName() {
+        return name;
+    }
+
+    public boolean hasDependencies() {
+        return !dependencies.isEmpty();
+    }
+
+    public List<String> getDependencies() {
+        return dependencies;
+    }
+
     void logContent(DescrFormatter logger) throws IOException {
         logger.print("Package ");
         logger.println(name);

@@ -32,11 +32,11 @@ import org.jboss.provisioning.util.DescrFormatter;
 
 
 /**
- * Describes what is different in a given group comparing to another group.
+ * Describes what is different in a given package comparing to another package.
  *
  * @author Alexey Loubyansky
  */
-public class GroupSpecificDescription {
+public class PackageSpecificDescription {
 
     static class Builder {
 
@@ -87,8 +87,8 @@ public class GroupSpecificDescription {
             return contentDiff != null || contentExists != null || !dependencies.isEmpty();
         }
 
-        public GroupSpecificDescription build() {
-            return new GroupSpecificDescription(name, Collections.unmodifiableList(dependencies), contentExists, contentDiff);
+        public PackageSpecificDescription build() {
+            return new PackageSpecificDescription(name, Collections.unmodifiableList(dependencies), contentExists, contentDiff);
         }
     }
 
@@ -101,7 +101,7 @@ public class GroupSpecificDescription {
     private final Boolean contentExists;
     private final ContentDiff contentDiff;
 
-    public GroupSpecificDescription(String name, List<String> dependencies, Boolean contentExists, ContentDiff contentDiff) {
+    public PackageSpecificDescription(String name, List<String> dependencies, Boolean contentExists, ContentDiff contentDiff) {
         this.name = name;
         this.dependencies = dependencies;
         this.contentExists = contentExists;

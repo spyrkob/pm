@@ -58,8 +58,8 @@ public class FeaturePackLayoutDescriber {
 
         final InstallationDescriptionBuilder installBuilder = InstallationDescriptionBuilder.newInstance();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(fpLayout)) {
-            for(Path groupDir : stream) {
-                processGroup(installBuilder, groupDir);
+            for(Path packageDir : stream) {
+                processPackage(installBuilder, packageDir);
             }
         } catch (IOException e) {
             failedToReadDirectory(fpLayout, e);
@@ -67,14 +67,14 @@ public class FeaturePackLayoutDescriber {
         return installBuilder.build();
     }
 
-    private static void processGroup(final InstallationDescriptionBuilder installBuilder, Path groupDir) throws InstallationDescriptionException {
-        assertDirectory(groupDir);
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(groupDir)) {
+    private static void processPackage(final InstallationDescriptionBuilder installBuilder, Path pkgDir) throws InstallationDescriptionException {
+        assertDirectory(pkgDir);
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(pkgDir)) {
             for(Path artifactDir : stream) {
                 processArtifact(installBuilder, artifactDir);
             }
         } catch (IOException e) {
-            failedToReadDirectory(groupDir, e);
+            failedToReadDirectory(pkgDir, e);
         }
     }
 
@@ -115,7 +115,7 @@ public class FeaturePackLayoutDescriber {
         assertDirectory(packagesDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(packagesDir)) {
             for(Path path : stream) {
-                fpBuilder.addGroup(processPackage(path));
+                fpBuilder.addPackage(processPackage(path));
             }
         } catch (IOException e) {
             failedToReadDirectory(packagesDir, e);
@@ -138,9 +138,9 @@ public class FeaturePackLayoutDescriber {
         }
     }
 
-    private static void assertDirectory(Path groupDir) throws InstallationDescriptionException {
-        if(!Files.isDirectory(groupDir)) {
-            throw new InstallationDescriptionException(Errors.notADir(groupDir));
+    private static void assertDirectory(Path dir) throws InstallationDescriptionException {
+        if(!Files.isDirectory(dir)) {
+            throw new InstallationDescriptionException(Errors.notADir(dir));
         }
     }
 

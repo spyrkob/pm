@@ -65,7 +65,7 @@ public class PackageXMLParser {
 
     public PackageDescription parse(final InputStream input) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final Builder pkgBuilder = PackageDescription.packageBuilder();
+        final Builder pkgBuilder = PackageDescription.builder();
         mapper.parseDocument(pkgBuilder, streamReader);
         return pkgBuilder.build();
     }

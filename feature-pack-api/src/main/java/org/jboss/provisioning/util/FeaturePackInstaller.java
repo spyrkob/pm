@@ -31,7 +31,7 @@ import java.util.Set;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.GroupDescription;
+import org.jboss.provisioning.descr.PackageDescription;
 
 /**
  * Installs feature pack content to the target directory.
@@ -60,19 +60,19 @@ public class FeaturePackInstaller {
         this.featurePack = featurePack;
         installedPackages = new HashSet<String>();
 
-        for(String name : featurePack.getTopGroupNames()) {
-            if(!isGroupInstalled(name)) {
-                install(featurePack.getGroupDescription(name));
+        for(String name : featurePack.getTopPackageNames()) {
+            if(!isPackageInstalled(name)) {
+                install(featurePack.getPackageDescription(name));
             }
         }
     }
 
-    private void install(GroupDescription group) throws FeaturePackInstallException {
-        installedPackages.add(group.getName());
-        if(group.hasDependencies()) {
-            for(String name : group.getDependencies()) {
-                if(!isGroupInstalled(name)) {
-                    final GroupDescription dependency = featurePack.getGroupDescription(name);
+    private void install(PackageDescription pkg) throws FeaturePackInstallException {
+        installedPackages.add(pkg.getName());
+        if(pkg.hasDependencies()) {
+            for(String name : pkg.getDependencies()) {
+                if(!isPackageInstalled(name)) {
+                    final PackageDescription dependency = featurePack.getPackageDescription(name);
                     if(dependency == null) {
                         throw new FeaturePackInstallException(Errors.packageNotFound(name));
                     }
@@ -80,17 +80,17 @@ public class FeaturePackInstaller {
                 }
             }
         }
-        final Path groupSrcDir = fpPackagesDir.resolve(group.getName()).resolve(Constants.CONTENT);
-        if (Files.exists(groupSrcDir)) {
+        final Path pkgSrcDir = fpPackagesDir.resolve(pkg.getName()).resolve(Constants.CONTENT);
+        if (Files.exists(pkgSrcDir)) {
             try {
-                IoUtils.copy(groupSrcDir, installDir);
+                IoUtils.copy(pkgSrcDir, installDir);
             } catch (IOException e) {
-                throw new FeaturePackInstallException(Errors.packageContentCopyFailed(group.getName()), e);
+                throw new FeaturePackInstallException(Errors.packageContentCopyFailed(pkg.getName()), e);
             }
         }
     }
 
-    private boolean isGroupInstalled(String name) {
+    private boolean isPackageInstalled(String name) {
         return installedPackages.contains(name);
     }
 }

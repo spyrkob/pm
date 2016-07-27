@@ -34,7 +34,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.GroupDescription;
+import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.xml.FeaturePackXMLParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXMLParser10.Element;
 import org.jboss.provisioning.xml.util.AttributeValue;
@@ -68,12 +68,12 @@ public class FeaturePackXMLWriter {
             }
         }
 
-        if(fpDescr.hasTopGroups()) {
+        if(fpDescr.hasTopPackages()) {
             final ElementNode pkgs = newElement(fp, Element.PACKAGES);
-            final String[] groupNames = fpDescr.getTopGroupNames().toArray(new String[0]);
-            Arrays.sort(groupNames);
-            for (String groupName : groupNames) {
-                write(pkgs, fpDescr.getGroupDescription(groupName));
+            final String[] pkgNames = fpDescr.getTopPackageNames().toArray(new String[0]);
+            Arrays.sort(pkgNames);
+            for (String name : pkgNames) {
+                write(pkgs, fpDescr.getPackageDescription(name));
             }
         }
 
@@ -86,8 +86,8 @@ public class FeaturePackXMLWriter {
         }
     }
 
-    private static void write(ElementNode pkgs, GroupDescription group) {
-        addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, group.getName());
+    private static void write(ElementNode pkgs, PackageDescription pkg) {
+        addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
     }
 
     private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {

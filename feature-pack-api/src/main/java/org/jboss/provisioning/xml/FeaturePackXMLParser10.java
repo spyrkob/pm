@@ -319,7 +319,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            fpBuilder.addTopGroupName(parseName(reader));
+                            fpBuilder.addTopPackageName(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

@@ -45,8 +45,8 @@ public class FeaturePackDescription {
 
         private GAV gav;
         private Map<GAV, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
-        private Set<String> topGroups = Collections.emptySet();
-        private Map<String, GroupDescription> groups = Collections.emptyMap();
+        private Set<String> topPackages = Collections.emptySet();
+        private Map<String, PackageDescription> packages = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -61,35 +61,35 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addTopGroup(GroupDescription group) {
-            addTopGroupName(group.getName());
-            addGroup(group);
+        public Builder addTopPackage(PackageDescription pkg) {
+            addTopPackageName(pkg.getName());
+            addPackage(pkg);
             return this;
         }
 
-        public void addTopGroupName(String groupName) {
-            assert groupName != null : "groupName is null";
-            switch(topGroups.size()) {
+        public void addTopPackageName(String packageName) {
+            assert packageName != null : "packageName is null";
+            switch(topPackages.size()) {
                 case 0:
-                    topGroups = Collections.singleton(groupName);
+                    topPackages = Collections.singleton(packageName);
                     break;
                 case 1:
-                    topGroups = new HashSet<String>(topGroups);
+                    topPackages = new HashSet<String>(topPackages);
                 default:
-                    topGroups.add(groupName);
+                    topPackages.add(packageName);
             }
         }
 
-        public Builder addGroup(GroupDescription group) {
-            assert group != null : "group is null";
-            switch(groups.size()) {
+        public Builder addPackage(PackageDescription pkg) {
+            assert pkg != null : "package is null";
+            switch(packages.size()) {
                 case 0:
-                    groups = Collections.singletonMap(group.getName(), group);
+                    packages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    groups = new HashMap<String, GroupDescription>(groups);
+                    packages = new HashMap<String, PackageDescription>(packages);
                 default:
-                    groups.put(group.getName(), group);
+                    packages.put(pkg.getName(), pkg);
             }
             return this;
         }
@@ -109,7 +109,7 @@ public class FeaturePackDescription {
         }
 
         public FeaturePackDescription build() {
-            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topGroups), Collections.unmodifiableMap(groups), Collections.unmodifiableMap(dependencies));
+            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topPackages), Collections.unmodifiableMap(packages), Collections.unmodifiableMap(dependencies));
         }
     }
 
@@ -123,17 +123,17 @@ public class FeaturePackDescription {
 
     private final GAV gav;
     private final Map<GAV, FeaturePackDependencyDescription> dependencies;
-    private final Set<String> topGroups;
-    private final Map<String, GroupDescription> groups;
+    private final Set<String> topPackages;
+    private final Map<String, PackageDescription> packages;
 
-    protected FeaturePackDescription(GAV gav, Set<String> topGroups, Map<String, GroupDescription> groups, Map<GAV, FeaturePackDependencyDescription> dependencies) {
+    protected FeaturePackDescription(GAV gav, Set<String> topPackages, Map<String, PackageDescription> packages, Map<GAV, FeaturePackDependencyDescription> dependencies) {
         assert gav != null : "GAV is null";
         assert dependencies != null : "dependencies is null";
-        assert topGroups != null : "topGroups is null";
-        assert groups != null : "groups is null";
+        assert topPackages != null : "topPackages is null";
+        assert packages != null : "packages is null";
         this.gav = gav;
-        this.topGroups = topGroups;
-        this.groups = groups;
+        this.topPackages = topPackages;
+        this.packages = packages;
         this.dependencies = dependencies;
     }
 
@@ -141,28 +141,28 @@ public class FeaturePackDescription {
         return gav;
     }
 
-    public boolean hasTopGroups() {
-        return !topGroups.isEmpty();
+    public boolean hasTopPackages() {
+        return !topPackages.isEmpty();
     }
 
-    public Set<String> getTopGroupNames() {
-        return topGroups;
+    public Set<String> getTopPackageNames() {
+        return topPackages;
     }
 
-    public boolean hasGroups() {
-        return !groups.isEmpty();
+    public boolean hasPackages() {
+        return !packages.isEmpty();
     }
 
-    public Collection<GroupDescription> getGroups() {
-        return groups.values();
+    public Collection<PackageDescription> getPackages() {
+        return packages.values();
     }
 
-    public Set<String> getGroupNames() {
-        return groups.keySet();
+    public Set<String> getPackageNames() {
+        return packages.keySet();
     }
 
-    public GroupDescription getGroupDescription(String name) {
-        return groups.get(name);
+    public PackageDescription getPackageDescription(String name) {
+        return packages.get(name);
     }
 
     public boolean hasDependencies() {
@@ -188,11 +188,11 @@ public class FeaturePackDescription {
         logger.println(gav.toString());
         logger.increaseOffset();
 
-        if(!groups.isEmpty()) {
-            final List<String> names = new ArrayList<String>(groups.keySet());
+        if(!packages.isEmpty()) {
+            final List<String> names = new ArrayList<String>(packages.keySet());
             names.sort(null);
-            for(String group : names) {
-                groups.get(group).logContent(logger);
+            for(String name : names) {
+                packages.get(name).logContent(logger);
             }
         }
 

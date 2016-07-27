@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.GroupDescription;
+import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -47,9 +47,9 @@ public class FeaturePackSpecificDescription {
 
         private final GAV gav;
         private Set<GAV> dependencies = Collections.emptySet();
-        private Map<String, GroupDescription> uniqueGroups = Collections.emptyMap();
-        private Map<String, GroupSpecificDescription> conflictingGroups = Collections.emptyMap();
-        private Map<String, GroupDescription> matchedGroups = Collections.emptyMap();
+        private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
+        private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
+        private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
 
         private Builder(GAV gav) {
             this.gav = gav;
@@ -80,54 +80,54 @@ public class FeaturePackSpecificDescription {
             return this;
         }
 
-        Builder addConflictingGroup(GroupSpecificDescription group) {
-            assert group != null : "group is null";
-            switch(conflictingGroups.size()) {
+        Builder addConflictingPackage(PackageSpecificDescription pkg) {
+            assert pkg != null : "pkg is null";
+            switch(conflictingPackages.size()) {
                 case 0:
-                    conflictingGroups = Collections.singletonMap(group.getName(), group);
+                    conflictingPackages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    conflictingGroups = new HashMap<String, GroupSpecificDescription>(conflictingGroups);
+                    conflictingPackages = new HashMap<String, PackageSpecificDescription>(conflictingPackages);
                 default:
-                    conflictingGroups.put(group.getName(), group);
+                    conflictingPackages.put(pkg.getName(), pkg);
             }
             return this;
         }
 
-        Builder addMatchedGroup(GroupDescription group) {
-            assert group != null : "group is null";
-            switch(matchedGroups.size()) {
+        Builder addMatchedPackage(PackageDescription pkg) {
+            assert pkg != null : "pkg is null";
+            switch(matchedPackages.size()) {
                 case 0:
-                    matchedGroups = Collections.singletonMap(group.getName(), group);
+                    matchedPackages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    matchedGroups = new HashMap<String, GroupDescription>(matchedGroups);
+                    matchedPackages = new HashMap<String, PackageDescription>(matchedPackages);
                 default:
-                    matchedGroups.put(group.getName(), group);
+                    matchedPackages.put(pkg.getName(), pkg);
             }
             return this;
         }
 
-        Builder addUniqueGroup(GroupDescription group) {
-            assert group != null : "group is null";
-            switch(uniqueGroups.size()) {
+        Builder addUniquePackage(PackageDescription pkg) {
+            assert pkg != null : "pkg is null";
+            switch(uniquePackages.size()) {
                 case 0:
-                    uniqueGroups = Collections.singletonMap(group.getName(), group);
+                    uniquePackages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    uniqueGroups = new HashMap<String, GroupDescription>(uniqueGroups);
+                    uniquePackages = new HashMap<String, PackageDescription>(uniquePackages);
                 default:
-                    uniqueGroups.put(group.getName(), group);
+                    uniquePackages.put(pkg.getName(), pkg);
             }
             return this;
         }
 
-        Builder addAllUniqueGroups(Collection<GroupDescription> groups) {
-            if(groups.isEmpty()) {
+        Builder addAllUniquePackages(Collection<PackageDescription> packages) {
+            if(packages.isEmpty()) {
                 return this;
             }
-            for(GroupDescription group : groups) {
-                addUniqueGroup(group);
+            for(PackageDescription pkg : packages) {
+                addUniquePackage(pkg);
             }
             return this;
         }
@@ -135,9 +135,9 @@ public class FeaturePackSpecificDescription {
         FeaturePackSpecificDescription build() {
             return new FeaturePackSpecificDescription(gav,
                     Collections.unmodifiableSet(dependencies),
-                    Collections.unmodifiableMap(uniqueGroups),
-                    Collections.unmodifiableMap(conflictingGroups),
-                    Collections.unmodifiableMap(matchedGroups));
+                    Collections.unmodifiableMap(uniquePackages),
+                    Collections.unmodifiableMap(conflictingPackages),
+                    Collections.unmodifiableMap(matchedPackages));
         }
     }
 
@@ -147,19 +147,19 @@ public class FeaturePackSpecificDescription {
 
     private final GAV gav;
     private final Set<GAV> dependencies;
-    private final Map<String, GroupDescription> uniqueGroups;
-    private final Map<String, GroupSpecificDescription> conflictingGroups;
-    private final Map<String, GroupDescription> matchedGroups;
+    private final Map<String, PackageDescription> uniquePackages;
+    private final Map<String, PackageSpecificDescription> conflictingPackages;
+    private final Map<String, PackageDescription> matchedPackages;
 
     FeaturePackSpecificDescription(GAV gav, Set<GAV> dependencies,
-            Map<String, GroupDescription> uniqueGroups,
-            Map<String, GroupSpecificDescription> conflictingGroups,
-            Map<String, GroupDescription> matchedGroups) {
+            Map<String, PackageDescription> uniquePackages,
+            Map<String, PackageSpecificDescription> conflictingPackages,
+            Map<String, PackageDescription> matchedPackages) {
         this.gav = gav;
         this.dependencies = dependencies;
-        this.uniqueGroups = uniqueGroups;
-        this.conflictingGroups = conflictingGroups;
-        this.matchedGroups = matchedGroups;
+        this.uniquePackages = uniquePackages;
+        this.conflictingPackages = conflictingPackages;
+        this.matchedPackages = matchedPackages;
     }
 
     public GAV getGav() {
@@ -170,28 +170,28 @@ public class FeaturePackSpecificDescription {
         return dependencies;
     }
 
-    public Set<String> getUniqueGroupNames() {
-        return uniqueGroups.keySet();
+    public Set<String> getUniquePackageNames() {
+        return uniquePackages.keySet();
     }
 
-    public GroupDescription getUniqueGroup(String name) {
-        return uniqueGroups.get(name);
+    public PackageDescription getUniquePackage(String name) {
+        return uniquePackages.get(name);
     }
 
-    public Set<String> getConflictingGroupNames() {
-        return conflictingGroups.keySet();
+    public Set<String> getConflictingPackageNames() {
+        return conflictingPackages.keySet();
     }
 
-    public GroupSpecificDescription getConflictingGroup(String name) {
-        return conflictingGroups.get(name);
+    public PackageSpecificDescription getConflictingPackage(String name) {
+        return conflictingPackages.get(name);
     }
 
-    public Set<String> getMatchedGroupNames() {
-        return matchedGroups.keySet();
+    public Set<String> getMatchedPackageNames() {
+        return matchedPackages.keySet();
     }
 
-    public GroupDescription getMatchedGroup(String groupName) {
-        return matchedGroups.get(groupName);
+    public PackageDescription getMatchedPackage(String name) {
+        return matchedPackages.get(name);
     }
 
     public String logContent() throws IOException {
@@ -206,33 +206,33 @@ public class FeaturePackSpecificDescription {
             }
             out.decreaseOffset();
         }
-        if(!matchedGroups.isEmpty()) {
-            final List<String> names = new ArrayList<String>(matchedGroups.keySet());
+        if(!matchedPackages.isEmpty()) {
+            final List<String> names = new ArrayList<String>(matchedPackages.keySet());
             names.sort(null);
             out.println("Matched packages");
             out.increaseOffset();
-            for(String group : names) {
-                out.println(group);
+            for(String name : names) {
+                out.println(name);
             }
             out.decreaseOffset();
         }
-        if(!uniqueGroups.isEmpty()) {
-            final List<String> names = new ArrayList<String>(uniqueGroups.keySet());
+        if(!uniquePackages.isEmpty()) {
+            final List<String> names = new ArrayList<String>(uniquePackages.keySet());
             names.sort(null);
             out.println("Unique packages");
             out.increaseOffset();
-            for(String group : names) {
-                out.println(group);
+            for(String name : names) {
+                out.println(name);
             }
             out.decreaseOffset();
         }
-        if(!conflictingGroups.isEmpty()) {
-            final List<String> names = new ArrayList<String>(conflictingGroups.keySet());
+        if(!conflictingPackages.isEmpty()) {
+            final List<String> names = new ArrayList<String>(conflictingPackages.keySet());
             names.sort(null);
             out.println("Package differences");
             out.increaseOffset();
-            for(String group : names) {
-                conflictingGroups.get(group).logContent(out);
+            for(String name : names) {
+                conflictingPackages.get(name).logContent(out);
             }
             out.decreaseOffset();
         }

@@ -147,7 +147,7 @@ public class WFFeaturePackLayoutBuilder {
 
     void build(WFPackageDescription wfPkg) throws InstallationDescriptionException {
 
-        pkgBuilder = PackageDescription.packageBuilder(wfPkg.getName());
+        pkgBuilder = PackageDescription.builder(wfPkg.getName());
         for (WFModulesDescription wfModules : wfPkg.getModules()) {
             build(wfModules);
         }
@@ -192,7 +192,7 @@ public class WFFeaturePackLayoutBuilder {
         }
 
         final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addTopGroup(pkgDescr);
+        fpBuilder.addTopPackage(pkgDescr);
 
         writePackageXml(pkgDescr, pkgDir);
         pkgBuilder = null;
@@ -298,10 +298,10 @@ public class WFFeaturePackLayoutBuilder {
 
         final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(moduleName.toString());
         mkdirs(pkgDir);
-        final PackageDescription.Builder moduleBuilder = PackageDescription.packageBuilder(moduleName.toString());
+        final PackageDescription.Builder moduleBuilder = PackageDescription.builder(moduleName.toString());
         copy(dir, pkgDir.resolve(CONTENT).resolve(relativePath.toString()));
         final PackageDescription pkgDescr = moduleBuilder.build();
-        fpBuilder.addGroup(pkgDescr);
+        fpBuilder.addPackage(pkgDescr);
         pkgBuilder.addDependency(moduleName.toString());
 
         writePackageXml(pkgDescr, pkgDir);

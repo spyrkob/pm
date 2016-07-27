@@ -37,7 +37,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.GroupDescription;
+import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
@@ -63,12 +63,12 @@ public class FeaturePackDependencyAnalyzer {
         return fpPath;
     }
 
-    private static Path getGroupDir(Path fpDir, String groupName) throws InstallationDescriptionException {
-        final Path groupDir = fpDir.resolve(Constants.PACKAGES).resolve(groupName);
-        if(!Files.exists(groupDir)) {
-            throw new InstallationDescriptionException(Errors.pathDoesNotExist(groupDir));
+    private static Path getPackageDir(Path fpDir, String packageName) throws InstallationDescriptionException {
+        final Path dir = fpDir.resolve(Constants.PACKAGES).resolve(packageName);
+        if(!Files.exists(dir)) {
+            throw new InstallationDescriptionException(Errors.pathDoesNotExist(dir));
         }
-        return groupDir;
+        return dir;
     }
 
     private static byte[] hashPath(Path path) throws InstallationDescriptionException {
@@ -95,46 +95,46 @@ public class FeaturePackDependencyAnalyzer {
         final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGAV());
         final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGAV());
         compareDependencies(fp1Diff, fp2Diff);
-        compareGroups(fp1Diff, fp2Diff);
+        comparePackages(fp1Diff, fp2Diff);
         return new FeaturePackDescriptionDiffs(fp1Diff.build(), fp2Diff.build());
     }
 
-    private void compareGroups(final Builder fp1Diff, final Builder fp2Diff) throws InstallationDescriptionException {
-        if(!fp1Descr.hasGroups()) {
-            if(fp2Descr.hasGroups()) {
-                fp2Diff.addAllUniqueGroups(fp2Descr.getGroups());
+    private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws InstallationDescriptionException {
+        if(!fp1Descr.hasPackages()) {
+            if(fp2Descr.hasPackages()) {
+                fp2Diff.addAllUniquePackages(fp2Descr.getPackages());
             }
         } else {
-            if(!fp2Descr.hasGroups()) {
-                fp1Diff.addAllUniqueGroups(fp1Descr.getGroups());
+            if(!fp2Descr.hasPackages()) {
+                fp1Diff.addAllUniquePackages(fp1Descr.getPackages());
             } else {
-                final Set<String> fp2GroupNames = new HashSet<String>(fp2Descr.getGroupNames());
-                for(String fp1GroupName : fp1Descr.getGroupNames()) {
-                    if(fp2GroupNames.remove(fp1GroupName)) {
-                        compareGroups(fp1Descr.getGroupDescription(fp1GroupName),
-                                fp2Descr.getGroupDescription(fp1GroupName),
+                final Set<String> fp2PkgNames = new HashSet<String>(fp2Descr.getPackageNames());
+                for(String fp1PkgName : fp1Descr.getPackageNames()) {
+                    if(fp2PkgNames.remove(fp1PkgName)) {
+                        comparePackages(fp1Descr.getPackageDescription(fp1PkgName),
+                                fp2Descr.getPackageDescription(fp1PkgName),
                                 fp1Diff, fp2Diff);
                     } else {
-                        fp1Diff.addUniqueGroup(fp1Descr.getGroupDescription(fp1GroupName));
+                        fp1Diff.addUniquePackage(fp1Descr.getPackageDescription(fp1PkgName));
                     }
                 }
-                if(!fp2GroupNames.isEmpty()) {
-                    for(String groupName : fp2GroupNames) {
-                        fp2Diff.addUniqueGroup(fp2Descr.getGroupDescription(groupName));
+                if(!fp2PkgNames.isEmpty()) {
+                    for(String pkgName : fp2PkgNames) {
+                        fp2Diff.addUniquePackage(fp2Descr.getPackageDescription(pkgName));
                     }
                 }
             }
         }
     }
 
-    private void compareGroups(GroupDescription fp1Group, GroupDescription fp2Group, Builder fp1Diff, Builder fp2Diff) throws InstallationDescriptionException {
-        final GroupSpecificDescription.Builder g1Diff = GroupSpecificDescription.builder(fp1Group.getName());
-        final GroupSpecificDescription.Builder g2Diff = GroupSpecificDescription.builder(fp2Group.getName());
+    private void comparePackages(PackageDescription fp1Pkg, PackageDescription fp2Pkg, Builder fp1Diff, Builder fp2Diff) throws InstallationDescriptionException {
+        final PackageSpecificDescription.Builder g1Diff = PackageSpecificDescription.builder(fp1Pkg.getName());
+        final PackageSpecificDescription.Builder g2Diff = PackageSpecificDescription.builder(fp2Pkg.getName());
 
-        compareDependencies(fp1Group, fp2Group, g1Diff, g2Diff);
+        compareDependencies(fp1Pkg, fp2Pkg, g1Diff, g2Diff);
 
-        final Path g1Content = getGroupDir(fp1Dir, fp1Group.getName()).resolve(Constants.CONTENT);
-        final Path g2Content = getGroupDir(fp2Dir, fp2Group.getName()).resolve(Constants.CONTENT);
+        final Path g1Content = getPackageDir(fp1Dir, fp1Pkg.getName()).resolve(Constants.CONTENT);
+        final Path g2Content = getPackageDir(fp2Dir, fp2Pkg.getName()).resolve(Constants.CONTENT);
 
         final boolean g1ContentExists = Files.exists(g1Content);
         final boolean g2ContentExists = Files.exists(g2Content);
@@ -142,22 +142,22 @@ public class FeaturePackDependencyAnalyzer {
             g1Diff.setContentExists(g1ContentExists);
             g2Diff.setContentExists(g2ContentExists);
         } else if(g1ContentExists && g2ContentExists) {
-            compareGroupContent(g1Content, g2Content, g1Diff, g2Diff);
+            comparePackageContent(g1Content, g2Content, g1Diff, g2Diff);
         }
 
         if(g1Diff.hasRecords()) {
-            fp1Diff.addConflictingGroup(g1Diff.build());
+            fp1Diff.addConflictingPackage(g1Diff.build());
         }
         if(g2Diff.hasRecords()) {
-            fp2Diff.addConflictingGroup(g2Diff.build());
+            fp2Diff.addConflictingPackage(g2Diff.build());
         } else if(!g1Diff.hasRecords()) {
-            fp1Diff.addMatchedGroup(fp1Group);
-            fp2Diff.addMatchedGroup(fp2Group);
+            fp1Diff.addMatchedPackage(fp1Pkg);
+            fp2Diff.addMatchedPackage(fp2Pkg);
         }
     }
 
-    private void compareGroupContent(Path g1Content, Path g2Content,
-            GroupSpecificDescription.Builder g1Diff, GroupSpecificDescription.Builder g2Diff) throws InstallationDescriptionException {
+    private void comparePackageContent(Path g1Content, Path g2Content,
+            PackageSpecificDescription.Builder g1Diff, PackageSpecificDescription.Builder g2Diff) throws InstallationDescriptionException {
 
         final ContentDiff.Builder c1Builder = ContentDiff.builder();
         final ContentDiff.Builder c2Builder = ContentDiff.builder();
@@ -172,49 +172,49 @@ public class FeaturePackDependencyAnalyzer {
         }
     }
 
-    private void compareDirs(Path group1Dir, Path group2Dir, Path c1Dir, Path c2Dir,
+    private void compareDirs(Path pkg1Dir, Path pkg2Dir, Path c1Dir, Path c2Dir,
             final ContentDiff.Builder c1Builder, final ContentDiff.Builder c2Builder) throws InstallationDescriptionException {
         final Map<String, Path> c2Children = getChildren(c2Dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(c1Dir)) {
             if(c2Children.isEmpty()) {
                 for (Path c1 : stream) {
-                    c1Builder.addUniquePath(group1Dir.relativize(c1).toString());
+                    c1Builder.addUniquePath(pkg1Dir.relativize(c1).toString());
                 }
             } else {
                 for (Path c1 : stream) {
                     final Path c2 = c2Children.remove(c1.getFileName().toString());
                     if (c2 == null) {
-                        c1Builder.addUniquePath(group1Dir.relativize(c1).toString());
+                        c1Builder.addUniquePath(pkg1Dir.relativize(c1).toString());
                     } else {
                         if (Files.isDirectory(c1)) {
                             if (!Files.isDirectory(c2)) {
-                                c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
-                                c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                                c1Builder.addConflictPath(pkg1Dir.relativize(c1).toString());
+                                c2Builder.addConflictPath(pkg2Dir.relativize(c2).toString());
                             } else {
-                                compareDirs(group1Dir, group2Dir, c1, c2, c1Builder, c2Builder);
+                                compareDirs(pkg1Dir, pkg2Dir, c1, c2, c1Builder, c2Builder);
                             }
                         } else if (Files.isDirectory(c2)) {
-                            c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
-                            c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                            c1Builder.addConflictPath(pkg1Dir.relativize(c1).toString());
+                            c2Builder.addConflictPath(pkg2Dir.relativize(c2).toString());
                         } else if (c1.getFileName().toString().endsWith(".jar")) {
                             if(!Arrays.equals(HashUtils.hashJar(c1, true), HashUtils.hashJar(c2, true))) {
-                                c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
-                                c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                                c1Builder.addConflictPath(pkg1Dir.relativize(c1).toString());
+                                c2Builder.addConflictPath(pkg2Dir.relativize(c2).toString());
                             }
                         } else if (!Arrays.equals(hashPath(c1), hashPath(c2))) {
-                            c1Builder.addConflictPath(group1Dir.relativize(c1).toString());
-                            c2Builder.addConflictPath(group2Dir.relativize(c2).toString());
+                            c1Builder.addConflictPath(pkg1Dir.relativize(c1).toString());
+                            c2Builder.addConflictPath(pkg2Dir.relativize(c2).toString());
                         }
                     }
                 }
                 if (!c2Children.isEmpty()) {
                     for (Path c2 : c2Children.values()) {
-                        c2Builder.addUniquePath(group2Dir.relativize(c2).toString());
+                        c2Builder.addUniquePath(pkg2Dir.relativize(c2).toString());
                     }
                 }
             }
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.readDirectory(group1Dir));
+            throw new InstallationDescriptionException(Errors.readDirectory(pkg1Dir));
         }
     }
 
@@ -233,24 +233,24 @@ public class FeaturePackDependencyAnalyzer {
         }
     }
 
-    private void compareDependencies(final GroupDescription fp1Group, final GroupDescription fp2Group,
-            final GroupSpecificDescription.Builder fp1GroupDiff, final GroupSpecificDescription.Builder fp2GroupDiff) {
-        if(!fp1Group.hasDependencies()) {
-            if(fp2Group.hasDependencies()) {
-                fp2GroupDiff.addAllDependencies(fp2Group.getDependencies());
+    private void compareDependencies(final PackageDescription fp1Pkg, final PackageDescription fp2Pkg,
+            final PackageSpecificDescription.Builder fp1PkgDiff, final PackageSpecificDescription.Builder fp2PkgDiff) {
+        if(!fp1Pkg.hasDependencies()) {
+            if(fp2Pkg.hasDependencies()) {
+                fp2PkgDiff.addAllDependencies(fp2Pkg.getDependencies());
             }
         } else {
-            if(!fp2Group.hasDependencies()) {
-                fp1GroupDiff.addAllDependencies(fp1Group.getDependencies());
+            if(!fp2Pkg.hasDependencies()) {
+                fp1PkgDiff.addAllDependencies(fp1Pkg.getDependencies());
             } else {
-                final Set<String> fp2Deps = new HashSet<String>(fp2Group.getDependencies());
-                for(String dep : fp1Group.getDependencies()) {
+                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getDependencies());
+                for(String dep : fp1Pkg.getDependencies()) {
                     if(!fp2Deps.remove(dep)) {
-                        fp1GroupDiff.addDependency(dep);
+                        fp1PkgDiff.addDependency(dep);
                     }
                 }
                 if(!fp2Deps.isEmpty()) {
-                    fp2GroupDiff.addAllDependencies(fp2Deps);
+                    fp2PkgDiff.addAllDependencies(fp2Deps);
                 }
             }
         }
