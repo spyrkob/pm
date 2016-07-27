@@ -56,6 +56,13 @@ public class FeaturePackDependencyDescription {
             return this;
         }
 
+        public Builder excludeAllPackages(Set<String> names) {
+            for(String name : names) {
+                excludePackage(name);
+            }
+            return this;
+        }
+
         public FeaturePackDependencyDescription build() {
             return new FeaturePackDependencyDescription(gav, excludedPackages);
         }

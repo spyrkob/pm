@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -46,7 +46,7 @@ public class FeaturePackSpecificDescription {
     static class Builder {
 
         private final GAV gav;
-        private Set<GAV> dependencies = Collections.emptySet();
+        private Map<GAV, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
         private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
         private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
         private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
@@ -55,27 +55,26 @@ public class FeaturePackSpecificDescription {
             this.gav = gav;
         }
 
-        Builder addAllDependencies(Collection<GAV> gavs) {
-            if(gavs.isEmpty()) {
+        Builder addAllDependencies(Collection<FeaturePackDependencyDescription> deps) {
+            if(deps.isEmpty()) {
                 return this;
-            } else if(gavs.size() == 1) {
-                for(GAV gav : gavs) {
-                    addDependency(gav);
+            } else {
+                for(FeaturePackDependencyDescription dep: deps) {
+                    addDependency(dep);
                 }
             }
             return this;
         }
 
-        Builder addDependency(GAV gav) {
-            assert gav != null : "GAV is null";
+        Builder addDependency(FeaturePackDependencyDescription dep) {
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singleton(gav);
+                    dependencies = Collections.singletonMap(dep.getGAV(), dep);
                     break;
                 case 1:
-                    dependencies = new HashSet<GAV>(dependencies);
+                    dependencies = new HashMap<GAV, FeaturePackDependencyDescription>(dependencies);
                 default:
-                    dependencies.add(gav);
+                    dependencies.put(dep.getGAV(), dep);
             }
             return this;
         }
@@ -134,7 +133,7 @@ public class FeaturePackSpecificDescription {
 
         FeaturePackSpecificDescription build() {
             return new FeaturePackSpecificDescription(gav,
-                    Collections.unmodifiableSet(dependencies),
+                    Collections.unmodifiableMap(dependencies),
                     Collections.unmodifiableMap(uniquePackages),
                     Collections.unmodifiableMap(conflictingPackages),
                     Collections.unmodifiableMap(matchedPackages));
@@ -146,12 +145,13 @@ public class FeaturePackSpecificDescription {
     }
 
     private final GAV gav;
-    private final Set<GAV> dependencies;
+    private final Map<GAV, FeaturePackDependencyDescription> dependencies;
     private final Map<String, PackageDescription> uniquePackages;
     private final Map<String, PackageSpecificDescription> conflictingPackages;
     private final Map<String, PackageDescription> matchedPackages;
 
-    FeaturePackSpecificDescription(GAV gav, Set<GAV> dependencies,
+    FeaturePackSpecificDescription(GAV gav,
+            Map<GAV, FeaturePackDependencyDescription> dependencies,
             Map<String, PackageDescription> uniquePackages,
             Map<String, PackageSpecificDescription> conflictingPackages,
             Map<String, PackageDescription> matchedPackages) {
@@ -166,16 +166,36 @@ public class FeaturePackSpecificDescription {
         return gav;
     }
 
-    public Set<GAV> getDependencies() {
-        return dependencies;
+    public boolean hasDependencies() {
+        return !dependencies.isEmpty();
+    }
+
+    public Set<GAV> getDependencyGAVs() {
+        return dependencies.keySet();
+    }
+
+    public Collection<FeaturePackDependencyDescription> getDependencies() {
+        return dependencies.values();
+    }
+
+    public boolean hasUniquePackages() {
+        return !uniquePackages.isEmpty();
     }
 
     public Set<String> getUniquePackageNames() {
         return uniquePackages.keySet();
     }
 
+    public Collection<PackageDescription> getUniquePackages() {
+        return uniquePackages.values();
+    }
+
     public PackageDescription getUniquePackage(String name) {
         return uniquePackages.get(name);
+    }
+
+    public boolean hasConflictingPackages() {
+        return !conflictingPackages.isEmpty();
     }
 
     public Set<String> getConflictingPackageNames() {
@@ -184,6 +204,10 @@ public class FeaturePackSpecificDescription {
 
     public PackageSpecificDescription getConflictingPackage(String name) {
         return conflictingPackages.get(name);
+    }
+
+    public boolean hasMatchedPackages() {
+        return !matchedPackages.isEmpty();
     }
 
     public Set<String> getMatchedPackageNames() {
@@ -201,7 +225,7 @@ public class FeaturePackSpecificDescription {
         if(!dependencies.isEmpty()) {
             out.println("Dependencies:");
             out.increaseOffset();
-            for(GAV gav : dependencies) {
+            for(GAV gav : dependencies.keySet()) {
                 out.println(gav.toString());
             }
             out.decreaseOffset();

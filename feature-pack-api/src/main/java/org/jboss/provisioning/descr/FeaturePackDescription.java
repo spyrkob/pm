@@ -108,6 +108,13 @@ public class FeaturePackDescription {
             return this;
         }
 
+        public Builder addAllDependencies(Collection<FeaturePackDependencyDescription> dependencies) {
+            for(FeaturePackDependencyDescription dependency : dependencies) {
+                addDependency(dependency);
+            }
+            return this;
+        }
+
         public FeaturePackDescription build() {
             return new FeaturePackDescription(gav, Collections.unmodifiableSet(topPackages), Collections.unmodifiableMap(packages), Collections.unmodifiableMap(dependencies));
         }
@@ -149,6 +156,10 @@ public class FeaturePackDescription {
         return topPackages;
     }
 
+    public boolean isTopPackage(String name) {
+        return topPackages.contains(name);
+    }
+
     public boolean hasPackages() {
         return !packages.isEmpty();
     }
@@ -171,6 +182,10 @@ public class FeaturePackDescription {
 
     public Set<GAV> getDependencyGAVs() {
         return dependencies.keySet();
+    }
+
+    public Collection<FeaturePackDependencyDescription> getDependencies() {
+        return dependencies.values();
     }
 
     public FeaturePackDependencyDescription getDependency(GAV gav) {

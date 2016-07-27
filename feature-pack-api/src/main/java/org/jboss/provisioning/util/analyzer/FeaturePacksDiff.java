@@ -44,15 +44,19 @@ import org.jboss.provisioning.util.HashUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Builder;
 
 /**
- * Analyzes feature pack layouts with the goal to identify dependencies between
- * feature packs.
+ * Analyzes feature pack layouts with the goal to identify common dependencies,
+ * content and differences between feature packs.
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDependencyAnalyzer {
+public class FeaturePacksDiff {
+
+    static FeaturePacksDiff newInstance(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+        return new FeaturePacksDiff(getFeaturePackDir(fpLayoutDir, gav1), getFeaturePackDir(fpLayoutDir, gav2));
+    }
 
     public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
-        return new FeaturePackDependencyAnalyzer(getFeaturePackDir(fpLayoutDir, gav1), getFeaturePackDir(fpLayoutDir, gav2)).compare();
+        return newInstance(fpLayoutDir, gav1, gav2).compare();
     }
 
     private static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws InstallationDescriptionException {
@@ -84,14 +88,22 @@ public class FeaturePackDependencyAnalyzer {
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    public FeaturePackDependencyAnalyzer(Path fp1Dir, Path fp2Dir) throws InstallationDescriptionException {
+    FeaturePacksDiff(Path fp1Dir, Path fp2Dir) throws InstallationDescriptionException {
         this.fp1Dir = fp1Dir;
         this.fp2Dir = fp2Dir;
         fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp1Dir);
         fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp2Dir);
     }
 
-    public FeaturePackDescriptionDiffs compare() throws InstallationDescriptionException {
+    FeaturePackDescription getFeaturePackDescription1() {
+        return fp1Descr;
+    }
+
+    FeaturePackDescription getFeaturePackDescription2() {
+        return fp2Descr;
+    }
+
+    FeaturePackDescriptionDiffs compare() throws InstallationDescriptionException {
         final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGAV());
         final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGAV());
         compareDependencies(fp1Diff, fp2Diff);
@@ -259,20 +271,22 @@ public class FeaturePackDependencyAnalyzer {
     private void compareDependencies(final Builder fp1Diff, final Builder fp2Diff) {
         if(!fp1Descr.hasDependencies()) {
             if(fp2Descr.hasDependencies()) {
-                fp2Diff.addAllDependencies(fp2Descr.getDependencyGAVs());
+                fp2Diff.addAllDependencies(fp2Descr.getDependencies());
             }
         } else {
             if(!fp2Descr.hasDependencies()) {
-                fp1Diff.addAllDependencies(fp1Descr.getDependencyGAVs());
+                fp1Diff.addAllDependencies(fp1Descr.getDependencies());
             } else {
                 final Set<GAV> fp2Deps = new HashSet<GAV>(fp2Descr.getDependencyGAVs());
                 for(GAV gav : fp1Descr.getDependencyGAVs()) {
                     if(!fp2Deps.remove(gav)) {
-                        fp1Diff.addDependency(gav);
+                        fp1Diff.addDependency(fp1Descr.getDependency(gav));
                     }
                 }
                 if(!fp2Deps.isEmpty()) {
-                    fp2Diff.addAllDependencies(fp2Deps);
+                    for(GAV gav : fp2Deps) {
+                        fp2Diff.addDependency(fp2Descr.getDependency(gav));
+                    }
                 }
             }
         }

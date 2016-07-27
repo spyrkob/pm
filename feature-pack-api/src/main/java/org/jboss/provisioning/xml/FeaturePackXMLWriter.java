@@ -23,6 +23,7 @@
 package org.jboss.provisioning.xml;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -53,22 +54,27 @@ public class FeaturePackXMLWriter {
     }
 
     public void write(FeaturePackDescription fpDescr, Path outputFile) throws XMLStreamException, IOException {
+        try (Writer writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)) {
+            write(fpDescr, writer);
+        }
+    }
 
+    public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
         final ElementNode fp = newElement(null, Element.FEATURE_PACK);
         addAttribute(fp, Attribute.GROUP_ID, fpDescr.getGAV().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, fpDescr.getGAV().getArtifactId());
         addAttribute(fp, Attribute.VERSION, fpDescr.getGAV().getVersion());
 
-        if(fpDescr.hasDependencies()) {
+        if (fpDescr.hasDependencies()) {
             final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
             final GAV[] gavs = fpDescr.getDependencyGAVs().toArray(new GAV[0]);
             Arrays.sort(gavs);
-            for(GAV gav : gavs) {
+            for (GAV gav : gavs) {
                 write(deps, fpDescr.getDependency(gav));
             }
         }
 
-        if(fpDescr.hasTopPackages()) {
+        if (fpDescr.hasTopPackages()) {
             final ElementNode pkgs = newElement(fp, Element.PACKAGES);
             final String[] pkgNames = fpDescr.getTopPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
@@ -77,12 +83,11 @@ public class FeaturePackXMLWriter {
             }
         }
 
-        try (FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
-                XMLOutputFactory.newInstance().createXMLStreamWriter(
-                        Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
-            writer.writeStartDocument();
-            fp.marshall(writer);
-            writer.writeEndDocument();
+        try (FormattingXMLStreamWriter xmlWriter = new FormattingXMLStreamWriter(XMLOutputFactory.newInstance()
+                .createXMLStreamWriter(writer))) {
+            xmlWriter.writeStartDocument();
+            fp.marshall(xmlWriter);
+            xmlWriter.writeEndDocument();
         }
     }
 
