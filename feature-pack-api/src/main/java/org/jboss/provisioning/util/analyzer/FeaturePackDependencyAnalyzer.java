@@ -150,6 +150,9 @@ public class FeaturePackDependencyAnalyzer {
         }
         if(g2Diff.hasRecords()) {
             fp2Diff.addConflictingGroup(g2Diff.build());
+        } else if(!g1Diff.hasRecords()) {
+            fp1Diff.addMatchedGroup(fp1Group);
+            fp2Diff.addMatchedGroup(fp2Group);
         }
     }
 

@@ -49,6 +49,7 @@ public class FeaturePackSpecificDescription {
         private Set<GAV> dependencies = Collections.emptySet();
         private Map<String, GroupDescription> uniqueGroups = Collections.emptyMap();
         private Map<String, GroupSpecificDescription> conflictingGroups = Collections.emptyMap();
+        private Map<String, GroupDescription> matchedGroups = Collections.emptyMap();
 
         private Builder(GAV gav) {
             this.gav = gav;
@@ -93,6 +94,20 @@ public class FeaturePackSpecificDescription {
             return this;
         }
 
+        Builder addMatchedGroup(GroupDescription group) {
+            assert group != null : "group is null";
+            switch(matchedGroups.size()) {
+                case 0:
+                    matchedGroups = Collections.singletonMap(group.getName(), group);
+                    break;
+                case 1:
+                    matchedGroups = new HashMap<String, GroupDescription>(matchedGroups);
+                default:
+                    matchedGroups.put(group.getName(), group);
+            }
+            return this;
+        }
+
         Builder addUniqueGroup(GroupDescription group) {
             assert group != null : "group is null";
             switch(uniqueGroups.size()) {
@@ -121,7 +136,8 @@ public class FeaturePackSpecificDescription {
             return new FeaturePackSpecificDescription(gav,
                     Collections.unmodifiableSet(dependencies),
                     Collections.unmodifiableMap(uniqueGroups),
-                    Collections.unmodifiableMap(conflictingGroups));
+                    Collections.unmodifiableMap(conflictingGroups),
+                    Collections.unmodifiableMap(matchedGroups));
         }
     }
 
@@ -133,12 +149,17 @@ public class FeaturePackSpecificDescription {
     private final Set<GAV> dependencies;
     private final Map<String, GroupDescription> uniqueGroups;
     private final Map<String, GroupSpecificDescription> conflictingGroups;
+    private final Map<String, GroupDescription> matchedGroups;
 
-    FeaturePackSpecificDescription(GAV gav, Set<GAV> dependencies, Map<String, GroupDescription> uniqueGroups, Map<String, GroupSpecificDescription> conflictingGroups) {
+    FeaturePackSpecificDescription(GAV gav, Set<GAV> dependencies,
+            Map<String, GroupDescription> uniqueGroups,
+            Map<String, GroupSpecificDescription> conflictingGroups,
+            Map<String, GroupDescription> matchedGroups) {
         this.gav = gav;
         this.dependencies = dependencies;
         this.uniqueGroups = uniqueGroups;
         this.conflictingGroups = conflictingGroups;
+        this.matchedGroups = matchedGroups;
     }
 
     public GAV getGav() {
@@ -165,10 +186,36 @@ public class FeaturePackSpecificDescription {
         return conflictingGroups.get(name);
     }
 
+    public Set<String> getMatchedGroupNames() {
+        return matchedGroups.keySet();
+    }
+
+    public GroupDescription getMatchedGroup(String groupName) {
+        return matchedGroups.get(groupName);
+    }
+
     public String logContent() throws IOException {
         final DescrFormatter out = new DescrFormatter();
         out.print("Feature-pack ").println(gav.toString());
         out.increaseOffset();
+        if(!dependencies.isEmpty()) {
+            out.println("Dependencies:");
+            out.increaseOffset();
+            for(GAV gav : dependencies) {
+                out.println(gav.toString());
+            }
+            out.decreaseOffset();
+        }
+        if(!matchedGroups.isEmpty()) {
+            final List<String> names = new ArrayList<String>(matchedGroups.keySet());
+            names.sort(null);
+            out.println("Matched packages");
+            out.increaseOffset();
+            for(String group : names) {
+                out.println(group);
+            }
+            out.decreaseOffset();
+        }
         if(!uniqueGroups.isEmpty()) {
             final List<String> names = new ArrayList<String>(uniqueGroups.keySet());
             names.sort(null);
@@ -182,18 +229,10 @@ public class FeaturePackSpecificDescription {
         if(!conflictingGroups.isEmpty()) {
             final List<String> names = new ArrayList<String>(conflictingGroups.keySet());
             names.sort(null);
-            out.println("Common packages");
+            out.println("Package differences");
             out.increaseOffset();
             for(String group : names) {
                 conflictingGroups.get(group).logContent(out);
-            }
-            out.decreaseOffset();
-        }
-        if(!dependencies.isEmpty()) {
-            out.println("Dependencies:");
-            out.increaseOffset();
-            for(GAV gav : dependencies) {
-                out.println(gav.toString());
             }
             out.decreaseOffset();
         }
