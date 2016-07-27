@@ -259,14 +259,14 @@ public class FeaturePackDependencyAnalyzer {
     private void compareDependencies(final Builder fp1Diff, final Builder fp2Diff) {
         if(!fp1Descr.hasDependencies()) {
             if(fp2Descr.hasDependencies()) {
-                fp2Diff.addAllDependencies(fp2Descr.getDependencies());
+                fp2Diff.addAllDependencies(fp2Descr.getDependencyGAVs());
             }
         } else {
             if(!fp2Descr.hasDependencies()) {
-                fp1Diff.addAllDependencies(fp1Descr.getDependencies());
+                fp1Diff.addAllDependencies(fp1Descr.getDependencyGAVs());
             } else {
-                final Set<GAV> fp2Deps = new HashSet<GAV>(fp2Descr.getDependencies());
-                for(GAV gav : fp1Descr.getDependencies()) {
+                final Set<GAV> fp2Deps = new HashSet<GAV>(fp2Descr.getDependencyGAVs());
+                for(GAV gav : fp1Descr.getDependencyGAVs()) {
                     if(!fp2Deps.remove(gav)) {
                         fp1Diff.addDependency(gav);
                     }

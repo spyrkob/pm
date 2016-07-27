@@ -32,6 +32,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.GroupDescription;
 import org.jboss.provisioning.xml.FeaturePackXMLParser10.Attribute;
@@ -60,10 +61,10 @@ public class FeaturePackXMLWriter {
 
         if(fpDescr.hasDependencies()) {
             final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
-            final GAV[] gavs = fpDescr.getDependencies().toArray(new GAV[0]);
+            final GAV[] gavs = fpDescr.getDependencyGAVs().toArray(new GAV[0]);
             Arrays.sort(gavs);
             for(GAV gav : gavs) {
-                write(deps, gav);
+                write(deps, fpDescr.getDependency(gav));
             }
         }
 
@@ -89,12 +90,21 @@ public class FeaturePackXMLWriter {
         addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, group.getName());
     }
 
-    private static void write(ElementNode deps, GAV gav) {
-        final ElementNode dep = newElement(deps, Element.DEPENDENCY);
-        addAttribute(dep, Attribute.GROUP_ID, gav.getGroupId());
-        addAttribute(dep, Attribute.ARTIFACT_ID, gav.getArtifactId());
+    private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {
+        final ElementNode depsElement = newElement(deps, Element.DEPENDENCY);
+        final GAV gav = dependency.getGAV();
+        addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
+        addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
         if(gav.getVersion() != null) {
-            addAttribute(dep, Attribute.VERSION, gav.getVersion());
+            addAttribute(depsElement, Attribute.VERSION, gav.getVersion());
+        }
+        if(dependency.hasExcludedPackages()) {
+            final ElementNode excludes = newElement(depsElement, Element.EXCLUDES);
+            final String[] packageNames = dependency.getExcludedPackages().toArray(new String[0]);
+            Arrays.sort(packageNames);
+            for (String packageName : packageNames) {
+                addAttribute(newElement(excludes, Element.PACKAGE), Attribute.NAME, packageName);
+            }
         }
     }
 

@@ -33,6 +33,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -51,6 +52,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
 
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
+        EXCLUDES("excludes"),
         FEATURE_PACK("feature-pack"),
         PACKAGES("packages"),
         PACKAGE("package"),
@@ -64,6 +66,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
             addElement(elementsMap, Element.DEPENDENCIES);
             addElement(elementsMap, Element.DEPENDENCY);
+            addElement(elementsMap, Element.EXCLUDES);
             addElement(elementsMap, Element.FEATURE_PACK);
             addElement(elementsMap, Element.PACKAGES);
             addElement(elementsMap, Element.PACKAGE);
@@ -254,11 +257,32 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        ParsingUtils.parseNoContent(reader);
-        fpBuilder.addDependency(new GAV(groupId, artifactId, version));
+        final FeaturePackDependencyDescription.Builder depBuilder = FeaturePackDependencyDescription.builder(new GAV(groupId, artifactId, version));
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case EXCLUDES:
+                            readExcludes(reader, depBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        fpBuilder.addDependency(depBuilder.build());
     }
 
-    private void readPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    private void readExcludes(XMLExtendedStreamReader reader, FeaturePackDependencyDescription.Builder depBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -269,7 +293,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            readPackage(reader, fpBuilder);
+                            depBuilder.excludePackage(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -284,8 +308,30 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackage(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        fpBuilder.addTopGroupName(parseName(reader));
+    private void readPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            fpBuilder.addTopGroupName(parseName(reader));
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
     private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {

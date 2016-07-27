@@ -44,7 +44,7 @@ public class FeaturePackDescription {
     public static class Builder {
 
         private GAV gav;
-        private Set<GAV> dependencies = Collections.emptySet();
+        private Map<GAV, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
         private Set<String> topGroups = Collections.emptySet();
         private Map<String, GroupDescription> groups = Collections.emptyMap();
 
@@ -94,22 +94,22 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addDependency(GAV gav) {
+        public Builder addDependency(FeaturePackDependencyDescription dependency) {
             assert gav != null : "GAV is null";
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singleton(gav);
+                    dependencies = Collections.singletonMap(dependency.getGAV(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashSet<GAV>(dependencies);
+                    dependencies = new HashMap<GAV, FeaturePackDependencyDescription>(dependencies);
                 default:
-                    dependencies.add(gav);
+                    dependencies.put(dependency.getGAV(), dependency);
             }
             return this;
         }
 
         public FeaturePackDescription build() {
-            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topGroups), Collections.unmodifiableMap(groups), Collections.unmodifiableSet(dependencies));
+            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topGroups), Collections.unmodifiableMap(groups), Collections.unmodifiableMap(dependencies));
         }
     }
 
@@ -122,11 +122,11 @@ public class FeaturePackDescription {
     }
 
     private final GAV gav;
-    private final Set<GAV> dependencies;
+    private final Map<GAV, FeaturePackDependencyDescription> dependencies;
     private final Set<String> topGroups;
     private final Map<String, GroupDescription> groups;
 
-    protected FeaturePackDescription(GAV gav, Set<String> topGroups, Map<String, GroupDescription> groups, Set<GAV> dependencies) {
+    protected FeaturePackDescription(GAV gav, Set<String> topGroups, Map<String, GroupDescription> groups, Map<GAV, FeaturePackDependencyDescription> dependencies) {
         assert gav != null : "GAV is null";
         assert dependencies != null : "dependencies is null";
         assert topGroups != null : "topGroups is null";
@@ -169,8 +169,12 @@ public class FeaturePackDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<GAV> getDependencies() {
-        return dependencies;
+    public Set<GAV> getDependencyGAVs() {
+        return dependencies.keySet();
+    }
+
+    public FeaturePackDependencyDescription getDependency(GAV gav) {
+        return dependencies.get(gav);
     }
 
     public String logContent() throws IOException {
@@ -195,7 +199,7 @@ public class FeaturePackDescription {
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
-            for(GAV gav : dependencies) {
+            for(GAV gav : dependencies.keySet()) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();
