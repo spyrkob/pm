@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
@@ -52,27 +51,11 @@ import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Build
 public class FeaturePacksDiff {
 
     static FeaturePacksDiff newInstance(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
-        return new FeaturePacksDiff(getFeaturePackDir(fpLayoutDir, gav1), getFeaturePackDir(fpLayoutDir, gav2));
+        return new FeaturePacksDiff(fpLayoutDir, gav1, gav2);
     }
 
     public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
         return newInstance(fpLayoutDir, gav1, gav2).compare();
-    }
-
-    private static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws InstallationDescriptionException {
-        final Path fpPath = fpLayoutDir.resolve(gav.getGroupId()).resolve(gav.getArtifactId()).resolve(gav.getVersion());
-        if(!Files.exists(fpPath)) {
-            throw new InstallationDescriptionException(Errors.pathDoesNotExist(fpPath));
-        }
-        return fpPath;
-    }
-
-    private static Path getPackageDir(Path fpDir, String packageName) throws InstallationDescriptionException {
-        final Path dir = fpDir.resolve(Constants.PACKAGES).resolve(packageName);
-        if(!Files.exists(dir)) {
-            throw new InstallationDescriptionException(Errors.pathDoesNotExist(dir));
-        }
-        return dir;
     }
 
     private static byte[] hashPath(Path path) throws InstallationDescriptionException {
@@ -83,16 +66,14 @@ public class FeaturePacksDiff {
         }
     }
 
-    private final Path fp1Dir;
-    private final Path fp2Dir;
+    private final Path fpLayoutDir;
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    FeaturePacksDiff(Path fp1Dir, Path fp2Dir) throws InstallationDescriptionException {
-        this.fp1Dir = fp1Dir;
-        this.fp2Dir = fp2Dir;
-        fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp1Dir);
-        fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(fp2Dir);
+    FeaturePacksDiff(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+        this.fpLayoutDir = fpLayoutDir;
+        fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1));
+        fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav2));
     }
 
     FeaturePackDescription getFeaturePackDescription1() {
@@ -112,41 +93,48 @@ public class FeaturePacksDiff {
     }
 
     private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws InstallationDescriptionException {
-        if(!fp1Descr.hasPackages()) {
-            if(fp2Descr.hasPackages()) {
-                fp2Diff.addAllUniquePackages(fp2Descr.getPackages());
+
+        final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, fp1Descr);
+        final Map<String, FeaturePackPackageView.ResolvedPackage> fp2Packages = FeaturePackPackageView.resolve(fpLayoutDir, fp2Descr);
+
+        if(fp1Packages.isEmpty()) {
+            if(!fp2Packages.isEmpty()) {
+                for(FeaturePackPackageView.ResolvedPackage resolvedPackage : fp2Packages.values()) {
+                    fp2Diff.addUniquePackage(resolvedPackage.getDescription());
+                }
             }
         } else {
-            if(!fp2Descr.hasPackages()) {
-                fp1Diff.addAllUniquePackages(fp1Descr.getPackages());
+            if(fp2Packages.isEmpty()) {
+                for(FeaturePackPackageView.ResolvedPackage resolvedPackage : fp1Packages.values()) {
+                    fp1Diff.addUniquePackage(resolvedPackage.getDescription());
+                }
             } else {
-                final Set<String> fp2PkgNames = new HashSet<String>(fp2Descr.getPackageNames());
-                for(String fp1PkgName : fp1Descr.getPackageNames()) {
+                final Set<String> fp2PkgNames = new HashSet<String>(fp2Packages.keySet());
+                for(String fp1PkgName : fp1Packages.keySet()) {
                     if(fp2PkgNames.remove(fp1PkgName)) {
-                        comparePackages(fp1Descr.getPackageDescription(fp1PkgName),
-                                fp2Descr.getPackageDescription(fp1PkgName),
-                                fp1Diff, fp2Diff);
+                        comparePackages(fp1Packages.get(fp1PkgName), fp2Packages.get(fp1PkgName), fp1Diff, fp2Diff);
                     } else {
-                        fp1Diff.addUniquePackage(fp1Descr.getPackageDescription(fp1PkgName));
+                        fp1Diff.addUniquePackage(fp1Packages.get(fp1PkgName).getDescription());
                     }
                 }
                 if(!fp2PkgNames.isEmpty()) {
                     for(String pkgName : fp2PkgNames) {
-                        fp2Diff.addUniquePackage(fp2Descr.getPackageDescription(pkgName));
+                        fp2Diff.addUniquePackage(fp2Packages.get(pkgName).getDescription());
                     }
                 }
             }
         }
     }
 
-    private void comparePackages(PackageDescription fp1Pkg, PackageDescription fp2Pkg, Builder fp1Diff, Builder fp2Diff) throws InstallationDescriptionException {
+    private void comparePackages(FeaturePackPackageView.ResolvedPackage fp1Pkg, FeaturePackPackageView.ResolvedPackage fp2Pkg,
+            Builder fp1Diff, Builder fp2Diff) throws InstallationDescriptionException {
         final PackageSpecificDescription.Builder g1Diff = PackageSpecificDescription.builder(fp1Pkg.getName());
         final PackageSpecificDescription.Builder g2Diff = PackageSpecificDescription.builder(fp2Pkg.getName());
 
-        compareDependencies(fp1Pkg, fp2Pkg, g1Diff, g2Diff);
+        compareDependencies(fp1Pkg.getDescription(), fp2Pkg.getDescription(), g1Diff, g2Diff);
 
-        final Path g1Content = getPackageDir(fp1Dir, fp1Pkg.getName()).resolve(Constants.CONTENT);
-        final Path g2Content = getPackageDir(fp2Dir, fp2Pkg.getName()).resolve(Constants.CONTENT);
+        final Path g1Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp1Pkg.getGAV()), fp1Pkg.getName());
+        final Path g2Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp2Pkg.getGAV()), fp2Pkg.getName());
 
         final boolean g1ContentExists = Files.exists(g1Content);
         final boolean g2ContentExists = Files.exists(g2Content);
@@ -163,8 +151,8 @@ public class FeaturePacksDiff {
         if(g2Diff.hasRecords()) {
             fp2Diff.addConflictingPackage(g2Diff.build());
         } else if(!g1Diff.hasRecords()) {
-            fp1Diff.addMatchedPackage(fp1Pkg);
-            fp2Diff.addMatchedPackage(fp2Pkg);
+            fp1Diff.addMatchedPackage(fp1Pkg.getDescription());
+            fp2Diff.addMatchedPackage(fp2Pkg.getDescription());
         }
     }
 

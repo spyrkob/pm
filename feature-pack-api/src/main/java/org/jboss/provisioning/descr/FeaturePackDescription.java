@@ -164,6 +164,10 @@ public class FeaturePackDescription {
         return !packages.isEmpty();
     }
 
+    public boolean hasPackage(String name) {
+        return packages.containsKey(name);
+    }
+
     public Collection<PackageDescription> getPackages() {
         return packages.values();
     }

@@ -24,6 +24,7 @@ package org.jboss.provisioning.cli;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,13 +55,16 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.util.analyzer.FeaturePackDependencyAnalyzer;
+import org.jboss.provisioning.util.analyzer.FeaturePackDependencyBuilder;
 import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
+import org.jboss.provisioning.util.analyzer.FeaturePacksDiff;
 import org.jboss.provisioning.wildfly.descr.WFFeaturePackLayoutBuilder;
 import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
 import org.jboss.provisioning.wildfly.xml.WFInstallationDefParser;
+import org.jboss.provisioning.xml.FeaturePackXMLWriter;
 
 /**
  *
@@ -78,6 +82,7 @@ public class FpCommand extends CommandBase {
 
     private static final String ACTION_ARG_NAME = "action";
     private static final String ANALYZE = "analyze";
+    private static final String EXTRACT_PARENT = "extract-parent";
     private static final String INSTALL = "install";
 
     private static final String INSTALL_DIR_ARG_NAME = "install-dir";
@@ -110,14 +115,26 @@ public class FpCommand extends CommandBase {
         }
     }
 
+    private static class XmlOnlyActivator extends AfterActionActivator {
+        @Override
+        protected boolean actionOption(ProcessedOption option) {
+            if (EXTRACT_PARENT.equals(option.getValue())) {
+                return true;
+            }
+            return false;
+        }
+    }
+
     private static class GavActivator extends AfterActionActivator {
         @Override
         public boolean isActivated(ProcessedCommand processedCommand) {
             int conditions = 0;
             for(Object o : processedCommand.getOptions()) {
                 final ProcessedOption option = (ProcessedOption) o;
+                final String optionValue = option.getValue();
                 if(option.getName().equals(ACTION_ARG_NAME)) {
-                    if (ANALYZE.equals(option.getValue())) {
+                    if (ANALYZE.equals(optionValue) ||
+                            EXTRACT_PARENT.equals(optionValue)) {
                         if (conditions == 1) {
                             return true;
                         }
@@ -126,8 +143,8 @@ public class FpCommand extends CommandBase {
                         return false;
                     }
                 } else if(option.getName().equals(WORK_DIR_ARG_NAME)) {
-                    if(option.getValue() != null) {
-                        workDirActivatedValue = option.getValue();
+                    if(optionValue != null) {
+                        workDirActivatedValue = optionValue;
                         if(conditions == 1) {
                             return true;
                         }
@@ -216,7 +233,7 @@ public class FpCommand extends CommandBase {
         }
     }
 
-    @Option(name=ACTION_ARG_NAME, required=true, defaultValue={ANALYZE, INSTALL})
+    @Option(name=ACTION_ARG_NAME, required=true, defaultValue={ANALYZE, EXTRACT_PARENT, INSTALL})
     private String actionArg;
 
     @Option(name=INSTALL_DIR_ARG_NAME, completer=FileOptionCompleter.class, activator=InstallActivator.class)
@@ -232,12 +249,17 @@ public class FpCommand extends CommandBase {
     @Option(name="gav2", completer=GavCompleter.class, activator=GavActivator.class)
     private String gav2;
 
+    @Option(name="xml-only", hasValue=false, required=false, activator=XmlOnlyActivator.class)
+    private boolean xmlOnly;
+
     @Override
     protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
         if(INSTALL.equals(actionArg)) {
             installAction();
         } else if(ANALYZE.equals(actionArg)) {
             analyzeAction(ci);
+        } else if(EXTRACT_PARENT.equals(actionArg)) {
+            extractParentAction(ci);
         } else {
             throw new CommandExecutionException("Unrecognized action '" + actionArg + "'");
         }
@@ -261,7 +283,7 @@ public class FpCommand extends CommandBase {
 
         final FeaturePackDescriptionDiffs diff;
         try {
-            diff = FeaturePackDependencyAnalyzer.compare(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+            diff = FeaturePacksDiff.compare(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
         } catch (InstallationDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
@@ -271,6 +293,43 @@ public class FpCommand extends CommandBase {
             ci.println(diff.getFeaturePackDiff2().logContent());
         } catch(IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void extractParentAction(CommandInvocation ci) throws CommandExecutionException {
+
+        if(workDirArg == null) {
+            argumentMissing(WORK_DIR_ARG_NAME);
+        }
+        if(gav1 == null) {
+            argumentMissing("gav1");
+        }
+        if(gav2 == null) {
+            argumentMissing("gav2");
+        }
+        final Path workDir = Paths.get(workDirArg);
+        if(!Files.exists(workDir)) {
+            throw new CommandExecutionException(Errors.pathDoesNotExist(workDir));
+        }
+
+        if (xmlOnly) {
+            try (StringWriter writer = new StringWriter()) {
+                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+                FeaturePackXMLWriter.INSTANCE.write(newChildDescr, writer);
+                System.out.println(writer.getBuffer().toString());
+            } catch (InstallationDescriptionException e) {
+                throw new CommandExecutionException("Failed to describe parent as a dependency", e);
+            } catch (XMLStreamException e) {
+                throw new CommandExecutionException("Failed to write XML", e);
+            } catch (IOException e) {
+                throw new CommandExecutionException("Failed to write XML", e);
+            }
+        } else {
+            try {
+                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+            } catch (InstallationDescriptionException e) {
+                throw new CommandExecutionException("Failed to extract parent as a dependency", e);
+            }
         }
     }
 

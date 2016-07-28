@@ -261,6 +261,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    fpBuilder.addDependency(depBuilder.build());
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -279,7 +280,6 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
                 }
             }
         }
-        fpBuilder.addDependency(depBuilder.build());
     }
 
     private void readExcludes(XMLExtendedStreamReader reader, FeaturePackDependencyDescription.Builder depBuilder) throws XMLStreamException {

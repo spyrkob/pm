@@ -218,6 +218,10 @@ public class FeaturePackSpecificDescription {
         return matchedPackages.get(name);
     }
 
+    public boolean isMatchedPackage(String name) {
+        return matchedPackages.containsKey(name);
+    }
+
     public String logContent() throws IOException {
         final DescrFormatter out = new DescrFormatter();
         out.print("Feature-pack ").println(gav.toString());

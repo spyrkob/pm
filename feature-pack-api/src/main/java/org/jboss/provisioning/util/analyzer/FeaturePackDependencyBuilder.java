@@ -22,17 +22,24 @@
 
 package org.jboss.provisioning.util.analyzer;
 
-import java.io.StringWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
+import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.xml.FeaturePackXMLWriter;
+import org.jboss.provisioning.xml.PackageXMLWriter;
 
 /**
  *
@@ -41,6 +48,48 @@ import org.jboss.provisioning.xml.FeaturePackXMLWriter;
 public class FeaturePackDependencyBuilder {
 
     public static void extractParentAsDependency(Path fpLayoutDir, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
+        new FeaturePackDependencyBuilder(fpLayoutDir, childGav, parentGav, true).extractParentAsDependency();
+    }
+
+    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
+        return new FeaturePackDependencyBuilder(fpLayoutDir, childGav, parentGav, false).describeParentAsDependency();
+    }
+
+    private final Path fpLayoutDir;
+    private final GAV childGav;
+    private final GAV parentGav;
+    private final boolean updateXml;
+
+
+    private FeaturePackDependencyBuilder(Path fpLayoutDir, GAV childGav, GAV parentGav, boolean updateXml) {
+        this.fpLayoutDir = fpLayoutDir;
+        this.childGav = childGav;
+        this.parentGav = parentGav;
+        this.updateXml = updateXml;
+    }
+
+    private void extractParentAsDependency() throws InstallationDescriptionException {
+        final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav);
+        final FeaturePackDescription originalDescr = FeaturePackLayoutDescriber.describeFeaturePack(fpDir);
+        final FeaturePackDescription newDescr = describeParentAsDependency();
+
+        final Path featurePackXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
+        if(!Files.exists(featurePackXml)) {
+            throw new InstallationDescriptionException(Errors.pathDoesNotExist(featurePackXml));
+        }
+        try {
+            FeaturePackXMLWriter.INSTANCE.write(newDescr, featurePackXml);
+        } catch (XMLStreamException | IOException e) {
+            throw new InstallationDescriptionException(Errors.writeXml(featurePackXml), e);
+        }
+        for(String name : originalDescr.getPackageNames()) {
+            if(!newDescr.hasPackage(name)) {
+                IoUtils.recursiveDelete(LayoutUtils.getPackageDir(fpDir, name));
+            }
+        }
+    }
+
+    private FeaturePackDescription describeParentAsDependency() throws InstallationDescriptionException {
         final FeaturePacksDiff diffTool = FeaturePacksDiff.newInstance(fpLayoutDir, childGav, parentGav);
         final FeaturePackDescriptionDiffs diff = diffTool.compare();
         final FeaturePackSpecificDescription childDiff = diff.getFeaturePackDiff1();
@@ -67,7 +116,8 @@ public class FeaturePackDependencyBuilder {
         if(childDiff.hasConflictingPackages()) {
             final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getConflictingPackageNames()) {
-                fpBuilder.addPackage(childDescr.getPackageDescription(name));
+                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackageDescription(name));
+                fpBuilder.addPackage(pkgDescr);
                 if(childDescr.isTopPackage(name)) {
                     fpBuilder.addTopPackageName(name);
                 }
@@ -78,20 +128,41 @@ public class FeaturePackDependencyBuilder {
         if(childDiff.hasUniquePackages()) {
             final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getUniquePackageNames()) {
-                fpBuilder.addPackage(childDiff.getUniquePackage(name));
+                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDiff.getUniquePackage(name));
+                fpBuilder.addPackage(pkgDescr);
                 if(childDescr.isTopPackage(name)) {
                     fpBuilder.addTopPackageName(name);
                 }
             }
         }
 
-        final StringWriter writer = new StringWriter();
-        try {
-            FeaturePackXMLWriter.INSTANCE.write(fpBuilder.build(), writer);
-        } catch (XMLStreamException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        return fpBuilder.build();
+    }
+
+    private PackageDescription updatePackageDependencies(
+            final FeaturePackSpecificDescription childDiff,
+            PackageDescription pkgDescr) throws InstallationDescriptionException {
+        if(pkgDescr.hasDependencies()) {
+            final PackageDescription.Builder pkgBuilder = PackageDescription.builder(pkgDescr.getName());
+            for(String dep : pkgDescr.getDependencies()) {
+                if(!childDiff.isMatchedPackage(dep)) {
+                    pkgBuilder.addDependency(dep);
+                }
+            }
+            pkgDescr = pkgBuilder.build();
+            if(updateXml) {
+                final Path packageXml = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav), pkgDescr.getName()).resolve(Constants.PACKAGE_XML);
+                if(!Files.exists(packageXml)) {
+                    throw new InstallationDescriptionException(Errors.pathDoesNotExist(packageXml));
+                }
+                try {
+                    IoUtils.recursiveDelete(packageXml);
+                    PackageXMLWriter.INSTANCE.write(pkgDescr, packageXml);
+                } catch (XMLStreamException | IOException e) {
+                    throw new InstallationDescriptionException(Errors.writeXml(packageXml));
+                }
+            }
         }
-        System.out.println(writer.getBuffer().toString());
+        return pkgDescr;
     }
 }
