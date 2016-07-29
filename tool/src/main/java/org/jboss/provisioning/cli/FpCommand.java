@@ -29,6 +29,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -335,23 +336,20 @@ public class FpCommand extends CommandBase {
 
     private void installAction() throws CommandExecutionException {
 
-        if(installDirArg == null) {
-            argumentMissing(INSTALL_DIR_ARG_NAME);
-        }
-
-        final Path installDir = Paths.get(installDirArg);
-
-        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final InputStream wfInstallDef = cl.getResourceAsStream(WF_FP_DEF_XML);
-        if(wfInstallDef == null) {
-            throw new CommandExecutionException(WF_FP_DEF_XML + " not found");
-        }
-
-        final WFInstallationDescription wfDescr;
-        try {
-            wfDescr = new WFInstallationDefParser().parse(wfInstallDef);
-        } catch (XMLStreamException e) {
-            throw new CommandExecutionException("failed to parse " + WF_FP_DEF_XML, e);
+        Path installDir = null;
+        WFInstallationDescription wfDescr = null;
+        if (installDirArg != null) {
+            installDir = Paths.get(installDirArg);
+            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            final InputStream wfInstallDef = cl.getResourceAsStream(WF_FP_DEF_XML);
+            if (wfInstallDef == null) {
+                throw new CommandExecutionException(WF_FP_DEF_XML + " not found");
+            }
+            try {
+                wfDescr = new WFInstallationDefParser().parse(wfInstallDef);
+            } catch (XMLStreamException e) {
+                throw new CommandExecutionException("failed to parse " + WF_FP_DEF_XML, e);
+            }
         }
 
         final Path workDir;
@@ -359,18 +357,21 @@ public class FpCommand extends CommandBase {
         if(workDirArg != null) {
             workDir = Paths.get(workDirArg);
             deleteWorkDir = false;
+        } else if (installDir == null) {
+            throw new CommandExecutionException(INSTALL_DIR_ARG_NAME + " and/or " + WORK_DIR_ARG_NAME + " are missing");
         } else {
             workDir = IoUtils.createRandomTmpDir();
             deleteWorkDir = true;
         }
 
         try {
-            final Path fpsDir = workDir.resolve(Constants.FEATURE_PACKS);
-            WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
-            try {
-                layoutBuilder.build(wfDescr, installDir, fpsDir);
-            } catch (InstallationDescriptionException e) {
-                throw new CommandExecutionException("Failed to layout feature packs", e);
+            if (wfDescr != null) {
+                WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
+                try {
+                    layoutBuilder.build(wfDescr, installDir, workDir);
+                } catch (InstallationDescriptionException e) {
+                    throw new CommandExecutionException("Failed to layout feature packs", e);
+                }
             }
             installLayout(workDir);
         } finally {
@@ -382,7 +383,12 @@ public class FpCommand extends CommandBase {
 
     private void installLayout(final Path workDir) throws CommandExecutionException {
         final InputStream pomIs = Util.getResourceStream(INSTALL_FEATURE_PACKS_POM);
-        final Path pomXml = workDir.resolve("pom.xml");
+        final Path pomXml;
+        try {
+            pomXml = Files.createTempFile("fpcmd", "pom.xml");
+        } catch (IOException e) {
+            throw new CommandExecutionException("Failed to create a temp file.", e);
+        }
         try {
             InvocationRequest request = new DefaultInvocationRequest();
 
@@ -390,7 +396,7 @@ public class FpCommand extends CommandBase {
             props.setProperty(Constants.PM_INSTALL_WORK_DIR, workDir.toAbsolutePath().toString());
             request.setProperties(props);
 
-            Files.copy(pomIs, pomXml);
+            Files.copy(pomIs, pomXml, StandardCopyOption.REPLACE_EXISTING);
             request.setPomFile(pomXml.toFile());
             request.setGoals(Collections.singletonList("compile"));
 
@@ -406,7 +412,9 @@ public class FpCommand extends CommandBase {
                 e.printStackTrace();
             }
         } catch (IOException e) {
-            throw new CommandExecutionException(Errors.copyFile(Paths.get(INSTALL_FEATURE_PACKS_POM), pomXml.toAbsolutePath()));
+            throw new CommandExecutionException(Errors.copyFile(Paths.get(INSTALL_FEATURE_PACKS_POM), pomXml), e);
+        } finally {
+            IoUtils.recursiveDelete(pomXml);
         }
     }
 

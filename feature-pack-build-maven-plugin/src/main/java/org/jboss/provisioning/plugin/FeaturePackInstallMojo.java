@@ -47,6 +47,7 @@ import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
 /**
@@ -75,13 +76,18 @@ public class FeaturePackInstallMojo extends AbstractMojo {
         if(workdirPath == null) {
             throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PM_INSTALL_WORK_DIR));
         }
-        final Path workDir = Paths.get(workdirPath, Constants.FEATURE_PACKS);
+        final Path workDir = Paths.get(workdirPath);
         if(!Files.exists(workDir)) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(workDir.toAbsolutePath()));
         }
 
         final InstallRequest installReq = new InstallRequest();
-        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(workDir)) {
+        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(workDir, new DirectoryStream.Filter<Path>() {
+            @Override
+            public boolean accept(Path entry) throws IOException {
+                return Files.isDirectory(entry);
+            }
+        })) {
             for (Path groupDir : wdStream) {
                 final String groupId = groupDir.getFileName().toString();
                 try (DirectoryStream<Path> groupStream = Files.newDirectoryStream(groupDir)) {
@@ -90,8 +96,11 @@ public class FeaturePackInstallMojo extends AbstractMojo {
                         try (DirectoryStream<Path> artifactStream = Files.newDirectoryStream(artifactDir)) {
                             for (Path versionDir : artifactStream) {
                                 System.out.println("Preparing feature-pack " + versionDir.toAbsolutePath());
-                                final Path zippedFP = workDir.getParent().resolve(
+                                final Path zippedFP = workDir.resolve(
                                         groupId + '_' + artifactId + '_' + versionDir.getFileName().toString() + ".zip");
+                                if(Files.exists(zippedFP)) {
+                                    IoUtils.recursiveDelete(zippedFP);
+                                }
                                 ZipUtils.zip(versionDir, zippedFP);
                                 final Artifact artifact = new DefaultArtifact(
                                         groupDir.getFileName().toString(),
