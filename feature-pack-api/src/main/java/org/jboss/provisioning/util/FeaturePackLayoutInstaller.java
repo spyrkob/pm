@@ -24,6 +24,7 @@ package org.jboss.provisioning.util;
 
 import java.nio.file.Path;
 
+import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
@@ -49,9 +50,11 @@ public class FeaturePackLayoutInstaller {
         final InstallationDescription installDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir);
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : installDescr.getFeaturePacks()) {
-            final Path fpDir = fpLayoutDir.resolve(fp.getGAV().getGroupId())
-                    .resolve(fp.getGAV().getArtifactId())
-                    .resolve(fp.getGAV().getVersion());
+            final GAV fpGav = fp.getGAV();
+            System.out.println("Installing " + fpGav + " to " + installDir);
+            final Path fpDir = fpLayoutDir.resolve(fpGav.getGroupId())
+                    .resolve(fpGav.getArtifactId())
+                    .resolve(fpGav.getVersion());
             fpInstaller.install(fp, fpDir, installDir);
         }
     }

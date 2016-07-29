@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -91,6 +92,7 @@ public class IoUtils {
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                         throws IOException {
                         final Path targetDir = target.resolve(source.relativize(dir));
+
                         try {
                             Files.copy(dir, targetDir);
                         } catch (FileAlreadyExistsException e) {
@@ -102,7 +104,7 @@ public class IoUtils {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
-                        Files.copy(file, target.resolve(source.relativize(file)));
+                        Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
                         return FileVisitResult.CONTINUE;
                     }
                 });

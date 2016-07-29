@@ -40,6 +40,7 @@ import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
+import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Builder;
 
 /**

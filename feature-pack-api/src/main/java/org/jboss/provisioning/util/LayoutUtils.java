@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util.analyzer;
+package org.jboss.provisioning.util;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,9 +34,9 @@ import org.jboss.provisioning.descr.InstallationDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-class LayoutUtils {
+public class LayoutUtils {
 
-    static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws InstallationDescriptionException {
+    public static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws InstallationDescriptionException {
         final Path fpPath = fpLayoutDir.resolve(gav.getGroupId()).resolve(gav.getArtifactId()).resolve(gav.getVersion());
         if(!Files.exists(fpPath)) {
             throw new InstallationDescriptionException(Errors.pathDoesNotExist(fpPath));
@@ -44,7 +44,7 @@ class LayoutUtils {
         return fpPath;
     }
 
-    static Path getPackageDir(Path fpDir, String packageName) throws InstallationDescriptionException {
+    public static Path getPackageDir(Path fpDir, String packageName) throws InstallationDescriptionException {
         final Path dir = fpDir.resolve(Constants.PACKAGES).resolve(packageName);
         if(!Files.exists(dir)) {
             throw new InstallationDescriptionException(Errors.pathDoesNotExist(dir));
@@ -52,7 +52,7 @@ class LayoutUtils {
         return dir;
     }
 
-    static Path getPackageContentDir(Path fpDir, String packageName) throws InstallationDescriptionException {
+    public static Path getPackageContentDir(Path fpDir, String packageName) throws InstallationDescriptionException {
         return fpDir.resolve(Constants.PACKAGES).resolve(packageName).resolve(Constants.CONTENT);
     }
 }
