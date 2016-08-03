@@ -118,6 +118,15 @@ public class WFFeaturePackLayoutBuilder {
         }
 
         if(move) {
+            if(fpGroupId == null) {
+                throw new InstallationDescriptionException(Errors.missingParameter("group-id"));
+            }
+            if(fpArtifactId == null) {
+                throw new InstallationDescriptionException(Errors.missingParameter("artifact-id"));
+            }
+            if(fpVersion == null) {
+                throw new InstallationDescriptionException(Errors.missingParameter("version"));
+            }
             Path fpTarget = workDir.resolve(fpGroupId);
             fpTarget = fpTarget.resolve(fpArtifactId);
             fpTarget = fpTarget.resolve(fpVersion);

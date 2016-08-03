@@ -85,4 +85,8 @@ public interface Errors {
     static String packageNotFound(String packageName) {
         return "Failed to resolve package " + packageName;
     }
+
+    static String missingParameter(String string) {
+        return "Missing " + string;
+    }
 }
