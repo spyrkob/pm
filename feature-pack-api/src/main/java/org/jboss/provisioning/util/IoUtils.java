@@ -86,13 +86,17 @@ public class IoUtils {
     }
 
     public static void copy(Path source, Path target) throws IOException {
+        if(Files.isDirectory(source)) {
+            Files.createDirectories(target);
+        } else {
+            Files.createDirectories(target.getParent());
+        }
         Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
                 new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                         throws IOException {
                         final Path targetDir = target.resolve(source.relativize(dir));
-
                         try {
                             Files.copy(dir, targetDir);
                         } catch (FileAlreadyExistsException e) {
