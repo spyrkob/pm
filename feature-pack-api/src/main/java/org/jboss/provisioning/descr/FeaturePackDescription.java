@@ -47,6 +47,7 @@ public class FeaturePackDescription {
         private Map<GAV, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
         private Set<String> topPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
+        private List<GAV> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
@@ -115,8 +116,22 @@ public class FeaturePackDescription {
             return this;
         }
 
+        public void addProvisioningPlugin(GAV gav) {
+            assert gav != null : "gav is null";
+            switch(provisioningPlugins.size()) {
+                case 0:
+                    provisioningPlugins = Collections.singletonList(gav);
+                    break;
+                case 1:
+                    provisioningPlugins = new ArrayList<GAV>(provisioningPlugins);
+                default:
+                    provisioningPlugins.add(gav);
+            }
+        }
+
         public FeaturePackDescription build() {
-            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topPackages), Collections.unmodifiableMap(packages), Collections.unmodifiableMap(dependencies));
+            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topPackages), Collections.unmodifiableMap(packages),
+                    Collections.unmodifiableMap(dependencies), Collections.unmodifiableList(provisioningPlugins));
         }
     }
 
@@ -132,8 +147,11 @@ public class FeaturePackDescription {
     private final Map<GAV, FeaturePackDependencyDescription> dependencies;
     private final Set<String> topPackages;
     private final Map<String, PackageDescription> packages;
+    private final List<GAV> provisioningPlugins;
 
-    protected FeaturePackDescription(GAV gav, Set<String> topPackages, Map<String, PackageDescription> packages, Map<GAV, FeaturePackDependencyDescription> dependencies) {
+    protected FeaturePackDescription(GAV gav, Set<String> topPackages, Map<String, PackageDescription> packages,
+            Map<GAV, FeaturePackDependencyDescription> dependencies,
+            List<GAV> provisioningPlugins) {
         assert gav != null : "GAV is null";
         assert dependencies != null : "dependencies is null";
         assert topPackages != null : "topPackages is null";
@@ -142,6 +160,7 @@ public class FeaturePackDescription {
         this.topPackages = topPackages;
         this.packages = packages;
         this.dependencies = dependencies;
+        this.provisioningPlugins = provisioningPlugins;
     }
 
     public GAV getGAV() {
@@ -196,6 +215,14 @@ public class FeaturePackDescription {
         return dependencies.get(gav);
     }
 
+    public boolean hasProvisioningPlugins() {
+        return !provisioningPlugins.isEmpty();
+    }
+
+    public List<GAV> getProvisioningPlugins() {
+        return provisioningPlugins;
+    }
+
     public String logContent() throws IOException {
         final DescrFormatter logger = new DescrFormatter();
         logContent(logger);
@@ -219,6 +246,14 @@ public class FeaturePackDescription {
             logger.println("Dependencies:");
             logger.increaseOffset();
             for(GAV gav : dependencies.keySet()) {
+                logger.println(gav.toString());
+            }
+            logger.decreaseOffset();
+        }
+
+        if(!provisioningPlugins.isEmpty()) {
+            logger.println("Provisioning plugins:").increaseOffset();
+            for(GAV gav : provisioningPlugins) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();

@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -57,6 +57,7 @@
         <module>feature-pack-build-maven-plugin</module>
         <module>tool</module>
         <module>wildfly-feature-pack-api</module>
+        <module>wildfly-feature-pack-maven-plugin</module>
     </modules>
 
     <build>
@@ -143,7 +144,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -188,6 +189,12 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>wildfly-feature-pack-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

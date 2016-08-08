@@ -61,9 +61,8 @@ public class FeaturePackXMLWriter {
 
     public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
         final ElementNode fp = newElement(null, Element.FEATURE_PACK);
-        addAttribute(fp, Attribute.GROUP_ID, fpDescr.getGAV().getGroupId());
-        addAttribute(fp, Attribute.ARTIFACT_ID, fpDescr.getGAV().getArtifactId());
-        addAttribute(fp, Attribute.VERSION, fpDescr.getGAV().getVersion());
+        final GAV fpGav = fpDescr.getGAV();
+        addGAV(fp, fpGav);
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
@@ -83,12 +82,25 @@ public class FeaturePackXMLWriter {
             }
         }
 
+        if(fpDescr.hasProvisioningPlugins()) {
+            final ElementNode plugins = newElement(fp, Element.PROVISIONING_PLUGINS);
+            for(GAV gav : fpDescr.getProvisioningPlugins()) {
+                addGAV(newElement(plugins, Element.ARTIFACT), gav);
+            }
+        }
+
         try (FormattingXMLStreamWriter xmlWriter = new FormattingXMLStreamWriter(XMLOutputFactory.newInstance()
                 .createXMLStreamWriter(writer))) {
             xmlWriter.writeStartDocument();
             fp.marshall(xmlWriter);
             xmlWriter.writeEndDocument();
         }
+    }
+
+    private void addGAV(final ElementNode fp, final GAV fpGav) {
+        addAttribute(fp, Attribute.GROUP_ID, fpGav.getGroupId());
+        addAttribute(fp, Attribute.ARTIFACT_ID, fpGav.getArtifactId());
+        addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
     }
 
     private static void write(ElementNode pkgs, PackageDescription pkg) {

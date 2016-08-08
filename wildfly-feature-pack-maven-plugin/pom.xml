@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss.pm</groupId>
+    <artifactId>pm-parent</artifactId>
+    <version>1.0.0.Alpha-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
+  <packaging>maven-plugin</packaging>
+  <name>WildFly Feature Pack Maven Plugin</name>
+
+  <url>http://maven.apache.org</url>
+
+  <dependencies>
+      <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model-builder</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-repository-metadata</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-artifact</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.sisu</groupId>
+          <artifactId>org.eclipse.sisu.plexus</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
+    </dependency>
+  
+    <dependency>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>wildfly-feature-pack-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>feature-pack-build-maven-plugin</artifactId>
+    </dependency>
+  </dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-plugin-plugin</artifactId>
+				<version>3.4</version>
+				<configuration>
+					<!-- see http://jira.codehaus.org/browse/MNG-5346 -->
+					<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>mojo-descriptor</id>
+						<goals>
+							<goal>descriptor</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-plugin-plugin
+										</artifactId>
+										<versionRange>
+											[3.4,)
+										</versionRange>
+										<goals>
+											<goal>descriptor</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

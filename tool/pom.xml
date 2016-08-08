@@ -40,6 +40,11 @@
       <groupId>org.jboss.pm</groupId>
       <artifactId>wildfly-feature-pack-api</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.jboss.pm</groupId>
+      <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

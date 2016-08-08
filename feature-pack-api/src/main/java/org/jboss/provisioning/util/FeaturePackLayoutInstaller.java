@@ -23,7 +23,6 @@
 package org.jboss.provisioning.util;
 
 import java.nio.file.Path;
-
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescription;

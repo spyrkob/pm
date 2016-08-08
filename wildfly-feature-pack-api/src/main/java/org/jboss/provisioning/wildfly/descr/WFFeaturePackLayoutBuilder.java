@@ -139,6 +139,7 @@ public class WFFeaturePackLayoutBuilder {
             fpDir = fpTarget;
         }
         fpBuilder.setGAV(new GAV(fpGroupId, fpArtifactId, fpVersion));
+        fpBuilder.addProvisioningPlugin(new GAV("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {

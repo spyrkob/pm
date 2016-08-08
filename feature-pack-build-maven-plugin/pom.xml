@@ -85,7 +85,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.4</version>
                 <configuration>
                     <!-- see http://jira.codehaus.org/browse/MNG-5346 -->
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -120,7 +120,7 @@
         									maven-plugin-plugin
         								</artifactId>
         								<versionRange>
-        									[3.2,)
+        									[3.4,)
         								</versionRange>
         								<goals>
         									<goal>descriptor</goal>

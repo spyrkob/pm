@@ -22,13 +22,9 @@
 
 package org.jboss.provisioning.plugin;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -37,18 +33,12 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.util.ZipUtils;
+import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 
 /**
  *
@@ -57,17 +47,11 @@ import org.jboss.provisioning.util.ZipUtils;
 @Mojo(name = "install", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
 public class FeaturePackInstallMojo extends AbstractMojo {
 
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    protected MavenProject project;
-
     @Component
-    private RepositorySystem repoSystem;
+    protected RepositorySystem repoSystem;
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
-    private RepositorySystemSession repoSession;
-
-    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
-    private List<RemoteRepository> remoteRepos;
+    protected RepositorySystemSession repoSession;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -81,43 +65,8 @@ public class FeaturePackInstallMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.pathDoesNotExist(workDir.toAbsolutePath()));
         }
 
-        final InstallRequest installReq = new InstallRequest();
-        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(workDir, new DirectoryStream.Filter<Path>() {
-            @Override
-            public boolean accept(Path entry) throws IOException {
-                return Files.isDirectory(entry);
-            }
-        })) {
-            for (Path groupDir : wdStream) {
-                final String groupId = groupDir.getFileName().toString();
-                try (DirectoryStream<Path> groupStream = Files.newDirectoryStream(groupDir)) {
-                    for (Path artifactDir : groupStream) {
-                        final String artifactId = artifactDir.getFileName().toString();
-                        try (DirectoryStream<Path> artifactStream = Files.newDirectoryStream(artifactDir)) {
-                            for (Path versionDir : artifactStream) {
-                                System.out.println("Preparing feature-pack " + versionDir.toAbsolutePath());
-                                final Path zippedFP = workDir.resolve(
-                                        groupId + '_' + artifactId + '_' + versionDir.getFileName().toString() + ".zip");
-                                if(Files.exists(zippedFP)) {
-                                    IoUtils.recursiveDelete(zippedFP);
-                                }
-                                ZipUtils.zip(versionDir, zippedFP);
-                                final Artifact artifact = new DefaultArtifact(
-                                        groupDir.getFileName().toString(),
-                                        artifactDir.getFileName().toString(), null,
-                                        "zip", versionDir.getFileName().toString(), null, zippedFP.toFile());
-                                installReq.addArtifact(artifact);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new MojoExecutionException(FPMavenErrors.featurePackBuild(), e);
-        }
-
         try {
-            repoSystem.install(repoSession, installReq);
+            repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException e) {
             throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
         }

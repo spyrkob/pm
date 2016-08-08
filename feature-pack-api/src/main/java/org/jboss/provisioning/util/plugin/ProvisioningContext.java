@@ -20,41 +20,17 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.plugin;
+package org.jboss.provisioning.util.plugin;
 
-import java.util.Collection;
-
-import org.eclipse.aether.artifact.Artifact;
-import org.jboss.provisioning.GAV;
+import java.nio.file.Path;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FPMavenErrors {
+public interface ProvisioningContext {
 
-    static String propertyMissing(String prop) {
-        return "Property " + prop + " is missing";
-    }
+    Path getLayoutDir();
 
-    static String featurePackBuild() {
-        return "Failed to build feature-pack";
-    }
-
-    static String featurePackInstallation() {
-        return "Failed to install feature-pack into repository";
-    }
-
-    static String artifactResolution(Collection<GAV> artifacts) {
-        return "Failed to resolve artifacts: " + artifacts;
-    }
-
-    static String artifactResolution(Artifact artifact) {
-        return "Failed to resolve " + artifact.getGroupId() + ':' + artifact.getArtifactId() + ':' + artifact.getVersion();
-    }
-
-    static String artifactMissing(Artifact artifact) {
-        return "Artifact " + artifact.getGroupId() + ':' + artifact.getArtifactId() + ':' + artifact.getVersion()
-                + " is missing from the repository";
-    }
+    Path getInstallDir();
 }

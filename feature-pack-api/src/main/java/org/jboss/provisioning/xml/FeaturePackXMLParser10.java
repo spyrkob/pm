@@ -50,12 +50,14 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
 
     public enum Element {
 
+        ARTIFACT("artifact"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
         EXCLUDES("excludes"),
         FEATURE_PACK("feature-pack"),
         PACKAGES("packages"),
         PACKAGE("package"),
+        PROVISIONING_PLUGINS("provisioning-plugins"),
 
         // default unknown element
         UNKNOWN(null);
@@ -64,12 +66,14 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
+            addElement(elementsMap, Element.ARTIFACT);
             addElement(elementsMap, Element.DEPENDENCIES);
             addElement(elementsMap, Element.DEPENDENCY);
             addElement(elementsMap, Element.EXCLUDES);
             addElement(elementsMap, Element.FEATURE_PACK);
             addElement(elementsMap, Element.PACKAGES);
             addElement(elementsMap, Element.PACKAGE);
+            addElement(elementsMap, Element.PROVISIONING_PLUGINS);
             elements = elementsMap;
         }
 
@@ -151,6 +155,38 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        fpBuilder.setGAV(readGAV(reader));
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCIES:
+                            readDependencies(reader, fpBuilder);
+                            break;
+                        case PACKAGES:
+                            readPackages(reader, fpBuilder);
+                            break;
+                        case PROVISIONING_PLUGINS:
+                            readProvisioningPlugins(reader, fpBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private GAV readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -176,33 +212,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        fpBuilder.setGAV(new GAV(groupId, artifactId, version));
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case DEPENDENCIES:
-                            readDependencies(reader, fpBuilder);
-                            break;
-                        case PACKAGES:
-                            readPackages(reader, fpBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
+        return new GAV(groupId, artifactId, version);
     }
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
@@ -320,6 +330,33 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
                     switch (element) {
                         case PACKAGE:
                             fpBuilder.addTopPackageName(parseName(reader));
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readProvisioningPlugins(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case ARTIFACT:
+                            fpBuilder.addProvisioningPlugin(readGAV(reader));
+                            ParsingUtils.parseNoContent(reader);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

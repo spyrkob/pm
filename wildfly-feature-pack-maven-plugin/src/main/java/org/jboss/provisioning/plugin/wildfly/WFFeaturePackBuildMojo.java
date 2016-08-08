@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.plugin;
+package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -46,13 +44,15 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.installation.InstallationException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.plugin.FPMavenErrors;
+import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.xml.FeaturePackXMLWriter;
@@ -75,9 +75,6 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
     private RepositorySystemSession repoSession;
-
-    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
-    private List<RemoteRepository> remoteRepos;
 
     /**
      * The directory the configuration file is located in.
@@ -121,7 +118,8 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
 
         final Path workDir = Paths.get(buildName, "layout");
         IoUtils.recursiveDelete(workDir);
-        final Path fpDir = workDir.resolve(project.getGroupId()).resolve(project.getArtifactId()).resolve(project.getVersion());
+        //final Path fpDir = workDir.resolve(project.getGroupId()).resolve(project.getArtifactId()).resolve(project.getVersion());
+        final Path fpDir = workDir.resolve(project.getGroupId()).resolve(project.getArtifactId() + "-new").resolve(project.getVersion());
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         final Path resourcesPath = Paths.get(configDir.getAbsolutePath() + resourcesDir);
@@ -130,7 +128,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.pathDoesNotExist(srcModulesDir));
         }
 
-        final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), project.getArtifactId() + "-new", project.getVersion()));
         try {
             processContent(fpBuilder, resourcesPath.resolve(Constants.CONTENT), fpPackagesDir);
         } catch (IOException e) {
@@ -148,6 +146,13 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         final PackageDescription modulesPkg = modulesBuilder.build();
         writeXml(modulesPkg, fpDir.resolve(Constants.PACKAGES).resolve(modulesPkg.getName()));
 
+        try {
+            processConfiguration(resourcesPath.resolve("configuration"), fpDir.resolve("resources").resolve("configuration"));
+        } catch (IOException e1) {
+            throw new MojoExecutionException(Errors.copyFile(resourcesPath.resolve("configuration"), fpDir.resolve("resources").resolve("configuration")));
+        }
+
+        fpBuilder.addProvisioningPlugin(new GAV("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
         final FeaturePackDescription fpDescr = fpBuilder.addTopPackage(modulesPkg).build();
         try {
@@ -156,11 +161,15 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)));
         }
 
-        throw new IllegalStateException("NOT WORKING " + project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion() +
-                " configDir=" + configDir.getAbsolutePath() +
-                " resourcesDir=" + resourcesDir +
-                " serverName=" + serverName +
-                " buildName=" + buildName);
+        try {
+            repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
+        } catch (InstallationException e) {
+            throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
+        }
+    }
+
+    private void processConfiguration(Path configurationDir, Path resourcesDir) throws IOException {
+        IoUtils.copy(configurationDir, resourcesDir);
     }
 
     private void processContent(FeaturePackDescription.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {
