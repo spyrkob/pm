@@ -46,9 +46,15 @@ public class FeaturePackLayoutInstaller {
      */
     public static void install(Path fpLayoutDir, Path installDir)
             throws InstallationDescriptionException, FeaturePackInstallException {
-        final InstallationDescription installDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir);
+        install(fpLayoutDir,
+                FeaturePackLayoutDescriber.describeLayout(fpLayoutDir),
+                installDir);
+    }
+
+    public static void install(Path fpLayoutDir, InstallationDescription descr, Path installDir)
+            throws FeaturePackInstallException {
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
-        for(FeaturePackDescription fp : installDescr.getFeaturePacks()) {
+        for(FeaturePackDescription fp : descr.getFeaturePacks()) {
             final GAV fpGav = fp.getGAV();
             System.out.println("Installing " + fpGav + " to " + installDir);
             final Path fpDir = fpLayoutDir.resolve(fpGav.getGroupId())

@@ -44,6 +44,12 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
     @Override
     public void execute(ProvisioningContext ctx) throws PMException {
 
+        final Path templatesDir = ctx.getResourcesDir().resolve("wildfly").resolve("configuration");
+        if(!Files.exists(templatesDir)) {
+            System.out.println("Configuration templates not found.");
+            return;
+        }
+
         System.out.println("WF CONFIG ASSEMBLER layout=" + ctx.getLayoutDir() + " install-dir=" + ctx.getInstallDir());
 
         try(DirectoryStream<Path> groups = Files.newDirectoryStream(ctx.getLayoutDir())) {

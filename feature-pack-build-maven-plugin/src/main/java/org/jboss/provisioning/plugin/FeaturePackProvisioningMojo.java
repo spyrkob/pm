@@ -35,11 +35,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -80,6 +77,7 @@ import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.PMException;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
@@ -99,64 +97,6 @@ import org.jboss.provisioning.xml.ProvisioningXmlParser;
 @Mojo(name = "build", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
 public class FeaturePackProvisioningMojo extends AbstractMojo {
 
-    private static class FeaturePacks {
-        private Map<String, Map<String, String>> gavs = Collections.emptyMap();
-
-        void addAll(Collection<GAV> gavs) throws InstallationDescriptionException {
-            for(GAV gav : gavs) {
-                add(gav);
-            }
-        }
-
-        void add(GAV gav) throws InstallationDescriptionException {
-            Map<String, String> group = gavs.get(gav.getGroupId());
-            if(group == null) {
-                final Map<String, String> result = Collections.singletonMap(gav.getArtifactId(), gav.getVersion());
-                switch(gavs.size()) {
-                    case 0:
-                        gavs = Collections.singletonMap(gav.getGroupId(), result);
-                        break;
-                    case 1:
-                        gavs = new HashMap<String, Map<String, String>>(gavs);
-                    default:
-                        gavs.put(gav.getGroupId(), result);
-                }
-            } else if (group.containsKey(gav.getArtifactId())) {
-                if (!group.get(gav.getArtifactId()).equals(gav.getVersion())) {
-                    throw new InstallationDescriptionException("The installation requires two versions of artifact "
-                            + gav.getGroupId() + ':' + gav.getArtifactId() + ": " + gav.getVersion() + " and "
-                            + group.get(gav.getArtifactId()));
-                }
-            } else {
-                if(group.size() == 1) {
-                    group = new HashMap<String, String>(group);
-                    if(gavs.size() == 1) {
-                        gavs = Collections.singletonMap(gav.getGroupId(), group);
-                    } else {
-                        gavs.put(gav.getGroupId(), group);
-                    }
-                }
-                group.put(gav.getArtifactId(), gav.getVersion());
-            }
-        }
-
-        boolean contains(GAV gav) {
-            final Map<String, String> group = gavs.get(gav.getGroupId());
-            if(group == null) {
-                return false;
-            }
-            final String version = group.get(gav.getArtifactId());
-            if(version == null) {
-                return false;
-            }
-            return version.equals(gav.getVersion());
-        }
-
-        boolean isEmpty() {
-            return gavs.isEmpty();
-        }
-    }
-
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
 
@@ -169,6 +109,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
     private List<RemoteRepository> remoteRepos;
 
+    private Path workDir;
     private Set<GAV> provisioningPlugins = Collections.emptySet();
 
     private void addProvisioningPlugin(GAV gav) {
@@ -218,17 +159,15 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.openFile(provXml), e);
         }
 
-        final FeaturePacks fps = new FeaturePacks();
-        final Path layoutDir = IoUtils.createRandomTmpDir();
+        final InstallationDescriptionBuilder descrBuilder = InstallationDescriptionBuilder.newInstance();
+        workDir = IoUtils.createRandomTmpDir();
+        final Path layoutDir = workDir.resolve("layout");
         try {
-            Collection<GAV> featurePacks = metadata.getFeaturePacks();
-            while (!featurePacks.isEmpty()) {
-                featurePacks = layoutFeaturePacks(featurePacks, layoutDir, fps);
-            }
+            layoutFeaturePacks(metadata.getFeaturePacks(), descrBuilder, layoutDir);
             if (!Files.exists(installDir)) {
                 mkdirs(installDir);
             }
-            FeaturePackLayoutInstaller.install(layoutDir, installDir);
+            FeaturePackLayoutInstaller.install(layoutDir, descrBuilder.build(), installDir);
 
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(installDir, layoutDir);
@@ -237,7 +176,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
-            IoUtils.recursiveDelete(layoutDir);
+            IoUtils.recursiveDelete(workDir);
         }
 
         //collectDependencies(artifact);
@@ -272,10 +211,13 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                 public Path getLayoutDir() {
                     return layoutDir;
                 }
-
                 @Override
                 public Path getInstallDir() {
                     return installDir;
+                }
+                @Override
+                public Path getResourcesDir() {
+                    return workDir.resolve("resources");
                 }
             };
             final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
@@ -292,8 +234,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private Collection<GAV> layoutFeaturePacks(final Collection<GAV> fpGavs, final Path layoutDir, final FeaturePacks fps)
-            throws MojoExecutionException {
+    private void layoutFeaturePacks(Collection<GAV> fpGavs, InstallationDescriptionBuilder descr, Path layoutDir) throws MojoExecutionException {
         for (ArtifactResult res : resolveArtifacts(fpGavs, "zip")) {
             final Artifact fpArtifact = res.getArtifact();
             if(!res.isResolved()) {
@@ -315,14 +256,6 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             }
         }
 
-        try {
-            fps.addAll(fpGavs);
-        } catch (InstallationDescriptionException e) {
-            throw new MojoExecutionException("Failed to layout feature-packs", e);
-        }
-
-
-        Set<GAV> deps = Collections.emptySet();
         for(GAV fpGav : fpGavs) {
             final FeaturePackDescription fpDescr;
             try {
@@ -331,25 +264,39 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                 throw new MojoExecutionException("Failed to describe feature-pack " + fpGav, e);
             }
             if(fpDescr.hasDependencies()) {
-                for(FeaturePackDependencyDescription depDescr : fpDescr.getDependencies()) {
-                    if(!fps.contains(depDescr.getGAV()) && !deps.contains(depDescr.getGAV())) {
-                        switch(deps.size()) {
-                            case 0:
-                                deps = Collections.singleton(depDescr.getGAV());
-                                break;
-                            case 1:
-                                deps = new HashSet<GAV>(deps);
-                            default:
-                                deps.add(depDescr.getGAV());
-                        }
+                final Collection<FeaturePackDependencyDescription> depsDescr = fpDescr.getDependencies();
+                final List<GAV> deps;
+                if(depsDescr.size() == 1) {
+                    deps = Collections.singletonList(depsDescr.iterator().next().getGAV());
+                } else {
+                    deps = new ArrayList<GAV>(depsDescr.size());
+                    for (FeaturePackDependencyDescription depDescr : depsDescr) {
+                        deps.add(depDescr.getGAV());
                     }
                 }
+                layoutFeaturePacks(deps, descr, layoutDir);
             }
+
+            final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
+            final Path fpResources = fpWorkDir.resolve("resources");
+            if(Files.exists(fpResources)) {
+                try {
+                    IoUtils.copy(fpResources, workDir.resolve("resources"));
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Failed to copy " + fpGav + " resources", e);
+                }
+            }
+
             if(fpDescr.hasProvisioningPlugins()) {
                 addAllProvisioningPlugins(fpDescr.getProvisioningPlugins());
             }
+
+            try {
+                descr.addFeaturePack(fpDescr);
+            } catch (InstallationDescriptionException e) {
+                throw new MojoExecutionException("Failed to layout feature packs", e);
+            }
         }
-        return deps;
     }
 
     private List<ArtifactResult> resolveArtifacts(final Collection<GAV> fpGavs, String extension) throws MojoExecutionException {

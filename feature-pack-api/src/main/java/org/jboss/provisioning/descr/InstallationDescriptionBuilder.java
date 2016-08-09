@@ -24,6 +24,7 @@ package org.jboss.provisioning.descr;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.GAV;
@@ -41,22 +42,64 @@ public class InstallationDescriptionBuilder {
     }
 
     private Map<GAV, FeaturePackDescription> featurePacks = Collections.emptyMap();
+    private Map<String, Map<String, String>> gavs = Collections.emptyMap();
 
     InstallationDescriptionBuilder() {
     }
 
-    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp) {
+    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp) throws InstallationDescriptionException {
+        return addFeaturePack(fp, true);
+    }
+
+    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws InstallationDescriptionException {
         assert fp != null : "fp is null";
+        final GAV fpGav = fp.getGAV();
+        checkGav(fpGav);
         switch(featurePacks.size()) {
             case 0:
-                featurePacks = Collections.singletonMap(fp.getGAV(), fp);
+                featurePacks = Collections.singletonMap(fpGav, fp);
                 break;
             case 1:
-                featurePacks = new HashMap<GAV, FeaturePackDescription>(featurePacks);
+                featurePacks = new LinkedHashMap<GAV, FeaturePackDescription>(featurePacks);
             default:
-                featurePacks.put(fp.getGAV(), fp);
+                if(addLast && featurePacks.containsKey(fpGav)) {
+                    featurePacks.remove(fpGav);
+                }
+                featurePacks.put(fpGav, fp);
         }
         return this;
+    }
+
+    private void checkGav(final GAV fpGav) throws InstallationDescriptionException {
+        Map<String, String> group = gavs.get(fpGav.getGroupId());
+        if(group == null) {
+            final Map<String, String> result = Collections.singletonMap(fpGav.getArtifactId(), fpGav.getVersion());
+            switch(gavs.size()) {
+                case 0:
+                    gavs = Collections.singletonMap(fpGav.getGroupId(), result);
+                    break;
+                case 1:
+                    gavs = new HashMap<String, Map<String, String>>(gavs);
+                default:
+                    gavs.put(fpGav.getGroupId(), result);
+            }
+        } else if (group.containsKey(fpGav.getArtifactId())) {
+            if (!group.get(fpGav.getArtifactId()).equals(fpGav.getVersion())) {
+                throw new InstallationDescriptionException("The installation requires two versions of artifact "
+                        + fpGav.getGroupId() + ':' + fpGav.getArtifactId() + ": " + fpGav.getVersion() + " and "
+                        + group.get(fpGav.getArtifactId()));
+            }
+        } else {
+            if(group.size() == 1) {
+                group = new HashMap<String, String>(group);
+                if(gavs.size() == 1) {
+                    gavs = Collections.singletonMap(fpGav.getGroupId(), group);
+                } else {
+                    gavs.put(fpGav.getGroupId(), group);
+                }
+            }
+            group.put(fpGav.getArtifactId(), fpGav.getVersion());
+        }
     }
 
     public InstallationDescription build() throws InstallationDescriptionException {

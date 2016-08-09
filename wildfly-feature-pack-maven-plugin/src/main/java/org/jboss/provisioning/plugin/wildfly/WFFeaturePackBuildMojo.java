@@ -147,9 +147,9 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         writeXml(modulesPkg, fpDir.resolve(Constants.PACKAGES).resolve(modulesPkg.getName()));
 
         try {
-            processConfiguration(resourcesPath.resolve("configuration"), fpDir.resolve("resources").resolve("configuration"));
-        } catch (IOException e1) {
-            throw new MojoExecutionException(Errors.copyFile(resourcesPath.resolve("configuration"), fpDir.resolve("resources").resolve("configuration")));
+            processConfiguration(resourcesPath.resolve("configuration"), fpDir.resolve("resources"));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to copy configuration", e);
         }
 
         fpBuilder.addProvisioningPlugin(new GAV("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
@@ -169,7 +169,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     }
 
     private void processConfiguration(Path configurationDir, Path resourcesDir) throws IOException {
-        IoUtils.copy(configurationDir, resourcesDir);
+        IoUtils.copy(configurationDir, resourcesDir.resolve("wildfly").resolve("configuration"));
     }
 
     private void processContent(FeaturePackDescription.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {

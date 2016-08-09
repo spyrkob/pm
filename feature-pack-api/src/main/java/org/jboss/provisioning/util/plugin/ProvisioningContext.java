@@ -33,4 +33,6 @@ public interface ProvisioningContext {
     Path getLayoutDir();
 
     Path getInstallDir();
+
+    Path getResourcesDir();
 }
