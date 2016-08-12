@@ -25,7 +25,7 @@ package org.jboss.provisioning.util.plugin;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.InstallationDescription;
 
 /**
@@ -42,5 +42,5 @@ public interface ProvisioningContext {
 
     Path getResourcesDir();
 
-    Path resolveArtifact(GAV gav, String extension) throws PMException;
+    Path resolveArtifact(GAV gav, String extension) throws ProvisioningException;
 }

@@ -74,7 +74,7 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescription;
@@ -227,18 +227,18 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                     return installationDescr;
                 }
                 @Override
-                public Path resolveArtifact(GAV gav, String extension) throws PMException {
+                public Path resolveArtifact(GAV gav, String extension) throws ProvisioningException {
                     final ArtifactResult result;
                     try {
                         result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(gav, extension));
                     } catch (ArtifactResolutionException e) {
-                        throw new PMException(FPMavenErrors.artifactResolution(gav), e);
+                        throw new ProvisioningException(FPMavenErrors.artifactResolution(gav), e);
                     }
                     if(!result.isResolved()) {
-                        throw new PMException(FPMavenErrors.artifactResolution(gav));
+                        throw new ProvisioningException(FPMavenErrors.artifactResolution(gav));
                     }
                     if(result.isMissing()) {
-                        throw new PMException(FPMavenErrors.artifactMissing(gav));
+                        throw new ProvisioningException(FPMavenErrors.artifactMissing(gav));
                     }
                     return Paths.get(result.getArtifact().getFile().toURI());
                 }
@@ -250,7 +250,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             for (ProvisioningPlugin plugin : plugins) {
                 try {
                     plugin.execute(ctx);
-                } catch (PMException e) {
+                } catch (ProvisioningException e) {
                     throw new MojoExecutionException("Provisioning plugin failed", e);
                 }
             }

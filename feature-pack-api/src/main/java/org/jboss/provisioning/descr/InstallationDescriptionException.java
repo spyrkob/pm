@@ -22,13 +22,13 @@
 
 package org.jboss.provisioning.descr;
 
-import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.ProvisioningException;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDescriptionException extends PMException {
+public class InstallationDescriptionException extends ProvisioningException {
 
     private static final long serialVersionUID = 1L;
 

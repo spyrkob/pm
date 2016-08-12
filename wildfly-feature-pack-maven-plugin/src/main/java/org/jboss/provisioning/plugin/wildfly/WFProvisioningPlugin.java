@@ -33,7 +33,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
@@ -49,7 +49,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
      */
     @Override
-    public void execute(ProvisioningContext ctx) throws PMException {
+    public void execute(ProvisioningContext ctx) throws ProvisioningException {
 
         final Path templatesDir = ctx.getResourcesDir().resolve("wildfly").resolve("configuration");
         if(!Files.exists(templatesDir)) {
@@ -92,7 +92,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                                 for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
                                     try {
                                         ctx.resolveArtifact(GAV.fromString(artName.getArtifactCoords()), "jar");
-                                    } catch(PMException e) {
+                                    } catch(ProvisioningException e) {
                                         System.out.println("FAILED to resolve " + artName.getArtifactCoords());
                                     }
                                 }
@@ -114,7 +114,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                         }
                     });
                 } catch (IOException e) {
-                    throw new PMException("Failed to process package " + pkgName + " of " + fpGav, e);
+                    throw new ProvisioningException("Failed to process package " + pkgName + " of " + fpGav, e);
                 }
             }
         }

@@ -22,7 +22,7 @@
 
 package org.jboss.provisioning.util.plugin;
 
-import org.jboss.provisioning.PMException;
+import org.jboss.provisioning.ProvisioningException;
 
 /**
  *
@@ -30,5 +30,5 @@ import org.jboss.provisioning.PMException;
  */
 public interface ProvisioningPlugin {
 
-    void execute(ProvisioningContext ctx) throws PMException;
+    void execute(ProvisioningContext ctx) throws ProvisioningException;
 }

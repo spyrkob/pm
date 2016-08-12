@@ -26,19 +26,19 @@ package org.jboss.provisioning;
  *
  * @author Alexey Loubyansky
  */
-public class PMException extends Exception {
+public class ProvisioningException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    public PMException(String message, Throwable cause) {
+    public ProvisioningException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public PMException(String message) {
+    public ProvisioningException(String message) {
         super(message);
     }
 
-    public PMException(Throwable cause) {
+    public ProvisioningException(Throwable cause) {
         super(cause);
     }
 }
