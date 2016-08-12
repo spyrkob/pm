@@ -22,7 +22,11 @@
 
 package org.jboss.provisioning.util;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -31,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -112,5 +117,30 @@ public class IoUtils {
                         return FileVisitResult.CONTINUE;
                     }
                 });
+    }
+
+    public static String readFile(Path file) throws IOException {
+        try(BufferedReader reader = Files.newBufferedReader(file)) {
+            final StringWriter buf = new StringWriter();
+            String line = reader.readLine();
+            if(line != null) {
+                try (final BufferedWriter bw = new BufferedWriter(buf)) {
+                    bw.append(line);
+                    line = reader.readLine();
+                    while (line != null) {
+                        bw.newLine();
+                        bw.append(line);
+                        line = reader.readLine();
+                    }
+                }
+            }
+            return buf.toString();
+        }
+    }
+
+    public static void writeFile(Path file, String content) throws IOException {
+        try(BufferedWriter writer = Files.newBufferedWriter(file, Charset.forName("UTF-8"), StandardOpenOption.CREATE)) {
+            writer.write(content);
+        }
     }
 }

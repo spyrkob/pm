@@ -20,23 +20,21 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util.plugin;
-
-import java.nio.file.Path;
-
-import org.jboss.provisioning.descr.InstallationDescription;
+package org.jboss.provisioning.plugin.wildfly;
 
 /**
+ * Property resolver abstract
  *
- * @author Alexey Loubyansky
+ * @author Stuart Douglas
  */
-public interface ProvisioningContext {
+public interface PropertyResolver {
 
-    InstallationDescription getInstallationDescription();
+    String resolveProperty(final String property);
 
-    Path getLayoutDir();
-
-    Path getInstallDir();
-
-    Path getResourcesDir();
+    PropertyResolver NO_OP = new PropertyResolver() {
+        @Override
+        public String resolveProperty(String property) {
+            return null;
+        }
+    };
 }

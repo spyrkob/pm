@@ -20,23 +20,26 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util.plugin;
-
-import java.nio.file.Path;
-
-import org.jboss.provisioning.descr.InstallationDescription;
+package org.jboss.provisioning.plugin.wildfly;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisioningContext {
+class ModuleArtifactPropertyResolver implements PropertyResolver {
 
-    InstallationDescription getInstallationDescription();
+    private final MavenProjectArtifactVersions versions;
 
-    Path getLayoutDir();
+    ModuleArtifactPropertyResolver(MavenProjectArtifactVersions versions) {
+        this.versions = versions;
+    }
 
-    Path getInstallDir();
+    /* (non-Javadoc)
+     * @see org.jboss.provisioning.plugin.wildfly.PropertyResolver#resolveProperty(java.lang.String)
+     */
+    @Override
+    public String resolveProperty(String property) {
+        return versions.getVersion(property);
+    }
 
-    Path getResourcesDir();
 }

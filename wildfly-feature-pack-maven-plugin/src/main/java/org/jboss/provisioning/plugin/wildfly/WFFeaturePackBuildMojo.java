@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -101,6 +102,8 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.build.directory}", property = "wildfly.feature.pack.buildName")
     private String buildName;
 
+    private MavenProjectArtifactVersions artifactVersions;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -137,6 +140,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
 
         final PackageDescription.Builder modulesBuilder = PackageDescription.builder("modules");
 
+        artifactVersions = MavenProjectArtifactVersions.getInstance(project);
         try {
             processModules(fpBuilder, modulesBuilder, resourcesPath, srcModulesDir, fpPackagesDir);
         } catch (IOException e) {
@@ -190,18 +194,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         Files.walkFileTree(modulesDir, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-/*                String relative = modulesDir.relativize(dir).toString();
-                boolean include = true;
-                if (include) {
-                    Path rel = target.resolve(relative);
-                    if (!Files.isDirectory(rel)) {
-                        if (!rel.toFile().mkdirs()) {
-                            throw new IOException("Could not create directory " + rel.toString());
-                        }
-                    }*/
                     return FileVisitResult.CONTINUE;
-//                }
-//                return FileVisitResult.SKIP_SUBTREE;
             }
 
             @Override
@@ -223,8 +216,10 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
                 modulesBuilder.addDependency(packageName);
                 fpBuilder.addPackage(pkgDescr);
 
+                final String moduleXmlContents = IoUtils.readFile(file);
+                final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(new ModuleArtifactPropertyResolver(artifactVersions));
+                IoUtils.writeFile(targetXml, buildPropertyReplacer.replaceProperties(moduleXmlContents));
 
-                IoUtils.copy(file, targetXml);
                 if (!OS_WINDOWS) {
                     Files.setPosixFilePermissions(targetXml, Files.getPosixFilePermissions(file));
                 }

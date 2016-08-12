@@ -77,6 +77,7 @@ import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.PMException;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.InstallationDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.util.FeaturePackInstallException;
@@ -109,6 +110,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
     private List<RemoteRepository> remoteRepos;
 
+    private InstallationDescription installationDescr;
     private Path workDir;
     private Set<GAV> provisioningPlugins = Collections.emptySet();
 
@@ -159,15 +161,16 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.openFile(provXml), e);
         }
 
-        final InstallationDescriptionBuilder descrBuilder = InstallationDescriptionBuilder.newInstance();
         workDir = IoUtils.createRandomTmpDir();
         final Path layoutDir = workDir.resolve("layout");
         try {
+            final InstallationDescriptionBuilder descrBuilder = InstallationDescriptionBuilder.newInstance();
             layoutFeaturePacks(metadata.getFeaturePacks(), descrBuilder, layoutDir);
+            installationDescr = descrBuilder.build();
             if (!Files.exists(installDir)) {
                 mkdirs(installDir);
             }
-            FeaturePackLayoutInstaller.install(layoutDir, descrBuilder.build(), installDir);
+            FeaturePackLayoutInstaller.install(layoutDir, installationDescr, installDir);
 
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(installDir, layoutDir);
@@ -218,6 +221,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                 @Override
                 public Path getResourcesDir() {
                     return workDir.resolve("resources");
+                }
+                @Override
+                public InstallationDescription getInstallationDescription() {
+                    return installationDescr;
                 }
             };
             final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
