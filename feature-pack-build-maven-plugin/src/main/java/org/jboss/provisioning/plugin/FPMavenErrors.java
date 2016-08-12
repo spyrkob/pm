@@ -24,7 +24,6 @@ package org.jboss.provisioning.plugin;
 
 import java.util.Collection;
 
-import org.eclipse.aether.artifact.Artifact;
 import org.jboss.provisioning.GAV;
 
 /**
@@ -49,12 +48,11 @@ public interface FPMavenErrors {
         return "Failed to resolve artifacts: " + artifacts;
     }
 
-    static String artifactResolution(Artifact artifact) {
-        return "Failed to resolve " + artifact.getGroupId() + ':' + artifact.getArtifactId() + ':' + artifact.getVersion();
+    static String artifactResolution(GAV gav) {
+        return "Failed to resolve " + gav;
     }
 
-    static String artifactMissing(Artifact artifact) {
-        return "Artifact " + artifact.getGroupId() + ':' + artifact.getArtifactId() + ':' + artifact.getVersion()
-                + " is missing from the repository";
+    static String artifactMissing(GAV gav) {
+        return "Repository is missing artifact " + gav;
     }
 }

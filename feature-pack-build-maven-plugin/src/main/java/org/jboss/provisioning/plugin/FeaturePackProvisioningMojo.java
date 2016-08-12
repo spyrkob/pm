@@ -195,10 +195,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for(ArtifactResult res : resolveArtifacts(provisioningPlugins, "jar")) {
             final Artifact artifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(artifact));
+                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new GAV(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion())));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(artifact));
+                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new GAV(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion())));
             }
             try {
                 urls.add(artifact.getFile().toURI().toURL());
@@ -226,6 +226,22 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                 public InstallationDescription getInstallationDescription() {
                     return installationDescr;
                 }
+                @Override
+                public Path resolveArtifact(GAV gav, String extension) throws PMException {
+                    final ArtifactResult result;
+                    try {
+                        result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(gav, extension));
+                    } catch (ArtifactResolutionException e) {
+                        throw new PMException(FPMavenErrors.artifactResolution(gav), e);
+                    }
+                    if(!result.isResolved()) {
+                        throw new PMException(FPMavenErrors.artifactResolution(gav));
+                    }
+                    if(result.isMissing()) {
+                        throw new PMException(FPMavenErrors.artifactMissing(gav));
+                    }
+                    return Paths.get(result.getArtifact().getFile().toURI());
+                }
             };
             final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
                     urls.toArray(new java.net.URL[urls.size()]),
@@ -245,10 +261,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for (ArtifactResult res : resolveArtifacts(fpGavs, "zip")) {
             final Artifact fpArtifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(fpArtifact));
+                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new GAV(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion())));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(fpArtifact));
+                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new GAV(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion())));
             }
             final Path fpWorkDir = layoutDir.resolve(fpArtifact.getGroupId()).resolve(fpArtifact.getArtifactId())
                     .resolve(fpArtifact.getVersion());

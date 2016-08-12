@@ -22,12 +22,20 @@
 
 package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 
+import javax.xml.stream.XMLStreamException;
+
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.PMException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
 
@@ -53,13 +61,62 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
 
         final Path layoutDir = ctx.getLayoutDir();
         for(FeaturePackDescription fpDescr : ctx.getInstallationDescription().getFeaturePacks()) {
+            final PackageDescription modulesDescr = fpDescr.getPackageDescription("modules");
+            if(modulesDescr == null) {
+                continue;
+            }
             final GAV fpGav = fpDescr.getGAV();
             final Path fpDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
             System.out.println(" processing " + fpGav + " " + fpDir);
-//            final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
-//            for(String pkgName : fpDescr.getPackageNames()) {
-//                System.out.println("  pkg " + pkgName + " " + packagesDir.resolve(pkgName) + " " + Files.exists(packagesDir.resolve(pkgName)));
-//            }
+            final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
+            for(String pkgName : modulesDescr.getDependencies()) {
+                final Path pkgContent = packagesDir.resolve(pkgName).resolve(Constants.CONTENT);
+                if(!Files.exists(pkgContent)) {
+                    continue;
+                }
+                try {
+                    Files.walkFileTree(pkgContent, new FileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            if(!file.getFileName().toString().equals("module.xml")) {
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            try {
+                                final ModuleParseResult parsedModule = ModuleXmlParser.parse(file);
+                                for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
+                                    try {
+                                        ctx.resolveArtifact(GAV.fromString(artName.getArtifactCoords()), "jar");
+                                    } catch(PMException e) {
+                                        System.out.println("FAILED to resolve " + artName.getArtifactCoords());
+                                    }
+                                }
+                            } catch (XMLStreamException e) {
+                                e.printStackTrace();
+                            }
+
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            return FileVisitResult.TERMINATE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                } catch (IOException e) {
+                    throw new PMException("Failed to process package " + pkgName + " of " + fpGav, e);
+                }
+            }
         }
     }
 }

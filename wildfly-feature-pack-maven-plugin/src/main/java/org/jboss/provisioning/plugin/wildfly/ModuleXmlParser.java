@@ -19,13 +19,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.jboss.provisioning.plugin.wildfly;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.stream.XMLInputFactory;
@@ -34,6 +32,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 /**
+ *
  * @author Alexey Loubyansky
  * @author Thomas.Diesler@jboss.com
  * @author Stuart Douglas
@@ -42,11 +41,15 @@ import javax.xml.stream.XMLStreamReader;
  */
 class ModuleXmlParser {
 
-    public static ModuleParseResult parse(Path inputFile) throws IOException, XMLStreamException {
-        return parse(new BufferedInputStream(new FileInputStream(inputFile.toFile())));
+    protected ModuleXmlParser() {
     }
 
-    public static ModuleParseResult parse(final InputStream in) throws IOException, XMLStreamException {
+    static ModuleParseResult parse(final Path file) throws IOException, XMLStreamException {
+        try(final InputStream is = Files.newInputStream(file)) {
+            return parse(is);
+        }
+    }
+    static ModuleParseResult parse(final InputStream in) throws IOException, XMLStreamException {
         ModuleParseResult result = new ModuleParseResult();
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(in);
@@ -202,18 +205,6 @@ class ModuleXmlParser {
     }
 
     private static ModuleParseResult.ArtifactName parseArtifactName(String artifactName) {
-        if (artifactName.startsWith("${") && artifactName.endsWith("}")) {
-            String ct = artifactName.substring(2, artifactName.length() - 1);
-            String options = null;
-            String artifactCoords = ct;
-            if (ct.contains("?")) {
-                String[] split = ct.split("\\?");
-                options = split[1];
-                artifactCoords = split[0];
-            }
-            return new ModuleParseResult.ArtifactName(artifactCoords, options);
-        } else {
-            throw new RuntimeException("Hard coded artifact " + artifactName);
-        }
+        return new ModuleParseResult.ArtifactName(artifactName, null);
     }
 }
