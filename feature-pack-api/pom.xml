@@ -1,6 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -11,8 +11,8 @@
 
   <artifactId>feature-pack-api</artifactId>
   <packaging>jar</packaging>
-  <name>Feature Pack API</name>
 
+  <name>Feature Pack API</name>
   <url>http://maven.apache.org</url>
 
   <dependencies>
@@ -21,4 +21,5 @@
       <artifactId>staxmapper</artifactId>
     </dependency>
   </dependencies>
+
 </project>
