@@ -1,6 +1,6 @@
 <installation xmlns="urn:wildfly:pm-install-def:1.0">
 
-    <modules relative="modules/system/layers/base"/>
+  <modules relative="modules/system/layers/base" />
 
   <feature-packs>
     <!-- <feature-pack group-id="org.wildfly.feature-pack" artifact-id="wildfly" version="10.1.0.Final-SNAPSHOT"> -->
@@ -25,50 +25,50 @@
         </package>
 -->
 
-        <package name="appclient" optional="true">
-            <path relative="appclient"/>
-        </package>
+      <package name="appclient" optional="true">
+        <path relative="appclient" />
+      </package>
 
-        <package name="bin">
-            <path relative="bin"/>
-        </package>
+      <package name="bin">
+        <path relative="bin" />
+      </package>
 
-        <package name="docs">
-            <path relative="docs"/>
-        </package>
+      <package name="docs">
+        <path relative="docs" />
+      </package>
 
-        <package name="welcome-content" optional="true">
-            <path relative="welcome-content"/>
-        </package>
+      <package name="welcome-content" optional="true">
+        <path relative="welcome-content" />
+      </package>
 
-        <package name="domain-config">
-            <path relative="domain"/>
-        </package>
+      <package name="domain-config">
+        <path relative="domain" />
+      </package>
 
-        <package name="standalone-config">
-            <path relative="standalone"/>
-        </package>
+      <package name="standalone-config">
+        <path relative="standalone" />
+      </package>
 
-        <package name="license">
-            <path relative="LICENSE.txt"/>
-        </package>
+      <package name="license">
+        <path relative="LICENSE.txt" />
+      </package>
 
-        <package name="copyright">
-            <path relative="copyright.txt"/>
-        </package>
+      <package name="copyright">
+        <path relative="copyright.txt" />
+      </package>
 
-        <package name="readme">
-            <path relative="README.txt"/>
-        </package>
+      <package name="readme">
+        <path relative="README.txt" />
+      </package>
 
-        <package name="jboss-modules">
-            <path relative="jboss-modules.jar"/>
-        </package>
-        
-        <package name="modules">
-            <modules relative="modules/system/layers/base"/>
-        </package>
-        
+      <package name="jboss-modules">
+        <path relative="jboss-modules.jar" />
+      </package>
+
+      <package name="modules">
+        <modules relative="modules/system/layers/base" />
+      </package>
+
     </feature-pack>
   </feature-packs>
 </installation>

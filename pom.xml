@@ -1,373 +1,389 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>20</version>
+  </parent>
 
-    <parent>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-parent</artifactId>
-        <version>20</version>
-    </parent>
+  <groupId>org.jboss.pm</groupId>
+  <artifactId>pm-parent</artifactId>
+  <version>1.0.0.Alpha-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
-    <groupId>org.jboss.pm</groupId>
-    <artifactId>pm-parent</artifactId>
-    <version>1.0.0.Alpha-SNAPSHOT</version>
+  <name>Provisioning tool parent</name>
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>http://repository.jboss.org/licenses/apache-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-    <name>Provisioning tool parent</name>
+  <modules>
+    <module>feature-pack-api</module>
+    <module>feature-pack-build-maven-plugin</module>
+    <module>tool</module>
+    <module>wildfly-feature-pack-api</module>
+    <module>wildfly-feature-pack-maven-plugin</module>
+  </modules>
 
-    <packaging>pom</packaging>
+  <properties>
+    <!--
+        Dependency versions. Please keep alphabetical.
 
-    <licenses>
-        <license>
-            <name>Apache License Version 2.0</name>
-            <url>http://repository.jboss.org/licenses/apache-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+        Each version property should be of the form "version.<groupId>".
+        For example: <version.org.jboss.as>
 
-    <properties>
-        <!--
-            Dependency versions. Please keep alphabetical.
+        In cases where multiple artifacts use the same groupId but have different
+        versions, add the artifactId or other qualifier to the property name.
+        For example: <version.org.jboss.as.console>
+    -->
+    <version.junit>4.12</version.junit>
 
-            Each version property should be of the form "version.<groupId>".
-            For example: <version.org.jboss.as>
+    <version.org.apache.maven.maven-core>3.1.0</version.org.apache.maven.maven-core>
+    <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.2.0</version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
+    <version.org.apache.maven.plugin-tools>${version.plugin.plugin}</version.org.apache.maven.plugin-tools>
+    <version.org.apache.maven.shared.maven-invoker>2.2</version.org.apache.maven.shared.maven-invoker>
+    <version.org.codehaus.mojo.xml-maven-plugin>1.0.1</version.org.codehaus.mojo.xml-maven-plugin>
+    <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
+    <version.org.jboss.modules.jboss-modules>1.5.1.Final</version.org.jboss.modules.jboss-modules>
+    <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
 
-            In cases where multiple artifacts use the same groupId but have different
-            versions, add the artifactId or other qualifier to the property name.
-            For example: <version.org.jboss.as.console>
-        -->
-        <version.junit>4.12</version.junit>
+    <!-- Checkstyle configuration -->
+    <linkXRef>false</linkXRef>
+    <version.org.wildfly.checkstyle-config>1.0.4.Final</version.org.wildfly.checkstyle-config>
+    <version.org.jboss.staxmapper>1.1.0.Final</version.org.jboss.staxmapper>
+  </properties>
 
-        <version.org.apache.maven.maven-core>3.1.0</version.org.apache.maven.maven-core>
-        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.2.0</version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
-        <version.org.apache.maven.plugin-tools>${version.plugin.plugin}</version.org.apache.maven.plugin-tools>
-        <version.org.apache.maven.shared.maven-invoker>2.2</version.org.apache.maven.shared.maven-invoker>
-        <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
-        <version.org.jboss.modules.jboss-modules>1.5.1.Final</version.org.jboss.modules.jboss-modules>
-        <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
+  <repositories>
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
-        <!-- Checkstyle configuration -->
-        <linkXRef>false</linkXRef>
-        <version.org.wildfly.checkstyle-config>1.0.4.Final</version.org.wildfly.checkstyle-config>
-        <version.org.jboss.staxmapper>1.1.0.Final</version.org.jboss.staxmapper>
-    </properties>
-
-    <modules>
-        <module>feature-pack-api</module>
-        <module>feature-pack-build-maven-plugin</module>
-        <module>tool</module>
-        <module>wildfly-feature-pack-api</module>
-        <module>wildfly-feature-pack-maven-plugin</module>
-    </modules>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce-java</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>1.8</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-        <pluginManagement>
-            <plugins>
-                <!-- Checkstyle -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${version.checkstyle.plugin}</version>
-                    <configuration>
-                        <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
-                        <consoleOutput>true</consoleOutput>
-                        <failsOnError>true</failsOnError>
-                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <useFile/>
-                    </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.wildfly.checkstyle</groupId>
-                            <artifactId>wildfly-checkstyle-config</artifactId>
-                            <version>${version.org.wildfly.checkstyle-config}</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>check-style</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>checkstyle</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                    <!--suppress MavenModelInspection -->
-                    <groupId>org.eclipse.m2e</groupId>
-                    <!--suppress MavenModelInspection -->
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <!--suppress MavenModelInspection -->
-                    <version>1.0.0</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>
-                                            org.apache.maven.plugins
-                                        </groupId>
-                                        <artifactId>
-                                            maven-checkstyle-plugin
-                                        </artifactId>
-                                        <versionRange>
-                                            [2.5,)
-                                        </versionRange>
-                                        <goals>
-                                            <goal>checkstyle</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore/>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
+  <dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.wildfly.checkstyle</groupId>
-            <artifactId>wildfly-checkstyle-config</artifactId>
-            <scope>provided</scope>
-        </dependency>
+
+      <!-- Modules in this project -->
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feature-pack-build-maven-plugin</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feature-pack-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>tool</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>wildfly-feature-pack-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- External Dependencies -->
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-core</artifactId>
+        <version>${version.org.apache.maven.maven-core}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model-builder</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-repository-metadata</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-plugin-api</artifactId>
+        <version>${version.org.apache.maven.maven-core}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-model</artifactId>
+        <version>${version.org.apache.maven.maven-core}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-model-builder</artifactId>
+        <version>${version.org.apache.maven.maven-core}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven.plugin-tools</groupId>
+        <artifactId>maven-plugin-annotations</artifactId>
+        <version>${version.org.apache.maven.plugin-tools}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven.shared</groupId>
+        <artifactId>maven-invoker</artifactId>
+        <version>${version.org.apache.maven.shared.maven-invoker}</version>
+      </dependency>
+
+      <!-- generated help mojo has a dependency to plexus-utils -->
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-utils</artifactId>
+        <version>${version.org.codehaus.plexus.plexus-utils}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>staxmapper</artifactId>
+        <version>${version.org.jboss.staxmapper}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.aesh</groupId>
+        <artifactId>aesh</artifactId>
+        <version>0.66.8</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.modules</groupId>
+        <artifactId>jboss-modules</artifactId>
+        <version>${version.org.jboss.modules.jboss-modules}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-api</artifactId>
+        <version>${version.org.sonatype.aether}</version>
+        <scope>provided</scope>
+        <!-- Used in maven 3.0.x -->
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-util</artifactId>
+        <version>${version.org.sonatype.aether}</version>
+        <scope>provided</scope>
+        <!-- Used in maven 3.0.x -->
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+        <version>${version.org.jboss.logging}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging-processor</artifactId>
+        <version>${version.org.jboss.logging.processor}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging-annotations</artifactId>
+        <version>${version.org.jboss.logging.processor}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.logmanager</groupId>
+        <artifactId>jboss-logmanager</artifactId>
+        <version>${version.org.jboss.logmanager}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.wildfly.checkstyle</groupId>
+        <artifactId>wildfly-checkstyle-config</artifactId>
+        <version>${version.org.wildfly.checkstyle-config}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${version.junit}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.wildfly.checkstyle</groupId>
+      <artifactId>wildfly-checkstyle-config</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
-   <dependencyManagement>
-        <dependencies>
-
-            <!-- Modules in this project -->
-
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Checkstyle -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${version.checkstyle.plugin}</version>
+          <configuration>
+            <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
+            <consoleOutput>true</consoleOutput>
+            <failsOnError>true</failsOnError>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <useFile />
+          </configuration>
+          <dependencies>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>feature-pack-build-maven-plugin</artifactId>
-                <version>${project.version}</version>
+              <groupId>org.wildfly.checkstyle</groupId>
+              <artifactId>wildfly-checkstyle-config</artifactId>
+              <version>${version.org.wildfly.checkstyle-config}</version>
             </dependency>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>feature-pack-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>tool</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>wildfly-feature-pack-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- External Dependencies -->
-
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-core</artifactId>
-                <version>${version.org.apache.maven.maven-core}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-model</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-model-builder</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-repository-metadata</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-plugin-api</artifactId>
-                <version>${version.org.apache.maven.maven-core}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-model</artifactId>
-                <version>${version.org.apache.maven.maven-core}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-model-builder</artifactId>
-                <version>${version.org.apache.maven.maven-core}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>${version.org.apache.maven.plugin-tools}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-artifact</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven.shared</groupId>
-                <artifactId>maven-invoker</artifactId>
-                <version>${version.org.apache.maven.shared.maven-invoker}</version>
-            </dependency>
-
-            <!-- generated help mojo has a dependency to plexus-utils -->
-            <dependency>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-utils</artifactId>
-                <version>${version.org.codehaus.plexus.plexus-utils}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss</groupId>
-                <artifactId>staxmapper</artifactId>
-                <version>${version.org.jboss.staxmapper}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.aesh</groupId>
-                <artifactId>aesh</artifactId>
-                <version>0.66.8</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.modules</groupId>
-                <artifactId>jboss-modules</artifactId>
-                <version>${version.org.jboss.modules.jboss-modules}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.sonatype.aether</groupId>
-                <artifactId>aether-api</artifactId>
-                <version>${version.org.sonatype.aether}</version>
-                <scope>provided</scope>
-                <!-- Used in maven 3.0.x -->
-                <optional>true</optional>
-            </dependency>
-
-            <dependency>
-                <groupId>org.sonatype.aether</groupId>
-                <artifactId>aether-util</artifactId>
-                <version>${version.org.sonatype.aether}</version>
-                <scope>provided</scope>
-                <!-- Used in maven 3.0.x -->
-                <optional>true</optional>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging</artifactId>
-                <version>${version.org.jboss.logging}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging-processor</artifactId>
-                <version>${version.org.jboss.logging.processor}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging-annotations</artifactId>
-                <version>${version.org.jboss.logging.processor}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jboss.logmanager</groupId>
-                <artifactId>jboss-logmanager</artifactId>
-                <version>${version.org.jboss.logmanager}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.wildfly.checkstyle</groupId>
-                <artifactId>wildfly-checkstyle-config</artifactId>
-                <version>${version.org.wildfly.checkstyle-config}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <repositories>
-        <repository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>check-style</id>
+              <phase>compile</phase>
+              <goals>
+                <goal>checkstyle</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <!--suppress MavenModelInspection -->
+          <groupId>org.eclipse.m2e</groupId>
+          <!--suppress MavenModelInspection -->
+          <artifactId>lifecycle-mapping</artifactId>
+          <!--suppress MavenModelInspection -->
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>
+                      org.apache.maven.plugins
+                    </groupId>
+                    <artifactId>
+                      maven-checkstyle-plugin
+                    </artifactId>
+                    <versionRange>
+                      [2.5,)
+                    </versionRange>
+                    <goals>
+                      <goal>checkstyle</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>xml-maven-plugin</artifactId>
+          <version>${version.org.codehaus.mojo.xml-maven-plugin}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-java</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>1.8</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xml-maven-plugin</artifactId>
+        <!-- *.xml and *.xsl are included by default -->
+        <executions>
+          <execution>
+            <id>xml-check-format</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check-format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

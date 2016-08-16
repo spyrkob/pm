@@ -1,5 +1,5 @@
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
-    <universe name="org.wildfly.feature-pack">
-        <feature-pack name="wildfly-core" version="2.0.10.Final"/>
-    </universe>
+  <universe name="org.wildfly.feature-pack">
+    <feature-pack name="wildfly-core" version="2.0.10.Final" />
+  </universe>
 </installation>
