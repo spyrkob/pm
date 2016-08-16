@@ -26,30 +26,30 @@ package org.jboss.provisioning.plugin.wildfly;
  *
  * @author Stuart Douglas
  */
-class ModuleIdentifier {
+public class ModuleIdentifier {
 
     private final String name;
     private final String slot;
 
-    ModuleIdentifier(String name, String slot) {
+    public ModuleIdentifier(String name, String slot) {
         this.name = name;
         this.slot = slot;
     }
 
-    ModuleIdentifier(String name) {
+    public ModuleIdentifier(String name) {
         this.name = name;
         this.slot = "main";
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    String getSlot() {
+    public String getSlot() {
         return slot;
     }
 
-    static ModuleIdentifier fromString(String moduleId) {
+    public static ModuleIdentifier fromString(String moduleId) {
         String[] parts = moduleId.split(":");
         if (parts.length == 1) {
             return new ModuleIdentifier(parts[0]);
