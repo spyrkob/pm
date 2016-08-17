@@ -1,0 +1,98 @@
+:toc:
+:toc-placement!:
+
+= Provisioning Manager Tool
+
+ifdef::env-github[]
+[link=https://travis-ci.org/aloubyansky/pm]
+image:https://travis-ci.org/aloubyansky/pm.svg?branch=master["Build Status", link="https://travis-ci.org/aloubyansky/pm"]
+endif::[]
+
+toc::[]
+
+= Project Modules
+
+== Module `pm-parent`
+
+Defines main version and common dependencies of the project.
+
+== Module `feature-pack-api`
+
+General provisioning and feature-pack API.
+
+== Module `wildfly-feature-pack-api`
+
+WildFly-specific provisioning and feature-pack API is basically a façade
+over the general provisioning and feature-pack API which makes
+it easier to build WildFly-specific provisioning config.
+
+== Module `feature-pack-build-maven-plugin`
+
+Maven Mojo implementations (i.e. goals in Maven plugins).
+
+== Module `tool`
+
+Command line interface which allows to:
+  
+* Build feature-packs and install them into the Maven repository;
+* Provision an installation by pulling the feature-packs from the
+  Maven repository and installing them at the specified location.
+
+The Maven assembly plug-in is configured to create a single executable JAR
+file which contains all the dependencies.
+
+= CLI Commands
+
+== Command `feature-pack --action install`
+
+Builds a feature pack for the specified WildFly-based installation and
+installs the feature pack into the Maven repository.
+  
+Arguments:
+
+[source,shell]
+----
+--install-dir - filesystem path to the WildFly-based installation for which 
+                the feature pack should be built.
+
+--workdir     - optional, useful for debugging, specifies the work directory
+                used by the tool to layout feature packs before ZIPing
+                and installing into the maven repository. The directory is
+                not automatically removed when the tool has finished
+                the task.
+                If the argument is not specified, a random temporary
+                directory will be created instead and removed after the tool
+                has finished the task.
+----
+
+== Command `pm`
+
+Provisions an installation at the specified location by reading its
+specification from the specified provisioning XML file.
+
+Arguments:
+  
+[source,shell]
+----
+--provisioning-xml - filesystem path to the provisioning XML file which
+                     defines an installation in terms of the feature-packs
+
+--install-dir      - root directory for the installation to be provisioned
+----
+
+= Building and launching the tool
+ 
+The tool can be built by executing the following Maven command:
+
+[source,shell]
+----
+mvn clean install
+----
+
+The executable JAR will be built in `pm/tool/target/pm-tool.jar`
+
+There is also a convenience `do.sh` script in the root directory
+of the project. If executed w/o arguments, it'll build and launch the tool.
+
+`./do.sh package` will only build the tool.
+`./do.sh run` will only launch the already built tool.
