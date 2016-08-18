@@ -34,6 +34,8 @@ import org.jboss.provisioning.descr.InstallationDescription;
  */
 public interface ProvisioningContext {
 
+    String getEncoding();
+
     InstallationDescription getInstallationDescription();
 
     Path getLayoutDir();

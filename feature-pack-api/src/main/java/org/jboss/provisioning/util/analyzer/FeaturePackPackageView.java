@@ -67,23 +67,23 @@ class FeaturePackPackageView {
         }
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, GAV fpGav) throws InstallationDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, GAV fpGav) throws InstallationDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpGav);
-        return resolve(fpLayoutDir, FeaturePackLayoutDescriber.describeFeaturePack(fpDir));
+        return resolve(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding));
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, FeaturePackDescription fpDescr) throws InstallationDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr) throws InstallationDescriptionException {
         final HashMap<String, ResolvedPackage> packages = new HashMap<String, ResolvedPackage>();
-        resolveFeaturePack(fpLayoutDir, fpDescr, packages, Collections.emptySet());
+        resolveFeaturePack(fpLayoutDir, encoding, fpDescr, packages, Collections.emptySet());
         return packages;
     }
 
-    private static void resolveFeaturePack(Path fpLayoutDir, FeaturePackDescription fpDescr,
+    private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr,
             Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws InstallationDescriptionException {
         if (fpDescr.hasDependencies()) {
             for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
                 final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGAV());
-                resolveFeaturePack(fpLayoutDir, FeaturePackLayoutDescriber.describeFeaturePack(fpDir), collectedPackages, dep.getExcludedPackages());
+                resolveFeaturePack(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding), collectedPackages, dep.getExcludedPackages());
             }
         }
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpDescr.getGAV());
