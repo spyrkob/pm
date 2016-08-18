@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.xml.LocalNameProvider;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
@@ -164,5 +165,9 @@ public class ParsingUtils {
     public static XMLStreamException unexpectedAttribute(final XMLExtendedStreamReader reader, final int index) {
         return new XMLStreamException(String.format("Unexpected attribute '%s' encountered", reader.getAttributeName(index)), reader.getLocation());
 
+    }
+
+    public static XMLStreamException expectedAtLeastOneChild(LocalNameProvider parent, LocalNameProvider child) {
+        return new XMLStreamException(String.format("There must be at least one %s under %s", child.getLocalName(), parent.getLocalName()));
     }
 }

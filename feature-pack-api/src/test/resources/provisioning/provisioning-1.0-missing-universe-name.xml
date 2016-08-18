@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<installation xmlns="urn:wildfly:pm-provisioning:1.0">
+  <universe>
+    <feature-pack name="fp1" version="0.0.1" />
+    <feature-pack name="fp2" version="0.0.2" />
+  </universe>
+</installation>

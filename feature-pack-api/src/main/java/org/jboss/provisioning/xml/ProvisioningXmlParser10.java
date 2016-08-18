@@ -43,7 +43,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
 
-    enum Element {
+    enum Element implements LocalNameProvider {
 
         FEATURE_PACK("feature-pack"),
         INSTALLATION("installation"),
@@ -85,12 +85,13 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         NAME("name"),
         VERSION("version"),
@@ -123,6 +124,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
@@ -131,9 +133,13 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
     @Override
     public void readElement(XMLExtendedStreamReader reader, ProvisioningMetaData metadata) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
+        boolean hasUniverse = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasUniverse) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.INSTALLATION, Element.UNIVERSE);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -141,6 +147,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
                     switch (element) {
                         case UNIVERSE:
                             readUniverse(reader, metadata);
+                            hasUniverse = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -161,6 +168,9 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (metadata.getFeaturePacks().isEmpty()) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.UNIVERSE, Element.FEATURE_PACK);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -210,19 +220,19 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
     private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String path = null;
-        boolean parsedTarget = false;
+        boolean hasName = false;
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case NAME:
                     path = reader.getAttributeValue(i);
-                    parsedTarget = true;
+                    hasName = true;
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (!parsedTarget) {
+        if (!hasName) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         if(exclusive) {
