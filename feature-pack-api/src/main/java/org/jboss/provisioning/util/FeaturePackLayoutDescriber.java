@@ -23,7 +23,8 @@
 package org.jboss.provisioning.util;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +49,7 @@ import org.jboss.provisioning.xml.PackageXMLParser;
  */
 public class FeaturePackLayoutDescriber {
 
-    public static InstallationDescription describeLayout(Path fpLayout) throws InstallationDescriptionException {
+    public static InstallationDescription describeLayout(Path fpLayout, String encoding) throws InstallationDescriptionException {
         if(!Files.exists(fpLayout)) {
             throw new InstallationDescriptionException(Errors.pathDoesNotExist(fpLayout));
         }
@@ -59,7 +60,7 @@ public class FeaturePackLayoutDescriber {
         final InstallationDescriptionBuilder installBuilder = InstallationDescriptionBuilder.newInstance();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(fpLayout)) {
             for(Path packageDir : stream) {
-                processGroup(installBuilder, packageDir);
+                processGroup(installBuilder, packageDir, encoding);
             }
         } catch (IOException e) {
             failedToReadDirectory(fpLayout, e);
@@ -67,29 +68,29 @@ public class FeaturePackLayoutDescriber {
         return installBuilder.build();
     }
 
-    private static void processGroup(final InstallationDescriptionBuilder installBuilder, Path pkgDir) throws InstallationDescriptionException {
+    private static void processGroup(final InstallationDescriptionBuilder installBuilder, Path pkgDir, String encoding) throws InstallationDescriptionException {
         assertDirectory(pkgDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pkgDir)) {
             for(Path artifactDir : stream) {
-                processArtifact(installBuilder, artifactDir);
+                processArtifact(installBuilder, artifactDir, encoding);
             }
         } catch (IOException e) {
             failedToReadDirectory(pkgDir, e);
         }
     }
 
-    private static void processArtifact(final InstallationDescriptionBuilder installBuilder, Path artifactDir) throws InstallationDescriptionException {
+    private static void processArtifact(final InstallationDescriptionBuilder installBuilder, Path artifactDir, String encoding) throws InstallationDescriptionException {
         assertDirectory(artifactDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(artifactDir)) {
             for(Path p : stream) {
-                installBuilder.addFeaturePack(describeFeaturePack(p));
+                installBuilder.addFeaturePack(describeFeaturePack(p, encoding));
             }
         } catch (IOException e) {
             failedToReadDirectory(artifactDir, e);
         }
     }
 
-    public static FeaturePackDescription describeFeaturePack(Path fpDir) throws InstallationDescriptionException {
+    public static FeaturePackDescription describeFeaturePack(Path fpDir, String encoding) throws InstallationDescriptionException {
         assertDirectory(fpDir);
         final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
         if(!Files.exists(fpXml)) {
@@ -97,7 +98,7 @@ public class FeaturePackLayoutDescriber {
         }
         final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
         final FeaturePackXMLParser fpXmlParser = new FeaturePackXMLParser();
-        try (InputStream is = Files.newInputStream(fpXml)) {
+        try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
             fpXmlParser.parse(is, fpBuilder);
         } catch (IOException e) {
             throw new InstallationDescriptionException(Errors.openFile(fpXml));
@@ -106,30 +107,30 @@ public class FeaturePackLayoutDescriber {
         }
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         if(Files.exists(packagesDir)) {
-            processPackages(fpBuilder, packagesDir);
+            processPackages(fpBuilder, packagesDir, encoding);
         }
         return fpBuilder.build();
     }
 
-    private static void processPackages(FeaturePackDescription.Builder fpBuilder, Path packagesDir) throws InstallationDescriptionException {
+    private static void processPackages(FeaturePackDescription.Builder fpBuilder, Path packagesDir, String encoding) throws InstallationDescriptionException {
         assertDirectory(packagesDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(packagesDir)) {
             for(Path path : stream) {
-                fpBuilder.addPackage(processPackage(path));
+                fpBuilder.addPackage(processPackage(path, encoding));
             }
         } catch (IOException e) {
             failedToReadDirectory(packagesDir, e);
         }
     }
 
-    private static PackageDescription processPackage(Path pkgDir) throws InstallationDescriptionException {
+    private static PackageDescription processPackage(Path pkgDir, String encoding) throws InstallationDescriptionException {
         assertDirectory(pkgDir);
         final Path pkgXml = pkgDir.resolve(Constants.PACKAGE_XML);
         if(!Files.exists(pkgXml)) {
             throw new InstallationDescriptionException(Errors.pathDoesNotExist(pkgXml));
         }
         final PackageXMLParser pkgParser = new PackageXMLParser();
-        try (InputStream in = Files.newInputStream(pkgXml)) {
+        try (Reader in = Files.newBufferedReader(pkgXml, Charset.forName(encoding))) {
             return pkgParser.parse(in);
         } catch (IOException e) {
             throw new InstallationDescriptionException(Errors.openFile(pkgXml), e);

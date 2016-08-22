@@ -27,8 +27,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.net.MalformedURLException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,6 +111,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
     private List<RemoteRepository> remoteRepos;
 
+    /** The encoding to use when reading descriptor files */
+    @Parameter(defaultValue = "${project.build.sourceEncoding}", required = true, property = "pm.encoding")
+    private String encoding;
+
     private InstallationDescription installationDescr;
     private Path workDir;
     private Set<GAV> provisioningPlugins = Collections.emptySet();
@@ -151,8 +156,8 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         final Path installDir = Paths.get(installDirArg);
 
         ProvisioningMetaData metadata;
-        try(InputStream fis = Files.newInputStream(provXml)) {
-            metadata = new ProvisioningXmlParser().parse(fis);
+        try(Reader r = Files.newBufferedReader(provXml, Charset.forName(encoding))) {
+            metadata = new ProvisioningXmlParser().parse(r);
         } catch (FileNotFoundException e) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(provXml), e);
         } catch (XMLStreamException e) {
@@ -242,6 +247,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                     }
                     return Paths.get(result.getArtifact().getFile().toURI());
                 }
+                @Override
+                public String getEncoding() {
+                    return FeaturePackProvisioningMojo.this.encoding;
+                }
             };
             final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
                     urls.toArray(new java.net.URL[urls.size()]),
@@ -282,7 +291,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for(GAV fpGav : fpGavs) {
             final FeaturePackDescription fpDescr;
             try {
-                fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav));
+                fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
             } catch (InstallationDescriptionException e) {
                 throw new MojoExecutionException("Failed to describe feature-pack " + fpGav, e);
             }

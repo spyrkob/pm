@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xs:schema xmlns="urn:wildfly:pm-provisioning:1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:wildfly:pm-provisioning:1.0"
+  version="2.0">
+
+  <xs:element name="installation" type="installationType" />
+
+  <xs:complexType name="installationType">
+    <xs:annotation>
+      <xs:documentation>
+        TODO: what is installation
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="1">
+      <xs:element name="universe" type="universeType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="universeType">
+    <xs:annotation>
+      <xs:documentation>
+        TODO: what is universe
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="1">
+      <xs:element name="feature-pack" type="feature-packType" />
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          TODO: what is universe/@name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="feature-packType">
+    <xs:annotation>
+      <xs:documentation>
+        TODO: what is feature-pack
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          TODO: what is feature-pack/@name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="version" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          TODO: what is feature-pack/@version
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+</xs:schema>

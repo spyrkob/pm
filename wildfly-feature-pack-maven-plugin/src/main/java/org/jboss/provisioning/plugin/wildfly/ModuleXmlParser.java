@@ -22,7 +22,8 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -44,15 +45,16 @@ class ModuleXmlParser {
     protected ModuleXmlParser() {
     }
 
-    static ModuleParseResult parse(final Path file) throws IOException, XMLStreamException {
-        try(final InputStream is = Files.newInputStream(file)) {
+    static ModuleParseResult parse(final Path file, String encoding) throws IOException, XMLStreamException {
+        try(final Reader is = Files.newBufferedReader(file, Charset.forName(encoding))) {
             return parse(is);
         }
     }
-    static ModuleParseResult parse(final InputStream in) throws IOException, XMLStreamException {
+
+    static ModuleParseResult parse(final Reader r) throws IOException, XMLStreamException {
         ModuleParseResult result = new ModuleParseResult();
         try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(in);
+            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(r);
             reader.require(XMLStreamConstants.START_DOCUMENT, null, null);
             boolean done = false;
             while (reader.hasNext()) {
@@ -74,11 +76,6 @@ class ModuleXmlParser {
             }
         } catch (Exception e) {
             throw new RuntimeException("Error parsing module xml", e);
-        } finally {
-            try {
-                in.close();
-            } catch (Exception ignore) {
-            }
         }
         return result;
     }

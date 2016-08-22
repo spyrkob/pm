@@ -87,6 +87,7 @@ public class FpCommand extends CommandBase {
     private static final String INSTALL = "install";
 
     private static final String INSTALL_DIR_ARG_NAME = "install-dir";
+    private static final String ENCODING_ARG_NAME = "encoding";
     private static final String WORK_DIR_ARG_NAME = "work-dir";
 
     private static class AfterActionActivator implements OptionActivator {
@@ -240,6 +241,9 @@ public class FpCommand extends CommandBase {
     @Option(name=INSTALL_DIR_ARG_NAME, completer=FileOptionCompleter.class, activator=InstallActivator.class)
     private String installDirArg;
 
+    @Option(name=ENCODING_ARG_NAME, required=true, defaultValue="utf-8")
+    private String encodingArg;
+
     @Option(name=WORK_DIR_ARG_NAME, completer=FileOptionCompleter.class, activator=AfterActionActivator.class)
     private String workDirArg;
     private static String workDirActivatedValue;
@@ -284,7 +288,7 @@ public class FpCommand extends CommandBase {
 
         final FeaturePackDescriptionDiffs diff;
         try {
-            diff = FeaturePacksDiff.compare(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+            diff = FeaturePacksDiff.compare(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
         } catch (InstallationDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
@@ -315,7 +319,7 @@ public class FpCommand extends CommandBase {
 
         if (xmlOnly) {
             try (StringWriter writer = new StringWriter()) {
-                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
                 FeaturePackXMLWriter.INSTANCE.write(newChildDescr, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (InstallationDescriptionException e) {
@@ -327,7 +331,7 @@ public class FpCommand extends CommandBase {
             }
         } else {
             try {
-                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, GAV.fromString(gav1), GAV.fromString(gav2));
+                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
             } catch (InstallationDescriptionException e) {
                 throw new CommandExecutionException("Failed to extract parent as a dependency", e);
             }

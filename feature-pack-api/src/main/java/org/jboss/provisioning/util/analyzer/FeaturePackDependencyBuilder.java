@@ -48,22 +48,24 @@ import org.jboss.provisioning.xml.PackageXMLWriter;
  */
 public class FeaturePackDependencyBuilder {
 
-    public static void extractParentAsDependency(Path fpLayoutDir, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
-        new FeaturePackDependencyBuilder(fpLayoutDir, childGav, parentGav, true).extractParentAsDependency();
+    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
+        new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, true).extractParentAsDependency();
     }
 
-    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
-        return new FeaturePackDependencyBuilder(fpLayoutDir, childGav, parentGav, false).describeParentAsDependency();
+    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav) throws InstallationDescriptionException {
+        return new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, false).describeParentAsDependency();
     }
 
     private final Path fpLayoutDir;
+    private final String encoding;
     private final GAV childGav;
     private final GAV parentGav;
     private final boolean updateXml;
 
 
-    private FeaturePackDependencyBuilder(Path fpLayoutDir, GAV childGav, GAV parentGav, boolean updateXml) {
+    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav, boolean updateXml) {
         this.fpLayoutDir = fpLayoutDir;
+        this.encoding = encoding;
         this.childGav = childGav;
         this.parentGav = parentGav;
         this.updateXml = updateXml;
@@ -71,7 +73,7 @@ public class FeaturePackDependencyBuilder {
 
     private void extractParentAsDependency() throws InstallationDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav);
-        final FeaturePackDescription originalDescr = FeaturePackLayoutDescriber.describeFeaturePack(fpDir);
+        final FeaturePackDescription originalDescr = FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding);
         final FeaturePackDescription newDescr = describeParentAsDependency();
 
         final Path featurePackXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
@@ -91,7 +93,7 @@ public class FeaturePackDependencyBuilder {
     }
 
     private FeaturePackDescription describeParentAsDependency() throws InstallationDescriptionException {
-        final FeaturePacksDiff diffTool = FeaturePacksDiff.newInstance(fpLayoutDir, childGav, parentGav);
+        final FeaturePacksDiff diffTool = FeaturePacksDiff.newInstance(fpLayoutDir, encoding, childGav, parentGav);
         final FeaturePackDescriptionDiffs diff = diffTool.compare();
         final FeaturePackSpecificDescription childDiff = diff.getFeaturePackDiff1();
         final FeaturePackSpecificDescription parentDiff = diff.getFeaturePackDiff2();

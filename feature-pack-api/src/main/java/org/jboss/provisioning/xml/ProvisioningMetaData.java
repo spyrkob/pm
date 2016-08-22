@@ -59,4 +59,30 @@ public class ProvisioningMetaData {
     public String toString() {
         return featurePacks.toString();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((featurePacks == null) ? 0 : featurePacks.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ProvisioningMetaData other = (ProvisioningMetaData) obj;
+        if (featurePacks == null) {
+            if (other.featurePacks != null)
+                return false;
+        } else if (!featurePacks.equals(other.featurePacks))
+            return false;
+        return true;
+    }
+
 }

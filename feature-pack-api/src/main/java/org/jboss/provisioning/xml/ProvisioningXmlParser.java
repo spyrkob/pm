@@ -22,7 +22,7 @@
 
 package org.jboss.provisioning.xml;
 
-import java.io.InputStream;
+import java.io.Reader;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
@@ -60,7 +60,7 @@ public class ProvisioningXmlParser {
         mapper.registerRootElement(ROOT_1_0, new ProvisioningXmlParser10());
     }
 
-    public ProvisioningMetaData parse(final InputStream input) throws XMLStreamException {
+    public ProvisioningMetaData parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final ProvisioningMetaData metadata = new ProvisioningMetaData();

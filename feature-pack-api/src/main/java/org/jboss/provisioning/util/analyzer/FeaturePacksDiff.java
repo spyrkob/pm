@@ -51,12 +51,12 @@ import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Build
  */
 public class FeaturePacksDiff {
 
-    static FeaturePacksDiff newInstance(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
-        return new FeaturePacksDiff(fpLayoutDir, gav1, gav2);
+    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+        return new FeaturePacksDiff(fpLayoutDir, encoding, gav1, gav2);
     }
 
-    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
-        return newInstance(fpLayoutDir, gav1, gav2).compare();
+    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+        return newInstance(fpLayoutDir, encoding, gav1, gav2).compare();
     }
 
     private static byte[] hashPath(Path path) throws InstallationDescriptionException {
@@ -68,13 +68,15 @@ public class FeaturePacksDiff {
     }
 
     private final Path fpLayoutDir;
+    private final String encoding;
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    FeaturePacksDiff(Path fpLayoutDir, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+    FeaturePacksDiff(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
         this.fpLayoutDir = fpLayoutDir;
-        fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1));
-        fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav2));
+        this.encoding = encoding;
+        fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
+        fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav2), encoding);
     }
 
     FeaturePackDescription getFeaturePackDescription1() {
@@ -95,8 +97,8 @@ public class FeaturePacksDiff {
 
     private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws InstallationDescriptionException {
 
-        final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, fp1Descr);
-        final Map<String, FeaturePackPackageView.ResolvedPackage> fp2Packages = FeaturePackPackageView.resolve(fpLayoutDir, fp2Descr);
+        final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp1Descr);
+        final Map<String, FeaturePackPackageView.ResolvedPackage> fp2Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp2Descr);
 
         if(fp1Packages.isEmpty()) {
             if(!fp2Packages.isEmpty()) {

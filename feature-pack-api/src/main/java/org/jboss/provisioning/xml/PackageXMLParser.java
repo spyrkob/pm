@@ -22,7 +22,7 @@
 
 package org.jboss.provisioning.xml;
 
-import java.io.InputStream;
+import java.io.Reader;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
@@ -63,7 +63,7 @@ public class PackageXMLParser {
         mapper.registerRootElement(ROOT_1_0, new PackageXMLParser10());
     }
 
-    public PackageDescription parse(final InputStream input) throws XMLStreamException {
+    public PackageDescription parse(final Reader input) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final Builder pkgBuilder = PackageDescription.builder();
         mapper.parseDocument(pkgBuilder, streamReader);

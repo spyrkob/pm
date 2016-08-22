@@ -20,29 +20,13 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util.plugin;
-
-import java.nio.file.Path;
-
-import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.InstallationDescription;
+package org.jboss.provisioning.xml;
 
 /**
+ * A common parent for Element and Attribute enums.
  *
- * @author Alexey Loubyansky
+ * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public interface ProvisioningContext {
-
-    String getEncoding();
-
-    InstallationDescription getInstallationDescription();
-
-    Path getLayoutDir();
-
-    Path getInstallDir();
-
-    Path getResourcesDir();
-
-    Path resolveArtifact(GAV gav, String extension) throws ProvisioningException;
+public interface LocalNameProvider {
+    String getLocalName();
 }

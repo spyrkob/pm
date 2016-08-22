@@ -88,7 +88,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                             }
 
                             try {
-                                final ModuleParseResult parsedModule = ModuleXmlParser.parse(file);
+                                final ModuleParseResult parsedModule = ModuleXmlParser.parse(file, ctx.getEncoding());
                                 for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
                                     try {
                                         ctx.resolveArtifact(GAV.fromString(artName.getArtifactCoords()), "jar");

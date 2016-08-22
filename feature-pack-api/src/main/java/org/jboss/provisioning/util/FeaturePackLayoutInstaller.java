@@ -41,13 +41,14 @@ public class FeaturePackLayoutInstaller {
      *
      * @param fpLayoutDir  feature-pack layout directory
      * @param installDir  target installation directory
+     * @param encoding the encoding to use when reading files under {@code fpLayoutDir}
      * @throws InstallationDescriptionException
      * @throws FeaturePackInstallException
      */
-    public static void install(Path fpLayoutDir, Path installDir)
+    public static void install(Path fpLayoutDir, Path installDir, String encoding)
             throws InstallationDescriptionException, FeaturePackInstallException {
         install(fpLayoutDir,
-                FeaturePackLayoutDescriber.describeLayout(fpLayoutDir),
+                FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding),
                 installDir);
     }
 
