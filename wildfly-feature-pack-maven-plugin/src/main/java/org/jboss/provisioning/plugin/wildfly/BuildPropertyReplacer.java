@@ -34,7 +34,7 @@ import java.io.File;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author John Bailey
  */
-class BuildPropertyReplacer {
+public class BuildPropertyReplacer {
 
     private static final int INITIAL = 0;
     private static final int GOT_DOLLAR = 1;
@@ -44,11 +44,11 @@ class BuildPropertyReplacer {
 
     private final PropertyResolver properties;
 
-    BuildPropertyReplacer(PropertyResolver properties) {
+    public BuildPropertyReplacer(PropertyResolver properties) {
         this.properties = properties;
     }
 
-    String replaceProperties(final String value) {
+    public String replaceProperties(final String value) {
         final StringBuilder builder = new StringBuilder();
         final int len = value.length();
         int state = INITIAL;
@@ -165,5 +165,4 @@ class BuildPropertyReplacer {
         }
         return builder.toString();
     }
-
 }

@@ -23,19 +23,35 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.plugin.FPMavenErrors;
+import org.jboss.provisioning.plugin.wildfly.configassembly.ConfigurationAssembler;
+import org.jboss.provisioning.plugin.wildfly.configassembly.FileInputStreamSource;
+import org.jboss.provisioning.plugin.wildfly.configassembly.InputStreamSource;
+import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemConfig;
+import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemInputStreamSources;
+import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemsParser;
+import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInputStreamSources;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
 
@@ -57,17 +73,76 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
             return;
         }
 
-        System.out.println("WF CONFIG ASSEMBLER layout=" + ctx.getLayoutDir() + " install-dir=" + ctx.getInstallDir());
+        System.out.println("Assembling configuration for " + ctx.getInstallDir());
 
+        final SubsystemInputStreamSources subsystemsInput = getSubsystemSources(ctx);
+
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(templatesDir, p -> Files.isDirectory(p))) {
+            for(Path p : stream) {
+                processConfigTemplate(p, subsystemsInput, ctx.getInstallDir());
+            }
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.readDirectory(templatesDir));
+        }
+    }
+
+    private void processConfigTemplate(Path baseDir, SubsystemInputStreamSources subsystemsInput, Path installDir) throws ProvisioningException {
+        System.out.println("Processing " + baseDir.getFileName() + " templates");
+
+        final Path subsystemsXml = baseDir.resolve("subsystems.xml");
+        if(!Files.exists(subsystemsXml)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(subsystemsXml));
+        }
+
+        final Map<String, Map<String, SubsystemConfig>> subsystemConfigs = new LinkedHashMap<>();
+        try {
+            SubsystemsParser.parse(new InputStreamSource() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return Files.newInputStream(subsystemsXml);
+                }
+            }, new BuildPropertyReplacer(PropertyResolver.NO_OP), subsystemConfigs);
+        } catch (IOException | XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(subsystemsXml), e);
+        }
+
+        final String templateRoot;
+        final Path configDir;
+        if(baseDir.getFileName().toString().equals("standalone")) {
+            configDir = installDir.resolve("standalone").resolve("configuration");
+            templateRoot = "server";
+        } else {
+            configDir = installDir.resolve("domain").resolve("configuration");
+            templateRoot = baseDir.getFileName().toString();
+        }
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(baseDir, p -> !p.getFileName().toString().equals("subsystems.xml"))) {
+            for(Path p : stream) {
+                final Path outputFile = p.getFileName().toString().equals("template.xml") ? configDir.resolve(baseDir.getFileName().toString() + ".xml") :
+                    configDir.resolve(p.getFileName().toString());
+                System.out.println("  assembling " + outputFile + " using template " + p.getFileName());
+                try {
+                    new ConfigurationAssembler(subsystemsInput, new FileInputStreamSource(p.toFile()), templateRoot, subsystemConfigs, outputFile.toFile()).assemble();
+                } catch (XMLStreamException | RuntimeException | Error t) {
+                    throw new ProvisioningException("Failed to assemble configuration", t);
+                }
+            }
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.readDirectory(baseDir));
+        }
+    }
+
+    private SubsystemInputStreamSources getSubsystemSources(ProvisioningContext ctx) throws ProvisioningException {
+        final ZipFileSubsystemInputStreamSources subsystemsInput = new ZipFileSubsystemInputStreamSources();
         final Path layoutDir = ctx.getLayoutDir();
         for(FeaturePackDescription fpDescr : ctx.getInstallationDescription().getFeaturePacks()) {
             final PackageDescription modulesDescr = fpDescr.getPackageDescription("modules");
             if(modulesDescr == null) {
                 continue;
             }
+
             final GAV fpGav = fpDescr.getGAV();
             final Path fpDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
-            System.out.println(" processing " + fpGav + " " + fpDir);
+
             final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
             for(String pkgName : modulesDescr.getDependencies()) {
                 final Path pkgContent = packagesDir.resolve(pkgName).resolve(Constants.CONTENT);
@@ -90,16 +165,26 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                             try {
                                 final ModuleParseResult parsedModule = ModuleXmlParser.parse(file, ctx.getEncoding());
                                 for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
+                                    final Path artifactPath;
                                     try {
-                                        ctx.resolveArtifact(GAV.fromString(artName.getArtifactCoords()), "jar");
+                                        artifactPath = ctx.resolveArtifact(GAV.fromString(artName.getArtifactCoords()), "jar");
                                     } catch(ProvisioningException e) {
-                                        System.out.println("FAILED to resolve " + artName.getArtifactCoords());
+                                        throw new IOException(FPMavenErrors.artifactResolution(GAV.fromString(artName.getArtifactCoords())));
+                                    }
+                                    final FileSystem jarFS = FileSystems.newFileSystem(artifactPath, null);
+                                    final Path subsystemTemplates = jarFS.getPath("subsystem-templates");
+                                    if(Files.exists(subsystemTemplates)) {
+                                        try (DirectoryStream<Path> stream = Files.newDirectoryStream(subsystemTemplates)) {
+                                            for(Path path : stream) {
+                                                subsystemsInput.addSubsystemFileSource(path.getFileName().toString(),
+                                                        artifactPath.toFile(), new ZipEntry(path.toString().substring(1)));
+                                            }
+                                        }
                                     }
                                 }
                             } catch (XMLStreamException e) {
-                                e.printStackTrace();
+                                throw new IOException(Errors.parseXml(file));
                             }
-
                             return FileVisitResult.CONTINUE;
                         }
 
@@ -118,5 +203,6 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
         }
+        return subsystemsInput;
     }
 }
