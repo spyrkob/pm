@@ -77,7 +77,11 @@ public class PackageXMLWriter {
     }
 
     private static ElementNode newElement(ElementNode parent, Element e) {
-        return new ElementNode(parent, e.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
+        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
+        if(parent != null) {
+            parent.addChild(eNode);
+        }
+        return eNode;
     }
 
     private static void addAttribute(ElementNode e, Attribute a, String value) {
