@@ -24,6 +24,7 @@ package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -31,6 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
+import java.util.Properties;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -45,17 +48,27 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallationException;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FPMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuildModelParser;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifact;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
+import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeaturePackXMLWriter;
 import org.jboss.provisioning.xml.PackageXMLWriter;
 
@@ -76,6 +89,15 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
     private RepositorySystemSession repoSession;
+
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
+    private List<RemoteRepository> remoteRepos;
+
+    /**
+     * The configuration file used for feature pack.
+     */
+    @Parameter(alias = "config-file", defaultValue = "feature-pack-build.xml", property = "wildfly.feature.pack.configFile")
+    private String configFile;
 
     /**
      * The directory the configuration file is located in.
@@ -107,6 +129,8 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
+        artifactVersions = MavenProjectArtifactVersions.getInstance(project);
+
         /* normalize resourcesDir */
         if (!resourcesDir.isEmpty()) {
             switch (resourcesDir.charAt(0)) {
@@ -119,30 +143,39 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
             }
         }
 
+        final Path targetResources = Paths.get(buildName, "resources");
+        try {
+            IoUtils.copy(Paths.get(configDir.getAbsolutePath() + resourcesDir), targetResources);
+        } catch (IOException e1) {
+            throw new MojoExecutionException(Errors.copyFile(Paths.get(configDir.getAbsolutePath() + resourcesDir), targetResources));
+        }
+
+        processFeaturePackBuildConfig(targetResources);
+
         final Path workDir = Paths.get(buildName, "layout");
+        System.out.println("WFFeaturePackBuildMojo.execute " + workDir);
         IoUtils.recursiveDelete(workDir);
-        //final Path fpDir = workDir.resolve(project.getGroupId()).resolve(project.getArtifactId()).resolve(project.getVersion());
-        final Path fpDir = workDir.resolve(project.getGroupId()).resolve(project.getArtifactId() + "-new").resolve(project.getVersion());
+        final String fpArtifactId = project.getArtifactId() + "-new";
+        final Path fpDir = workDir.resolve(project.getGroupId()).resolve(fpArtifactId).resolve(project.getVersion());
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
-        final Path resourcesPath = Paths.get(configDir.getAbsolutePath() + resourcesDir);
-        final Path srcModulesDir = resourcesPath.resolve("modules").resolve("system").resolve("layers").resolve("base");
+        System.out.println("WFFeaturePackBuildMojo.execute " + targetResources);
+        final Path srcModulesDir = targetResources.resolve("modules").resolve("system").resolve("layers").resolve("base");
         if(!Files.exists(srcModulesDir)) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(srcModulesDir));
         }
 
-        final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), project.getArtifactId() + "-new", project.getVersion()));
+        final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), fpArtifactId, project.getVersion()));
         try {
-            processContent(fpBuilder, resourcesPath.resolve(Constants.CONTENT), fpPackagesDir);
+            processContent(fpBuilder, targetResources.resolve(Constants.CONTENT), fpPackagesDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
         final PackageDescription.Builder modulesBuilder = PackageDescription.builder("modules");
 
-        artifactVersions = MavenProjectArtifactVersions.getInstance(project);
         try {
-            processModules(fpBuilder, modulesBuilder, resourcesPath, srcModulesDir, fpPackagesDir);
+            processModules(fpBuilder, modulesBuilder, targetResources, srcModulesDir, fpPackagesDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
         }
@@ -151,7 +184,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         writeXml(modulesPkg, fpDir.resolve(Constants.PACKAGES).resolve(modulesPkg.getName()));
 
         try {
-            processConfiguration(resourcesPath.resolve("configuration"), fpDir.resolve("resources"));
+            processConfiguration(targetResources.resolve("configuration"), fpDir.resolve("resources"));
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to copy configuration", e);
         }
@@ -169,6 +202,36 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException e) {
             throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
+        }
+    }
+
+    private void processFeaturePackBuildConfig(final Path targetResources) {
+        try (InputStream configStream = Files.newInputStream(Paths.get(configDir.getAbsolutePath(), configFile))) {
+            Properties properties = new Properties();
+            properties.putAll(project.getProperties());
+            properties.putAll(System.getProperties());
+            properties.put("project.version", project.getVersion()); //TODO: figure out the correct way to do this
+            final FeaturePackBuild build = new FeaturePackBuildModelParser(new MapPropertyResolver(properties)).parse(configStream);
+            for(CopyArtifact copyArtifact : build.getCopyArtifacts()) {
+                final String gavString = artifactVersions.getVersion(copyArtifact.getArtifact());
+                final Path jarSrc = resolveArtifact(GAV.fromString(gavString), "jar");
+                String location = copyArtifact.getToLocation();
+                if (location.endsWith("/")) {
+                    // if the to location ends with a / then it is a directory
+                    // so we need to append the artifact name
+                    location += jarSrc.getFileName();
+                }
+
+                final Path jarTarget = targetResources.resolve("content").resolve(location);
+                Files.createDirectories(jarTarget.getParent());
+                if (copyArtifact.isExtract()) {
+                    ZipUtils.unzip(jarSrc, jarTarget);
+                } else {
+                    IoUtils.copy(jarSrc, jarTarget);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -207,6 +270,8 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
                 final Path targetXml = packageDir.resolve(Constants.CONTENT).resolve(resourcesDir.relativize(file));
                 Files.createDirectories(targetXml.getParent());
 
+                IoUtils.copy(file.getParent(), targetXml.getParent());
+
                 final PackageDescription pkgDescr = PackageDescription.builder(packageName).build();
                 try {
                     PackageXMLWriter.INSTANCE.write(pkgDescr, packageDir.resolve(Constants.PACKAGE_XML));
@@ -223,6 +288,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
                 if (!OS_WINDOWS) {
                     Files.setPosixFilePermissions(targetXml, Files.getPosixFilePermissions(file));
                 }
+
                 return FileVisitResult.CONTINUE;
             }
 
@@ -245,5 +311,28 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeXml(dir.resolve(Constants.PACKAGE_XML)));
         }
+    }
+
+    private Path resolveArtifact(GAV gav, String extension) throws ProvisioningException {
+        final ArtifactResult result;
+        try {
+            result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(gav, extension));
+        } catch (ArtifactResolutionException e) {
+            throw new ProvisioningException(FPMavenErrors.artifactResolution(gav), e);
+        }
+        if(!result.isResolved()) {
+            throw new ProvisioningException(FPMavenErrors.artifactResolution(gav));
+        }
+        if(result.isMissing()) {
+            throw new ProvisioningException(FPMavenErrors.artifactMissing(gav));
+        }
+        return Paths.get(result.getArtifact().getFile().toURI());
+    }
+
+    private ArtifactRequest getArtifactRequest(GAV gav, String extension) {
+        final ArtifactRequest req = new ArtifactRequest();
+        req.setArtifact(new DefaultArtifact(gav.getGroupId(), gav.getArtifactId(), extension, gav.getVersion()));
+        req.setRepositories(remoteRepos);
+        return req;
     }
 }
