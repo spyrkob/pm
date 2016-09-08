@@ -36,6 +36,10 @@ public interface Errors {
         return "Failed to locate " + p.toAbsolutePath();
     }
 
+    static String pathAlreadyExists(Path p) {
+        return "Path already exists " + p.toAbsolutePath();
+    }
+
     static String mkdirs(Path p) {
         return "Failed to make directories " + p.toAbsolutePath();
     }

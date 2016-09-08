@@ -24,6 +24,7 @@ package org.jboss.provisioning.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
@@ -35,7 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -139,8 +139,8 @@ public class IoUtils {
     }
 
     public static void writeFile(Path file, String content) throws IOException {
-        try(BufferedWriter writer = Files.newBufferedWriter(file, Charset.forName("UTF-8"), StandardOpenOption.CREATE)) {
-            writer.write(content);
+        try(final FileOutputStream fos = new FileOutputStream(file.toFile())) {
+            fos.write(content.getBytes(Charset.forName("UTF-8")));
         }
     }
 }

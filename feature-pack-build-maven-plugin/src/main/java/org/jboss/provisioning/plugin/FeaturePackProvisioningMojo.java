@@ -72,6 +72,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
@@ -200,10 +201,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for(ArtifactResult res : resolveArtifacts(provisioningPlugins, "jar")) {
             final Artifact artifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new GAV(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion())));
+                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new GAV(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion())));
+                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
             }
             try {
                 urls.add(artifact.getFile().toURI().toURL());
@@ -232,18 +233,18 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                     return installationDescr;
                 }
                 @Override
-                public Path resolveArtifact(GAV gav, String extension) throws ProvisioningException {
+                public Path resolveArtifact(ArtifactCoords coords) throws ProvisioningException {
                     final ArtifactResult result;
                     try {
-                        result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(gav, extension));
+                        result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
                     } catch (ArtifactResolutionException e) {
-                        throw new ProvisioningException(FPMavenErrors.artifactResolution(gav), e);
+                        throw new ProvisioningException(FPMavenErrors.artifactResolution(coords), e);
                     }
                     if(!result.isResolved()) {
-                        throw new ProvisioningException(FPMavenErrors.artifactResolution(gav));
+                        throw new ProvisioningException(FPMavenErrors.artifactResolution(coords));
                     }
                     if(result.isMissing()) {
-                        throw new ProvisioningException(FPMavenErrors.artifactMissing(gav));
+                        throw new ProvisioningException(FPMavenErrors.artifactMissing(coords));
                     }
                     return Paths.get(result.getArtifact().getFile().toURI());
                 }
@@ -270,10 +271,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for (ArtifactResult res : resolveArtifacts(fpGavs, "zip")) {
             final Artifact fpArtifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new GAV(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion())));
+                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new GAV(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion())));
+                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
             }
             final Path fpWorkDir = layoutDir.resolve(fpArtifact.getGroupId()).resolve(fpArtifact.getArtifactId())
                     .resolve(fpArtifact.getVersion());
@@ -334,17 +335,21 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     private List<ArtifactResult> resolveArtifacts(final Collection<GAV> fpGavs, String extension) throws MojoExecutionException {
         final List<ArtifactRequest> requests;
         if (fpGavs.size() == 1) {
-            requests = Collections.singletonList(getArtifactRequest(fpGavs.iterator().next(), extension));
+            requests = Collections.singletonList(getArtifactRequest(ArtifactCoords.fromGAV(fpGavs.iterator().next(), extension)));
         } else {
             requests = new ArrayList<ArtifactRequest>(fpGavs.size());
             for (GAV gav : fpGavs) {
-                requests.add(getArtifactRequest(gav, extension));
+                requests.add(getArtifactRequest(ArtifactCoords.fromGAV(gav, extension)));
             }
         }
         try {
             return repoSystem.resolveArtifacts(repoSession, requests);
         } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException(FPMavenErrors.artifactResolution(fpGavs), e);
+            final Collection<ArtifactCoords> coords = new ArrayList<>(fpGavs.size());
+            for(GAV gav : fpGavs) {
+                coords.add(ArtifactCoords.fromGAV(gav));
+            }
+            throw new MojoExecutionException(FPMavenErrors.artifactResolution(coords), e);
         }
     }
 
@@ -448,9 +453,9 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private ArtifactRequest getArtifactRequest(GAV gav, String extension) {
+    private ArtifactRequest getArtifactRequest(ArtifactCoords coords) {
         final ArtifactRequest req = new ArtifactRequest();
-        req.setArtifact(new DefaultArtifact(gav.getGroupId(), gav.getArtifactId(), extension, gav.getVersion()));
+        req.setArtifact(new DefaultArtifact(coords.getGroupId(), coords.getArtifactId(), coords.getClassifier(), coords.getExtension(), coords.getVersion()));
         req.setRepositories(remoteRepos);
         return req;
     }

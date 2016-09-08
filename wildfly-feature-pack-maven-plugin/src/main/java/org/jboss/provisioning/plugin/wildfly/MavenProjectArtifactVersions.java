@@ -46,10 +46,14 @@ class MavenProjectArtifactVersions {
             final StringBuilder buf = new StringBuilder(artifact.getGroupId()).append(':').
                     append(artifact.getArtifactId());
             final String classifier = artifact.getClassifier();
+            final StringBuilder version = new StringBuilder(buf);
             if(classifier != null && !classifier.isEmpty()) {
                 buf.append("::").append(classifier);
+                version.append(':').append(artifact.getVersion()).append(':').append(classifier);
+            } else {
+                version.append(':').append(artifact.getVersion());
             }
-            versions.put(buf.toString(), buf.append(':').append(artifact.getVersion()).toString());
+            versions.put(buf.toString(), version.toString());
         }
     }
 

@@ -20,29 +20,35 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.util.plugin;
+package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 
-import org.jboss.provisioning.ArtifactCoords;
+import javax.xml.stream.XMLStreamException;
+
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.InstallationDescription;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuildModelParser;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisioningContext {
+class Util {
 
-    String getEncoding();
-
-    InstallationDescription getInstallationDescription();
-
-    Path getLayoutDir();
-
-    Path getInstallDir();
-
-    Path getResourcesDir();
-
-    Path resolveArtifact(ArtifactCoords coords) throws ProvisioningException;
+    static FeaturePackBuild loadFeaturePackBuildConfig(Path configFile, Properties props) throws ProvisioningException {
+        try (InputStream configStream = Files.newInputStream(configFile)) {
+            props.putAll(System.getProperties());
+            return new FeaturePackBuildModelParser(new MapPropertyResolver(props)).parse(configStream);
+        } catch (XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(configFile), e);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.openFile(configFile), e);
+        }
+    }
 }

@@ -51,31 +51,26 @@ class ModuleXmlParser {
         }
     }
 
-    static ModuleParseResult parse(final Reader r) throws IOException, XMLStreamException {
+    static ModuleParseResult parse(final Reader r) throws XMLStreamException {
         ModuleParseResult result = new ModuleParseResult();
-        try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(r);
-            reader.require(XMLStreamConstants.START_DOCUMENT, null, null);
-            boolean done = false;
-            while (reader.hasNext()) {
-                int type = reader.next();
-                switch (type) {
-                    case XMLStreamConstants.START_ELEMENT:
-                        if (!done && reader.getLocalName().equals("module")) {
-                            parseModule(reader, result);
-                            done = true;
-                        }
-                        else if (!done && reader.getLocalName().equals("module-alias")) {
-                            parseModuleAlias(reader, result);
-                            done = true;
-                        }
-                        break;
-                    case XMLStreamConstants.END_DOCUMENT:
-                        return result;
-                }
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(r);
+        reader.require(XMLStreamConstants.START_DOCUMENT, null, null);
+        boolean done = false;
+        while (reader.hasNext()) {
+            int type = reader.next();
+            switch (type) {
+                case XMLStreamConstants.START_ELEMENT:
+                    if (!done && reader.getLocalName().equals("module")) {
+                        parseModule(reader, result);
+                        done = true;
+                    } else if (!done && reader.getLocalName().equals("module-alias")) {
+                        parseModuleAlias(reader, result);
+                        done = true;
+                    }
+                    break;
+                case XMLStreamConstants.END_DOCUMENT:
+                    return result;
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing module xml", e);
         }
         return result;
     }
