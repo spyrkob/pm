@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
@@ -94,43 +93,45 @@ public class ElementNode extends Node {
 
     @Override
     public void marshall(XMLStreamWriter writer) throws XMLStreamException {
-//        boolean empty = false;//children.isEmpty()
+        // boolean empty = false;//children.isEmpty()
         boolean empty = isEmpty();
-        NamespaceContext context = writer.getNamespaceContext();
+//        if (empty && name.equals("package")) {
+//            if (attributes.size() == 1) {
+//                AttributeValue next = attributes.values().iterator().next();
+//                if (next.getValue().equals("modules")) {
+//                    throw new XMLStreamException("package modules is empty");
+//                }
+//            }
+//        }
         String prefix = writer.getNamespaceContext().getPrefix(namespace);
         if (prefix == null) {
             // Unknown namespace; it becomes default
             writer.setDefaultNamespace(namespace);
             if (empty) {
                 writer.writeEmptyElement(name);
-            }
-            else {
+            } else {
                 writer.writeStartElement(name);
             }
             writer.writeNamespace(null, namespace);
-        }
-        else {
-            if (empty) {
-                writer.writeEmptyElement(namespace, name);
-            }
-            else {
-                writer.writeStartElement(namespace, name);
-            }
+        } else if (empty) {
+            writer.writeEmptyElement(namespace, name);
+        } else {
+            writer.writeStartElement(namespace, name);
         }
 
         for (Map.Entry<String, AttributeValue> attr : attributes.entrySet()) {
             writer.writeAttribute(attr.getKey(), attr.getValue().getValue());
         }
 
-        for (Node child : children) {
-            child.marshall(writer);
-        }
-
         if (!empty) {
+            for (Node child : children) {
+                child.marshall(writer);
+            }
+
             try {
                 writer.writeEndElement();
-            } catch(XMLStreamException e) {
-                //TODO REMOVE THIS
+            } catch (XMLStreamException e) {
+                // TODO REMOVE THIS
                 throw e;
             }
         }

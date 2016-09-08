@@ -105,7 +105,6 @@ public class BuildPropertyReplacer {
                                 continue;
                             }
                             final String val = properties.resolveProperty(name);
-
                             if (val != null) {
                                 builder.append(val);
                                 resolvedValue = val;
@@ -115,6 +114,21 @@ public class BuildPropertyReplacer {
                                 nameStart = i + 1;
                                 continue;
                             } else {
+                                // check and ignore options if there are any
+                                int q = name.indexOf('?');
+                                if(q > 0) {
+                                    final String name2 = name.substring(0, q);
+                                    final String val2 = properties.resolveProperty(name2);
+                                    if (val2 != null) {
+                                        builder.append(val2);
+                                        resolvedValue = val2;
+                                        state = ch == '}' ? INITIAL : RESOLVED;
+                                        continue;
+                                    } else if (ch == ',') {
+                                        nameStart = i + 1;
+                                        continue;
+                                    }
+                                }
                                 throw new IllegalStateException("Failed to resolve expression: " + value.substring(start - 2, i + 1));
                             }
                         }

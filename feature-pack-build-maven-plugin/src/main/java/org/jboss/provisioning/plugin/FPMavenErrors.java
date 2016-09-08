@@ -24,7 +24,7 @@ package org.jboss.provisioning.plugin;
 
 import java.util.Collection;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.ArtifactCoords;
 
 /**
  *
@@ -44,15 +44,15 @@ public interface FPMavenErrors {
         return "Failed to install feature-pack into repository";
     }
 
-    static String artifactResolution(Collection<GAV> artifacts) {
+    static String artifactResolution(Collection<ArtifactCoords> artifacts) {
         return "Failed to resolve artifacts: " + artifacts;
     }
 
-    static String artifactResolution(GAV gav) {
+    static String artifactResolution(ArtifactCoords gav) {
         return "Failed to resolve " + gav;
     }
 
-    static String artifactMissing(GAV gav) {
+    static String artifactMissing(ArtifactCoords gav) {
         return "Repository is missing artifact " + gav;
     }
 }
