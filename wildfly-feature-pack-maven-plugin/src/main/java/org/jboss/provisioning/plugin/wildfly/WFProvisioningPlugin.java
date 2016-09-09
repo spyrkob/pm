@@ -32,6 +32,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,6 +56,8 @@ import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemsParser;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInputStreamSources;
 import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFile;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
+import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.xml.PackageXMLParser;
@@ -91,6 +94,63 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
 
         collectLayoutSubsystemsInput(ctx);
         assembleConfigs(resources, fpBuild, ctx.getInstallDir());
+
+        if (!PropertyUtils.isWindows()) {
+            processFeaturePackFilePermissions(fpBuild, ctx.getInstallDir());
+        }
+
+        mkdirs(fpBuild, ctx.getInstallDir());
+    }
+
+    private static void mkdirs(final FeaturePackBuild build, Path installDir) throws ProvisioningException {
+        // make dirs
+        for (String dirName : build.getMkDirs()) {
+            final Path dir = installDir.resolve(dirName);
+            if(!Files.isDirectory(dir)) {
+                try {
+                    Files.createDirectories(dir);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.mkdirs(dir));
+                }
+            }
+        }
+    }
+
+    private void processFeaturePackFilePermissions(FeaturePackBuild featurePack, Path installDir) throws ProvisioningException {
+        final List<FilePermission> filePermissions = featurePack.getFilePermissions();
+        try {
+            Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    final String relative = installDir.relativize(dir).toString();
+                    for (FilePermission perm : filePermissions) {
+                        if (perm.includeFile(relative)) {
+                            Files.setPosixFilePermissions(dir, perm.getPermission());
+                            continue;
+                        }
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    final String relative = installDir.relativize(file).toString();
+                    for (FilePermission perm : filePermissions) {
+                        if (perm.includeFile(relative)) {
+                            Files.setPosixFilePermissions(file, perm.getPermission());
+                            continue;
+                        }
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to set file permissions", e);
+        }
+//        if(!excludeDependencies) {
+//            for (FeaturePack dependency : featurePack.getDependencies()) {
+//                processFeaturePackFilePermissions(dependency, outputDirectory, excludeDependencies);
+//            }
+//        }
     }
 
     private void collectLayoutSubsystemsInput(ProvisioningContext ctx) throws ProvisioningException {
