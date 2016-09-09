@@ -36,6 +36,7 @@ WildFly-specific Maven Mojo implementation that builds WildFly feature-packs.
 The plugin has to be included into the WildFly feature-pack build modules as
 
 [source,xml]
+----
 <plugin>
     <groupId>org.jboss.pm</groupId>
     <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
@@ -49,6 +50,7 @@ The plugin has to be included into the WildFly feature-pack build modules as
         </execution>
     </executions>
 </plugin>
+----
 
 == Module `tool`
 
@@ -98,6 +100,16 @@ Arguments:
                      defines an installation in terms of the feature-packs
 
 --install-dir      - root directory for the installation to be provisioned
+----
+
+Assuming the feature-packs are built and installed into the Maven repository,
+these are the commands I use to test provisioning WildFly builds:
+
+[source,shell]
+----
+[pm] pm --install-dir install/wf-full --provisioning-xml tool/src/test/resources/wf-full-provisioning.xml
+[pm] pm --install-dir install/wf-web --provisioning-xml tool/src/test/resources/wf-web-provisioning.xml
+[pm] pm --install-dir install/wf-core --provisioning-xml tool/src/test/resources/wf-core-provisioning.xml
 ----
 
 = Building and launching the tool
