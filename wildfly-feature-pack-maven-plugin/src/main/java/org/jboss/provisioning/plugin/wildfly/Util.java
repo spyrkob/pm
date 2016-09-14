@@ -32,7 +32,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuildModelParser;
 
 /**
@@ -41,7 +41,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePack
  */
 class Util {
 
-    static FeaturePackBuild loadFeaturePackBuildConfig(Path configFile, Properties props) throws ProvisioningException {
+    static WildFlyFeaturePackBuild loadFeaturePackBuildConfig(Path configFile, Properties props) throws ProvisioningException {
         try (InputStream configStream = Files.newInputStream(configFile)) {
             props.putAll(System.getProperties());
             return new FeaturePackBuildModelParser(new MapPropertyResolver(props)).parse(configStream);

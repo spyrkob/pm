@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Complete Maven artifact coordinates.
  *
  * @author Alexey Loubyansky
  */

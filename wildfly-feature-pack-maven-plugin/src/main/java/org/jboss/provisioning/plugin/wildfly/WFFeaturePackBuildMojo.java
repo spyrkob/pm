@@ -71,7 +71,7 @@ import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FPMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifact;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
@@ -105,7 +105,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     /**
      * The configuration file used for feature pack.
      */
-    @Parameter(alias = "config-file", defaultValue = "feature-pack-build.xml", property = "wildfly.feature.pack.configFile")
+    @Parameter(alias = "config-file", defaultValue = "wildfly-feature-pack-build.xml", property = "wildfly.feature.pack.configFile")
     private String configFile;
 
     /**
@@ -172,7 +172,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
-        FeaturePackBuild build;
+        WildFlyFeaturePackBuild build;
         try {
             build = Util.loadFeaturePackBuildConfig(getFPConfigFile(), getFPConfigProperties());
         } catch (ProvisioningException e) {
@@ -221,10 +221,10 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         }
         try {
             IoUtils.copy(getFPConfigFile(), resourcesWildFly.resolve(configFile));
-        } catch (IOException e) {
+        } catch (ProvisioningException | IOException e) {
             throw new MojoExecutionException("Failed to copy " + configFile + " to feature-pack resources", e);
         }
-        try(OutputStream out = Files.newOutputStream(resourcesWildFly.resolve("feature-pack-build.properties"))) {
+        try(OutputStream out = Files.newOutputStream(resourcesWildFly.resolve("wildfly-feature-pack-build.properties"))) {
                 getFPConfigProperties().store(out, "Feature-pack build properties");
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to store feature-pack build properties", e);
@@ -237,7 +237,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void copyArtifacts(final Path targetResources, final FeaturePackBuild build) throws MojoExecutionException {
+    private void copyArtifacts(final Path targetResources, final WildFlyFeaturePackBuild build) throws MojoExecutionException {
         for(CopyArtifact copyArtifact : build.getCopyArtifacts()) {
             final String gavString = artifactVersions.getVersion(copyArtifact.getArtifact());
             try {
@@ -304,12 +304,13 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void processFeaturePackDependencies(final Builder fpBuilder, final FeaturePackBuild build)
+    private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
             throws MojoExecutionException {
         if (!build.getDependencies().isEmpty()) {
-            for (String dep : build.getDependencies()) {
-                String gavStr = artifactVersions.getVersion(dep);
-                gavStr = gavStr.replace(dep, dep + "-new");
+            for (FeaturePackDependencyDescription dep : build.getDependencies()) {
+                final String depStr = dep.getGAV().toString();
+                String gavStr = artifactVersions.getVersion(depStr);
+                gavStr = gavStr.replace(depStr, depStr + "-new");
                 final GAV gav = GAV.fromString(gavStr);
                 fpBuilder.addDependency(FeaturePackDependencyDescription.builder(gav).build());
             }
@@ -394,8 +395,12 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         return properties;
     }
 
-    private Path getFPConfigFile() {
-        return Paths.get(configDir.getAbsolutePath(), configFile);
+    private Path getFPConfigFile() throws ProvisioningException {
+        final Path path = Paths.get(configDir.getAbsolutePath(), configFile);
+        if(!Files.exists(path)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(path));
+        }
+        return path;
     }
 
     private static void writeXml(PackageDescription pkgDescr, Path dir) throws MojoExecutionException {

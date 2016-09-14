@@ -32,8 +32,7 @@ import org.jboss.staxmapper.XMLMapper;
  */
 public class FeaturePackBuildModelParser {
 
-    private static final QName ROOT_1_0 = new QName(FeaturePackBuildModelParser10.NAMESPACE_1_0, FeaturePackBuildModelParser10.Element.BUILD.getLocalName());
-    private static final QName ROOT_1_1 = new QName(FeaturePackBuildModelParser11.NAMESPACE_1_1, FeaturePackBuildModelParser10.Element.BUILD.getLocalName());
+    private static final QName ROOT_2_0 = new QName(FeaturePackBuildModelParser20.NAMESPACE_2_0, FeaturePackBuildModelParser20.Element.BUILD.getLocalName());
 
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
 
@@ -41,19 +40,18 @@ public class FeaturePackBuildModelParser {
 
     public FeaturePackBuildModelParser(PropertyResolver properties) {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new FeaturePackBuildModelParser10(properties));
-        mapper.registerRootElement(ROOT_1_1, new FeaturePackBuildModelParser11(properties));
+        mapper.registerRootElement(ROOT_2_0, new FeaturePackBuildModelParser20(properties));
     }
 
-    public FeaturePackBuild parse(final InputStream input) throws XMLStreamException {
+    public WildFlyFeaturePackBuild parse(final InputStream input) throws XMLStreamException {
 
         final XMLInputFactory inputFactory = INPUT_FACTORY;
         setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
         setIfSupported(inputFactory, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        FeaturePackBuild build = new FeaturePackBuild();
-        mapper.parseDocument(build, streamReader);
-        return build;
+        final WildFlyFeaturePackBuild.Builder builder = WildFlyFeaturePackBuild.builder();
+        mapper.parseDocument(builder, streamReader);
+        return builder.build();
     }
 
     private void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
@@ -61,5 +59,4 @@ public class FeaturePackBuildModelParser {
             inputFactory.setProperty(property, value);
         }
     }
-
 }

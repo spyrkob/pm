@@ -23,6 +23,7 @@
 package org.jboss.provisioning;
 
 /**
+ * GroupId, artifactId, version that are used to identify a feature-pack.
  *
  * @author Alexey Loubyansky
  */

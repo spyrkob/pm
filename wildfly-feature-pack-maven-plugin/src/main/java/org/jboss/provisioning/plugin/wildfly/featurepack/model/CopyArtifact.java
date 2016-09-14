@@ -17,6 +17,7 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,16 +29,64 @@ import java.util.List;
  */
 public class CopyArtifact {
 
+    public static class Builder {
+
+        private String artifact;
+        private String toLocation;
+        private boolean extract;
+        private List<FileFilter> filters = Collections.emptyList();
+
+        private Builder() {
+        }
+
+        public Builder setArtifact(String artifact) {
+            this.artifact = artifact;
+            return this;
+        }
+
+        public Builder setToLocation(String toLocation) {
+            this.toLocation = toLocation;
+            return this;
+        }
+
+        public Builder setExtract() {
+            this.extract = true;
+            return this;
+        }
+
+        public Builder addFilter(FileFilter filter) {
+            switch(filters.size()) {
+                case 0:
+                    filters = Collections.singletonList(filter);
+                    break;
+                case 1:
+                    filters = new ArrayList<FileFilter>(filters);
+                default:
+                    filters.add(filter);
+            }
+            return this;
+        }
+
+        public CopyArtifact build() {
+            return new CopyArtifact(artifact, toLocation, extract,filters);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final String artifact;
     private final String toLocation;
     private final boolean extract;
-    private final List<FileFilter> filters = new ArrayList<>();
+    private final List<FileFilter> filters;
 
 
-    public CopyArtifact(String artifact, String toLocation, boolean extract) {
+    private CopyArtifact(String artifact, String toLocation, boolean extract, List<FileFilter> filters) {
         this.artifact = artifact;
         this.toLocation = toLocation;
         this.extract = extract;
+        this.filters = filters;
     }
 
     public String getArtifact() {

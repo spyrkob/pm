@@ -22,11 +22,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.util.ParsingUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -123,7 +123,7 @@ public class FilePermissionsModelParser10 {
         this.fileFilterModelParser = fileFilterModelParser;
     }
 
-    public void parseFilePermissions(final XMLStreamReader reader, final List<FilePermission> result) throws XMLStreamException {
+    public void parseFilePermissions(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -133,7 +133,7 @@ public class FilePermissionsModelParser10 {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PERMISSION:
-                            parsePermission(reader, result);
+                            builder.addFilePermissions(parsePermission(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -148,8 +148,8 @@ public class FilePermissionsModelParser10 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    protected void parsePermission(XMLStreamReader reader, List<FilePermission> result) throws XMLStreamException {
-        String permission = null;
+    protected FilePermission parsePermission(XMLStreamReader reader) throws XMLStreamException {
+        final FilePermission.Builder permissionBuilder = FilePermission.builder();
         final Set<Attribute> required = EnumSet.of(Attribute.VALUE);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -157,7 +157,7 @@ public class FilePermissionsModelParser10 {
             required.remove(attribute);
             switch (attribute) {
                 case VALUE:
-                    permission = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    permissionBuilder.setValue(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -167,18 +167,18 @@ public class FilePermissionsModelParser10 {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        FilePermission filePermission = new FilePermission(permission);
-        result.add(filePermission);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return;
+                    return permissionBuilder.build();
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case FILTER:
-                            fileFilterModelParser.parseFilter(reader, filePermission.getFilters());
+                            final FileFilter.Builder filterBuilder = FileFilter.builder();
+                            fileFilterModelParser.parseFilter(reader, filterBuilder);
+                            permissionBuilder.addFilter(filterBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -192,5 +192,4 @@ public class FilePermissionsModelParser10 {
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
-
 }
