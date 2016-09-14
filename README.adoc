@@ -128,3 +128,13 @@ of the project. If executed w/o arguments, it'll build and launch the tool.
 
 `./do.sh package` will only build the tool.
 `./do.sh run` will only launch the already built tool.
+
+= Building WildFly feature-packs
+
+To be able to build WildFly (core, servlet and full) feature-packs the WildFly Maven plugins
+from this project have to be included into the target WildFly Maven build configuration.
+
+The following branches can be used as examples:
+
+* WildFly Core: https://github.com/aloubyansky/wildfly-core/tree/new-feature-pack
+* WildFly Servlet and Full: https://github.com/aloubyansky/wildfly/tree/new-feature-pack
