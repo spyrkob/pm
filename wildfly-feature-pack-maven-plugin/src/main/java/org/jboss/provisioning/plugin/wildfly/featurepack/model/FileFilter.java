@@ -26,11 +26,38 @@ import org.jboss.provisioning.util.ParsingUtils;
  */
 public class FileFilter {
 
+    public static class Builder {
+
+        private String patternString;
+        private boolean include;
+
+        private Builder() {
+        }
+
+        public Builder setPatternString(String patternString) {
+            this.patternString = patternString;
+            return this;
+        }
+
+        public Builder setInclude() {
+            this.include = true;
+            return this;
+        }
+
+        public FileFilter build() {
+            return new FileFilter(patternString, include);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final String patternString;
     private final Pattern pattern;
     private final boolean include;
 
-    public FileFilter(String patternString, boolean include) {
+    private FileFilter(String patternString, boolean include) {
         if (patternString == null) {
             throw new IllegalArgumentException("null pattern");
         }

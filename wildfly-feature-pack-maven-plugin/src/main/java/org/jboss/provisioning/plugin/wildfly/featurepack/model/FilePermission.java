@@ -19,6 +19,7 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,16 +28,53 @@ import java.util.Set;
  * Represents a set of file permissions that should be applied to the final build.
  *
  * @author Stuart Douglas
+ * @author Alexey Loubyansky
  */
 public class FilePermission {
 
+    public static class Builder {
+
+        private String value;
+        private List<FileFilter> filters = Collections.emptyList();
+
+        private Builder() {
+        }
+
+        public Builder setValue(String value) {
+            this.value = value;
+            return this;
+        }
+
+        public Builder addFilter(FileFilter filter) {
+            switch(filters.size()) {
+                case 0:
+                    filters = Collections.singletonList(filter);
+                    break;
+                case 1:
+                    filters = new ArrayList<FileFilter>(filters);
+                default:
+                    filters.add(filter);
+            }
+            return this;
+        }
+
+        public FilePermission build() {
+            return new FilePermission(value, Collections.unmodifiableList(filters));
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final Set<PosixFilePermission> permission;
     private final String value;
-    private final List<FileFilter> filters = new ArrayList<>();
+    private final List<FileFilter> filters;
 
-    public FilePermission(String value) {
+    private FilePermission(String value, List<FileFilter> filters) {
         this.value = value;
         this.permission = fromString(value);
+        this.filters = filters;
     }
 
     private static Set<PosixFilePermission> fromString(String permission) {

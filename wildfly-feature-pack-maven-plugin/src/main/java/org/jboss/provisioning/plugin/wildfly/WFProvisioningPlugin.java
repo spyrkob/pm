@@ -54,7 +54,7 @@ import org.jboss.provisioning.plugin.wildfly.configassembly.InputStreamSource;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemConfig;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemsParser;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInputStreamSources;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFile;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 import org.jboss.provisioning.util.PropertyUtils;
@@ -85,12 +85,16 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
 
         final Properties props = new Properties();
-        try(InputStream in = Files.newInputStream(resources.resolve("feature-pack-build.properties"))) {
+        try(InputStream in = Files.newInputStream(resources.resolve("wildfly-feature-pack-build.properties"))) {
             props.load(in);
         } catch (IOException e) {
-            throw new ProvisioningException(Errors.readFile(resources.resolve("feature-pack-build.properties")), e);
+            throw new ProvisioningException(Errors.readFile(resources.resolve("wildfly-feature-pack-build.properties")), e);
         }
-        final FeaturePackBuild fpBuild = Util.loadFeaturePackBuildConfig(resources.resolve("feature-pack-build.xml"), props);
+        final Path wfFpXml = resources.resolve("wildfly-feature-pack-build.xml");
+        if(!Files.exists(wfFpXml)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(wfFpXml));
+        }
+        final WildFlyFeaturePackBuild fpBuild = Util.loadFeaturePackBuildConfig(wfFpXml, props);
 
         collectLayoutSubsystemsInput(ctx);
         assembleConfigs(resources, fpBuild, ctx.getInstallDir());
@@ -102,7 +106,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         mkdirs(fpBuild, ctx.getInstallDir());
     }
 
-    private static void mkdirs(final FeaturePackBuild build, Path installDir) throws ProvisioningException {
+    private static void mkdirs(final WildFlyFeaturePackBuild build, Path installDir) throws ProvisioningException {
         // make dirs
         for (String dirName : build.getMkDirs()) {
             final Path dir = installDir.resolve(dirName);
@@ -116,7 +120,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processFeaturePackFilePermissions(FeaturePackBuild featurePack, Path installDir) throws ProvisioningException {
+    private void processFeaturePackFilePermissions(WildFlyFeaturePackBuild featurePack, Path installDir) throws ProvisioningException {
         final List<FilePermission> filePermissions = featurePack.getFilePermissions();
         try {
             Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
@@ -258,7 +262,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void assembleConfigs(final Path resources, FeaturePackBuild build, Path installDir) throws ProvisioningException {
+    private void assembleConfigs(final Path resources, WildFlyFeaturePackBuild build, Path installDir) throws ProvisioningException {
         assembleConfigs(resources, "domain", build.getConfig().getDomainConfigFiles(), installDir);
         assembleConfigs(resources, "server", build.getConfig().getStandaloneConfigFiles(), installDir);
         assembleConfigs(resources, "host", build.getConfig().getHostConfigFiles(), installDir);

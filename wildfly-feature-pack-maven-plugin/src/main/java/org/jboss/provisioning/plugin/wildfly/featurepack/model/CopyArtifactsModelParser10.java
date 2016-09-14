@@ -22,11 +22,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
+import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.util.ParsingUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -127,7 +127,7 @@ public class CopyArtifactsModelParser10 {
         this.fileFilterModelParser = fileFilterModelParser;
     }
 
-    public void parseCopyArtifacts(final XMLStreamReader reader, final List<CopyArtifact> result) throws XMLStreamException {
+    public void parseCopyArtifacts(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder wfBuilder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -137,7 +137,9 @@ public class CopyArtifactsModelParser10 {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case COPY_ARTIFACT:
-                            parseCopyArtifact(reader, result);
+                            final CopyArtifact.Builder cpBuilder = CopyArtifact.builder();
+                            parseCopyArtifact(reader, cpBuilder);
+                            wfBuilder.addCopyArtifact(cpBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -152,10 +154,7 @@ public class CopyArtifactsModelParser10 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseCopyArtifact(XMLStreamReader reader, final List<CopyArtifact> result) throws XMLStreamException {
-        String artifact = null;
-        String location = null;
-        boolean extract = false;
+    private void parseCopyArtifact(XMLStreamReader reader, final CopyArtifact.Builder builder) throws XMLStreamException {
         final Set<Attribute> required = EnumSet.of(Attribute.ARTIFACT, Attribute.TO_LOCATION);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -163,13 +162,15 @@ public class CopyArtifactsModelParser10 {
             required.remove(attribute);
             switch (attribute) {
                 case ARTIFACT:
-                    artifact = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    builder.setArtifact(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 case TO_LOCATION:
-                    location = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    builder.setToLocation(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 case EXTRACT:
-                    extract = Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    if(Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)))) {
+                        builder.setExtract();
+                    }
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -179,8 +180,6 @@ public class CopyArtifactsModelParser10 {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        CopyArtifact copyArtifact = new CopyArtifact(artifact, location, extract);
-        result.add(copyArtifact);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -190,7 +189,9 @@ public class CopyArtifactsModelParser10 {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case FILTER:
-                            fileFilterModelParser.parseFilter(reader, copyArtifact.getFilters());
+                            final FileFilter.Builder filterBuilder = FileFilter.builder();
+                            fileFilterModelParser.parseFilter(reader, filterBuilder);
+                            builder.addFilter(filterBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

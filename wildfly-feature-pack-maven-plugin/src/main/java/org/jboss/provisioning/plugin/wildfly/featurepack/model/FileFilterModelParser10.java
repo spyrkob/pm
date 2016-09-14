@@ -26,7 +26,6 @@ import org.jboss.provisioning.util.ParsingUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,9 +79,7 @@ public class FileFilterModelParser10 {
         this.propertyReplacer = propertyReplacer;
     }
 
-    public void parseFilter(XMLStreamReader reader, List<FileFilter> filters) throws XMLStreamException {
-        String pattern = null;
-        boolean include = false;
+    public void parseFilter(XMLStreamReader reader, FileFilter.Builder builder) throws XMLStreamException {
         final Set<Attribute> required = EnumSet.of(Attribute.PATTERN, Attribute.INCLUDE);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -90,10 +87,12 @@ public class FileFilterModelParser10 {
             required.remove(attribute);
             switch (attribute) {
                 case PATTERN:
-                    pattern = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    builder.setPatternString(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 case INCLUDE:
-                    include = Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    if(Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)))) {
+                        builder.setInclude();
+                    }
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -102,9 +101,6 @@ public class FileFilterModelParser10 {
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-
         ParsingUtils.parseNoContent(reader);
-
-        filters.add(new FileFilter(pattern, include));
     }
 }

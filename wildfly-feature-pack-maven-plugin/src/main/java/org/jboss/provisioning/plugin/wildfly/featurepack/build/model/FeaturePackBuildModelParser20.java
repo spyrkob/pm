@@ -16,9 +16,12 @@
 
 package org.jboss.provisioning.plugin.wildfly.featurepack.build.model;
 
+import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser10;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser11;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifactsModelParser10;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser10;
@@ -34,63 +37,68 @@ import javax.xml.stream.XMLStreamReader;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Parses the feature pack build config file (i.e. the config file that is
- * used to create a feature pack, not the config file inside the feature pack).
- *
+ * Parses the WildFly-based feature pack build config file (i.e. the config file that is
+ * used to create a WildFly-based feature pack, not the config file inside the feature pack).
  *
  * @author Stuart Douglas
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild> {
+class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePackBuild.Builder> {
 
-    public static final String NAMESPACE_1_0 = "urn:wildfly:feature-pack-build:1.0";
+    public static final String NAMESPACE_2_0 = "urn:wildfly:feature-pack-build:2.0";
 
     enum Element {
 
-        // default unknown element
-        UNKNOWN(null),
-
-        BUILD("build"),
-        DEPENDENCIES("dependencies"),
         ARTIFACT("artifact"),
+        BUILD("build"),
         CONFIG(ConfigModelParser10.ELEMENT_LOCAL_NAME),
         COPY_ARTIFACTS(CopyArtifactsModelParser10.ELEMENT_LOCAL_NAME),
-        FILTER(FileFilterModelParser10.ELEMENT_LOCAL_NAME),
-        FILE_PERMISSIONS(FilePermissionsModelParser10.ELEMENT_LOCAL_NAME),
-        MKDIRS("mkdirs"),
+        DEPENDENCIES("dependencies"),
+        DEPENDENCY("dependency"),
         DIR("dir"),
+        EXCLUDES("excludes"),
+        FILE_PERMISSIONS(FilePermissionsModelParser10.ELEMENT_LOCAL_NAME),
+        FILTER(FileFilterModelParser10.ELEMENT_LOCAL_NAME),
         LINE_ENDINGS("line-endings"),
+        MKDIRS("mkdirs"),
+        PACKAGE("package"),
+        UNIX("unix"),
         WINDOWS("windows"),
-        UNIX("unix");
+
+        // default unknown element
+        UNKNOWN(null);
 
         private static final Map<QName, Element> elements;
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.BUILD.getLocalName()), Element.BUILD);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.ARTIFACT.getLocalName()), Element.ARTIFACT);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.CONFIG.getLocalName()), Element.CONFIG);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.FILTER.getLocalName()), Element.FILTER);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.DIR.getLocalName()), Element.DIR);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.LINE_ENDINGS.getLocalName()), Element.LINE_ENDINGS);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.WINDOWS.getLocalName()), Element.WINDOWS);
-            elementsMap.put(new QName(NAMESPACE_1_0, Element.UNIX.getLocalName()), Element.UNIX);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.ARTIFACT.getLocalName()), Element.ARTIFACT);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.BUILD.getLocalName()), Element.BUILD);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG.getLocalName()), Element.CONFIG);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.EXCLUDES.getLocalName()), Element.EXCLUDES);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.FILTER.getLocalName()), Element.FILTER);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.LINE_ENDINGS.getLocalName()), Element.LINE_ENDINGS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE.getLocalName()), Element.PACKAGE);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.UNIX.getLocalName()), Element.UNIX);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.WINDOWS.getLocalName()), Element.WINDOWS);
             elements = elementsMap;
         }
 
         static Element of(QName qName) {
             QName name;
             if (qName.getNamespaceURI().equals("")) {
-                name = new QName(NAMESPACE_1_0, qName.getLocalPart());
+                name = new QName(NAMESPACE_2_0, qName.getLocalPart());
             } else {
                 name = qName;
             }
@@ -116,16 +124,22 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
 
     enum Attribute {
 
-        // default unknown attribute
-        UNKNOWN(null),
+        ARTIFACT_ID("artifact-id"),
+        GROUP_ID("group-id"),
         NAME("name"),
-        ;
+        VERSION("version"),
+
+        // default unknown attribute
+        UNKNOWN(null);
 
         private static final Map<QName, Attribute> attributes;
 
         static {
             Map<QName, Attribute> attributesMap = new HashMap<QName, Attribute>();
+            attributesMap.put(new QName(ARTIFACT_ID.getLocalName()), ARTIFACT_ID);
+            attributesMap.put(new QName(GROUP_ID.getLocalName()), GROUP_ID);
             attributesMap.put(new QName(NAME.getLocalName()), NAME);
+            attributesMap.put(new QName(VERSION.getLocalName()), VERSION);
             attributes = attributesMap;
         }
 
@@ -151,21 +165,21 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
     }
 
     private final BuildPropertyReplacer propertyReplacer;
-    private final ConfigModelParser10 configModelParser;
+    private final ConfigModelParser11 configModelParser;
     private final CopyArtifactsModelParser10 copyArtifactsModelParser;
     private final FileFilterModelParser10 fileFilterModelParser;
     private final FilePermissionsModelParser10 filePermissionsModelParser;
 
-    FeaturePackBuildModelParser10(PropertyResolver resolver) {
+    FeaturePackBuildModelParser20(PropertyResolver resolver) {
         this.propertyReplacer = new BuildPropertyReplacer(resolver);
-        this.configModelParser = new ConfigModelParser10(this.propertyReplacer);
+        this.configModelParser = new ConfigModelParser11(this.propertyReplacer);
         this.fileFilterModelParser = new FileFilterModelParser10(this.propertyReplacer);
         this.copyArtifactsModelParser = new CopyArtifactsModelParser10(this.propertyReplacer, this.fileFilterModelParser);
         this.filePermissionsModelParser = new FilePermissionsModelParser10(this.propertyReplacer, this.fileFilterModelParser);
     }
 
     @Override
-    public void readElement(final XMLExtendedStreamReader reader, final FeaturePackBuild result) throws XMLStreamException {
+    public void readElement(final XMLExtendedStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
 
         final Set<Attribute> required = EnumSet.noneOf(Attribute.class);
         final int count = reader.getAttributeCount();
@@ -185,22 +199,22 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
 
                     switch (element) {
                         case DEPENDENCIES:
-                            parseDependencies(reader, result);
+                            parseDependencies(reader, builder);
                             break;
                         case CONFIG:
-                            configModelParser.parseConfig(reader, result.getConfig());
+                            configModelParser.parseConfig(reader, builder.getConfig());
                             break;
                         case COPY_ARTIFACTS:
-                            copyArtifactsModelParser.parseCopyArtifacts(reader, result.getCopyArtifacts());
+                            copyArtifactsModelParser.parseCopyArtifacts(reader, builder);
                             break;
                         case FILE_PERMISSIONS:
-                            filePermissionsModelParser.parseFilePermissions(reader, result.getFilePermissions());
+                            filePermissionsModelParser.parseFilePermissions(reader, builder);
                             break;
                         case MKDIRS:
-                            parseMkdirs(reader, result);
+                            parseMkdirs(reader, builder);
                             break;
                         case LINE_ENDINGS:
-                            parseLineEndings(reader, result);
+                            parseLineEndings(reader, builder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -215,7 +229,7 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDependencies(final XMLStreamReader reader, final FeaturePackBuild result) throws XMLStreamException {
+    private void parseDependencies(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -224,8 +238,85 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case ARTIFACT:
-                            result.getDependencies().add(parseName(reader));
+                        case DEPENDENCY:
+                            parseDependency(reader, builder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseDependency(XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
+        String groupId = null;
+        String artifactId = null;
+        String version = null;
+        final int count = reader.getAttributeCount();
+        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            required.remove(attribute);
+            switch (attribute) {
+                case GROUP_ID:
+                    groupId = reader.getAttributeValue(i);
+                    break;
+                case ARTIFACT_ID:
+                    artifactId = reader.getAttributeValue(i);
+                    break;
+                case VERSION:
+                    version = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!required.isEmpty()) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
+        }
+        final FeaturePackDependencyDescription.Builder depBuilder = FeaturePackDependencyDescription.builder(new GAV(groupId, artifactId, version));
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    builder.addDependency(depBuilder.build());
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case EXCLUDES:
+                            parseExcludes(reader, depBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+    }
+
+    private void parseExcludes(XMLStreamReader reader, FeaturePackDependencyDescription.Builder depBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            depBuilder.excludePackage(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -262,7 +353,7 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
         return propertyReplacer.replaceProperties(name);
     }
 
-    private void parseMkdirs(final XMLStreamReader reader, final FeaturePackBuild result) throws XMLStreamException {
+    private void parseMkdirs(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -272,7 +363,7 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case DIR:
-                            result.getMkDirs().add(parseName(reader));
+                            builder.addMkdirs(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -287,7 +378,7 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseLineEndings(final XMLStreamReader reader, final FeaturePackBuild result) throws XMLStreamException {
+    private void parseLineEndings(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -297,10 +388,10 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case WINDOWS:
-                            parseLineEnding(reader, result.getWindows());
+                            parseLineEnding(reader, builder, true);
                             break;
                         case UNIX:
-                            parseLineEnding(reader, result.getUnix());
+                            parseLineEnding(reader, builder, true);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -315,7 +406,7 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseLineEnding(XMLStreamReader reader, List<FileFilter> result) throws XMLStreamException {
+    private void parseLineEnding(XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder, boolean windows) throws XMLStreamException {
         if(reader.getAttributeCount() != 0) {
             throw ParsingUtils.unexpectedContent(reader);
         }
@@ -329,7 +420,13 @@ class FeaturePackBuildModelParser10 implements XMLElementReader<FeaturePackBuild
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case FILTER:
-                            fileFilterModelParser.parseFilter(reader, result);
+                            final FileFilter.Builder filterBuilder = FileFilter.builder();
+                            fileFilterModelParser.parseFilter(reader, filterBuilder);
+                            if(windows) {
+                                builder.addWindows(filterBuilder.build());
+                            } else {
+                                builder.addUnix(filterBuilder.build());
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
