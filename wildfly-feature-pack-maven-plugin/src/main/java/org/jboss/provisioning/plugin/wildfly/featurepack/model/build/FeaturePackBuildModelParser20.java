@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.plugin.wildfly.featurepack.build.model;
+package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser10;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser11;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifactsModelParser10;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser10;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser10;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -56,14 +54,14 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
 
         ARTIFACT("artifact"),
         BUILD("build"),
-        CONFIG(ConfigModelParser10.ELEMENT_LOCAL_NAME),
-        COPY_ARTIFACTS(CopyArtifactsModelParser10.ELEMENT_LOCAL_NAME),
+        CONFIG(ConfigModelParser20.ELEMENT_LOCAL_NAME),
+        COPY_ARTIFACTS(CopyArtifactsModelParser20.ELEMENT_LOCAL_NAME),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
         DIR("dir"),
         EXCLUDES("excludes"),
-        FILE_PERMISSIONS(FilePermissionsModelParser10.ELEMENT_LOCAL_NAME),
-        FILTER(FileFilterModelParser10.ELEMENT_LOCAL_NAME),
+        FILE_PERMISSIONS(FilePermissionsModelParser20.ELEMENT_LOCAL_NAME),
+        FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
         LINE_ENDINGS("line-endings"),
         MKDIRS("mkdirs"),
         PACKAGE("package"),
@@ -165,17 +163,17 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
     }
 
     private final BuildPropertyReplacer propertyReplacer;
-    private final ConfigModelParser11 configModelParser;
-    private final CopyArtifactsModelParser10 copyArtifactsModelParser;
-    private final FileFilterModelParser10 fileFilterModelParser;
-    private final FilePermissionsModelParser10 filePermissionsModelParser;
+    private final ConfigModelParser20 configModelParser;
+    private final CopyArtifactsModelParser20 copyArtifactsModelParser;
+    private final FileFilterModelParser20 fileFilterModelParser;
+    private final FilePermissionsModelParser20 filePermissionsModelParser;
 
     FeaturePackBuildModelParser20(PropertyResolver resolver) {
         this.propertyReplacer = new BuildPropertyReplacer(resolver);
-        this.configModelParser = new ConfigModelParser11(this.propertyReplacer);
-        this.fileFilterModelParser = new FileFilterModelParser10(this.propertyReplacer);
-        this.copyArtifactsModelParser = new CopyArtifactsModelParser10(this.propertyReplacer, this.fileFilterModelParser);
-        this.filePermissionsModelParser = new FilePermissionsModelParser10(this.propertyReplacer, this.fileFilterModelParser);
+        this.configModelParser = new ConfigModelParser20(this.propertyReplacer);
+        this.fileFilterModelParser = new FileFilterModelParser20(this.propertyReplacer);
+        this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
+        this.filePermissionsModelParser = new FilePermissionsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
     }
 
     @Override
@@ -202,13 +200,13 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             parseDependencies(reader, builder);
                             break;
                         case CONFIG:
-                            configModelParser.parseConfig(reader, builder.getConfig());
+                            builder.setConfig(configModelParser.parseConfig(reader));
                             break;
                         case COPY_ARTIFACTS:
-                            copyArtifactsModelParser.parseCopyArtifacts(reader, builder);
+                            builder.addCopyArtifacts(copyArtifactsModelParser.parseCopyArtifacts(reader));
                             break;
                         case FILE_PERMISSIONS:
-                            filePermissionsModelParser.parseFilePermissions(reader, builder);
+                            builder.addFilePermissions(filePermissionsModelParser.parseFilePermissions(reader));
                             break;
                         case MKDIRS:
                             parseMkdirs(reader, builder);
@@ -423,9 +421,9 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             final FileFilter.Builder filterBuilder = FileFilter.builder();
                             fileFilterModelParser.parseFilter(reader, filterBuilder);
                             if(windows) {
-                                builder.addWindows(filterBuilder.build());
+                                builder.addWindowsLineEndFilter(filterBuilder.build());
                             } else {
-                                builder.addUnix(filterBuilder.build());
+                                builder.addUnixLineEndFilter(filterBuilder.build());
                             }
                             break;
                         default:

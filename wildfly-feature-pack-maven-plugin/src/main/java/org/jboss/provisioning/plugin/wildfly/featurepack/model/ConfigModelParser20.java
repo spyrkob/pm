@@ -27,14 +27,15 @@ import org.jboss.provisioning.util.ParsingUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
+ *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class ConfigModelParser11 {
+public class ConfigModelParser20 {
 
     public static final String ELEMENT_LOCAL_NAME = "config";
 
@@ -126,27 +127,28 @@ public class ConfigModelParser11 {
 
     private final BuildPropertyReplacer propertyReplacer;
 
-    public ConfigModelParser11(BuildPropertyReplacer propertyReplacer) {
+    public ConfigModelParser20(BuildPropertyReplacer propertyReplacer) {
         this.propertyReplacer = propertyReplacer;
     }
 
-    public void parseConfig(final XMLStreamReader reader, final Config result) throws XMLStreamException {
+    public ConfigDescription parseConfig(final XMLStreamReader reader) throws XMLStreamException {
+        final ConfigDescription.Builder builder = ConfigDescription.builder();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return;
+                    return builder.build();
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case STANDALONE:
-                            parseConfigFile(reader, result.getStandaloneConfigFiles());
+                            builder.addStandalone(parseConfigFile(reader));
                             break;
                         case DOMAIN:
-                            parseConfigFile(reader, result.getDomainConfigFiles());
+                            builder.addDomain(parseConfigFile(reader));
                             break;
                         case HOST:
-                            parseConfigFile(reader, result.getHostConfigFiles());
+                            builder.addHost(parseConfigFile(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -161,11 +163,8 @@ public class ConfigModelParser11 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseConfigFile(XMLStreamReader reader, List<ConfigFile> result) throws XMLStreamException {
-        final Map<String, String> properties = new HashMap<>();
-        String template = null;
-        String subsystems = null;
-        String outputFile = null;
+    private ConfigFileDescription parseConfigFile(XMLStreamReader reader) throws XMLStreamException {
+        final ConfigFileDescription.Builder configFile = ConfigFileDescription.builder();
         final Set<Attribute> required = EnumSet.of(Attribute.TEMPLATE, Attribute.SUBSYSTEMS, Attribute.OUTPUT_FILE);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -173,13 +172,13 @@ public class ConfigModelParser11 {
             required.remove(attribute);
             switch (attribute) {
                 case TEMPLATE:
-                    template = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    configFile.setTemplate(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 case SUBSYSTEMS:
-                    subsystems = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    configFile.setSubsystems(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 case OUTPUT_FILE:
-                    outputFile = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    configFile.setOutputFile(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -189,18 +188,17 @@ public class ConfigModelParser11 {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        final ConfigFile configFile = new ConfigFile(properties, template, subsystems, outputFile);
-        result.add(configFile);
+
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return;
+                    return configFile.build();
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PROPERTY:
-                            parseProperty(reader, properties);
+                            parseProperty(reader, configFile);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -215,7 +213,7 @@ public class ConfigModelParser11 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseProperty(XMLStreamReader reader, Map<String, String> result) throws XMLStreamException {
+    private void parseProperty(XMLStreamReader reader, ConfigFileDescription.Builder builder) throws XMLStreamException {
         String name = null;
         String value = null;
         final Set<Attribute> required = EnumSet.of(Attribute.NAME, Attribute.VALUE);
@@ -238,7 +236,7 @@ public class ConfigModelParser11 {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
         ParsingUtils.parseNoContent(reader);
-        result.put(name, value);
+        builder.addProperty(name, value);
     }
 
 }

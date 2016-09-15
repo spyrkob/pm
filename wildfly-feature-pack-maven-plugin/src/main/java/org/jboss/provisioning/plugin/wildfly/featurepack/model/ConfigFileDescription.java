@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -35,14 +36,60 @@ import java.util.zip.ZipFile;
  *
  * @author Eduardo Martins
  */
-public class ConfigFile {
+public class ConfigFileDescription {
+
+    public static class Builder {
+        private String template;
+        private String subsystems;
+        private String outputFile;
+        private Map<String, String> properties = Collections.emptyMap();
+
+        private Builder() {
+        }
+
+        public Builder setTemplate(String template) {
+            this.template = template;
+            return this;
+        }
+
+        public Builder setSubsystems(String subsystems) {
+            this.subsystems = subsystems;
+            return this;
+        }
+
+        public Builder setOutputFile(String outputFile) {
+            this.outputFile = outputFile;
+            return this;
+        }
+
+        public Builder addProperty(String name, String value) {
+            switch(properties.size()) {
+                case 0:
+                    properties = Collections.singletonMap(name, value);
+                    break;
+                case 1:
+                    properties = new HashMap<>(properties);
+                default:
+                    properties.put(name, value);
+            }
+            return this;
+        }
+
+        public ConfigFileDescription build() {
+            return new ConfigFileDescription(Collections.unmodifiableMap(properties), template, subsystems, outputFile);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     private final Map<String, String> properties;
     private final String template;
     private final String subsystems;
     private final String outputFile;
 
-    public ConfigFile(Map<String, String> properties, String template, String subsystems, String outputFile) {
+    private ConfigFileDescription(Map<String, String> properties, String template, String subsystems, String outputFile) {
         this.properties = properties;
         this.template = template;
         this.subsystems = subsystems;

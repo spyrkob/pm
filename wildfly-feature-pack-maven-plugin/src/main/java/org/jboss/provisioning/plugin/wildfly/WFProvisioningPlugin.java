@@ -54,9 +54,9 @@ import org.jboss.provisioning.plugin.wildfly.configassembly.InputStreamSource;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemConfig;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemsParser;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInputStreamSources;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFile;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFileDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
@@ -85,30 +85,31 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
 
         final Properties props = new Properties();
-        try(InputStream in = Files.newInputStream(resources.resolve("wildfly-feature-pack-build.properties"))) {
+        try(InputStream in = Files.newInputStream(resources.resolve("wildfly-tasks.properties"))) {
             props.load(in);
         } catch (IOException e) {
             throw new ProvisioningException(Errors.readFile(resources.resolve("wildfly-feature-pack-build.properties")), e);
         }
-        final Path wfFpXml = resources.resolve("wildfly-feature-pack-build.xml");
-        if(!Files.exists(wfFpXml)) {
-            throw new ProvisioningException(Errors.pathDoesNotExist(wfFpXml));
+
+        final Path wfTasksXml = resources.resolve("wildfly-tasks.xml");
+        if(!Files.exists(wfTasksXml)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(wfTasksXml));
         }
-        final WildFlyFeaturePackBuild fpBuild = Util.loadFeaturePackBuildConfig(wfFpXml, props);
+        final WildFlyPostFeaturePackTasks tasks = Util.loadWildFlyTasks(wfTasksXml, props);
 
         collectLayoutSubsystemsInput(ctx);
-        assembleConfigs(resources, fpBuild, ctx.getInstallDir());
+        assembleConfigs(resources, tasks, ctx.getInstallDir());
 
         if (!PropertyUtils.isWindows()) {
-            processFeaturePackFilePermissions(fpBuild, ctx.getInstallDir());
+            processFeaturePackFilePermissions(tasks, ctx.getInstallDir());
         }
 
-        mkdirs(fpBuild, ctx.getInstallDir());
+        mkdirs(tasks, ctx.getInstallDir());
     }
 
-    private static void mkdirs(final WildFlyFeaturePackBuild build, Path installDir) throws ProvisioningException {
+    private static void mkdirs(final WildFlyPostFeaturePackTasks tasks, Path installDir) throws ProvisioningException {
         // make dirs
-        for (String dirName : build.getMkDirs()) {
+        for (String dirName : tasks.getMkDirs()) {
             final Path dir = installDir.resolve(dirName);
             if(!Files.isDirectory(dir)) {
                 try {
@@ -120,8 +121,8 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processFeaturePackFilePermissions(WildFlyFeaturePackBuild featurePack, Path installDir) throws ProvisioningException {
-        final List<FilePermission> filePermissions = featurePack.getFilePermissions();
+    private void processFeaturePackFilePermissions(WildFlyPostFeaturePackTasks tasks, Path installDir) throws ProvisioningException {
+        final List<FilePermission> filePermissions = tasks.getFilePermissions();
         try {
             Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
                 @Override
@@ -262,15 +263,15 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void assembleConfigs(final Path resources, WildFlyFeaturePackBuild build, Path installDir) throws ProvisioningException {
-        assembleConfigs(resources, "domain", build.getConfig().getDomainConfigFiles(), installDir);
-        assembleConfigs(resources, "server", build.getConfig().getStandaloneConfigFiles(), installDir);
-        assembleConfigs(resources, "host", build.getConfig().getHostConfigFiles(), installDir);
+    private void assembleConfigs(final Path resources, WildFlyPostFeaturePackTasks tasks, Path installDir) throws ProvisioningException {
+        assembleConfigs(resources, "domain", tasks.getConfig().getDomainConfigFiles(), installDir);
+        assembleConfigs(resources, "server", tasks.getConfig().getStandaloneConfigFiles(), installDir);
+        assembleConfigs(resources, "host", tasks.getConfig().getHostConfigFiles(), installDir);
     }
 
-    private void assembleConfigs(final Path resources, String rootElement, List<ConfigFile> configFiles, Path installDir)
+    private void assembleConfigs(final Path resources, String rootElement, List<ConfigFileDescription> configFiles, Path installDir)
             throws ProvisioningException {
-        for (ConfigFile provisioningConfigFile : configFiles) {
+        for (ConfigFileDescription provisioningConfigFile : configFiles) {
             final Path template = resources.resolve(provisioningConfigFile.getTemplate());
             if(!Files.exists(template)) {
                 continue;

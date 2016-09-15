@@ -32,8 +32,10 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.FeaturePackBuildModelParser;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasksParser;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.FeaturePackBuildModelParser;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.WildFlyFeaturePackBuild;
 
 /**
  *
@@ -45,6 +47,17 @@ class Util {
         try (InputStream configStream = Files.newInputStream(configFile)) {
             props.putAll(System.getProperties());
             return new FeaturePackBuildModelParser(new MapPropertyResolver(props)).parse(configStream);
+        } catch (XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(configFile), e);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.openFile(configFile), e);
+        }
+    }
+
+    static WildFlyPostFeaturePackTasks loadWildFlyTasks(Path configFile, Properties props) throws ProvisioningException {
+        try (InputStream configStream = Files.newInputStream(configFile)) {
+            props.putAll(System.getProperties());
+            return new WildFlyPostFeaturePackTasksParser(new MapPropertyResolver(props)).parse(configStream);
         } catch (XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(configFile), e);
         } catch (IOException e) {

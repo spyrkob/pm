@@ -21,35 +21,36 @@ import java.util.Map;
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
 
-import static org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser10.Attribute;
-import static org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser10.Element;
+import static org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser20.Attribute;
+import static org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser20.Element;
 
 /**
- * Writes a {@link org.wildfly.build.common.model.Config} as XML.
+ * Writes a {@link org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigDescription} as XML.
  *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class ConfigXMLWriter11 {
+public class ConfigXMLWriter20 {
 
-    public static final ConfigXMLWriter11 INSTANCE = new ConfigXMLWriter11();
+    public static final ConfigXMLWriter20 INSTANCE = new ConfigXMLWriter20();
 
-    private ConfigXMLWriter11() {
+    private ConfigXMLWriter20() {
     }
 
-    public void write(Config config, ElementNode parentElementNode) {
+    public void write(ConfigDescription config, ElementNode parentElementNode) {
         if (!config.getStandaloneConfigFiles().isEmpty() || !config.getDomainConfigFiles().isEmpty()) {
-            final ElementNode configElementNode = new ElementNode(parentElementNode, ConfigModelParser10.ELEMENT_LOCAL_NAME);
-            for (ConfigFile configFile : config.getStandaloneConfigFiles()) {
+            final ElementNode configElementNode = new ElementNode(parentElementNode, ConfigModelParser20.ELEMENT_LOCAL_NAME);
+            for (ConfigFileDescription configFile : config.getStandaloneConfigFiles()) {
                 final ElementNode standaloneElementNode = new ElementNode(parentElementNode, Element.STANDALONE.getLocalName());
                 writeConfigFile(configFile, standaloneElementNode);
                 configElementNode.addChild(standaloneElementNode);
             }
-            for (ConfigFile configFile : config.getDomainConfigFiles()) {
+            for (ConfigFileDescription configFile : config.getDomainConfigFiles()) {
                 final ElementNode domainElementNode = new ElementNode(parentElementNode, Element.DOMAIN.getLocalName());
                 writeConfigFile(configFile, domainElementNode);
                 configElementNode.addChild(domainElementNode);
             }
-            for (ConfigFile configFile : config.getHostConfigFiles()) {
+            for (ConfigFileDescription configFile : config.getHostConfigFiles()) {
                 final ElementNode hostElementNode = new ElementNode(parentElementNode, Element.HOST.getLocalName());
                 writeConfigFile(configFile, hostElementNode);
                 configElementNode.addChild(hostElementNode);
@@ -58,7 +59,7 @@ public class ConfigXMLWriter11 {
         }
     }
 
-    protected void writeConfigFile(ConfigFile configFile, ElementNode configElementNode) {
+    protected void writeConfigFile(ConfigFileDescription configFile, ElementNode configElementNode) {
         for (Map.Entry<String, String> property : configFile.getProperties().entrySet()) {
             ElementNode propertyElementNode = new ElementNode(configElementNode, Element.PROPERTY.getLocalName());
             propertyElementNode.addAttribute(Attribute.NAME.getLocalName(), new AttributeValue(property.getKey()));

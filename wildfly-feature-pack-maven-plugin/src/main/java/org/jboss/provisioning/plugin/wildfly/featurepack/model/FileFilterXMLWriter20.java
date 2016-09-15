@@ -16,7 +16,7 @@
 package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 
 
-import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser10.Attribute;
+import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20.Attribute;
 
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -25,16 +25,17 @@ import org.jboss.provisioning.xml.util.ElementNode;
  * Writes a file filter as XML element.
  *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class FileFilterXMLWriter10 {
+public class FileFilterXMLWriter20 {
 
-    public static final FileFilterXMLWriter10 INSTANCE = new FileFilterXMLWriter10();
+    public static final FileFilterXMLWriter20 INSTANCE = new FileFilterXMLWriter20();
 
-    private FileFilterXMLWriter10() {
+    private FileFilterXMLWriter20() {
     }
 
     public void write(FileFilter fileFilter, ElementNode parentElementNode) {
-        final ElementNode fileFilterElementNode = new ElementNode(parentElementNode, FileFilterModelParser10.ELEMENT_LOCAL_NAME);
+        final ElementNode fileFilterElementNode = new ElementNode(parentElementNode, FileFilterModelParser20.ELEMENT_LOCAL_NAME);
         fileFilterElementNode.addAttribute(Attribute.PATTERN.getLocalName(), new AttributeValue(fileFilter.getPattern()));
         fileFilterElementNode.addAttribute(Attribute.INCLUDE.getLocalName(), new AttributeValue(Boolean.toString(fileFilter.isInclude())));
         parentElementNode.addChild(fileFilterElementNode);
