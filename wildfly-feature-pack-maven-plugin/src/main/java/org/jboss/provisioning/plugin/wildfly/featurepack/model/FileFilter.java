@@ -16,7 +16,6 @@
 package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 
 
-
 import java.util.regex.Pattern;
 
 import org.jboss.provisioning.util.ParsingUtils;

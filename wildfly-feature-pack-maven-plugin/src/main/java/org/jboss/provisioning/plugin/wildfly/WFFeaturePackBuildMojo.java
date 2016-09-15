@@ -71,8 +71,10 @@ import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FPMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifact;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasksWriter20;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.CopyArtifact;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.WildFlyFeaturePackBuild;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.xml.FeaturePackXMLWriter;
@@ -219,15 +221,26 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to copy configuration files to feature-pack resources", e);
         }
-        try {
-            IoUtils.copy(getFPConfigFile(), resourcesWildFly.resolve(configFile));
-        } catch (ProvisioningException | IOException e) {
-            throw new MojoExecutionException("Failed to copy " + configFile + " to feature-pack resources", e);
-        }
-        try(OutputStream out = Files.newOutputStream(resourcesWildFly.resolve("wildfly-feature-pack-build.properties"))) {
-                getFPConfigProperties().store(out, "Feature-pack build properties");
+
+        // properties
+        try(OutputStream out = Files.newOutputStream(resourcesWildFly.resolve("wildfly-tasks.properties"))) {
+                getFPConfigProperties().store(out, "WildFly feature-pack properties");
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to store feature-pack build properties", e);
+            throw new MojoExecutionException("Failed to store feature-pack properties", e);
+        }
+
+        // post feature-pack tasks config
+        final WildFlyPostFeaturePackTasks tasks = WildFlyPostFeaturePackTasks.builder()
+                .setConfig(build.getConfig())
+                .addFilePermissions(build.getFilePermissions())
+                .addMkDirs(build.getMkDirs())
+                .addUnixLineEndFilters(build.getUnixLineEndFilters())
+                .addWindowsLineEndFilters(build.getWindowsLineEndFilters())
+                .build();
+        try {
+            WildFlyPostFeaturePackTasksWriter20.INSTANCE.write(tasks, resourcesWildFly.resolve("wildfly-tasks.xml"));
+        } catch (XMLStreamException | IOException e) {
+            throw new MojoExecutionException(Errors.writeXml(resourcesWildFly.resolve("wildfly-tasks.xml")), e);
         }
 
         try {

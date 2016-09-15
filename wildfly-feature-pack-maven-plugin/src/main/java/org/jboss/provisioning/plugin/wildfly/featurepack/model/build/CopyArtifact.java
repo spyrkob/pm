@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.plugin.wildfly.featurepack.model;
+package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 
 /**
  * Represents an artifact that is copies into a specific location in the final

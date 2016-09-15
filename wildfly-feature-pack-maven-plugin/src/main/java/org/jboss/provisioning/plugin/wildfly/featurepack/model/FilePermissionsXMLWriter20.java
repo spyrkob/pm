@@ -22,24 +22,25 @@ import java.util.List;
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
 
-import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser10.Attribute;
-import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser10.Element;
+import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20.Attribute;
+import static org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20.Element;
 
 /**
  * Writes a list of file permissions as XML.
  *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class FilePermissionsXMLWriter10 {
+public class FilePermissionsXMLWriter20 {
 
-    public static final FilePermissionsXMLWriter10 INSTANCE = new FilePermissionsXMLWriter10();
+    public static final FilePermissionsXMLWriter20 INSTANCE = new FilePermissionsXMLWriter20();
 
-    private FilePermissionsXMLWriter10() {
+    private FilePermissionsXMLWriter20() {
     }
 
     public void write(List<FilePermission> filePermissions, ElementNode parentElementNode) {
         if (!filePermissions.isEmpty()) {
-            final ElementNode filePermissionsElementNode = new ElementNode(parentElementNode, FilePermissionsModelParser10.ELEMENT_LOCAL_NAME);
+            final ElementNode filePermissionsElementNode = new ElementNode(parentElementNode, FilePermissionsModelParser20.ELEMENT_LOCAL_NAME);
             for (FilePermission filePermission : filePermissions) {
                 writeFilePermission(filePermission, filePermissionsElementNode);
             }
@@ -51,7 +52,7 @@ public class FilePermissionsXMLWriter10 {
         final ElementNode filePermissionElementNode = new ElementNode(filePermissionsElementNode, Element.PERMISSION.getLocalName());
         if (!filePermission.getFilters().isEmpty()) {
             for (FileFilter fileFilter : filePermission.getFilters()) {
-                FileFilterXMLWriter10.INSTANCE.write(fileFilter, filePermissionElementNode);
+                FileFilterXMLWriter20.INSTANCE.write(fileFilter, filePermissionElementNode);
             }
         }
         filePermissionElementNode.addAttribute(Attribute.VALUE.getLocalName(), new AttributeValue(filePermission.getValue()));

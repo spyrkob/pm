@@ -30,9 +30,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class FileFilterModelParser10 {
+public class FileFilterModelParser20 {
 
     public static final String ELEMENT_LOCAL_NAME = "filter";
 
@@ -75,7 +77,7 @@ public class FileFilterModelParser10 {
 
     private final BuildPropertyReplacer propertyReplacer;
 
-    public FileFilterModelParser10(BuildPropertyReplacer propertyReplacer) {
+    public FileFilterModelParser20(BuildPropertyReplacer propertyReplacer) {
         this.propertyReplacer = propertyReplacer;
     }
 

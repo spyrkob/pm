@@ -24,6 +24,7 @@ import javax.xml.stream.XMLStreamReader;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.util.ParsingUtils;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -31,29 +32,28 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class ConfigModelParser10 {
+public class FilePermissionsModelParser20 {
 
-    public static final String ELEMENT_LOCAL_NAME = "config";
+    public static final String ELEMENT_LOCAL_NAME = "file-permissions";
 
     enum Element {
 
         // default unknown element
         UNKNOWN(null),
-        STANDALONE("standalone"),
-        DOMAIN("domain"),
-        PROPERTY("property"),
-        HOST("host")
+        PERMISSION("permission"),
+        FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
         ;
 
         private static final Map<String, Element> elements;
 
         static {
             Map<String, Element> elementsMap = new HashMap<>();
-            elementsMap.put(Element.STANDALONE.getLocalName(), Element.STANDALONE);
-            elementsMap.put(Element.DOMAIN.getLocalName(), Element.DOMAIN);
-            elementsMap.put(Element.PROPERTY.getLocalName(), Element.PROPERTY);
+            elementsMap.put(Element.PERMISSION.getLocalName(), Element.PERMISSION);
+            elementsMap.put(Element.FILTER.getLocalName(), Element.FILTER);
             elements = elementsMap;
         }
 
@@ -82,10 +82,6 @@ public class ConfigModelParser10 {
 
         // default unknown attribute
         UNKNOWN(null),
-        TEMPLATE("template"),
-        SUBSYSTEMS("subsystems"),
-        OUTPUT_FILE("output-file"),
-        NAME("name"),
         VALUE("value"),
         ;
 
@@ -93,10 +89,6 @@ public class ConfigModelParser10 {
 
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
-            attributesMap.put(TEMPLATE.getLocalName(), TEMPLATE);
-            attributesMap.put(SUBSYSTEMS.getLocalName(), SUBSYSTEMS);
-            attributesMap.put(OUTPUT_FILE.getLocalName(), OUTPUT_FILE);
-            attributesMap.put(NAME.getLocalName(), NAME);
             attributesMap.put(VALUE.getLocalName(), VALUE);
             attributes = attributesMap;
         }
@@ -123,25 +115,29 @@ public class ConfigModelParser10 {
     }
 
     private final BuildPropertyReplacer propertyReplacer;
+    private final FileFilterModelParser20 fileFilterModelParser;
 
-    public ConfigModelParser10(BuildPropertyReplacer propertyReplacer) {
+    public FilePermissionsModelParser20(BuildPropertyReplacer propertyReplacer) {
+        this(propertyReplacer, new FileFilterModelParser20(propertyReplacer));
+    }
+
+    public FilePermissionsModelParser20(BuildPropertyReplacer propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
         this.propertyReplacer = propertyReplacer;
+        this.fileFilterModelParser = fileFilterModelParser;
     }
 
-    public void parseConfig(final XMLStreamReader reader, final Config result) throws XMLStreamException {
+    public List<FilePermission> parseFilePermissions(final XMLStreamReader reader) throws XMLStreamException {
+        List<FilePermission> list = new ArrayList<FilePermission>();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return;
+                    return list;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case STANDALONE:
-                            parseConfigFile(reader, result.getStandaloneConfigFiles());
-                            break;
-                        case DOMAIN:
-                            parseConfigFile(reader, result.getDomainConfigFiles());
+                        case PERMISSION:
+                            list.add(parsePermission(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -156,74 +152,16 @@ public class ConfigModelParser10 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseConfigFile(XMLStreamReader reader, List<ConfigFile> result) throws XMLStreamException {
-        final Map<String, String> properties = new HashMap<>();
-        String template = null;
-        String subsystems = null;
-        String outputFile = null;
-        final Set<Attribute> required = EnumSet.of(Attribute.TEMPLATE, Attribute.SUBSYSTEMS, Attribute.OUTPUT_FILE);
+    protected FilePermission parsePermission(XMLStreamReader reader) throws XMLStreamException {
+        final FilePermission.Builder permissionBuilder = FilePermission.builder();
+        final Set<Attribute> required = EnumSet.of(Attribute.VALUE);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             required.remove(attribute);
             switch (attribute) {
-                case TEMPLATE:
-                    template = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
-                    break;
-                case SUBSYSTEMS:
-                    subsystems = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
-                    break;
-                case OUTPUT_FILE:
-                    outputFile = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (!required.isEmpty()) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
-        }
-
-        final ConfigFile configFile = new ConfigFile(properties, template, subsystems, outputFile);
-        result.add(configFile);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PROPERTY:
-                            parseProperty(reader, properties);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void parseProperty(XMLStreamReader reader, Map<String, String> result) throws XMLStreamException {
-        String name = null;
-        String value = null;
-        final Set<Attribute> required = EnumSet.of(Attribute.NAME, Attribute.VALUE);
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            required.remove(attribute);
-            switch (attribute) {
-                case NAME:
-                    name = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
-                    break;
                 case VALUE:
-                    value = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                    permissionBuilder.setValue(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -232,8 +170,30 @@ public class ConfigModelParser10 {
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        ParsingUtils.parseNoContent(reader);
-        result.put(name, value);
-    }
 
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return permissionBuilder.build();
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case FILTER:
+                            final FileFilter.Builder filterBuilder = FileFilter.builder();
+                            fileFilterModelParser.parseFilter(reader, filterBuilder);
+                            permissionBuilder.addFilter(filterBuilder.build());
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
 }

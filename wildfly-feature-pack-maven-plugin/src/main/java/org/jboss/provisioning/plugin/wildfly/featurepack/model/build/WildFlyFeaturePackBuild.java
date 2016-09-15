@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.plugin.wildfly.featurepack.build.model;
+package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 
 import java.util.ArrayList;
@@ -22,8 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.Config;
-import org.jboss.provisioning.plugin.wildfly.featurepack.model.CopyArtifact;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 
@@ -38,12 +37,12 @@ public class WildFlyFeaturePackBuild {
     public static class Builder {
 
         private List<FeaturePackDependencyDescription> dependencies = Collections.emptyList();
-        private final Config config = new Config();
+        private ConfigDescription config;
         private List<CopyArtifact> copyArtifacts = Collections.emptyList();
         private List<FilePermission> filePermissions = Collections.emptyList();
         private List<String> mkDirs = Collections.emptyList();
-        private List<FileFilter> windows = Collections.emptyList();
-        private List<FileFilter> unix = Collections.emptyList();
+        private List<FileFilter> windowsLineEndFilters = Collections.emptyList();
+        private List<FileFilter> unixLineEndFilters = Collections.emptyList();
 
         private Builder() {
         }
@@ -61,8 +60,9 @@ public class WildFlyFeaturePackBuild {
             return this;
         }
 
-        public Config getConfig() {
-            return config;
+        public Builder setConfig(ConfigDescription config) {
+            this.config = config;
+            return this;
         }
 
         public Builder addCopyArtifact(CopyArtifact copy) {
@@ -74,6 +74,13 @@ public class WildFlyFeaturePackBuild {
                     copyArtifacts = new ArrayList<CopyArtifact>(copyArtifacts);
                 default:
                     copyArtifacts.add(copy);
+            }
+            return this;
+        }
+
+        public Builder addCopyArtifacts(List<CopyArtifact> copyArtifacts) {
+            for(CopyArtifact ca : copyArtifacts) {
+                addCopyArtifact(ca);
             }
             return this;
         }
@@ -91,6 +98,13 @@ public class WildFlyFeaturePackBuild {
             return this;
         }
 
+        public Builder addFilePermissions(List<FilePermission> filePermissions) {
+            for(FilePermission fp : filePermissions) {
+                addFilePermissions(fp);
+            }
+            return this;
+        }
+
         public Builder addMkdirs(String mkdirs) {
             switch(mkDirs.size()) {
                 case 0:
@@ -104,28 +118,28 @@ public class WildFlyFeaturePackBuild {
             return this;
         }
 
-        public Builder addWindows(FileFilter filter) {
-            switch(windows.size()) {
+        public Builder addWindowsLineEndFilter(FileFilter filter) {
+            switch(windowsLineEndFilters.size()) {
                 case 0:
-                    windows = Collections.singletonList(filter);
+                    windowsLineEndFilters = Collections.singletonList(filter);
                     break;
                 case 1:
-                    windows = new ArrayList<FileFilter>(windows);
+                    windowsLineEndFilters = new ArrayList<FileFilter>(windowsLineEndFilters);
                 default:
-                    windows.add(filter);
+                    windowsLineEndFilters.add(filter);
             }
             return this;
         }
 
-        public Builder addUnix(FileFilter filter) {
-            switch(unix.size()) {
+        public Builder addUnixLineEndFilter(FileFilter filter) {
+            switch(unixLineEndFilters.size()) {
                 case 0:
-                    unix = Collections.singletonList(filter);
+                    unixLineEndFilters = Collections.singletonList(filter);
                     break;
                 case 1:
-                    unix = new ArrayList<FileFilter>(unix);
+                    unixLineEndFilters = new ArrayList<FileFilter>(unixLineEndFilters);
                 default:
-                    unix.add(filter);
+                    unixLineEndFilters.add(filter);
             }
             return this;
         }
@@ -133,7 +147,8 @@ public class WildFlyFeaturePackBuild {
         public WildFlyFeaturePackBuild build() {
             return new WildFlyFeaturePackBuild(Collections.unmodifiableList(dependencies), config,
                     Collections.unmodifiableList(copyArtifacts), Collections.unmodifiableList(filePermissions),
-                    Collections.unmodifiableList(mkDirs), Collections.unmodifiableList(windows), Collections.unmodifiableList(unix));
+                    Collections.unmodifiableList(mkDirs),
+                    Collections.unmodifiableList(windowsLineEndFilters), Collections.unmodifiableList(unixLineEndFilters));
         }
     }
 
@@ -142,30 +157,30 @@ public class WildFlyFeaturePackBuild {
     }
 
     private final List<FeaturePackDependencyDescription> dependencies;
-    private final Config config;
+    private final ConfigDescription config;
     private final List<CopyArtifact> copyArtifacts;
     private final List<FilePermission> filePermissions;
     private final List<String> mkDirs;
-    private final List<FileFilter> windows;
-    private final List<FileFilter> unix;
+    private final List<FileFilter> windowsLineEndFilters;
+    private final List<FileFilter> unixLineEndFilters;
 
-    private WildFlyFeaturePackBuild(List<FeaturePackDependencyDescription> dependencies, Config config,
+    private WildFlyFeaturePackBuild(List<FeaturePackDependencyDescription> dependencies, ConfigDescription config,
             List<CopyArtifact> copyArtifacts, List<FilePermission> filePermissions, List<String> mkDirs,
-            List<FileFilter> windows, List<FileFilter> unix) {
+            List<FileFilter> windowsLineEndFilters, List<FileFilter> unixLineEndFilters) {
         this.dependencies = dependencies;
         this.config = config;
         this.copyArtifacts = copyArtifacts;
         this.filePermissions = filePermissions;
         this.mkDirs = mkDirs;
-        this.windows = windows;
-        this.unix = unix;
+        this.windowsLineEndFilters = windowsLineEndFilters;
+        this.unixLineEndFilters = unixLineEndFilters;
     }
 
     public List<FeaturePackDependencyDescription> getDependencies() {
         return dependencies;
     }
 
-    public Config getConfig() {
+    public ConfigDescription getConfig() {
         return config;
     }
 
@@ -181,11 +196,11 @@ public class WildFlyFeaturePackBuild {
         return mkDirs;
     }
 
-    public List<FileFilter> getWindows() {
-        return windows;
+    public List<FileFilter> getWindowsLineEndFilters() {
+        return windowsLineEndFilters;
     }
 
-    public List<FileFilter> getUnix() {
-        return unix;
+    public List<FileFilter> getUnixLineEndFilters() {
+        return unixLineEndFilters;
     }
 }

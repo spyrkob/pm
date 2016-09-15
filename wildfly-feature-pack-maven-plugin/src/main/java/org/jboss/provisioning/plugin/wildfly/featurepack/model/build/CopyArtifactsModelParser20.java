@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.plugin.wildfly.featurepack.model;
+package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 
 import javax.xml.namespace.QName;
@@ -22,34 +22,39 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
-import org.jboss.provisioning.plugin.wildfly.featurepack.build.model.WildFlyFeaturePackBuild;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
+import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
+ *
  * @author Eduardo Martins
+ * @author Alexey Loubyansky
  */
-public class FilePermissionsModelParser10 {
+public class CopyArtifactsModelParser20 {
 
-    public static final String ELEMENT_LOCAL_NAME = "file-permissions";
+    public static final String ELEMENT_LOCAL_NAME = "copy-artifacts";
 
     enum Element {
 
         // default unknown element
         UNKNOWN(null),
-        PERMISSION("permission"),
-        FILTER(FileFilterModelParser10.ELEMENT_LOCAL_NAME),
+        COPY_ARTIFACT("copy-artifact"),
+        FILTER("filter"),
         ;
 
         private static final Map<String, Element> elements;
 
         static {
             Map<String, Element> elementsMap = new HashMap<>();
-            elementsMap.put(Element.PERMISSION.getLocalName(), Element.PERMISSION);
+            elementsMap.put(Element.COPY_ARTIFACT.getLocalName(), Element.COPY_ARTIFACT);
             elementsMap.put(Element.FILTER.getLocalName(), Element.FILTER);
             elements = elementsMap;
         }
@@ -79,14 +84,18 @@ public class FilePermissionsModelParser10 {
 
         // default unknown attribute
         UNKNOWN(null),
-        VALUE("value"),
+        ARTIFACT("artifact"),
+        TO_LOCATION("to-location"),
+        EXTRACT("extract"),
         ;
 
         private static final Map<String, Attribute> attributes;
 
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
-            attributesMap.put(VALUE.getLocalName(), VALUE);
+            attributesMap.put(ARTIFACT.getLocalName(), ARTIFACT);
+            attributesMap.put(TO_LOCATION.getLocalName(), TO_LOCATION);
+            attributesMap.put(EXTRACT.getLocalName(), EXTRACT);
             attributes = attributesMap;
         }
 
@@ -112,28 +121,31 @@ public class FilePermissionsModelParser10 {
     }
 
     private final BuildPropertyReplacer propertyReplacer;
-    private final FileFilterModelParser10 fileFilterModelParser;
+    private final FileFilterModelParser20 fileFilterModelParser;
 
-    public FilePermissionsModelParser10(BuildPropertyReplacer propertyReplacer) {
-        this(propertyReplacer, new FileFilterModelParser10(propertyReplacer));
+    public CopyArtifactsModelParser20(BuildPropertyReplacer propertyReplacer) {
+        this(propertyReplacer, new FileFilterModelParser20(propertyReplacer));
     }
 
-    public FilePermissionsModelParser10(BuildPropertyReplacer propertyReplacer, FileFilterModelParser10 fileFilterModelParser) {
+    public CopyArtifactsModelParser20(BuildPropertyReplacer propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
         this.propertyReplacer = propertyReplacer;
         this.fileFilterModelParser = fileFilterModelParser;
     }
 
-    public void parseFilePermissions(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
+    public List<CopyArtifact> parseCopyArtifacts(final XMLStreamReader reader) throws XMLStreamException {
+        final List<CopyArtifact> list = new ArrayList<>();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return;
+                    return list;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case PERMISSION:
-                            builder.addFilePermissions(parsePermission(reader));
+                        case COPY_ARTIFACT:
+                            final CopyArtifact.Builder cpBuilder = CopyArtifact.builder();
+                            parseCopyArtifact(reader, cpBuilder);
+                            list.add(cpBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -148,16 +160,23 @@ public class FilePermissionsModelParser10 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    protected FilePermission parsePermission(XMLStreamReader reader) throws XMLStreamException {
-        final FilePermission.Builder permissionBuilder = FilePermission.builder();
-        final Set<Attribute> required = EnumSet.of(Attribute.VALUE);
+    private void parseCopyArtifact(XMLStreamReader reader, final CopyArtifact.Builder builder) throws XMLStreamException {
+        final Set<Attribute> required = EnumSet.of(Attribute.ARTIFACT, Attribute.TO_LOCATION);
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             required.remove(attribute);
             switch (attribute) {
-                case VALUE:
-                    permissionBuilder.setValue(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                case ARTIFACT:
+                    builder.setArtifact(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    break;
+                case TO_LOCATION:
+                    builder.setToLocation(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    break;
+                case EXTRACT:
+                    if(Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)))) {
+                        builder.setExtract();
+                    }
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -170,7 +189,7 @@ public class FilePermissionsModelParser10 {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return permissionBuilder.build();
+                    return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
@@ -178,7 +197,7 @@ public class FilePermissionsModelParser10 {
                         case FILTER:
                             final FileFilter.Builder filterBuilder = FileFilter.builder();
                             fileFilterModelParser.parseFilter(reader, filterBuilder);
-                            permissionBuilder.addFilter(filterBuilder.build());
+                            builder.addFilter(filterBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -192,4 +211,5 @@ public class FilePermissionsModelParser10 {
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
+
 }

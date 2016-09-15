@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.plugin.wildfly.featurepack.build.model;
+package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 
 import java.io.InputStream;
