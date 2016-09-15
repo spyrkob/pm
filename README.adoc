@@ -138,3 +138,19 @@ The following branches can be used as examples:
 
 * WildFly Core: https://github.com/aloubyansky/wildfly-core/tree/new-feature-pack
 * WildFly Servlet and Full: https://github.com/aloubyansky/wildfly/tree/new-feature-pack
+
+== WildFly feature-pack build configuration
+
+WildFly feature-pack building Maven plugin expects an XML file named wildfly-feature-pack-build.xml
+which contains information about the feature-pack dependencies on other feature-packs, what additional
+content to include into the feature-pack, configuration assembly instructions and post provisioning tasks.
+
+== WildFly post provisioning/install tasks configuration
+
+When the target installation has been provisioned content-wise, there still tasks remain to perform to make
+the just provisioned installation usable. One of the essential ones is to assemble/adjust the configuration
+to what the user has selected. Other tasks include setting file permissions, correcting line endings for
+certain files, create expected directories.
+
+These tasks are described in wildfly-tasks.xml file which is included into the resources of the WildFly feature-pack.
+The file is created by the WildFly feature-pack building Maven plugin based on the wildfly-feature-pack-build.xml.
