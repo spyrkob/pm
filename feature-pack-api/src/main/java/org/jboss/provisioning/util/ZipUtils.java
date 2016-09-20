@@ -59,7 +59,7 @@ public class ZipUtils {
         }
     }
 
-    private static void copyFromZip(Path source, Path target) throws IOException {
+    public static void copyFromZip(Path source, Path target) throws IOException {
         Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
                 new SimpleFileVisitor<Path>() {
                     @Override
@@ -77,7 +77,7 @@ public class ZipUtils {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
-                        Files.copy(file, target.resolve(source.relativize(file).toString()));
+                        Files.copy(file, target.resolve(source.relativize(file).toString()), StandardCopyOption.REPLACE_EXISTING);
                         return FileVisitResult.CONTINUE;
                     }
                 });
