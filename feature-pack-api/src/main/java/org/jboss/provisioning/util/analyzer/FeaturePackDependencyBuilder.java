@@ -31,11 +31,12 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
@@ -102,10 +103,14 @@ public class FeaturePackDependencyBuilder {
 
         // add dependency on the parent
         {
-            final FeaturePackDependencyDescription.Builder depBuilder = FeaturePackDependencyDescription.builder(parentGav);
+            final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(parentGav);
             if (parentDiff.hasUniquePackages()) {
                 // exclude packages not found in the child
-                depBuilder.excludeAllPackages(parentDiff.getUniquePackageNames());
+                try {
+                    depBuilder.excludeAllPackages(parentDiff.getUniquePackageNames());
+                } catch (ProvisioningException e) {
+                    throw new InstallationDescriptionException("Failed to exlcude packages", e);
+                }
             }
             fpBuilder.addDependency(depBuilder.build());
         }

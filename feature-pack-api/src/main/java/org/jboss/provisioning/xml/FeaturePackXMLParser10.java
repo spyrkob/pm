@@ -33,8 +33,9 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
@@ -267,7 +268,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final FeaturePackDependencyDescription.Builder depBuilder = FeaturePackDependencyDescription.builder(new GAV(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new GAV(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -292,7 +293,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         }
     }
 
-    private void readExcludes(XMLExtendedStreamReader reader, FeaturePackDependencyDescription.Builder depBuilder) throws XMLStreamException {
+    private void readExcludes(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder depBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -303,7 +304,11 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            depBuilder.excludePackage(parseName(reader));
+                            try {
+                                depBuilder.excludePackage(parseName(reader));
+                            } catch (ProvisioningException e) {
+                                throw new XMLStreamException("Failed to exclude package", e);
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

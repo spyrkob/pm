@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -46,7 +46,7 @@ public class FeaturePackSpecificDescription {
     static class Builder {
 
         private final GAV gav;
-        private Map<GAV, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
+        private Map<GAV, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
         private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
         private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
         private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
@@ -55,24 +55,24 @@ public class FeaturePackSpecificDescription {
             this.gav = gav;
         }
 
-        Builder addAllDependencies(Collection<FeaturePackDependencyDescription> deps) {
+        Builder addAllDependencies(Collection<ProvisionedFeaturePackDescription> deps) {
             if(deps.isEmpty()) {
                 return this;
             } else {
-                for(FeaturePackDependencyDescription dep: deps) {
+                for(ProvisionedFeaturePackDescription dep: deps) {
                     addDependency(dep);
                 }
             }
             return this;
         }
 
-        Builder addDependency(FeaturePackDependencyDescription dep) {
+        Builder addDependency(ProvisionedFeaturePackDescription dep) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonMap(dep.getGAV(), dep);
                     break;
                 case 1:
-                    dependencies = new HashMap<GAV, FeaturePackDependencyDescription>(dependencies);
+                    dependencies = new HashMap<GAV, ProvisionedFeaturePackDescription>(dependencies);
                 default:
                     dependencies.put(dep.getGAV(), dep);
             }
@@ -145,13 +145,13 @@ public class FeaturePackSpecificDescription {
     }
 
     private final GAV gav;
-    private final Map<GAV, FeaturePackDependencyDescription> dependencies;
+    private final Map<GAV, ProvisionedFeaturePackDescription> dependencies;
     private final Map<String, PackageDescription> uniquePackages;
     private final Map<String, PackageSpecificDescription> conflictingPackages;
     private final Map<String, PackageDescription> matchedPackages;
 
     FeaturePackSpecificDescription(GAV gav,
-            Map<GAV, FeaturePackDependencyDescription> dependencies,
+            Map<GAV, ProvisionedFeaturePackDescription> dependencies,
             Map<String, PackageDescription> uniquePackages,
             Map<String, PackageSpecificDescription> conflictingPackages,
             Map<String, PackageDescription> matchedPackages) {
@@ -174,7 +174,7 @@ public class FeaturePackSpecificDescription {
         return dependencies.keySet();
     }
 
-    public Collection<FeaturePackDependencyDescription> getDependencies() {
+    public Collection<ProvisionedFeaturePackDescription> getDependencies() {
         return dependencies.values();
     }
 

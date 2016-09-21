@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.descr;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
