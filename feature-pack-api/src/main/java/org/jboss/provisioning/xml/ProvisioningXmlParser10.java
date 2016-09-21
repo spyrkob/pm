@@ -31,6 +31,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.state.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.state.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -39,7 +41,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> {
+class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallationDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
 
@@ -131,7 +133,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, ProvisioningMetaData metadata) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, ProvisionedInstallationDescription.Builder builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasUniverse = false;
         while (reader.hasNext()) {
@@ -146,7 +148,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case UNIVERSE:
-                            readUniverse(reader, metadata);
+                            readUniverse(reader, builder);
                             hasUniverse = true;
                             break;
                         default:
@@ -162,13 +164,14 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readUniverse(XMLExtendedStreamReader reader, ProvisioningMetaData metadata) throws XMLStreamException {
+    private void readUniverse(XMLExtendedStreamReader reader, ProvisionedInstallationDescription.Builder builder) throws XMLStreamException {
 
-        final String group = parseName(reader, false);
+        boolean emptyUniverse = true;
+        final String group = readName(reader, false);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    if (metadata.getFeaturePacks().isEmpty()) {
+                    if (emptyUniverse) {
                         throw ParsingUtils.expectedAtLeastOneChild(Element.UNIVERSE, Element.FEATURE_PACK);
                     }
                     return;
@@ -177,7 +180,8 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case FEATURE_PACK:
-                            readFeaturePack(reader, metadata, group);
+                            emptyUniverse = false;
+                            builder.addFeaturePack(readFeaturePack(reader, group));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -192,7 +196,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readFeaturePack(XMLExtendedStreamReader reader, ProvisioningMetaData metadata, String group) throws XMLStreamException {
+    private ProvisionedFeaturePackDescription readFeaturePack(XMLExtendedStreamReader reader, String group) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         String version = "LATEST";
@@ -214,10 +218,12 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningMetaData> 
         }
         ParsingUtils.parseNoContent(reader);
 
-        metadata.addFeaturePack(new GAV(group, name, version));
+        final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
+        fpBuilder.setGAV(new GAV(group, name, version));
+        return fpBuilder.build();
     }
 
-    private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
+    private String readName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String path = null;
         boolean hasName = false;
