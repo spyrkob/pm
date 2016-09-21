@@ -338,11 +338,28 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(contentDir)) {
             for(Path p : stream) {
                 final String pkgName = p.getFileName().toString();
-                final Path pkgDir = packagesDir.resolve(pkgName);
-                IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(p.getFileName()));
-                final PackageDescription pkgDescr = PackageDescription.builder(pkgName).build();
-                writeXml(pkgDescr, pkgDir);
-                fpBuilder.addTopPackage(pkgDescr);
+                if(pkgName.equals("docs")) {
+                    final PackageDescription.Builder docsBuilder = PackageDescription.builder(pkgName);
+                    try(DirectoryStream<Path> docsStream = Files.newDirectoryStream(p)) {
+                        for(Path docPath : docsStream) {
+                            final String docName = docPath.getFileName().toString();
+                            final Path docDir = packagesDir.resolve(docName);
+                            IoUtils.copy(docPath, docDir.resolve(Constants.CONTENT).resolve("docs").resolve(docName));
+                            final PackageDescription docDescr = PackageDescription.builder(docName).build();
+                            writeXml(docDescr, docDir);
+                            docsBuilder.addDependency(docName);
+                        }
+                    }
+                    PackageDescription docsDescr = docsBuilder.build();
+                    writeXml(docsDescr, packagesDir.resolve(pkgName));
+                    fpBuilder.addTopPackage(docsDescr);
+                } else {
+                    final Path pkgDir = packagesDir.resolve(pkgName);
+                    IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(pkgName));
+                    final PackageDescription pkgDescr = PackageDescription.builder(pkgName).build();
+                    writeXml(pkgDescr, pkgDir);
+                    fpBuilder.addTopPackage(pkgDescr);
+                }
             }
         }
     }
