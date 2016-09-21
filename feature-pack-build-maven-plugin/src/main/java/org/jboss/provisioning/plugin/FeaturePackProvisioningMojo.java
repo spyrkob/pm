@@ -77,12 +77,12 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
-import org.jboss.provisioning.state.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
@@ -297,13 +297,13 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                 throw new MojoExecutionException("Failed to describe feature-pack " + fpGav, e);
             }
             if(fpDescr.hasDependencies()) {
-                final Collection<FeaturePackDependencyDescription> depsDescr = fpDescr.getDependencies();
+                final Collection<ProvisionedFeaturePackDescription> depsDescr = fpDescr.getDependencies();
                 final List<GAV> deps;
                 if(depsDescr.size() == 1) {
                     deps = Collections.singletonList(depsDescr.iterator().next().getGAV());
                 } else {
                     deps = new ArrayList<GAV>(depsDescr.size());
-                    for (FeaturePackDependencyDescription depDescr : depsDescr) {
+                    for (ProvisionedFeaturePackDescription depDescr : depsDescr) {
                         deps.add(depDescr.getGAV());
                     }
                 }

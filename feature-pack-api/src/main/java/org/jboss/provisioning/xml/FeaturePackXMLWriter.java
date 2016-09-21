@@ -33,9 +33,9 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.xml.FeaturePackXMLParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXMLParser10.Element;
 import org.jboss.provisioning.xml.util.AttributeValue;
@@ -107,7 +107,7 @@ public class FeaturePackXMLWriter {
         addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
     }
 
-    private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {
+    private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
         final ElementNode depsElement = newElement(deps, Element.DEPENDENCY);
         final GAV gav = dependency.getGAV();
         addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());

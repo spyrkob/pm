@@ -65,8 +65,8 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FPMavenErrors;
@@ -324,12 +324,12 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
             throws MojoExecutionException {
         if (!build.getDependencies().isEmpty()) {
-            for (FeaturePackDependencyDescription dep : build.getDependencies()) {
+            for (ProvisionedFeaturePackDescription dep : build.getDependencies()) {
                 final String depStr = dep.getGAV().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final GAV gav = GAV.fromString(gavStr);
-                fpBuilder.addDependency(FeaturePackDependencyDescription.builder(gav).build());
+                fpBuilder.addDependency(ProvisionedFeaturePackDescription.builder().setGAV(gav).build());
             }
         }
     }

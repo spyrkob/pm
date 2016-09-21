@@ -36,8 +36,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.state.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.state.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

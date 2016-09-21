@@ -29,10 +29,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.LayoutUtils;
 
@@ -81,7 +81,7 @@ class FeaturePackPackageView {
     private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr,
             Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws InstallationDescriptionException {
         if (fpDescr.hasDependencies()) {
-            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+            for (ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
                 final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGAV());
                 resolveFeaturePack(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding), collectedPackages, dep.getExcludedPackages());
             }
