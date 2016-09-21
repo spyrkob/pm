@@ -35,11 +35,11 @@ import org.jboss.provisioning.util.DescrFormatter;
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDescription {
+public class FeaturePackLayoutDescription {
 
     private final Map<GAV, FeaturePackDescription> featurePacks;
 
-    InstallationDescription(Map<GAV, FeaturePackDescription> featurePacks) {
+    FeaturePackLayoutDescription(Map<GAV, FeaturePackDescription> featurePacks) {
         assert featurePacks != null : "featurePacks is null";
         this.featurePacks = featurePacks;
     }

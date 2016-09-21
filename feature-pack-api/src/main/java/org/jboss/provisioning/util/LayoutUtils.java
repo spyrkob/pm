@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
  *
@@ -36,23 +36,23 @@ import org.jboss.provisioning.descr.InstallationDescriptionException;
  */
 public class LayoutUtils {
 
-    public static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws InstallationDescriptionException {
+    public static Path getFeaturePackDir(Path fpLayoutDir, GAV gav) throws ProvisioningDescriptionException {
         final Path fpPath = fpLayoutDir.resolve(gav.getGroupId()).resolve(gav.getArtifactId()).resolve(gav.getVersion());
         if(!Files.exists(fpPath)) {
-            throw new InstallationDescriptionException(Errors.pathDoesNotExist(fpPath));
+            throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpPath));
         }
         return fpPath;
     }
 
-    public static Path getPackageDir(Path fpDir, String packageName) throws InstallationDescriptionException {
+    public static Path getPackageDir(Path fpDir, String packageName) throws ProvisioningDescriptionException {
         final Path dir = fpDir.resolve(Constants.PACKAGES).resolve(packageName);
         if(!Files.exists(dir)) {
-            throw new InstallationDescriptionException(Errors.pathDoesNotExist(dir));
+            throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(dir));
         }
         return dir;
     }
 
-    public static Path getPackageContentDir(Path fpDir, String packageName) throws InstallationDescriptionException {
+    public static Path getPackageContentDir(Path fpDir, String packageName) throws ProvisioningDescriptionException {
         return fpDir.resolve(Constants.PACKAGES).resolve(packageName).resolve(Constants.CONTENT);
     }
 }

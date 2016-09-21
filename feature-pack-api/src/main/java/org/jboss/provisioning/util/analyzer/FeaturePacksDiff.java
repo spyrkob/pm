@@ -37,7 +37,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
 import org.jboss.provisioning.util.LayoutUtils;
@@ -51,19 +51,19 @@ import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Build
  */
 public class FeaturePacksDiff {
 
-    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
         return new FeaturePacksDiff(fpLayoutDir, encoding, gav1, gav2);
     }
 
-    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
         return newInstance(fpLayoutDir, encoding, gav1, gav2).compare();
     }
 
-    private static byte[] hashPath(Path path) throws InstallationDescriptionException {
+    private static byte[] hashPath(Path path) throws ProvisioningDescriptionException {
         try {
             return HashUtils.hashPath(path);
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.hashCalculation(path), e);
+            throw new ProvisioningDescriptionException(Errors.hashCalculation(path), e);
         }
     }
 
@@ -72,7 +72,7 @@ public class FeaturePacksDiff {
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    FeaturePacksDiff(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws InstallationDescriptionException {
+    FeaturePacksDiff(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
@@ -87,7 +87,7 @@ public class FeaturePacksDiff {
         return fp2Descr;
     }
 
-    FeaturePackDescriptionDiffs compare() throws InstallationDescriptionException {
+    FeaturePackDescriptionDiffs compare() throws ProvisioningDescriptionException {
         final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGAV());
         final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGAV());
         compareDependencies(fp1Diff, fp2Diff);
@@ -95,7 +95,7 @@ public class FeaturePacksDiff {
         return new FeaturePackDescriptionDiffs(fp1Diff.build(), fp2Diff.build());
     }
 
-    private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws InstallationDescriptionException {
+    private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws ProvisioningDescriptionException {
 
         final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp1Descr);
         final Map<String, FeaturePackPackageView.ResolvedPackage> fp2Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp2Descr);
@@ -130,7 +130,7 @@ public class FeaturePacksDiff {
     }
 
     private void comparePackages(FeaturePackPackageView.ResolvedPackage fp1Pkg, FeaturePackPackageView.ResolvedPackage fp2Pkg,
-            Builder fp1Diff, Builder fp2Diff) throws InstallationDescriptionException {
+            Builder fp1Diff, Builder fp2Diff) throws ProvisioningDescriptionException {
         final PackageSpecificDescription.Builder g1Diff = PackageSpecificDescription.builder(fp1Pkg.getName());
         final PackageSpecificDescription.Builder g2Diff = PackageSpecificDescription.builder(fp2Pkg.getName());
 
@@ -160,7 +160,7 @@ public class FeaturePacksDiff {
     }
 
     private void comparePackageContent(Path g1Content, Path g2Content,
-            PackageSpecificDescription.Builder g1Diff, PackageSpecificDescription.Builder g2Diff) throws InstallationDescriptionException {
+            PackageSpecificDescription.Builder g1Diff, PackageSpecificDescription.Builder g2Diff) throws ProvisioningDescriptionException {
 
         final ContentDiff.Builder c1Builder = ContentDiff.builder();
         final ContentDiff.Builder c2Builder = ContentDiff.builder();
@@ -176,7 +176,7 @@ public class FeaturePacksDiff {
     }
 
     private void compareDirs(Path pkg1Dir, Path pkg2Dir, Path c1Dir, Path c2Dir,
-            final ContentDiff.Builder c1Builder, final ContentDiff.Builder c2Builder) throws InstallationDescriptionException {
+            final ContentDiff.Builder c1Builder, final ContentDiff.Builder c2Builder) throws ProvisioningDescriptionException {
         final Map<String, Path> c2Children = getChildren(c2Dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(c1Dir)) {
             if(c2Children.isEmpty()) {
@@ -217,11 +217,11 @@ public class FeaturePacksDiff {
                 }
             }
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.readDirectory(pkg1Dir));
+            throw new ProvisioningDescriptionException(Errors.readDirectory(pkg1Dir));
         }
     }
 
-    private static Map<String, Path> getChildren(Path p) throws InstallationDescriptionException {
+    private static Map<String, Path> getChildren(Path p) throws ProvisioningDescriptionException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(p)) {
             Map<String, Path> children = Collections.emptyMap();
             for (Path c : stream) {
@@ -232,7 +232,7 @@ public class FeaturePacksDiff {
             }
             return children;
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.readDirectory(p));
+            throw new ProvisioningDescriptionException(Errors.readDirectory(p));
         }
     }
 

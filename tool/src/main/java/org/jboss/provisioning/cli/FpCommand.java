@@ -57,7 +57,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackDependencyBuilder;
 import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
@@ -289,7 +289,7 @@ public class FpCommand extends CommandBase {
         final FeaturePackDescriptionDiffs diff;
         try {
             diff = FeaturePacksDiff.compare(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
-        } catch (InstallationDescriptionException e) {
+        } catch (ProvisioningDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
 
@@ -322,7 +322,7 @@ public class FpCommand extends CommandBase {
                 final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
                 FeaturePackXMLWriter.INSTANCE.write(newChildDescr, writer);
                 System.out.println(writer.getBuffer().toString());
-            } catch (InstallationDescriptionException e) {
+            } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to describe parent as a dependency", e);
             } catch (XMLStreamException e) {
                 throw new CommandExecutionException("Failed to write XML", e);
@@ -332,7 +332,7 @@ public class FpCommand extends CommandBase {
         } else {
             try {
                 FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
-            } catch (InstallationDescriptionException e) {
+            } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to extract parent as a dependency", e);
             }
         }
@@ -373,7 +373,7 @@ public class FpCommand extends CommandBase {
                 WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
                 try {
                     layoutBuilder.build(wfDescr, installDir, workDir);
-                } catch (InstallationDescriptionException e) {
+                } catch (ProvisioningDescriptionException e) {
                     throw new CommandExecutionException("Failed to layout feature packs", e);
                 }
             }

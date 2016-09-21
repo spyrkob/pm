@@ -78,9 +78,9 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.InstallationDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.FeaturePackInstallException;
@@ -116,7 +116,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.build.sourceEncoding}", required = true, property = "pm.encoding")
     private String encoding;
 
-    private InstallationDescription installationDescr;
+    private FeaturePackLayoutDescription installationDescr;
     private Path workDir;
     private Set<GAV> provisioningPlugins = Collections.emptySet();
 
@@ -170,7 +170,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         workDir = IoUtils.createRandomTmpDir();
         final Path layoutDir = workDir.resolve("layout");
         try {
-            final InstallationDescriptionBuilder descrBuilder = InstallationDescriptionBuilder.newInstance();
+            final FeaturePackLayoutDescriptionBuilder descrBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
             layoutFeaturePacks(metadata.getFeaturePackGAVs(), descrBuilder, layoutDir);
             installationDescr = descrBuilder.build();
             if (!Files.exists(installDir)) {
@@ -181,7 +181,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(installDir, layoutDir);
             }
-        } catch (InstallationDescriptionException | FeaturePackInstallException e) {
+        } catch (ProvisioningDescriptionException | FeaturePackInstallException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
@@ -229,7 +229,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                     return workDir.resolve("resources");
                 }
                 @Override
-                public InstallationDescription getInstallationDescription() {
+                public FeaturePackLayoutDescription getInstallationDescription() {
                     return installationDescr;
                 }
                 @Override
@@ -267,7 +267,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private void layoutFeaturePacks(Collection<GAV> fpGavs, InstallationDescriptionBuilder descr, Path layoutDir) throws MojoExecutionException {
+    private void layoutFeaturePacks(Collection<GAV> fpGavs, FeaturePackLayoutDescriptionBuilder descr, Path layoutDir) throws MojoExecutionException {
         for (ArtifactResult res : resolveArtifacts(fpGavs, "zip")) {
             final Artifact fpArtifact = res.getArtifact();
             if(!res.isResolved()) {
@@ -293,7 +293,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             final FeaturePackDescription fpDescr;
             try {
                 fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
-            } catch (InstallationDescriptionException e) {
+            } catch (ProvisioningDescriptionException e) {
                 throw new MojoExecutionException("Failed to describe feature-pack " + fpGav, e);
             }
             if(fpDescr.hasDependencies()) {
@@ -326,7 +326,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
             try {
                 descr.addFeaturePack(fpDescr);
-            } catch (InstallationDescriptionException e) {
+            } catch (ProvisioningDescriptionException e) {
                 throw new MojoExecutionException("Failed to layout feature packs", e);
             }
         }

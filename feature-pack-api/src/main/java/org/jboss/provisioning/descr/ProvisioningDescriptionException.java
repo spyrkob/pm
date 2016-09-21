@@ -28,15 +28,15 @@ import org.jboss.provisioning.ProvisioningException;
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDescriptionException extends ProvisioningException {
+public class ProvisioningDescriptionException extends ProvisioningException {
 
     private static final long serialVersionUID = 1L;
 
-    public InstallationDescriptionException(String message, Throwable cause) {
+    public ProvisioningDescriptionException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public InstallationDescriptionException(String message) {
+    public ProvisioningDescriptionException(String message) {
         super(message);
     }
 
