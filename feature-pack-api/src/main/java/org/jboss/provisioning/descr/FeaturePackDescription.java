@@ -36,6 +36,7 @@ import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
+ * This class describes the feature-pack as it is available in the repository.
  *
  * @author Alexey Loubyansky
  */

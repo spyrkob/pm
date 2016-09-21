@@ -19,45 +19,64 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.provisioning.xml;
 
-import java.util.Collection;
+package org.jboss.provisioning.state;
+
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.GAV;
 
 /**
+ * This class describes the state of provisioned installation.
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningMetaData {
+public class ProvisionedInstallationDescription {
 
-    private Set<GAV> featurePacks = Collections.emptySet();
+    public static class Builder {
 
-    public ProvisioningMetaData() {
-    }
+        private Map<GAV, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
 
-    public void addFeaturePack(GAV gav) {
-        switch(featurePacks.size()) {
-            case 0:
-                featurePacks = Collections.singleton(gav);
-                break;
-            case 1:
-                featurePacks = new HashSet<GAV>(featurePacks);
-            default:
-                featurePacks.add(gav);
+        private Builder() {
+        }
+
+        public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) {
+            switch(featurePacks.size()) {
+                case 0:
+                    featurePacks = Collections.singletonMap(fp.getGAV(), fp);
+                    break;
+                case 1:
+                    featurePacks = new LinkedHashMap<>(featurePacks);
+                default:
+                    featurePacks.put(fp.getGAV(), fp);
+            }
+            return this;
+        }
+
+        public ProvisionedInstallationDescription build() {
+            return new ProvisionedInstallationDescription(Collections.unmodifiableMap(featurePacks));
         }
     }
 
-    public Collection<GAV> getFeaturePacks() {
-        return featurePacks;
+    public static Builder builder() {
+        return new Builder();
     }
 
-    @Override
-    public String toString() {
-        return featurePacks.toString();
+    private Map<GAV, ProvisionedFeaturePackDescription> featurePacks;
+
+    private ProvisionedInstallationDescription(Map<GAV, ProvisionedFeaturePackDescription> featurePacks) {
+        this.featurePacks = featurePacks;
+    }
+
+    public boolean hasFeaturePacks() {
+        return !featurePacks.isEmpty();
+    }
+
+    public Set<GAV> getFeaturePackGAVs() {
+        return featurePacks.keySet();
     }
 
     @Override
@@ -76,7 +95,7 @@ public class ProvisioningMetaData {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ProvisioningMetaData other = (ProvisioningMetaData) obj;
+        ProvisionedInstallationDescription other = (ProvisionedInstallationDescription) obj;
         if (featurePacks == null) {
             if (other.featurePacks != null)
                 return false;
@@ -84,5 +103,4 @@ public class ProvisioningMetaData {
             return false;
         return true;
     }
-
 }

@@ -29,6 +29,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.state.ProvisionedInstallationDescription;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
@@ -60,11 +61,11 @@ public class ProvisioningXmlParser {
         mapper.registerRootElement(ROOT_1_0, new ProvisioningXmlParser10());
     }
 
-    public ProvisioningMetaData parse(final Reader input) throws XMLStreamException {
+    public ProvisionedInstallationDescription parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final ProvisioningMetaData metadata = new ProvisioningMetaData();
-        mapper.parseDocument(metadata, streamReader);
-        return metadata;
+        final ProvisionedInstallationDescription.Builder builder = ProvisionedInstallationDescription.builder();
+        mapper.parseDocument(builder, streamReader);
+        return builder.build();
     }
 }

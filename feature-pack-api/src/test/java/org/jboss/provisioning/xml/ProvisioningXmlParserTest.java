@@ -36,6 +36,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.state.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.state.ProvisionedInstallationDescription;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -94,12 +96,12 @@ public class ProvisioningXmlParserTest {
 
     @Test
     public void readValid() throws IOException {
-        ProvisioningMetaData found = validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
-        ProvisioningMetaData expected = new ProvisioningMetaData();
-        expected.addFeaturePack(new GAV("org.jboss.group1", "fp1", "0.0.1"));
-        expected.addFeaturePack(new GAV("org.jboss.group1", "fp2", "0.0.2"));
-        expected.addFeaturePack(new GAV("org.jboss.group2", "fp3", "0.0.3"));
-
+        ProvisionedInstallationDescription found = validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
+        ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group1", "fp1", "0.0.1")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group1", "fp2", "0.0.2")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group2", "fp3", "0.0.3")).build())
+                .build();
         Assert.assertEquals(expected, found);
     }
 
@@ -107,7 +109,7 @@ public class ProvisioningXmlParserTest {
         validator.validate(new StreamSource(Files.newBufferedReader(p, Charset.forName("utf-8"))));
     }
 
-    private ProvisioningMetaData validateAndParse(String xmlFile, String xsdValidationExceptionMessage,
+    private ProvisionedInstallationDescription validateAndParse(String xmlFile, String xsdValidationExceptionMessage,
             String parseExceptionMessage) throws IOException {
 
         Path p = Paths.get(xmlFile);
@@ -122,7 +124,7 @@ public class ProvisioningXmlParserTest {
             Assert.assertEquals(xsdValidationExceptionMessage, e.getMessage());
         }
 
-        ProvisioningMetaData result = null;
+        ProvisionedInstallationDescription result = null;
         try {
             result = new ProvisioningXmlParser().parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
         } catch (XMLStreamException e) {

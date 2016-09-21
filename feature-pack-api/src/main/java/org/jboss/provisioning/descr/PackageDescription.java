@@ -30,6 +30,7 @@ import java.util.List;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
+ * This class describes a package as it appears in a feature-pack.
  *
  * @author Alexey Loubyansky
  */

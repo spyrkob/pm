@@ -82,6 +82,7 @@ import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.InstallationDescription;
 import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
 import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.state.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
@@ -90,7 +91,6 @@ import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.xml.ProvisioningMetaData;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -156,7 +156,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
         final Path installDir = Paths.get(installDirArg);
 
-        ProvisioningMetaData metadata;
+        ProvisionedInstallationDescription metadata;
         try(Reader r = Files.newBufferedReader(provXml, Charset.forName(encoding))) {
             metadata = new ProvisioningXmlParser().parse(r);
         } catch (FileNotFoundException e) {
@@ -171,7 +171,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         final Path layoutDir = workDir.resolve("layout");
         try {
             final InstallationDescriptionBuilder descrBuilder = InstallationDescriptionBuilder.newInstance();
-            layoutFeaturePacks(metadata.getFeaturePacks(), descrBuilder, layoutDir);
+            layoutFeaturePacks(metadata.getFeaturePackGAVs(), descrBuilder, layoutDir);
             installationDescr = descrBuilder.build();
             if (!Files.exists(installDir)) {
                 mkdirs(installDir);

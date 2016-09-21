@@ -30,6 +30,8 @@ import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
+ * This class describes a layout of feature-packs from which
+ * the target installation is provisioned.
  *
  * @author Alexey Loubyansky
  */
