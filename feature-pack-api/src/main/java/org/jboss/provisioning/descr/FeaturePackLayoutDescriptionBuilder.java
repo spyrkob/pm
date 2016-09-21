@@ -35,23 +35,23 @@ import org.jboss.provisioning.GAV;
  *
  * @author Alexey Loubyansky
  */
-public class InstallationDescriptionBuilder {
+public class FeaturePackLayoutDescriptionBuilder {
 
-    public static InstallationDescriptionBuilder newInstance() {
-        return new InstallationDescriptionBuilder();
+    public static FeaturePackLayoutDescriptionBuilder newInstance() {
+        return new FeaturePackLayoutDescriptionBuilder();
     }
 
     private Map<GAV, FeaturePackDescription> featurePacks = Collections.emptyMap();
     private Map<String, Map<String, String>> gavs = Collections.emptyMap();
 
-    InstallationDescriptionBuilder() {
+    FeaturePackLayoutDescriptionBuilder() {
     }
 
-    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp) throws InstallationDescriptionException {
+    public FeaturePackLayoutDescriptionBuilder addFeaturePack(FeaturePackDescription fp) throws ProvisioningDescriptionException {
         return addFeaturePack(fp, true);
     }
 
-    public InstallationDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws InstallationDescriptionException {
+    public FeaturePackLayoutDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
         assert fp != null : "fp is null";
         final GAV fpGav = fp.getGAV();
         checkGav(fpGav);
@@ -70,7 +70,7 @@ public class InstallationDescriptionBuilder {
         return this;
     }
 
-    private void checkGav(final GAV fpGav) throws InstallationDescriptionException {
+    private void checkGav(final GAV fpGav) throws ProvisioningDescriptionException {
         Map<String, String> group = gavs.get(fpGav.getGroupId());
         if(group == null) {
             final Map<String, String> result = Collections.singletonMap(fpGav.getArtifactId(), fpGav.getVersion());
@@ -85,7 +85,7 @@ public class InstallationDescriptionBuilder {
             }
         } else if (group.containsKey(fpGav.getArtifactId())) {
             if (!group.get(fpGav.getArtifactId()).equals(fpGav.getVersion())) {
-                throw new InstallationDescriptionException("The installation requires two versions of artifact "
+                throw new ProvisioningDescriptionException("The installation requires two versions of artifact "
                         + fpGav.getGroupId() + ':' + fpGav.getArtifactId() + ": " + fpGav.getVersion() + " and "
                         + group.get(fpGav.getArtifactId()));
             }
@@ -102,7 +102,7 @@ public class InstallationDescriptionBuilder {
         }
     }
 
-    public InstallationDescription build() throws InstallationDescriptionException {
-        return new InstallationDescription(Collections.unmodifiableMap(featurePacks));
+    public FeaturePackLayoutDescription build() throws ProvisioningDescriptionException {
+        return new FeaturePackLayoutDescription(Collections.unmodifiableMap(featurePacks));
     }
 }

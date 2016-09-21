@@ -30,7 +30,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
@@ -67,19 +67,19 @@ class FeaturePackPackageView {
         }
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, GAV fpGav) throws InstallationDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, GAV fpGav) throws ProvisioningDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpGav);
         return resolve(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding));
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr) throws InstallationDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr) throws ProvisioningDescriptionException {
         final HashMap<String, ResolvedPackage> packages = new HashMap<String, ResolvedPackage>();
         resolveFeaturePack(fpLayoutDir, encoding, fpDescr, packages, Collections.emptySet());
         return packages;
     }
 
     private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr,
-            Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws InstallationDescriptionException {
+            Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws ProvisioningDescriptionException {
         if (fpDescr.hasDependencies()) {
             for (ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
                 final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGAV());

@@ -40,9 +40,9 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.InstallationDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionBuilder;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.util.IoUtils;
@@ -65,7 +65,7 @@ public class WFFeaturePackLayoutBuilder {
     private Path homeDir;
     private String modulesPath;
     private Path modulesDir;
-    private InstallationDescriptionBuilder installBuilder;
+    private FeaturePackLayoutDescriptionBuilder installBuilder;
 
     private String fpGroupId;
     private String fpArtifactId;
@@ -75,28 +75,28 @@ public class WFFeaturePackLayoutBuilder {
 
     private PackageDescription.Builder pkgBuilder;
 
-    public InstallationDescription build(WFInstallationDescription wfDescr, Path homeDir, Path workDir) throws InstallationDescriptionException {
+    public FeaturePackLayoutDescription build(WFInstallationDescription wfDescr, Path homeDir, Path workDir) throws ProvisioningDescriptionException {
         this.workDir = workDir;
         mkdirs(workDir);
         this.homeDir = homeDir;
         modulesPath = wfDescr.getModulesPath();
         modulesDir = homeDir.resolve(modulesPath);
-        installBuilder = InstallationDescriptionBuilder.newInstance();
+        installBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
         for(WFFeaturePackDescription fpDescr : wfDescr.getFeaturePacks()) {
             build(fpDescr);
         }
         return installBuilder.build();
     }
 
-    private void mkdirs(Path dir) throws InstallationDescriptionException {
+    private void mkdirs(Path dir) throws ProvisioningDescriptionException {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.mkdirs(dir.toAbsolutePath()), e);
+            throw new ProvisioningDescriptionException(Errors.mkdirs(dir.toAbsolutePath()), e);
         }
     }
 
-    void build(WFFeaturePackDescription wfFPDescr) throws InstallationDescriptionException {
+    void build(WFFeaturePackDescription wfFPDescr) throws ProvisioningDescriptionException {
         fpBuilder = FeaturePackDescription.builder();
         fpGroupId = wfFPDescr.getGroupId();
         fpArtifactId = wfFPDescr.getArtifactId();
@@ -119,13 +119,13 @@ public class WFFeaturePackLayoutBuilder {
 
         if(move) {
             if(fpGroupId == null) {
-                throw new InstallationDescriptionException(Errors.missingParameter("group-id"));
+                throw new ProvisioningDescriptionException(Errors.missingParameter("group-id"));
             }
             if(fpArtifactId == null) {
-                throw new InstallationDescriptionException(Errors.missingParameter("artifact-id"));
+                throw new ProvisioningDescriptionException(Errors.missingParameter("artifact-id"));
             }
             if(fpVersion == null) {
-                throw new InstallationDescriptionException(Errors.missingParameter("version"));
+                throw new ProvisioningDescriptionException(Errors.missingParameter("version"));
             }
             Path fpTarget = workDir.resolve(fpGroupId);
             fpTarget = fpTarget.resolve(fpArtifactId);
@@ -134,7 +134,7 @@ public class WFFeaturePackLayoutBuilder {
             try {
                 Files.move(fpDir, fpTarget, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
-                throw new InstallationDescriptionException(Errors.moveFile(fpDir, fpTarget), e);
+                throw new ProvisioningDescriptionException(Errors.moveFile(fpDir, fpTarget), e);
             }
             fpDir = fpTarget;
         }
@@ -145,7 +145,7 @@ public class WFFeaturePackLayoutBuilder {
         try {
             FeaturePackXMLWriter.INSTANCE.write(fpBuilder.build(), fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException e) {
-            throw new InstallationDescriptionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML).toAbsolutePath()), e);
+            throw new ProvisioningDescriptionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML).toAbsolutePath()), e);
         }
 
         fpBuilder = null;
@@ -155,7 +155,7 @@ public class WFFeaturePackLayoutBuilder {
         fpDir = null;
     }
 
-    void build(WFPackageDescription wfPkg) throws InstallationDescriptionException {
+    void build(WFPackageDescription wfPkg) throws ProvisioningDescriptionException {
 
         pkgBuilder = PackageDescription.builder(wfPkg.getName());
         for (WFModulesDescription wfModules : wfPkg.getModules()) {
@@ -171,7 +171,7 @@ public class WFFeaturePackLayoutBuilder {
                     pkgBuilder = null;
                     return;
                 }
-                throw new InstallationDescriptionException(Errors.pathDoesNotExist(f));
+                throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(f));
             }
             Path pkgContent = pkgDir.resolve(CONTENT);
             mkdirs(pkgContent);
@@ -208,18 +208,18 @@ public class WFFeaturePackLayoutBuilder {
         pkgBuilder = null;
     }
 
-    private void writePackageXml(final PackageDescription pkgDescr, final Path pkgDir) throws InstallationDescriptionException {
+    private void writePackageXml(final PackageDescription pkgDescr, final Path pkgDir) throws ProvisioningDescriptionException {
         if(!Files.exists(pkgDir)) {
             mkdirs(pkgDir);
         }
         try {
             PackageXMLWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
-            throw new InstallationDescriptionException(Errors.writeXml(pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath()), e);
+            throw new ProvisioningDescriptionException(Errors.writeXml(pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath()), e);
         }
     }
 
-    void build(WFModulesDescription wfModules) throws InstallationDescriptionException {
+    void build(WFModulesDescription wfModules) throws ProvisioningDescriptionException {
 
         String relativePath = wfModules.getRelativeDir();
         if(relativePath != null) {
@@ -230,7 +230,7 @@ public class WFFeaturePackLayoutBuilder {
         }
         if(wfModules.getNames().isEmpty()) {
             if(!Files.exists(modulesDir)) {
-                throw new InstallationDescriptionException(Errors.pathDoesNotExist(modulesDir.toAbsolutePath()));
+                throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(modulesDir.toAbsolutePath()));
             }
             // all
             final List<String> path = new ArrayList<String>();
@@ -258,7 +258,7 @@ public class WFFeaturePackLayoutBuilder {
         }
     }
 
-    private void processModules(String modulesPath, List<String> path, Path dir) throws InstallationDescriptionException {
+    private void processModules(String modulesPath, List<String> path, Path dir) throws ProvisioningDescriptionException {
 
         final Path moduleXml = dir.resolve(Constants.MODULES_XML);
         if(!Files.exists(moduleXml)) {
@@ -301,7 +301,7 @@ public class WFFeaturePackLayoutBuilder {
             try(BufferedReader reader = Files.newBufferedReader(manifest)) {
                 props.load(reader);
             } catch(IOException e) {
-                throw new InstallationDescriptionException(Errors.readFile(manifest.toAbsolutePath()), e);
+                throw new ProvisioningDescriptionException(Errors.readFile(manifest.toAbsolutePath()), e);
             }
             fpVersion = props.getProperty(RELEASE_VERSION);
         }
@@ -317,18 +317,18 @@ public class WFFeaturePackLayoutBuilder {
         writePackageXml(pkgDescr, pkgDir);
     }
 
-    private void copy(Path src, Path target) throws InstallationDescriptionException {
+    private void copy(Path src, Path target) throws ProvisioningDescriptionException {
         if(!Files.exists(target.getParent())) {
             mkdirs(target.getParent());
         }
         try {
             IoUtils.copy(src, target);
         } catch (IOException e) {
-            throw new InstallationDescriptionException(Errors.copyFile(src.toAbsolutePath(), target.toAbsolutePath()));
+            throw new ProvisioningDescriptionException(Errors.copyFile(src.toAbsolutePath(), target.toAbsolutePath()));
         }
     }
 
-    private void failedToReadDirectory(Path p, IOException e) throws InstallationDescriptionException {
-        throw new InstallationDescriptionException(Errors.readDirectory(p.toAbsolutePath()), e);
+    private void failedToReadDirectory(Path p, IOException e) throws ProvisioningDescriptionException {
+        throw new ProvisioningDescriptionException(Errors.readDirectory(p.toAbsolutePath()), e);
     }
 }

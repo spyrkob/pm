@@ -25,8 +25,8 @@ package org.jboss.provisioning.util;
 import java.nio.file.Path;
 import org.jboss.provisioning.GAV;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.InstallationDescription;
-import org.jboss.provisioning.descr.InstallationDescriptionException;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
  * Turns feature-pack layout into a target installation.
@@ -42,17 +42,17 @@ public class FeaturePackLayoutInstaller {
      * @param fpLayoutDir  feature-pack layout directory
      * @param installDir  target installation directory
      * @param encoding the encoding to use when reading files under {@code fpLayoutDir}
-     * @throws InstallationDescriptionException
+     * @throws ProvisioningDescriptionException
      * @throws FeaturePackInstallException
      */
     public static void install(Path fpLayoutDir, Path installDir, String encoding)
-            throws InstallationDescriptionException, FeaturePackInstallException {
+            throws ProvisioningDescriptionException, FeaturePackInstallException {
         install(fpLayoutDir,
                 FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding),
                 installDir);
     }
 
-    public static void install(Path fpLayoutDir, InstallationDescription descr, Path installDir)
+    public static void install(Path fpLayoutDir, FeaturePackLayoutDescription descr, Path installDir)
             throws FeaturePackInstallException {
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : descr.getFeaturePacks()) {

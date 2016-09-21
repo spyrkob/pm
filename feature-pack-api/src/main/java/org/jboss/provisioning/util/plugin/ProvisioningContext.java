@@ -26,7 +26,7 @@ import java.nio.file.Path;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.InstallationDescription;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 
 /**
  *
@@ -36,7 +36,7 @@ public interface ProvisioningContext {
 
     String getEncoding();
 
-    InstallationDescription getInstallationDescription();
+    FeaturePackLayoutDescription getInstallationDescription();
 
     Path getLayoutDir();
 
