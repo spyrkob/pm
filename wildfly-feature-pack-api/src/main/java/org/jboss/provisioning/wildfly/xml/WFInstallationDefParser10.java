@@ -31,6 +31,7 @@ import org.jboss.provisioning.wildfly.descr.WFFeaturePackDescription;
 import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
 import org.jboss.provisioning.wildfly.descr.WFModulesDescription;
 import org.jboss.provisioning.wildfly.descr.WFPackageDescription;
+import org.jboss.provisioning.xml.LocalNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -99,7 +100,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         ARTIFACT_ID("artifact-id"),
         GROUP_ID("group-id"),
@@ -139,6 +140,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }

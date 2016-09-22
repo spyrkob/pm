@@ -145,10 +145,10 @@ public class ParsingUtils {
         return new XMLStreamException("Unexpected end of document ", location);
     }
 
-    public static XMLStreamException missingAttributes(final Location location, final Set<? extends Enum> requiredAttributes) {
+    public static XMLStreamException missingAttributes(final Location location, final Set<? extends LocalNameProvider> requiredAttributes) {
         final StringBuilder b = new StringBuilder();
-        for (Object attribute : requiredAttributes) {
-            b.append(' ').append(attribute);
+        for (LocalNameProvider attribute : requiredAttributes) {
+            b.append(' ').append(attribute.getLocalName());
         }
         return new XMLStreamException("Missing required attributes " + b.toString(), location);
     }

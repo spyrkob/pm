@@ -19,6 +19,7 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.LocalNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -102,7 +103,7 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         NAME("name"),
 
@@ -133,6 +134,7 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }

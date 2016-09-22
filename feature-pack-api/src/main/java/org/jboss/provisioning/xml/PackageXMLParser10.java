@@ -89,7 +89,7 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         NAME("name"),
         // default unknown attribute
@@ -119,6 +119,7 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }

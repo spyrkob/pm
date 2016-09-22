@@ -103,7 +103,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         GROUP_ID("group-id"),
         ARTIFACT_ID("artifact-id"),
@@ -143,6 +143,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
