@@ -88,7 +88,11 @@ public class XmlParserValidator<T> {
         } catch (XMLStreamException e) {
             parseException = e;
             String m = String.format("[%s] should contain [%s]", e.getMessage(), parseExceptionMessage);
-            Assert.assertTrue(m, e.getMessage().contains(parseExceptionMessage));
+            if(parseExceptionMessage == null) {
+                Assert.fail(e.getMessage());
+            } else {
+                Assert.assertTrue(m, e.getMessage().contains(parseExceptionMessage));
+            }
         }
 
         /* Make sure XSD and parser both either accept or reject the document */

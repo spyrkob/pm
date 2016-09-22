@@ -50,6 +50,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         DEPENDENCY("dependency"),
         EXCLUDES("excludes"),
         FEATURE_PACK("feature-pack"),
+        INCLUDES("includes"),
         PACKAGES("packages"),
         PACKAGE("package"),
         PROVISIONING_PLUGINS("provisioning-plugins"),
@@ -66,6 +67,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
             addElement(elementsMap, Element.DEPENDENCY);
             addElement(elementsMap, Element.EXCLUDES);
             addElement(elementsMap, Element.FEATURE_PACK);
+            addElement(elementsMap, Element.INCLUDES);
             addElement(elementsMap, Element.PACKAGES);
             addElement(elementsMap, Element.PACKAGE);
             addElement(elementsMap, Element.PROVISIONING_PLUGINS);
@@ -263,7 +265,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new Gav(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(new Gav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -275,6 +277,9 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     switch (element) {
                         case EXCLUDES:
                             readExcludes(reader, depBuilder);
+                            break;
+                        case INCLUDES:
+                            readIncludes(reader, depBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -303,6 +308,36 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                                 depBuilder.excludePackage(parseName(reader));
                             } catch (ProvisioningException e) {
                                 throw new XMLStreamException("Failed to exclude package", e);
+                            }
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readIncludes(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder depBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            try {
+                                depBuilder.includePackage(parseName(reader));
+                            } catch (ProvisioningException e) {
+                                throw new XMLStreamException("Failed to include package", e);
                             }
                             break;
                         default:

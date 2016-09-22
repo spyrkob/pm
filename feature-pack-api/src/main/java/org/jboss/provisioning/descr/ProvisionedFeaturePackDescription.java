@@ -19,16 +19,15 @@ package org.jboss.provisioning.descr;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
  * This class represents user's choice to install a feature-pack
- * with options to exclude undesired content.
+ * with options to exclude undesired packages.
  *
  * @author Alexey Loubyansky
  */
@@ -36,22 +35,21 @@ public class ProvisionedFeaturePackDescription {
 
     public static class Builder {
 
-        private Gav gav;
-        private Set<String> excludedPackages = Collections.emptySet();
-        private Set<String> includedPackages = Collections.emptySet();
-        private Map<Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        protected Gav gav;
+        protected Set<String> excludedPackages = Collections.emptySet();
+        protected Set<String> includedPackages = Collections.emptySet();
 
-        private Builder() {
+        protected Builder() {
         }
 
-        public Builder setGAV(Gav gav) {
+        public Builder setGav(Gav gav) {
             this.gav = gav;
             return this;
         }
 
         public Builder excludePackage(String packageName) throws ProvisioningException {
             if(!includedPackages.isEmpty()) {
-                throw new ProvisioningException("There already are included packages.");
+                throw new ProvisioningException(Errors.packageExcludesIncludes());
             }
             if(!excludedPackages.contains(packageName)) {
                 switch(excludedPackages.size()) {
@@ -76,7 +74,7 @@ public class ProvisionedFeaturePackDescription {
 
         public Builder includePackage(String packageName) throws ProvisioningException {
             if(!excludedPackages.isEmpty()) {
-                throw new ProvisioningException("There already are excluded packages.");
+                throw new ProvisioningException(Errors.packageExcludesIncludes());
             }
             if(!includedPackages.contains(packageName)) {
                 switch(includedPackages.size()) {
@@ -92,22 +90,8 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        public Builder addDependency(ProvisionedFeaturePackDescription dependency) {
-            switch(dependencies.size()) {
-                case 0:
-                    dependencies = Collections.singletonMap(dependency.getGAV(), dependency);
-                    break;
-                case 1:
-                    dependencies = new LinkedHashMap<>(dependencies);
-                default:
-                    dependencies.put(dependency.getGAV(), dependency);
-            }
-            return this;
-        }
-
         public ProvisionedFeaturePackDescription build() {
-            return new ProvisionedFeaturePackDescription(gav, Collections.unmodifiableSet(excludedPackages), Collections.unmodifiableSet(includedPackages),
-                    Collections.unmodifiableMap(dependencies));
+            return new ProvisionedFeaturePackDescription(gav, Collections.unmodifiableSet(excludedPackages), Collections.unmodifiableSet(includedPackages));
         }
     }
 
@@ -118,18 +102,15 @@ public class ProvisionedFeaturePackDescription {
     private final Gav gav;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
-    private final Map<Gav, ProvisionedFeaturePackDescription> dependencies;
 
-    private ProvisionedFeaturePackDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
-            Map<Gav, ProvisionedFeaturePackDescription> dependencies) {
+    protected ProvisionedFeaturePackDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
         this.excludedPackages = excludedPackages;
         this.includedPackages = includedPackages;
-        this.dependencies = dependencies;
     }
 
-    public Gav getGAV() {
+    public Gav getGav() {
         return gav;
     }
 
@@ -139,6 +120,10 @@ public class ProvisionedFeaturePackDescription {
 
     public boolean isIncluded(String packageName) {
         return includedPackages.contains(packageName);
+    }
+
+    public Set<String> getIncludedPackages() {
+        return includedPackages;
     }
 
     public boolean hasExcludedPackages() {
@@ -153,19 +138,10 @@ public class ProvisionedFeaturePackDescription {
         return excludedPackages;
     }
 
-    public boolean hasDependencies() {
-        return !dependencies.isEmpty();
-    }
-
-    public Collection<ProvisionedFeaturePackDescription> getDependencies() {
-        return dependencies.values();
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
@@ -181,11 +157,6 @@ public class ProvisionedFeaturePackDescription {
         if (getClass() != obj.getClass())
             return false;
         ProvisionedFeaturePackDescription other = (ProvisionedFeaturePackDescription) obj;
-        if (dependencies == null) {
-            if (other.dependencies != null)
-                return false;
-        } else if (!dependencies.equals(other.dependencies))
-            return false;
         if (excludedPackages == null) {
             if (other.excludedPackages != null)
                 return false;

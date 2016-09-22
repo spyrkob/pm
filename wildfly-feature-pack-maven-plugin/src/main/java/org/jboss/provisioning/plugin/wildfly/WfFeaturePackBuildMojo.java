@@ -319,11 +319,19 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throws MojoExecutionException {
         if (!build.getDependencies().isEmpty()) {
             for (ProvisionedFeaturePackDescription dep : build.getDependencies()) {
-                final String depStr = dep.getGAV().toString();
+                final String depStr = dep.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final Gav gav = Gav.fromString(gavStr);
-                fpBuilder.addDependency(ProvisionedFeaturePackDescription.builder().setGAV(gav).build());
+                final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(gav);
+                if (dep.hasExcludedPackages()) {
+                    try {
+                        depBuilder.excludeAllPackages(dep.getExcludedPackages()).build();
+                    } catch (ProvisioningException e) {
+                        throw new MojoExecutionException("Failed to process dependencies", e);
+                    }
+                }
+                fpBuilder.addDependency(depBuilder.build());
             }
         }
     }

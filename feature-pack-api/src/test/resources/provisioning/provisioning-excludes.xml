@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     Copyright 2016 Red Hat, Inc. and/or its affiliates
@@ -17,5 +18,16 @@
 
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
-  <feature-pack groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack-new" version="3.0.0.Alpha9-SNAPSHOT" />
+  <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="0.0.1">
+    <excludes>
+      <package name="p1"/>
+    </excludes>
+  </feature-pack>
+  <feature-pack groupId="org.jboss.group1" artifactId="fp2" version="0.0.2">
+    <excludes>
+      <package name="p2"/>
+      <package name="p3"/>
+    </excludes>
+  </feature-pack>
+  <feature-pack groupId="org.jboss.group2" artifactId="fp3" version="0.0.3" />
 </installation>

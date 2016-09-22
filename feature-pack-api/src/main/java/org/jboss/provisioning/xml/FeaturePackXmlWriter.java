@@ -55,7 +55,7 @@ public class FeaturePackXmlWriter {
 
     public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
         final ElementNode fp = newElement(null, Element.FEATURE_PACK);
-        final Gav fpGav = fpDescr.getGAV();
+        final Gav fpGav = fpDescr.getGav();
         addGAV(fp, fpGav);
 
         if (fpDescr.hasDependencies()) {
@@ -103,7 +103,7 @@ public class FeaturePackXmlWriter {
 
     private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
         final ElementNode depsElement = newElement(deps, Element.DEPENDENCY);
-        final Gav gav = dependency.getGAV();
+        final Gav gav = dependency.getGav();
         addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
         if(gav.getVersion() != null) {
@@ -115,6 +115,14 @@ public class FeaturePackXmlWriter {
             Arrays.sort(packageNames);
             for (String packageName : packageNames) {
                 addAttribute(newElement(excludes, Element.PACKAGE), Attribute.NAME, packageName);
+            }
+        }
+        if(dependency.hasIncludedPackages()) {
+            final ElementNode includes = newElement(depsElement, Element.INCLUDES);
+            final String[] packageNames = dependency.getIncludedPackages().toArray(new String[0]);
+            Arrays.sort(packageNames);
+            for (String packageName : packageNames) {
+                addAttribute(newElement(includes, Element.PACKAGE), Attribute.NAME, packageName);
             }
         }
     }

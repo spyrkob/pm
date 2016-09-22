@@ -63,12 +63,12 @@ public class FeaturePackSpecificDescription {
         Builder addDependency(ProvisionedFeaturePackDescription dep) {
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dep.getGAV(), dep);
+                    dependencies = Collections.singletonMap(dep.getGav(), dep);
                     break;
                 case 1:
                     dependencies = new HashMap<Gav, ProvisionedFeaturePackDescription>(dependencies);
                 default:
-                    dependencies.put(dep.getGAV(), dep);
+                    dependencies.put(dep.getGav(), dep);
             }
             return this;
         }

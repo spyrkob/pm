@@ -52,7 +52,7 @@ public class FeaturePackLayoutDescription {
 
     public String logContent() throws IOException {
         final DescrFormatter logger = new DescrFormatter();
-        logger.println("Installation");
+        logger.println("Feature-pack layout");
         logger.increaseOffset();
         for(FeaturePackDescription fp : featurePacks.values()) {
             fp.logContent(logger);
