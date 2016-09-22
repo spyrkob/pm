@@ -68,24 +68,24 @@ public class ProvisioningXmlParserTest {
     }
 
     @Test
-    public void readMissingUniverseName() throws XMLStreamException, IOException {
-        validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-universe-name.xml",
-                "cvc-complex-type.4: Attribute 'name' must appear on element 'universe'.",
-                "Message: Missing required attributes  NAME");
+    public void readMissingGroupId() throws XMLStreamException, IOException {
+        validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-groupId.xml",
+                "cvc-complex-type.4: Attribute 'groupId' must appear on element 'feature-pack'.",
+                "Message: Missing required attributes  groupId");
+    }
+
+    @Test
+    public void readMissingArtifactId() throws XMLStreamException, IOException {
+        validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-artifactId.xml",
+                "cvc-complex-type.4: Attribute 'artifactId' must appear on element 'feature-pack'.",
+                "Message: Missing required attributes  artifactId");
     }
 
     @Test
     public void readNoFp() throws IOException {
         validateAndParse("src/test/resources/provisioning/provisioning-1.0-no-fp.xml",
-                "cvc-complex-type.2.4.b: The content of element 'universe' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":feature-pack}' is expected.",
-                "There must be at least one feature-pack under universe");
-    }
-
-    @Test
-    public void readNoUniverse() throws IOException {
-        validateAndParse("src/test/resources/provisioning/provisioning-1.0-no-universe.xml",
-                "cvc-complex-type.2.4.b: The content of element 'installation' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":universe}' is expected.",
-                "There must be at least one universe under installation");
+                "cvc-complex-type.2.4.b: The content of element 'installation' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":feature-pack}' is expected.",
+                "There must be at least one feature-pack under installation");
     }
 
     @Test

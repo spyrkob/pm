@@ -18,8 +18,6 @@
 
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
-  <universe>
-    <feature-pack name="fp1" version="0.0.1" />
-    <feature-pack name="fp2" version="0.0.2" />
-  </universe>
+  <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="0.0.1" />
+  <feature-pack artifactId="fp2" version="0.0.2" />
 </installation>

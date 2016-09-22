@@ -30,26 +30,8 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
-      <xs:element name="universe" type="universeType" />
-    </xs:choice>
-  </xs:complexType>
-
-  <xs:complexType name="universeType">
-    <xs:annotation>
-      <xs:documentation>
-        TODO: what is universe
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="feature-pack" type="feature-packType" />
     </xs:choice>
-    <xs:attribute name="name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          TODO: what is universe/@name
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="feature-packType">
@@ -58,10 +40,17 @@
         TODO: what is feature-pack
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute name="name" type="xs:string" use="required">
+    <xs:attribute name="groupId" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is feature-pack/@name
+          TODO: what is feature-pack/@groupId
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="artifactId" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          TODO: what is feature-pack/@artifactId
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
