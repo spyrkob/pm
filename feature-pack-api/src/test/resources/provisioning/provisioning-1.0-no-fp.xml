@@ -18,6 +18,4 @@
 
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
-  <universe name="org.jboss.group1">
-  </universe>
 </installation>
