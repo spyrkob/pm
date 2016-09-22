@@ -16,10 +16,7 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.io.IOException;
 import java.nio.file.Paths;
-
-import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -30,13 +27,13 @@ import org.junit.Test;
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class ProvisioningXmlParserTest  {
+public class ProvisioningXmlParserTest {
 
-    private static final XmlParserValidator validator = new XmlParserValidator(Paths.get("src/main/resources/schema/pm-provisioning-1_0.xsd"));
-
+    private static final XmlParserValidator<ProvisionedInstallationDescription> validator = new XmlParserValidator<>(
+            Paths.get("src/main/resources/schema/pm-provisioning-1_0.xsd"), new ProvisioningXmlParser());
 
     @Test
-    public void readBadNamespace() throws IOException {
+    public void readBadNamespace() throws Exception {
         /*
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
@@ -46,33 +43,37 @@ public class ProvisioningXmlParserTest  {
     }
 
     @Test
-    public void readMissingGroupId() throws XMLStreamException, IOException {
+    public void readMissingGroupId() throws Exception {
         validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-groupId.xml",
                 "cvc-complex-type.4: Attribute 'groupId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  groupId");
     }
 
     @Test
-    public void readMissingArtifactId() throws XMLStreamException, IOException {
+    public void readMissingArtifactId() throws Exception {
         validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-artifactId.xml",
                 "cvc-complex-type.4: Attribute 'artifactId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  artifactId");
     }
 
     @Test
-    public void readNoFp() throws IOException {
+    public void readNoFp() throws Exception {
         validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-no-fp.xml",
                 "cvc-complex-type.2.4.b: The content of element 'installation' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":feature-pack}' is expected.",
                 "There must be at least one feature-pack under installation");
     }
 
     @Test
-    public void readValid() throws IOException {
-        ProvisionedInstallationDescription found = validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
+    public void readValid() throws Exception {
+        ProvisionedInstallationDescription found = validator
+                .validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group1", "fp1", "0.0.1")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group1", "fp2", "0.0.2")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
+                        .setGAV(new Gav("org.jboss.group1", "fp1", "0.0.1")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
+                        .setGAV(new Gav("org.jboss.group1", "fp2", "0.0.2")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
+                        .setGAV(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
                 .build();
         Assert.assertEquals(expected, found);
     }

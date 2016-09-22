@@ -30,22 +30,24 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.junit.Assert;
 import org.xml.sax.SAXException;
 
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class XmlParserValidator {
+public class XmlParserValidator<T> {
 
     private final Validator validator;
 
     private final Path schemaPath;
 
-    public XmlParserValidator(Path schemaPath) {
+    private final XmlParser<T> parser;
+
+    public XmlParserValidator(Path schemaPath, XmlParser<T> parser) {
         super();
         this.schemaPath = schemaPath;
+        this.parser = parser;
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         try (Reader r = Files.newBufferedReader(schemaPath, Charset.forName("utf-8"))) {
             Schema schema = schemaFactory.newSchema(new StreamSource(r));
@@ -60,8 +62,8 @@ public class XmlParserValidator {
         validator.validate(new StreamSource(Files.newBufferedReader(p, Charset.forName("utf-8"))));
     }
 
-    public ProvisionedInstallationDescription validateAndParse(String xmlFile, String xsdValidationExceptionMessage,
-            String parseExceptionMessage) throws IOException {
+    public T validateAndParse(String xmlFile, String xsdValidationExceptionMessage,
+            String parseExceptionMessage) throws Exception {
 
         Path p = Paths.get(xmlFile);
 
@@ -71,13 +73,18 @@ public class XmlParserValidator {
         try {
             validate(p);
         } catch (SAXException e) {
+
+            if (xsdValidationExceptionMessage == null) {
+                throw e;
+            }
+
             xsdValidationException = e;
             Assert.assertEquals(xsdValidationExceptionMessage, e.getMessage());
         }
 
-        ProvisionedInstallationDescription result = null;
+        T result = null;
         try {
-            result = new ProvisioningXmlParser().parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
+            result = parser.parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
         } catch (XMLStreamException e) {
             parseException = e;
             String m = String.format("[%s] should contain [%s]", e.getMessage(), parseExceptionMessage);
@@ -86,7 +93,7 @@ public class XmlParserValidator {
 
         /* Make sure XSD and parser both either accept or reject the document */
 
-        String msg = ProvisioningXmlParser.class.getSimpleName() + " "
+        String msg = parser.getClass().getSimpleName() + " "
                 + (parseException == null ? "accepts" : "does not accept") + " the file [" + xmlFile
                 + "] while the schema " + schemaPath.toString() + " "
                 + (xsdValidationException == null ? "does" : "does not");
