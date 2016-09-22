@@ -69,7 +69,7 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
@@ -112,22 +112,22 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
     private FeaturePackLayoutDescription installationDescr;
     private Path workDir;
-    private Set<GAV> provisioningPlugins = Collections.emptySet();
+    private Set<Gav> provisioningPlugins = Collections.emptySet();
 
-    private void addProvisioningPlugin(GAV gav) {
+    private void addProvisioningPlugin(Gav gav) {
         switch(provisioningPlugins.size()) {
             case 0:
                 provisioningPlugins = Collections.singleton(gav);
                 break;
             case 1:
-                provisioningPlugins = new LinkedHashSet<GAV>(provisioningPlugins);
+                provisioningPlugins = new LinkedHashSet<Gav>(provisioningPlugins);
             default:
                 provisioningPlugins.add(gav);
         }
     }
 
-    private void addAllProvisioningPlugins(List<GAV> gavs) {
-        for(GAV gav : gavs) {
+    private void addAllProvisioningPlugins(List<Gav> gavs) {
+        for(Gav gav : gavs) {
             addProvisioningPlugin(gav);
         }
     }
@@ -137,7 +137,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
         final String provXmlArg = repoSession.getSystemProperties().get(Constants.PROVISIONING_XML);
         if(provXmlArg == null) {
-            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PROVISIONING_XML));
+            throw new MojoExecutionException(FpMavenErrors.propertyMissing(Constants.PROVISIONING_XML));
         }
         final Path provXml = Paths.get(provXmlArg);
         if(!Files.exists(provXml)) {
@@ -146,7 +146,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
         final String installDirArg = repoSession.getSystemProperties().get(Constants.PM_INSTALL_DIR);
         if(installDirArg == null) {
-            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PM_INSTALL_DIR));
+            throw new MojoExecutionException(FpMavenErrors.propertyMissing(Constants.PM_INSTALL_DIR));
         }
         final Path installDir = Paths.get(installDirArg);
 
@@ -195,10 +195,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for(ArtifactResult res : resolveArtifacts(provisioningPlugins, "jar")) {
             final Artifact artifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
+                throw new MojoExecutionException(FpMavenErrors.artifactResolution(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
+                throw new MojoExecutionException(FpMavenErrors.artifactMissing(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
             }
             try {
                 urls.add(artifact.getFile().toURI().toURL());
@@ -232,13 +232,13 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                     try {
                         result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
                     } catch (ArtifactResolutionException e) {
-                        throw new ProvisioningException(FPMavenErrors.artifactResolution(coords), e);
+                        throw new ProvisioningException(FpMavenErrors.artifactResolution(coords), e);
                     }
                     if(!result.isResolved()) {
-                        throw new ProvisioningException(FPMavenErrors.artifactResolution(coords));
+                        throw new ProvisioningException(FpMavenErrors.artifactResolution(coords));
                     }
                     if(result.isMissing()) {
-                        throw new ProvisioningException(FPMavenErrors.artifactMissing(coords));
+                        throw new ProvisioningException(FpMavenErrors.artifactMissing(coords));
                     }
                     return Paths.get(result.getArtifact().getFile().toURI());
                 }
@@ -261,14 +261,14 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private void layoutFeaturePacks(Collection<GAV> fpGavs, FeaturePackLayoutDescriptionBuilder descr, Path layoutDir) throws MojoExecutionException {
+    private void layoutFeaturePacks(Collection<Gav> fpGavs, FeaturePackLayoutDescriptionBuilder descr, Path layoutDir) throws MojoExecutionException {
         for (ArtifactResult res : resolveArtifacts(fpGavs, "zip")) {
             final Artifact fpArtifact = res.getArtifact();
             if(!res.isResolved()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactResolution(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
+                throw new MojoExecutionException(FpMavenErrors.artifactResolution(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
             }
             if(res.isMissing()) {
-                throw new MojoExecutionException(FPMavenErrors.artifactMissing(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
+                throw new MojoExecutionException(FpMavenErrors.artifactMissing(new ArtifactCoords(fpArtifact.getGroupId(), fpArtifact.getArtifactId(), fpArtifact.getVersion(), "", "zip")));
             }
             final Path fpWorkDir = layoutDir.resolve(fpArtifact.getGroupId()).resolve(fpArtifact.getArtifactId())
                     .resolve(fpArtifact.getVersion());
@@ -283,7 +283,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             }
         }
 
-        for(GAV fpGav : fpGavs) {
+        for(Gav fpGav : fpGavs) {
             final FeaturePackDescription fpDescr;
             try {
                 fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
@@ -292,11 +292,11 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             }
             if(fpDescr.hasDependencies()) {
                 final Collection<ProvisionedFeaturePackDescription> depsDescr = fpDescr.getDependencies();
-                final List<GAV> deps;
+                final List<Gav> deps;
                 if(depsDescr.size() == 1) {
                     deps = Collections.singletonList(depsDescr.iterator().next().getGAV());
                 } else {
-                    deps = new ArrayList<GAV>(depsDescr.size());
+                    deps = new ArrayList<Gav>(depsDescr.size());
                     for (ProvisionedFeaturePackDescription depDescr : depsDescr) {
                         deps.add(depDescr.getGAV());
                     }
@@ -326,13 +326,13 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private List<ArtifactResult> resolveArtifacts(final Collection<GAV> fpGavs, String extension) throws MojoExecutionException {
+    private List<ArtifactResult> resolveArtifacts(final Collection<Gav> fpGavs, String extension) throws MojoExecutionException {
         final List<ArtifactRequest> requests;
         if (fpGavs.size() == 1) {
             requests = Collections.singletonList(getArtifactRequest(ArtifactCoords.fromGAV(fpGavs.iterator().next(), extension)));
         } else {
             requests = new ArrayList<ArtifactRequest>(fpGavs.size());
-            for (GAV gav : fpGavs) {
+            for (Gav gav : fpGavs) {
                 requests.add(getArtifactRequest(ArtifactCoords.fromGAV(gav, extension)));
             }
         }
@@ -340,10 +340,10 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             return repoSystem.resolveArtifacts(repoSession, requests);
         } catch (ArtifactResolutionException e) {
             final Collection<ArtifactCoords> coords = new ArrayList<>(fpGavs.size());
-            for(GAV gav : fpGavs) {
+            for(Gav gav : fpGavs) {
                 coords.add(ArtifactCoords.fromGAV(gav));
             }
-            throw new MojoExecutionException(FPMavenErrors.artifactResolution(coords), e);
+            throw new MojoExecutionException(FpMavenErrors.artifactResolution(coords), e);
         }
     }
 

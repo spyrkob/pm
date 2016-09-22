@@ -30,7 +30,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 import org.jboss.provisioning.xml.util.TextNode;
 
 /**
@@ -124,7 +124,7 @@ public class GenerateSubsystemsDefinition {
 
         try (Writer writer = new FileWriter(outputFile)) {
             XMLOutputFactory factory = XMLOutputFactory.newInstance();
-            XMLStreamWriter xmlwriter = new FormattingXMLStreamWriter(factory.createXMLStreamWriter(writer));
+            XMLStreamWriter xmlwriter = new FormattingXmlStreamWriter(factory.createXMLStreamWriter(writer));
             config.marshall(xmlwriter);
         }
     }

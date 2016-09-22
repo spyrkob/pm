@@ -25,7 +25,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
-import org.jboss.provisioning.plugin.FPMavenErrors;
+import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
@@ -68,7 +68,7 @@ public class MavenPluginUtil {
                 }
             }
         } catch (IOException e) {
-            throw new MojoExecutionException(FPMavenErrors.featurePackBuild(), e);
+            throw new MojoExecutionException(FpMavenErrors.featurePackBuild(), e);
         }
         return installReq;
     }

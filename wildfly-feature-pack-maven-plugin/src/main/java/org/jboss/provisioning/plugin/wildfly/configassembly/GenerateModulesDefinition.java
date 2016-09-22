@@ -37,7 +37,7 @@ import org.jboss.provisioning.plugin.wildfly.ModuleIdentifier;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ModuleParser.ModuleDependency;
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  * Generate module directory pattern file as used by FileSet.includes
@@ -171,7 +171,7 @@ public class GenerateModulesDefinition {
         Writer writer = new FileWriter(xmloutput.substring(0, xmloutput.lastIndexOf(".")) + ".xml");
         try {
             XMLOutputFactory factory = XMLOutputFactory.newInstance();
-            XMLStreamWriter xmlwriter = new FormattingXMLStreamWriter(factory.createXMLStreamWriter(writer));
+            XMLStreamWriter xmlwriter = new FormattingXmlStreamWriter(factory.createXMLStreamWriter(writer));
             modulesNode.marshall(xmlwriter);
         } finally {
             writer.close();

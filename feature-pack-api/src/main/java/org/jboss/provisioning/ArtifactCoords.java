@@ -28,11 +28,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
 
     private static final Pattern COORDS_PATTERN = Pattern.compile("([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)");
 
-    public static ArtifactCoords fromGAV(GAV gav) {
+    public static ArtifactCoords fromGAV(Gav gav) {
         return fromGAV(gav, "zip");
     }
 
-    public static ArtifactCoords fromGAV(GAV gav, String extension) {
+    public static ArtifactCoords fromGAV(Gav gav, String extension) {
         return new ArtifactCoords(gav.getGroupId(), gav.getArtifactId(), gav.getVersion(), null, extension);
     }
 

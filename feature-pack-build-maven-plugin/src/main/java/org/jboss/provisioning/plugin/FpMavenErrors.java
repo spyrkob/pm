@@ -24,7 +24,7 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public interface FPMavenErrors {
+public interface FpMavenErrors {
 
     static String propertyMissing(String prop) {
         return "Property " + prop + " is missing";

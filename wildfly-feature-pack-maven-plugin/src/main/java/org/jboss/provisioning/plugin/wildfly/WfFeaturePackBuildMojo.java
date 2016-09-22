@@ -57,13 +57,13 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.plugin.FPMavenErrors;
+import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasksWriter20;
@@ -72,8 +72,8 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.WildFlyFeat
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
-import org.jboss.provisioning.xml.FeaturePackXMLWriter;
-import org.jboss.provisioning.xml.PackageXMLWriter;
+import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.PackageXmlWriter;
 
 /**
  * This plugin builds a WildFly feature-pack by organizing the content into packages.
@@ -83,7 +83,7 @@ import org.jboss.provisioning.xml.PackageXMLWriter;
  * @author Alexey Loubyansky
  */
 @Mojo(name = "wf-build", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
-public class WFFeaturePackBuildMojo extends AbstractMojo {
+public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private static final boolean OS_WINDOWS = PropertyUtils.isWindows();
 
@@ -159,14 +159,14 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         }
 
         final Path workDir = Paths.get(buildName, "layout");
-        System.out.println("WFFeaturePackBuildMojo.execute " + workDir);
+        System.out.println("WfFeaturePackBuildMojo.execute " + workDir);
         IoUtils.recursiveDelete(workDir);
         final String fpArtifactId = project.getArtifactId() + "-new";
         final Path fpDir = workDir.resolve(project.getGroupId()).resolve(fpArtifactId).resolve(project.getVersion());
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final Builder fpBuilder = FeaturePackDescription.builder(new GAV(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final Builder fpBuilder = FeaturePackDescription.builder(new Gav(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
         WildFlyFeaturePackBuild build;
@@ -198,11 +198,11 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
-        fpBuilder.addProvisioningPlugin(new GAV("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.addProvisioningPlugin(new Gav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
         final FeaturePackDescription fpDescr = fpBuilder.addTopPackage(modulesPkg).build();
         try {
-            FeaturePackXMLWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
+            FeaturePackXmlWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)));
         }
@@ -239,7 +239,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         try {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException e) {
-            throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
+            throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }
     }
 
@@ -322,7 +322,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
                 final String depStr = dep.getGAV().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
-                final GAV gav = GAV.fromString(gavStr);
+                final Gav gav = Gav.fromString(gavStr);
                 fpBuilder.addDependency(ProvisionedFeaturePackDescription.builder().setGAV(gav).build());
             }
         }
@@ -381,7 +381,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
 
                 final PackageDescription pkgDescr = PackageDescription.builder(packageName).build();
                 try {
-                    PackageXMLWriter.INSTANCE.write(pkgDescr, packageDir.resolve(Constants.PACKAGE_XML));
+                    PackageXmlWriter.INSTANCE.write(pkgDescr, packageDir.resolve(Constants.PACKAGE_XML));
                 } catch (XMLStreamException e) {
                     throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
                 }
@@ -405,7 +405,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
                             try {
                                 artifactFile = resolveArtifact(coords);
                             } catch(ProvisioningException e) {
-                                throw new IOException(FPMavenErrors.artifactResolution(coords), e);
+                                throw new IOException(FpMavenErrors.artifactResolution(coords), e);
                             }
                             extractSchemas(resourcesDir, artifactFile);
                         }
@@ -461,7 +461,7 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
     private static void writeXml(PackageDescription pkgDescr, Path dir) throws MojoExecutionException {
         try {
             Files.createDirectories(dir);
-            PackageXMLWriter.INSTANCE.write(pkgDescr, dir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.INSTANCE.write(pkgDescr, dir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeXml(dir.resolve(Constants.PACKAGE_XML)), e);
         }
@@ -472,13 +472,13 @@ public class WFFeaturePackBuildMojo extends AbstractMojo {
         try {
             result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
         } catch (ArtifactResolutionException e) {
-            throw new ProvisioningException(FPMavenErrors.artifactResolution(coords), e);
+            throw new ProvisioningException(FpMavenErrors.artifactResolution(coords), e);
         }
         if(!result.isResolved()) {
-            throw new ProvisioningException(FPMavenErrors.artifactResolution(coords));
+            throw new ProvisioningException(FpMavenErrors.artifactResolution(coords));
         }
         if(result.isMissing()) {
-            throw new ProvisioningException(FPMavenErrors.artifactMissing(coords));
+            throw new ProvisioningException(FpMavenErrors.artifactMissing(coords));
         }
         return Paths.get(result.getArtifact().getFile().toURI());
     }

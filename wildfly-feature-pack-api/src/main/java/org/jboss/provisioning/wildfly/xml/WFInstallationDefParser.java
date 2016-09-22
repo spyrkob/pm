@@ -23,7 +23,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
+import org.jboss.provisioning.wildfly.descr.WfInstallationDescription;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
@@ -55,10 +55,10 @@ public class WFInstallationDefParser {
         mapper.registerRootElement(ROOT_1_0, new WFInstallationDefParser10());
     }
 
-    public WFInstallationDescription parse(final InputStream input) throws XMLStreamException {
+    public WfInstallationDescription parse(final InputStream input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final WFInstallationDescription.Builder builder = WFInstallationDescription.builder();
+        final WfInstallationDescription.Builder builder = WfInstallationDescription.builder();
         mapper.parseDocument(builder, streamReader);
         return builder.build();
     }

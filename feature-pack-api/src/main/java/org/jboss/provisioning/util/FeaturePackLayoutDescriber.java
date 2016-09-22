@@ -32,8 +32,8 @@ import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.xml.FeaturePackXMLParser;
-import org.jboss.provisioning.xml.PackageXMLParser;
+import org.jboss.provisioning.xml.FeaturePackXmlParser;
+import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
  * Builds an installation description by analyzing the feature-pack layout
@@ -91,7 +91,7 @@ public class FeaturePackLayoutDescriber {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
         }
         final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
-        final FeaturePackXMLParser fpXmlParser = new FeaturePackXMLParser();
+        final FeaturePackXmlParser fpXmlParser = new FeaturePackXmlParser();
         try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
             fpXmlParser.parse(is, fpBuilder);
         } catch (IOException e) {
@@ -123,7 +123,7 @@ public class FeaturePackLayoutDescriber {
         if(!Files.exists(pkgXml)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(pkgXml));
         }
-        final PackageXMLParser pkgParser = new PackageXMLParser();
+        final PackageXmlParser pkgParser = new PackageXmlParser();
         try (Reader in = Files.newBufferedReader(pkgXml, Charset.forName(encoding))) {
             return pkgParser.parse(in);
         } catch (IOException e) {

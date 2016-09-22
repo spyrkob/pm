@@ -24,13 +24,13 @@ import java.util.List;
  *
  * @author Alexey Loubyansky
  */
-public class WFPackageDescription {
+public class WfPackageDescription {
 
     public static class Builder {
 
         private String name;
         private List<String> relativePaths = Collections.emptyList();
-        private List<WFModulesDescription> modules = Collections.emptyList();
+        private List<WfModulesDescription> modules = Collections.emptyList();
         private List<String> packageRefs = Collections.emptyList();
         private boolean optional;
 
@@ -57,13 +57,13 @@ public class WFPackageDescription {
             }
         }
 
-        public void addModule(WFModulesDescription modulesDef) {
+        public void addModule(WfModulesDescription modulesDef) {
             switch(modules.size()) {
                 case 0:
                     modules = Collections.singletonList(modulesDef);
                     break;
                 case 1:
-                    modules = new ArrayList<WFModulesDescription>(modules);
+                    modules = new ArrayList<WfModulesDescription>(modules);
                 default:
                     modules.add(modulesDef);
             }
@@ -81,8 +81,8 @@ public class WFPackageDescription {
             }
         }
 
-        public WFPackageDescription build() {
-            return new WFPackageDescription(name, optional,
+        public WfPackageDescription build() {
+            return new WfPackageDescription(name, optional,
                     Collections.unmodifiableList(relativePaths),
                     Collections.unmodifiableList(modules),
                     Collections.unmodifiableList(packageRefs));
@@ -96,10 +96,10 @@ public class WFPackageDescription {
     private final String name;
     private final boolean optional;
     private final List<String> relativePaths;
-    private final List<WFModulesDescription> modules;
+    private final List<WfModulesDescription> modules;
     private final List<String> packageRefs;
 
-    public WFPackageDescription(String name, boolean optional, List<String> relativePaths, List<WFModulesDescription> modules, List<String> packageRefs) {
+    public WfPackageDescription(String name, boolean optional, List<String> relativePaths, List<WfModulesDescription> modules, List<String> packageRefs) {
         this.name = name;
         this.optional = optional;
         this.relativePaths = relativePaths;
@@ -119,7 +119,7 @@ public class WFPackageDescription {
         return relativePaths;
     }
 
-    public List<WFModulesDescription> getModules() {
+    public List<WfModulesDescription> getModules() {
         return modules;
     }
 

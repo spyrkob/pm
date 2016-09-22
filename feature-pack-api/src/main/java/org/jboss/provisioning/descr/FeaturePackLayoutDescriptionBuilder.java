@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 
 /**
  * This class collects feature packs descriptions and produces an installation
@@ -35,7 +35,7 @@ public class FeaturePackLayoutDescriptionBuilder {
         return new FeaturePackLayoutDescriptionBuilder();
     }
 
-    private Map<GAV, FeaturePackDescription> featurePacks = Collections.emptyMap();
+    private Map<Gav, FeaturePackDescription> featurePacks = Collections.emptyMap();
     private Map<String, Map<String, String>> gavs = Collections.emptyMap();
 
     FeaturePackLayoutDescriptionBuilder() {
@@ -47,14 +47,14 @@ public class FeaturePackLayoutDescriptionBuilder {
 
     public FeaturePackLayoutDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
         assert fp != null : "fp is null";
-        final GAV fpGav = fp.getGAV();
+        final Gav fpGav = fp.getGAV();
         checkGav(fpGav);
         switch(featurePacks.size()) {
             case 0:
                 featurePacks = Collections.singletonMap(fpGav, fp);
                 break;
             case 1:
-                featurePacks = new LinkedHashMap<GAV, FeaturePackDescription>(featurePacks);
+                featurePacks = new LinkedHashMap<Gav, FeaturePackDescription>(featurePacks);
             default:
                 if(addLast && featurePacks.containsKey(fpGav)) {
                     featurePacks.remove(fpGav);
@@ -64,7 +64,7 @@ public class FeaturePackLayoutDescriptionBuilder {
         return this;
     }
 
-    private void checkGav(final GAV fpGav) throws ProvisioningDescriptionException {
+    private void checkGav(final Gav fpGav) throws ProvisioningDescriptionException {
         Map<String, String> group = gavs.get(fpGav.getGroupId());
         if(group == null) {
             final Map<String, String> result = Collections.singletonMap(fpGav.getArtifactId(), fpGav.getVersion());

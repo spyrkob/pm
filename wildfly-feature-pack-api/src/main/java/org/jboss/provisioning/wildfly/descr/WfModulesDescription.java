@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author Alexey Loubyansky
  */
-public class WFModulesDescription {
+public class WfModulesDescription {
 
     public static class Builder {
 
@@ -50,8 +50,8 @@ public class WFModulesDescription {
             }
         }
 
-        public WFModulesDescription build() {
-            return new WFModulesDescription(relativeDir, Collections.unmodifiableList(names));
+        public WfModulesDescription build() {
+            return new WfModulesDescription(relativeDir, Collections.unmodifiableList(names));
         }
     }
 
@@ -62,7 +62,7 @@ public class WFModulesDescription {
     private final String relativeDir;
     private final List<String> names;
 
-    public WFModulesDescription(String relativeDir, List<String> names) {
+    public WfModulesDescription(String relativeDir, List<String> names) {
         this.relativeDir = relativeDir;
         this.names = names;
     }

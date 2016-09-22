@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.junit.Assert;
@@ -70,9 +70,9 @@ public class ProvisioningXmlParserTest  {
     public void readValid() throws IOException {
         ProvisionedInstallationDescription found = validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group1", "fp1", "0.0.1")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group1", "fp2", "0.0.2")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new GAV("org.jboss.group2", "fp3", "0.0.3")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group1", "fp1", "0.0.1")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group1", "fp2", "0.0.2")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.builder().setGAV(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
                 .build();
         Assert.assertEquals(expected, found);
     }

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
@@ -45,11 +45,11 @@ import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Build
  */
 public class FeaturePacksDiff {
 
-    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
+    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
         return new FeaturePacksDiff(fpLayoutDir, encoding, gav1, gav2);
     }
 
-    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
+    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
         return newInstance(fpLayoutDir, encoding, gav1, gav2).compare();
     }
 
@@ -66,7 +66,7 @@ public class FeaturePacksDiff {
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    FeaturePacksDiff(Path fpLayoutDir, String encoding, GAV gav1, GAV gav2) throws ProvisioningDescriptionException {
+    FeaturePacksDiff(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
@@ -262,14 +262,14 @@ public class FeaturePacksDiff {
             if(!fp2Descr.hasDependencies()) {
                 fp1Diff.addAllDependencies(fp1Descr.getDependencies());
             } else {
-                final Set<GAV> fp2Deps = new HashSet<GAV>(fp2Descr.getDependencyGAVs());
-                for(GAV gav : fp1Descr.getDependencyGAVs()) {
+                final Set<Gav> fp2Deps = new HashSet<Gav>(fp2Descr.getDependencyGAVs());
+                for(Gav gav : fp1Descr.getDependencyGAVs()) {
                     if(!fp2Deps.remove(gav)) {
                         fp1Diff.addDependency(fp1Descr.getDependency(gav));
                     }
                 }
                 if(!fp2Deps.isEmpty()) {
-                    for(GAV gav : fp2Deps) {
+                    for(Gav gav : fp2Deps) {
                         fp2Diff.addDependency(fp2Descr.getDependency(gav));
                     }
                 }

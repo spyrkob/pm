@@ -22,7 +22,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 import org.jboss.provisioning.xml.util.Node;
 import org.jboss.provisioning.xml.util.ProcessingInstructionNode;
 
@@ -73,7 +73,7 @@ public class ConfigurationAssembler {
         }
         FileWriter fileWriter = new FileWriter(outputFile);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-        FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(bufferedWriter));
+        FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(bufferedWriter));
         try {
             writer.writeStartDocument();
             templateParser.getRootNode().marshall(writer);

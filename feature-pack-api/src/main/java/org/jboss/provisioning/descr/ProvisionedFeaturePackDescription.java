@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -36,15 +36,15 @@ public class ProvisionedFeaturePackDescription {
 
     public static class Builder {
 
-        private GAV gav;
+        private Gav gav;
         private Set<String> excludedPackages = Collections.emptySet();
         private Set<String> includedPackages = Collections.emptySet();
-        private Map<GAV, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private Map<Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
 
         private Builder() {
         }
 
-        public Builder setGAV(GAV gav) {
+        public Builder setGAV(Gav gav) {
             this.gav = gav;
             return this;
         }
@@ -115,13 +115,13 @@ public class ProvisionedFeaturePackDescription {
         return new Builder();
     }
 
-    private final GAV gav;
+    private final Gav gav;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
-    private final Map<GAV, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<Gav, ProvisionedFeaturePackDescription> dependencies;
 
-    private ProvisionedFeaturePackDescription(GAV gav, Set<String> excludedPackages, Set<String> includedPackages,
-            Map<GAV, ProvisionedFeaturePackDescription> dependencies) {
+    private ProvisionedFeaturePackDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
+            Map<Gav, ProvisionedFeaturePackDescription> dependencies) {
         assert gav != null : "gav is null";
         this.gav = gav;
         this.excludedPackages = excludedPackages;
@@ -129,7 +129,7 @@ public class ProvisionedFeaturePackDescription {
         this.dependencies = dependencies;
     }
 
-    public GAV getGAV() {
+    public Gav getGAV() {
         return gav;
     }
 

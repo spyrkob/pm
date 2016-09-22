@@ -27,16 +27,16 @@ import java.util.Map;
  */
 public class FeaturePack {
 
-    private final GAV gav;
+    private final Gav gav;
     private Map<String, Package> packages = Collections.emptyMap();
-    private List<GAV> dependencies = Collections.emptyList();
+    private List<Gav> dependencies = Collections.emptyList();
 
-    FeaturePack(GAV gav) {
+    FeaturePack(Gav gav) {
         assert gav != null : "gav is null";
         this.gav = gav;
     }
 
-    public GAV getGAV() {
+    public Gav getGAV() {
         return gav;
     }
 
@@ -44,7 +44,7 @@ public class FeaturePack {
         return packages.values();
     }
 
-    public List<GAV> getDependencies() {
+    public List<Gav> getDependencies() {
         return dependencies;
     }
 }

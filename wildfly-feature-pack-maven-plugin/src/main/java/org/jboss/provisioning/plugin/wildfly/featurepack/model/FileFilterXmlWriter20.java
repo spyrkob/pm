@@ -28,11 +28,11 @@ import org.jboss.provisioning.xml.util.ElementNode;
  * @author Eduardo Martins
  * @author Alexey Loubyansky
  */
-public class FileFilterXMLWriter20 {
+public class FileFilterXmlWriter20 {
 
-    public static final FileFilterXMLWriter20 INSTANCE = new FileFilterXMLWriter20();
+    public static final FileFilterXmlWriter20 INSTANCE = new FileFilterXmlWriter20();
 
-    private FileFilterXMLWriter20() {
+    private FileFilterXmlWriter20() {
     }
 
     public void write(FileFilter fileFilter, ElementNode parentElementNode) {

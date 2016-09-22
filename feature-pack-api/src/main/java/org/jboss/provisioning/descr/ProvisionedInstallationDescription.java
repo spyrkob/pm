@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 
 /**
  * This class describes the state of provisioned installation.
@@ -32,7 +32,7 @@ public class ProvisionedInstallationDescription {
 
     public static class Builder {
 
-        private Map<GAV, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<Gav, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
@@ -59,9 +59,9 @@ public class ProvisionedInstallationDescription {
         return new Builder();
     }
 
-    private Map<GAV, ProvisionedFeaturePackDescription> featurePacks;
+    private Map<Gav, ProvisionedFeaturePackDescription> featurePacks;
 
-    private ProvisionedInstallationDescription(Map<GAV, ProvisionedFeaturePackDescription> featurePacks) {
+    private ProvisionedInstallationDescription(Map<Gav, ProvisionedFeaturePackDescription> featurePacks) {
         this.featurePacks = featurePacks;
     }
 
@@ -69,7 +69,7 @@ public class ProvisionedInstallationDescription {
         return !featurePacks.isEmpty();
     }
 
-    public Set<GAV> getFeaturePackGAVs() {
+    public Set<Gav> getFeaturePackGAVs() {
         return featurePacks.keySet();
     }
 

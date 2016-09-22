@@ -21,9 +21,9 @@ package org.jboss.provisioning;
  *
  * @author Alexey Loubyansky
  */
-public class GAV implements Comparable<GAV> {
+public class Gav implements Comparable<Gav> {
 
-    public static GAV fromString(String str) {
+    public static Gav fromString(String str) {
 
         int i = str.indexOf(':');
         if(i <= 0) {
@@ -40,18 +40,18 @@ public class GAV implements Comparable<GAV> {
             artifactId = str.substring(groupId.length() + 1, i);
             version = str.substring(i + 1);
         }
-        return new GAV(groupId, artifactId, version);
+        return new Gav(groupId, artifactId, version);
     }
 
     private final String groupId;
     private final String artifactId;
     private final String version;
 
-    public GAV(String groupId, String artifactId) {
+    public Gav(String groupId, String artifactId) {
         this(groupId, artifactId, null);
     }
 
-    public GAV(String groupId, String artifactId, String version) {
+    public Gav(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
@@ -103,7 +103,7 @@ public class GAV implements Comparable<GAV> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        GAV other = (GAV) obj;
+        Gav other = (Gav) obj;
         if (artifactId == null) {
             if (other.artifactId != null)
                 return false;
@@ -123,7 +123,7 @@ public class GAV implements Comparable<GAV> {
     }
 
     @Override
-    public int compareTo(GAV o) {
+    public int compareTo(Gav o) {
         if(o == null) {
             return 1;
         }

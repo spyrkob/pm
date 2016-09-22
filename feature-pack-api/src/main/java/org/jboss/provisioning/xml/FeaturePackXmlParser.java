@@ -31,9 +31,9 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXMLParser {
+public class FeaturePackXmlParser {
 
-    private static final QName ROOT_1_0 = new QName(FeaturePackXMLParser10.NAMESPACE_1_0, FeaturePackXMLParser10.Element.FEATURE_PACK.getLocalName());
+    private static final QName ROOT_1_0 = new QName(FeaturePackXmlParser10.NAMESPACE_1_0, FeaturePackXmlParser10.Element.FEATURE_PACK.getLocalName());
 
     private static final XMLInputFactory inputFactory;
     static {
@@ -51,9 +51,9 @@ public class FeaturePackXMLParser {
 
     private final XMLMapper mapper;
 
-    public FeaturePackXMLParser() {
+    public FeaturePackXmlParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new FeaturePackXMLParser10());
+        mapper.registerRootElement(ROOT_1_0, new FeaturePackXmlParser10());
     }
 
     public void parse(final Reader input, final FeaturePackDescription.Builder fpBuilder) throws XMLStreamException {

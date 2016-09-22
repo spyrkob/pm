@@ -31,11 +31,11 @@ import static org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigMode
  * @author Eduardo Martins
  * @author Alexey Loubyansky
  */
-public class ConfigXMLWriter20 {
+public class ConfigXmlWriter20 {
 
-    public static final ConfigXMLWriter20 INSTANCE = new ConfigXMLWriter20();
+    public static final ConfigXmlWriter20 INSTANCE = new ConfigXmlWriter20();
 
-    private ConfigXMLWriter20() {
+    private ConfigXmlWriter20() {
     }
 
     public void write(ConfigDescription config, ElementNode parentElementNode) {

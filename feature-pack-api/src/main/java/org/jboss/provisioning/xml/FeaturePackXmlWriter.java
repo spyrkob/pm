@@ -26,25 +26,25 @@ import java.util.Arrays;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.xml.FeaturePackXMLParser10.Attribute;
-import org.jboss.provisioning.xml.FeaturePackXMLParser10.Element;
+import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
+import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXMLWriter {
+public class FeaturePackXmlWriter {
 
-    public static final FeaturePackXMLWriter INSTANCE = new FeaturePackXMLWriter();
+    public static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
 
-    private FeaturePackXMLWriter() {
+    private FeaturePackXmlWriter() {
     }
 
     public void write(FeaturePackDescription fpDescr, Path outputFile) throws XMLStreamException, IOException {
@@ -55,14 +55,14 @@ public class FeaturePackXMLWriter {
 
     public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
         final ElementNode fp = newElement(null, Element.FEATURE_PACK);
-        final GAV fpGav = fpDescr.getGAV();
+        final Gav fpGav = fpDescr.getGAV();
         addGAV(fp, fpGav);
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
-            final GAV[] gavs = fpDescr.getDependencyGAVs().toArray(new GAV[0]);
+            final Gav[] gavs = fpDescr.getDependencyGAVs().toArray(new Gav[0]);
             Arrays.sort(gavs);
-            for (GAV gav : gavs) {
+            for (Gav gav : gavs) {
                 write(deps, fpDescr.getDependency(gav));
             }
         }
@@ -78,12 +78,12 @@ public class FeaturePackXMLWriter {
 
         if(fpDescr.hasProvisioningPlugins()) {
             final ElementNode plugins = newElement(fp, Element.PROVISIONING_PLUGINS);
-            for(GAV gav : fpDescr.getProvisioningPlugins()) {
+            for(Gav gav : fpDescr.getProvisioningPlugins()) {
                 addGAV(newElement(plugins, Element.ARTIFACT), gav);
             }
         }
 
-        try (FormattingXMLStreamWriter xmlWriter = new FormattingXMLStreamWriter(XMLOutputFactory.newInstance()
+        try (FormattingXmlStreamWriter xmlWriter = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
                 .createXMLStreamWriter(writer))) {
             xmlWriter.writeStartDocument();
             fp.marshall(xmlWriter);
@@ -91,7 +91,7 @@ public class FeaturePackXMLWriter {
         }
     }
 
-    private void addGAV(final ElementNode fp, final GAV fpGav) {
+    private void addGAV(final ElementNode fp, final Gav fpGav) {
         addAttribute(fp, Attribute.GROUP_ID, fpGav.getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, fpGav.getArtifactId());
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
@@ -103,7 +103,7 @@ public class FeaturePackXMLWriter {
 
     private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
         final ElementNode depsElement = newElement(deps, Element.DEPENDENCY);
-        final GAV gav = dependency.getGAV();
+        final Gav gav = dependency.getGAV();
         addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
         if(gav.getVersion() != null) {
@@ -120,7 +120,7 @@ public class FeaturePackXMLWriter {
     }
 
     private static ElementNode newElement(ElementNode parent, Element e) {
-        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), FeaturePackXMLParser10.NAMESPACE_1_0);
+        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), FeaturePackXmlParser10.NAMESPACE_1_0);
         if(parent != null) {
             parent.addChild(eNode);
         }

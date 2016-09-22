@@ -27,10 +27,10 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.provisioning.wildfly.descr.WFFeaturePackDescription;
-import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
-import org.jboss.provisioning.wildfly.descr.WFModulesDescription;
-import org.jboss.provisioning.wildfly.descr.WFPackageDescription;
+import org.jboss.provisioning.wildfly.descr.WfFeaturePackDescription;
+import org.jboss.provisioning.wildfly.descr.WfInstallationDescription;
+import org.jboss.provisioning.wildfly.descr.WfModulesDescription;
+import org.jboss.provisioning.wildfly.descr.WfPackageDescription;
 import org.jboss.provisioning.xml.LocalNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -39,7 +39,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescription.Builder> {
+class WFInstallationDefParser10 implements XMLElementReader<WfInstallationDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-install-def:1.0";
 
@@ -147,7 +147,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, WFInstallationDescription.Builder wfBuilder) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, WfInstallationDescription.Builder wfBuilder) throws XMLStreamException {
         if(reader.getAttributeCount() != 0) {
             throw ParsingUtils.unexpectedContent(reader);
         }
@@ -200,7 +200,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         return path;
     }
 
-    private void parseFeaturePacks(XMLExtendedStreamReader reader, WFInstallationDescription.Builder wfBuilder) throws XMLStreamException {
+    private void parseFeaturePacks(XMLExtendedStreamReader reader, WfInstallationDescription.Builder wfBuilder) throws XMLStreamException {
         if(reader.getAttributeCount() != 0) {
             throw ParsingUtils.unexpectedContent(reader);
         }
@@ -228,7 +228,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         }
     }
 
-    private void parseFeaturePack(XMLExtendedStreamReader reader, WFInstallationDescription.Builder wfBuilder) throws XMLStreamException {
+    private void parseFeaturePack(XMLExtendedStreamReader reader, WfInstallationDescription.Builder wfBuilder) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -255,7 +255,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
 
-        final WFFeaturePackDescription.Builder fpBuilder = WFFeaturePackDescription.builder();
+        final WfFeaturePackDescription.Builder fpBuilder = WfFeaturePackDescription.builder();
         fpBuilder.setGroupId(groupId);
         fpBuilder.setArtifactId(artifactId);
         fpBuilder.setVersion(version);
@@ -284,7 +284,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         }
     }
 
-    private void parsePackage(XMLExtendedStreamReader reader, WFFeaturePackDescription.Builder fpBuilder) throws XMLStreamException {
+    private void parsePackage(XMLExtendedStreamReader reader, WfFeaturePackDescription.Builder fpBuilder) throws XMLStreamException {
         String name = null;
         boolean optional = false;
         final int count = reader.getAttributeCount();
@@ -306,7 +306,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final WFPackageDescription.Builder pkgBuilder = WFPackageDescription.builder();
+        final WfPackageDescription.Builder pkgBuilder = WfPackageDescription.builder();
         pkgBuilder.setName(name);
         pkgBuilder.setOptional(optional);
 
@@ -320,7 +320,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WFInstallationDescri
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case MODULES:
-                            final WFModulesDescription.Builder modulesBuilder = WFModulesDescription.builder();
+                            final WfModulesDescription.Builder modulesBuilder = WfModulesDescription.builder();
                             modulesBuilder.setRelativeDir(parseRelativePath(reader));
                             pkgBuilder.addModule(modulesBuilder.build());
                             break;

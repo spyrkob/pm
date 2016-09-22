@@ -35,7 +35,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXMLParser10 implements XMLElementReader<PackageDescription.Builder> {
+public class PackageXmlParser10 implements XMLElementReader<PackageDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
 
