@@ -24,12 +24,12 @@ import java.util.List;
  *
  * @author Alexey Loubyansky
  */
-public class WFInstallationDescription {
+public class WfInstallationDescription {
 
     public static class Builder {
 
         private String modulesPath;
-        private List<WFFeaturePackDescription> featurePacks = Collections.emptyList();
+        private List<WfFeaturePackDescription> featurePacks = Collections.emptyList();
 
         Builder() {
         }
@@ -41,20 +41,20 @@ public class WFInstallationDescription {
             this.modulesPath = modulesPath;
         }
 
-        public void addFeaturePack(WFFeaturePackDescription fpBuilder) {
+        public void addFeaturePack(WfFeaturePackDescription fpBuilder) {
             switch(featurePacks.size()) {
                 case 0:
                     featurePacks = Collections.singletonList(fpBuilder);
                     break;
                 case 1:
-                    featurePacks = new ArrayList<WFFeaturePackDescription>(featurePacks);
+                    featurePacks = new ArrayList<WfFeaturePackDescription>(featurePacks);
                 default:
                     featurePacks.add(fpBuilder);
             }
         }
 
-        public WFInstallationDescription build() {
-            return new WFInstallationDescription(modulesPath, Collections.unmodifiableList(featurePacks));
+        public WfInstallationDescription build() {
+            return new WfInstallationDescription(modulesPath, Collections.unmodifiableList(featurePacks));
         }
     }
 
@@ -63,9 +63,9 @@ public class WFInstallationDescription {
     }
 
     private final String modulesPath;
-    private final List<WFFeaturePackDescription> featurePacks;
+    private final List<WfFeaturePackDescription> featurePacks;
 
-    private WFInstallationDescription(String modulesPath, List<WFFeaturePackDescription> featurePacks) {
+    private WfInstallationDescription(String modulesPath, List<WfFeaturePackDescription> featurePacks) {
         this.modulesPath = modulesPath;
         this.featurePacks = featurePacks;
     }
@@ -74,7 +74,7 @@ public class WFInstallationDescription {
         return modulesPath;
     }
 
-    public List<WFFeaturePackDescription> getFeaturePacks() {
+    public List<WfFeaturePackDescription> getFeaturePacks() {
         return featurePacks;
     }
 }

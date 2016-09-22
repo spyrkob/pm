@@ -38,10 +38,10 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.plugin.FPMavenErrors;
+import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ConfigurationAssembler;
 import org.jboss.provisioning.plugin.wildfly.configassembly.InputStreamSource;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemConfig;
@@ -53,13 +53,13 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeatur
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.plugin.ProvisioningContext;
 import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.xml.PackageXMLParser;
+import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class WFProvisioningPlugin implements ProvisioningPlugin {
+public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private final ZipFileSubsystemInputStreamSources subsystemsInput = new ZipFileSubsystemInputStreamSources();
 
@@ -160,7 +160,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                             for(Path version : versionStream) {
                                 if(++count > 1) {
                                     throw new ProvisioningException("There is more than one version of feature-pack " +
-                                        new GAV(groupId.getFileName().toString(), artifactId.getFileName().toString()));
+                                        new Gav(groupId.getFileName().toString(), artifactId.getFileName().toString()));
                                 }
                                 collectFeaturePackSubsystemsInput(ctx, version);
                             }
@@ -186,7 +186,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
 
         final PackageDescription modulesDescr;
         try (Reader reader = Files.newBufferedReader(modulesPackageXml)) {
-            modulesDescr = new PackageXMLParser().parse(reader);
+            modulesDescr = new PackageXmlParser().parse(reader);
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningException(Errors.parseXml(modulesPackageXml), e);
         }
@@ -213,7 +213,7 @@ public class WFProvisioningPlugin implements ProvisioningPlugin {
                             try {
                                 artifactFile = ctx.resolveArtifact(coords);
                             } catch(ProvisioningException e) {
-                                throw new IOException(FPMavenErrors.artifactResolution(coords), e);
+                                throw new IOException(FpMavenErrors.artifactResolution(coords), e);
                             }
 
                             final FileSystem jarFS = FileSystems.newFileSystem(artifactFile, null);

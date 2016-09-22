@@ -32,9 +32,9 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXMLParser {
+public class PackageXmlParser implements XmlParser<PackageDescription> {
 
-    private static final QName ROOT_1_0 = new QName(PackageXMLParser10.NAMESPACE_1_0, PackageXMLParser10.Element.PACKAGE.getLocalName());
+    private static final QName ROOT_1_0 = new QName(PackageXmlParser10.NAMESPACE_1_0, PackageXmlParser10.Element.PACKAGE.getLocalName());
 
     private static final XMLInputFactory inputFactory;
     static {
@@ -52,11 +52,12 @@ public class PackageXMLParser {
 
     private final XMLMapper mapper;
 
-    public PackageXMLParser() {
+    public PackageXmlParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new PackageXMLParser10());
+        mapper.registerRootElement(ROOT_1_0, new PackageXmlParser10());
     }
 
+    @Override
     public PackageDescription parse(final Reader input) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final Builder pkgBuilder = PackageDescription.builder();

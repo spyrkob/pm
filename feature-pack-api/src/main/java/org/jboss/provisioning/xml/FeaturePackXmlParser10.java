@@ -26,7 +26,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -39,7 +39,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescription.Builder> {
+public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
 
@@ -103,7 +103,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         GROUP_ID("group-id"),
         ARTIFACT_ID("artifact-id"),
@@ -143,6 +143,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
@@ -181,7 +182,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private GAV readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private Gav readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -207,7 +208,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        return new GAV(groupId, artifactId, version);
+        return new Gav(groupId, artifactId, version);
     }
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
@@ -262,7 +263,7 @@ public class FeaturePackXMLParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new GAV(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new Gav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {

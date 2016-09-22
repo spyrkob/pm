@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
@@ -38,10 +38,10 @@ class FeaturePackPackageView {
 
     static class ResolvedPackage {
         private final String name;
-        private final GAV fpGav;
+        private final Gav fpGav;
         private final PackageDescription descr;
 
-        ResolvedPackage(String name, GAV fpGav, PackageDescription descr) {
+        ResolvedPackage(String name, Gav fpGav, PackageDescription descr) {
             super();
             this.name = name;
             this.fpGav = fpGav;
@@ -52,7 +52,7 @@ class FeaturePackPackageView {
             return name;
         }
 
-        GAV getGAV() {
+        Gav getGAV() {
             return fpGav;
         }
 
@@ -61,7 +61,7 @@ class FeaturePackPackageView {
         }
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, GAV fpGav) throws ProvisioningDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, Gav fpGav) throws ProvisioningDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpGav);
         return resolve(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding));
     }

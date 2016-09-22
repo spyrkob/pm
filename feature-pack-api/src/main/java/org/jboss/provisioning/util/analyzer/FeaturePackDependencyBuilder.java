@@ -24,7 +24,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
@@ -34,8 +34,8 @@ import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
-import org.jboss.provisioning.xml.FeaturePackXMLWriter;
-import org.jboss.provisioning.xml.PackageXMLWriter;
+import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.PackageXmlWriter;
 
 /**
  *
@@ -43,22 +43,22 @@ import org.jboss.provisioning.xml.PackageXMLWriter;
  */
 public class FeaturePackDependencyBuilder {
 
-    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav) throws ProvisioningDescriptionException {
+    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav) throws ProvisioningDescriptionException {
         new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, true).extractParentAsDependency();
     }
 
-    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav) throws ProvisioningDescriptionException {
+    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav) throws ProvisioningDescriptionException {
         return new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, false).describeParentAsDependency();
     }
 
     private final Path fpLayoutDir;
     private final String encoding;
-    private final GAV childGav;
-    private final GAV parentGav;
+    private final Gav childGav;
+    private final Gav parentGav;
     private final boolean updateXml;
 
 
-    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, GAV childGav, GAV parentGav, boolean updateXml) {
+    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav, boolean updateXml) {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         this.childGav = childGav;
@@ -76,7 +76,7 @@ public class FeaturePackDependencyBuilder {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(featurePackXml));
         }
         try {
-            FeaturePackXMLWriter.INSTANCE.write(newDescr, featurePackXml);
+            FeaturePackXmlWriter.INSTANCE.write(newDescr, featurePackXml);
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(featurePackXml), e);
         }
@@ -159,7 +159,7 @@ public class FeaturePackDependencyBuilder {
                 }
                 try {
                     IoUtils.recursiveDelete(packageXml);
-                    PackageXMLWriter.INSTANCE.write(pkgDescr, packageXml);
+                    PackageXmlWriter.INSTANCE.write(pkgDescr, packageXml);
                 } catch (XMLStreamException | IOException e) {
                     throw new ProvisioningDescriptionException(Errors.writeXml(packageXml));
                 }

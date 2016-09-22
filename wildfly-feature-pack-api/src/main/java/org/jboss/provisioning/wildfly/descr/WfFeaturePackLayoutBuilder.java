@@ -32,7 +32,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
@@ -40,14 +40,14 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.xml.FeaturePackXMLWriter;
-import org.jboss.provisioning.xml.PackageXMLWriter;
+import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.PackageXmlWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class WFFeaturePackLayoutBuilder {
+public class WfFeaturePackLayoutBuilder {
 
     private static final List<String> PRODUCT_MODULE = Arrays.asList("org", "jboss", "as", "product");
     //private static final String RELEASE_NAME = "JBoss-Product-Release-Name";
@@ -69,14 +69,14 @@ public class WFFeaturePackLayoutBuilder {
 
     private PackageDescription.Builder pkgBuilder;
 
-    public FeaturePackLayoutDescription build(WFInstallationDescription wfDescr, Path homeDir, Path workDir) throws ProvisioningDescriptionException {
+    public FeaturePackLayoutDescription build(WfInstallationDescription wfDescr, Path homeDir, Path workDir) throws ProvisioningDescriptionException {
         this.workDir = workDir;
         mkdirs(workDir);
         this.homeDir = homeDir;
         modulesPath = wfDescr.getModulesPath();
         modulesDir = homeDir.resolve(modulesPath);
         installBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
-        for(WFFeaturePackDescription fpDescr : wfDescr.getFeaturePacks()) {
+        for(WfFeaturePackDescription fpDescr : wfDescr.getFeaturePacks()) {
             build(fpDescr);
         }
         return installBuilder.build();
@@ -90,7 +90,7 @@ public class WFFeaturePackLayoutBuilder {
         }
     }
 
-    void build(WFFeaturePackDescription wfFPDescr) throws ProvisioningDescriptionException {
+    void build(WfFeaturePackDescription wfFPDescr) throws ProvisioningDescriptionException {
         fpBuilder = FeaturePackDescription.builder();
         fpGroupId = wfFPDescr.getGroupId();
         fpArtifactId = wfFPDescr.getArtifactId();
@@ -107,7 +107,7 @@ public class WFFeaturePackLayoutBuilder {
             move = true;
         }
 
-        for(WFPackageDescription wfPkg : wfFPDescr.getPackages()) {
+        for(WfPackageDescription wfPkg : wfFPDescr.getPackages()) {
             build(wfPkg);
         }
 
@@ -132,12 +132,12 @@ public class WFFeaturePackLayoutBuilder {
             }
             fpDir = fpTarget;
         }
-        fpBuilder.setGAV(new GAV(fpGroupId, fpArtifactId, fpVersion));
-        fpBuilder.addProvisioningPlugin(new GAV("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.setGAV(new Gav(fpGroupId, fpArtifactId, fpVersion));
+        fpBuilder.addProvisioningPlugin(new Gav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {
-            FeaturePackXMLWriter.INSTANCE.write(fpBuilder.build(), fpDir.resolve(Constants.FEATURE_PACK_XML));
+            FeaturePackXmlWriter.INSTANCE.write(fpBuilder.build(), fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML).toAbsolutePath()), e);
         }
@@ -149,10 +149,10 @@ public class WFFeaturePackLayoutBuilder {
         fpDir = null;
     }
 
-    void build(WFPackageDescription wfPkg) throws ProvisioningDescriptionException {
+    void build(WfPackageDescription wfPkg) throws ProvisioningDescriptionException {
 
         pkgBuilder = PackageDescription.builder(wfPkg.getName());
-        for (WFModulesDescription wfModules : wfPkg.getModules()) {
+        for (WfModulesDescription wfModules : wfPkg.getModules()) {
             build(wfModules);
         }
 
@@ -207,20 +207,20 @@ public class WFFeaturePackLayoutBuilder {
             mkdirs(pkgDir);
         }
         try {
-            PackageXMLWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath()), e);
         }
     }
 
-    void build(WFModulesDescription wfModules) throws ProvisioningDescriptionException {
+    void build(WfModulesDescription wfModules) throws ProvisioningDescriptionException {
 
         String relativePath = wfModules.getRelativeDir();
         if(relativePath != null) {
             modulesDir = homeDir.resolve(relativePath);
         } else {
             relativePath = modulesPath;
-            modulesDir = WFFeaturePackLayoutBuilder.this.modulesDir;
+            modulesDir = WfFeaturePackLayoutBuilder.this.modulesDir;
         }
         if(wfModules.getNames().isEmpty()) {
             if(!Files.exists(modulesDir)) {

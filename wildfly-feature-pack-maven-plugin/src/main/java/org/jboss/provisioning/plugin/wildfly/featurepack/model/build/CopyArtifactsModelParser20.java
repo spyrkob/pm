@@ -26,6 +26,7 @@ import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.LocalNameProvider;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -81,7 +82,7 @@ public class CopyArtifactsModelParser20 {
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         // default unknown attribute
         UNKNOWN(null),
@@ -116,6 +117,7 @@ public class CopyArtifactsModelParser20 {
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }

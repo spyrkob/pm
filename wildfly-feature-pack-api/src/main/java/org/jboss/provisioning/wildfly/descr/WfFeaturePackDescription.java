@@ -24,13 +24,13 @@ import java.util.List;
  *
  * @author Alexey Loubyansky
  */
-public class WFFeaturePackDescription {
+public class WfFeaturePackDescription {
 
     public static class Builder {
         private String groupId;
         private String artifactId;
         private String version;
-        private List<WFPackageDescription> packages = Collections.emptyList();
+        private List<WfPackageDescription> packages = Collections.emptyList();
 
         Builder() {
         }
@@ -47,20 +47,20 @@ public class WFFeaturePackDescription {
             this.version = version;
         }
 
-        public void addPackage(WFPackageDescription pkgBuilder) {
+        public void addPackage(WfPackageDescription pkgBuilder) {
             switch(packages.size()) {
                 case 0:
                     packages = Collections.singletonList(pkgBuilder);
                     break;
                 case 1:
-                    packages = new ArrayList<WFPackageDescription>(packages);
+                    packages = new ArrayList<WfPackageDescription>(packages);
                 default:
                     packages.add(pkgBuilder);
             }
         }
 
-        public WFFeaturePackDescription build() {
-            return new WFFeaturePackDescription(groupId, artifactId, version, Collections.unmodifiableList(packages));
+        public WfFeaturePackDescription build() {
+            return new WfFeaturePackDescription(groupId, artifactId, version, Collections.unmodifiableList(packages));
         }
     }
 
@@ -71,9 +71,9 @@ public class WFFeaturePackDescription {
     private final String groupId;
     private final String artifactId;
     private final String version;
-    private final List<WFPackageDescription> packages;
+    private final List<WfPackageDescription> packages;
 
-    private WFFeaturePackDescription(String groupId, String artifactId, String version, List<WFPackageDescription> packages) {
+    private WfFeaturePackDescription(String groupId, String artifactId, String version, List<WfPackageDescription> packages) {
         assert groupId != null : "groupId is null";
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -93,7 +93,7 @@ public class WFFeaturePackDescription {
         return version;
     }
 
-    public List<WFPackageDescription> getPackages() {
+    public List<WfPackageDescription> getPackages() {
         return packages;
     }
 }

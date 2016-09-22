@@ -53,7 +53,7 @@ public class FilePermissionsXMLWriter20 {
         final ElementNode filePermissionElementNode = new ElementNode(filePermissionsElementNode, Element.PERMISSION.getLocalName());
         if (!filePermission.getFilters().isEmpty()) {
             for (FileFilter fileFilter : filePermission.getFilters()) {
-                FileFilterXMLWriter20.INSTANCE.write(fileFilter, filePermissionElementNode);
+                FileFilterXmlWriter20.INSTANCE.write(fileFilter, filePermissionElementNode);
             }
         }
         filePermissionElementNode.addAttribute(Attribute.VALUE.getLocalName(), new AttributeValue(filePermission.getValue()));

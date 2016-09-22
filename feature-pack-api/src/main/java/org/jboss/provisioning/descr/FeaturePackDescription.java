@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -38,21 +38,21 @@ public class FeaturePackDescription {
 
     public static class Builder {
 
-        private GAV gav;
-        private Map<GAV, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private Gav gav;
+        private Map<Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
         private Set<String> topPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
-        private List<GAV> provisioningPlugins = Collections.emptyList();
+        private List<Gav> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
         }
 
-        protected Builder(GAV gav) {
+        protected Builder(Gav gav) {
             this.gav = gav;
         }
 
-        public Builder setGAV(GAV gav) {
+        public Builder setGAV(Gav gav) {
             this.gav = gav;
             return this;
         }
@@ -91,13 +91,13 @@ public class FeaturePackDescription {
         }
 
         public Builder addDependency(ProvisionedFeaturePackDescription dependency) {
-            assert gav != null : "GAV is null";
+            assert gav != null : "Gav is null";
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonMap(dependency.getGAV(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashMap<GAV, ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new HashMap<Gav, ProvisionedFeaturePackDescription>(dependencies);
                 default:
                     dependencies.put(dependency.getGAV(), dependency);
             }
@@ -111,14 +111,14 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public void addProvisioningPlugin(GAV gav) {
+        public void addProvisioningPlugin(Gav gav) {
             assert gav != null : "gav is null";
             switch(provisioningPlugins.size()) {
                 case 0:
                     provisioningPlugins = Collections.singletonList(gav);
                     break;
                 case 1:
-                    provisioningPlugins = new ArrayList<GAV>(provisioningPlugins);
+                    provisioningPlugins = new ArrayList<Gav>(provisioningPlugins);
                 default:
                     provisioningPlugins.add(gav);
             }
@@ -134,20 +134,20 @@ public class FeaturePackDescription {
         return builder(null);
     }
 
-    public static Builder builder(GAV gav) {
+    public static Builder builder(Gav gav) {
         return new Builder(gav);
     }
 
-    private final GAV gav;
-    private final Map<GAV, ProvisionedFeaturePackDescription> dependencies;
+    private final Gav gav;
+    private final Map<Gav, ProvisionedFeaturePackDescription> dependencies;
     private final Set<String> topPackages;
     private final Map<String, PackageDescription> packages;
-    private final List<GAV> provisioningPlugins;
+    private final List<Gav> provisioningPlugins;
 
-    protected FeaturePackDescription(GAV gav, Set<String> topPackages, Map<String, PackageDescription> packages,
-            Map<GAV, ProvisionedFeaturePackDescription> dependencies,
-            List<GAV> provisioningPlugins) {
-        assert gav != null : "GAV is null";
+    protected FeaturePackDescription(Gav gav, Set<String> topPackages, Map<String, PackageDescription> packages,
+            Map<Gav, ProvisionedFeaturePackDescription> dependencies,
+            List<Gav> provisioningPlugins) {
+        assert gav != null : "Gav is null";
         assert dependencies != null : "dependencies is null";
         assert topPackages != null : "topPackages is null";
         assert packages != null : "packages is null";
@@ -158,7 +158,7 @@ public class FeaturePackDescription {
         this.provisioningPlugins = provisioningPlugins;
     }
 
-    public GAV getGAV() {
+    public Gav getGAV() {
         return gav;
     }
 
@@ -198,7 +198,7 @@ public class FeaturePackDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<GAV> getDependencyGAVs() {
+    public Set<Gav> getDependencyGAVs() {
         return dependencies.keySet();
     }
 
@@ -206,7 +206,7 @@ public class FeaturePackDescription {
         return dependencies.values();
     }
 
-    public ProvisionedFeaturePackDescription getDependency(GAV gav) {
+    public ProvisionedFeaturePackDescription getDependency(Gav gav) {
         return dependencies.get(gav);
     }
 
@@ -214,7 +214,7 @@ public class FeaturePackDescription {
         return !provisioningPlugins.isEmpty();
     }
 
-    public List<GAV> getProvisioningPlugins() {
+    public List<Gav> getProvisioningPlugins() {
         return provisioningPlugins;
     }
 
@@ -240,7 +240,7 @@ public class FeaturePackDescription {
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
-            for(GAV gav : dependencies.keySet()) {
+            for(Gav gav : dependencies.keySet()) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();
@@ -248,7 +248,7 @@ public class FeaturePackDescription {
 
         if(!provisioningPlugins.isEmpty()) {
             logger.println("Provisioning plugins:").increaseOffset();
-            for(GAV gav : provisioningPlugins) {
+            for(Gav gav : provisioningPlugins) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();

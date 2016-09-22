@@ -25,7 +25,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -193,7 +193,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         ParsingUtils.parseNoContent(reader);
 
         final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
-        fpBuilder.setGAV(new GAV(groupId, artifactId, version));
+        fpBuilder.setGAV(new Gav(groupId, artifactId, version));
         return fpBuilder.build();
     }
 

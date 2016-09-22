@@ -24,7 +24,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  *
@@ -39,9 +39,9 @@ public class WildFlyPostFeaturePackTasksWriter20 {
 
     public void write(WildFlyPostFeaturePackTasks featurePackDescription, Path outputFile) throws XMLStreamException, IOException {
         final ElementNode tasksElement = new ElementNode(null, WildFlyPostFeaturePackTasksParser20.Element.TASKS.getLocalName(), WildFlyPostFeaturePackTasksParser20.NAMESPACE_2_0);
-        ConfigXMLWriter20.INSTANCE.write(featurePackDescription.getConfig(), tasksElement);
+        ConfigXmlWriter20.INSTANCE.write(featurePackDescription.getConfig(), tasksElement);
         FilePermissionsXMLWriter20.INSTANCE.write(featurePackDescription.getFilePermissions(), tasksElement);
-        try(FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
+        try(FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(
                         Files.newBufferedWriter(outputFile)))) {
             writer.writeStartDocument();

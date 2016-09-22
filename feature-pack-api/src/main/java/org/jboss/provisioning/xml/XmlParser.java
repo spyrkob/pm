@@ -14,37 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning;
+package org.jboss.provisioning.xml;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.io.Reader;
+
+import javax.xml.stream.XMLStreamException;
 
 /**
+ * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  *
- * @author Alexey Loubyansky
+ * @param <T> the type of the object returned by the parse method
  */
-public class FeaturePack {
-
-    private final Gav gav;
-    private Map<String, Package> packages = Collections.emptyMap();
-    private List<Gav> dependencies = Collections.emptyList();
-
-    FeaturePack(Gav gav) {
-        assert gav != null : "gav is null";
-        this.gav = gav;
-    }
-
-    public Gav getGAV() {
-        return gav;
-    }
-
-    public Collection<Package> getPackages() {
-        return packages.values();
-    }
-
-    public List<Gav> getDependencies() {
-        return dependencies;
-    }
+public interface XmlParser<T> {
+    T parse(final Reader input) throws XMLStreamException;
 }

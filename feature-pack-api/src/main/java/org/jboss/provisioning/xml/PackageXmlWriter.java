@@ -26,21 +26,21 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.xml.PackageXMLParser10.Attribute;
-import org.jboss.provisioning.xml.PackageXMLParser10.Element;
+import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
+import org.jboss.provisioning.xml.PackageXmlParser10.Element;
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXMLStreamWriter;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PackageXMLWriter {
+public class PackageXmlWriter {
 
-    public static final PackageXMLWriter INSTANCE = new PackageXMLWriter();
+    public static final PackageXmlWriter INSTANCE = new PackageXmlWriter();
 
-    private PackageXMLWriter() {
+    private PackageXmlWriter() {
     }
 
     public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
@@ -57,7 +57,7 @@ public class PackageXMLWriter {
             }
         }
 
-        try (FormattingXMLStreamWriter writer = new FormattingXMLStreamWriter(
+        try (FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(
                         Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
             writer.writeStartDocument();
@@ -71,7 +71,7 @@ public class PackageXMLWriter {
     }
 
     private static ElementNode newElement(ElementNode parent, Element e) {
-        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), PackageXMLParser10.NAMESPACE_1_0);
+        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), PackageXmlParser10.NAMESPACE_1_0);
         if(parent != null) {
             parent.addChild(eNode);
         }

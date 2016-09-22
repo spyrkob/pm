@@ -33,7 +33,7 @@ import javax.xml.stream.XMLStreamWriter;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public final class FormattingXMLStreamWriter implements XMLStreamWriter, XMLStreamConstants, AutoCloseable {
+public final class FormattingXmlStreamWriter implements XMLStreamWriter, XMLStreamConstants, AutoCloseable {
     private static final String NO_NAMESPACE = new String();
     private final XMLStreamWriter delegate;
     private int level;
@@ -42,7 +42,7 @@ public final class FormattingXMLStreamWriter implements XMLStreamWriter, XMLStre
     private ArrayDeque<String> unspecifiedNamespaces = new ArrayDeque<String>();
 
 
-    public FormattingXMLStreamWriter(final XMLStreamWriter delegate) {
+    public FormattingXmlStreamWriter(final XMLStreamWriter delegate) {
         this.delegate = delegate;
         unspecifiedNamespaces.push(NO_NAMESPACE);
     }

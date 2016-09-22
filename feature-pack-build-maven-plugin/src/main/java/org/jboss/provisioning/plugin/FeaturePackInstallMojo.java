@@ -52,7 +52,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
 
         final String workdirPath = repoSession.getSystemProperties().get(Constants.PM_INSTALL_WORK_DIR);
         if(workdirPath == null) {
-            throw new MojoExecutionException(FPMavenErrors.propertyMissing(Constants.PM_INSTALL_WORK_DIR));
+            throw new MojoExecutionException(FpMavenErrors.propertyMissing(Constants.PM_INSTALL_WORK_DIR));
         }
         final Path workDir = Paths.get(workdirPath);
         if(!Files.exists(workDir)) {
@@ -62,7 +62,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
         try {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException e) {
-            throw new MojoExecutionException(FPMavenErrors.featurePackInstallation(), e);
+            throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }
     }
 }

@@ -16,7 +16,7 @@
  */
 package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
@@ -26,6 +26,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.LocalNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -125,7 +126,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         ARTIFACT_ID("artifact-id"),
         GROUP_ID("group-id"),
@@ -162,6 +163,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
@@ -287,7 +289,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new GAV(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGAV(new Gav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {

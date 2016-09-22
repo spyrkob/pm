@@ -16,9 +16,10 @@
  */
 package org.jboss.provisioning.xml;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -35,11 +36,11 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXMLParser10 implements XMLElementReader<PackageDescription.Builder> {
+public class PackageXmlParser10 implements XMLElementReader<PackageDescription.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
 
-    public enum Element {
+    public enum Element implements LocalNameProvider {
 
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -51,15 +52,8 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
         private static final Map<QName, Element> elements;
 
         static {
-            Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            addElement(elementsMap, Element.DEPENDENCIES);
-            addElement(elementsMap, Element.DEPENDENCY);
-            addElement(elementsMap, Element.PACKAGE);
-            elements = elementsMap;
-        }
-
-        private static void addElement(Map<QName, Element> map, Element e) {
-            map.put(new QName(NAMESPACE_1_0,  e.getLocalName()), e);
+            elements = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
         }
 
         static Element of(QName qName) {
@@ -84,12 +78,13 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
     }
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         NAME("name"),
         // default unknown attribute
@@ -98,9 +93,8 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
         private static final Map<QName, Attribute> attributes;
 
         static {
-            Map<QName, Attribute> attributesMap = new HashMap<QName, Attribute>();
-            attributesMap.put(new QName(NAME.getLocalName()), NAME);
-            attributes = attributesMap;
+            attributes = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
         }
 
         static Attribute of(QName qName) {
@@ -119,6 +113,7 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
@@ -127,9 +122,13 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
     @Override
     public void readElement(XMLExtendedStreamReader reader, PackageDescription.Builder pkgBuilder) throws XMLStreamException {
         pkgBuilder.setName(parseName(reader, false));
+        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.PACKAGE, Element.DEPENDENCIES);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -137,6 +136,7 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
                     switch (element) {
                         case DEPENDENCIES:
                             readDependencies(reader, pkgBuilder);
+                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -153,9 +153,13 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
+        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.DEPENDENCY);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -163,6 +167,7 @@ public class PackageXMLParser10 implements XMLElementReader<PackageDescription.B
                     switch (element) {
                         case DEPENDENCY:
                             readDependency(reader, pkgBuilder);
+                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

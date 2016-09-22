@@ -24,6 +24,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.LocalNameProvider;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class FileFilterModelParser20 {
 
     public static final String ELEMENT_LOCAL_NAME = "filter";
 
-    enum Attribute {
+    enum Attribute implements LocalNameProvider {
 
         // default unknown attribute
         UNKNOWN(null),
@@ -71,6 +72,7 @@ public class FileFilterModelParser20 {
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }

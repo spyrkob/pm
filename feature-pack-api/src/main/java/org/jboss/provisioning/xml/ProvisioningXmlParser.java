@@ -30,7 +30,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningXmlParser {
+public class ProvisioningXmlParser implements XmlParser<ProvisionedInstallationDescription> {
 
     private static final QName ROOT_1_0 = new QName(ProvisioningXmlParser10.NAMESPACE_1_0, ProvisioningXmlParser10.Element.INSTALLATION.getLocalName());
 
@@ -55,6 +55,7 @@ public class ProvisioningXmlParser {
         mapper.registerRootElement(ROOT_1_0, new ProvisioningXmlParser10());
     }
 
+    @Override
     public ProvisionedInstallationDescription parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);

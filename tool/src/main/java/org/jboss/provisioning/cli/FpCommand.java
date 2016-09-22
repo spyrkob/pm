@@ -49,17 +49,17 @@ import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.GAV;
+import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackDependencyBuilder;
 import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
 import org.jboss.provisioning.util.analyzer.FeaturePacksDiff;
-import org.jboss.provisioning.wildfly.descr.WFFeaturePackLayoutBuilder;
-import org.jboss.provisioning.wildfly.descr.WFInstallationDescription;
+import org.jboss.provisioning.wildfly.descr.WfFeaturePackLayoutBuilder;
+import org.jboss.provisioning.wildfly.descr.WfInstallationDescription;
 import org.jboss.provisioning.wildfly.xml.WFInstallationDefParser;
-import org.jboss.provisioning.xml.FeaturePackXMLWriter;
+import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 
 /**
  *
@@ -282,7 +282,7 @@ public class FpCommand extends CommandBase {
 
         final FeaturePackDescriptionDiffs diff;
         try {
-            diff = FeaturePacksDiff.compare(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
+            diff = FeaturePacksDiff.compare(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
         } catch (ProvisioningDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
@@ -313,8 +313,8 @@ public class FpCommand extends CommandBase {
 
         if (xmlOnly) {
             try (StringWriter writer = new StringWriter()) {
-                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
-                FeaturePackXMLWriter.INSTANCE.write(newChildDescr, writer);
+                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
+                FeaturePackXmlWriter.INSTANCE.write(newChildDescr, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to describe parent as a dependency", e);
@@ -325,7 +325,7 @@ public class FpCommand extends CommandBase {
             }
         } else {
             try {
-                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, GAV.fromString(gav1), GAV.fromString(gav2));
+                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to extract parent as a dependency", e);
             }
@@ -335,7 +335,7 @@ public class FpCommand extends CommandBase {
     private void installAction() throws CommandExecutionException {
 
         Path installDir = null;
-        WFInstallationDescription wfDescr = null;
+        WfInstallationDescription wfDescr = null;
         if (installDirArg != null) {
             installDir = Paths.get(installDirArg);
             final ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -364,7 +364,7 @@ public class FpCommand extends CommandBase {
 
         try {
             if (wfDescr != null) {
-                WFFeaturePackLayoutBuilder layoutBuilder = new WFFeaturePackLayoutBuilder();
+                WfFeaturePackLayoutBuilder layoutBuilder = new WfFeaturePackLayoutBuilder();
                 try {
                     layoutBuilder.build(wfDescr, installDir, workDir);
                 } catch (ProvisioningDescriptionException e) {
