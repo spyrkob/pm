@@ -63,9 +63,9 @@ public class PackageXmlParserTest  {
 
     @Test
     public void readMissingDependencies() throws Exception {
-        validator.validateAndParse("src/test/resources/package/package-1.0-missing-dependencies.xml",
-                "cvc-complex-type.2.4.b: The content of element 'package' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":dependencies}' is expected.",
-                "There must be at least one dependencies under package");
+        final PackageDescription parsedPkg = validator.validateAndParse("src/test/resources/package/package-1.0-missing-dependencies.xml", null, null);
+        final PackageDescription expectedPkg = PackageDescription.builder().setName("package1").build();
+        Assert.assertEquals(expectedPkg, parsedPkg);
     }
 
     @Test

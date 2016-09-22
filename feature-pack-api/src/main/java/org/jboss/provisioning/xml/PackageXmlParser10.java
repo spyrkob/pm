@@ -122,13 +122,9 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     @Override
     public void readElement(XMLExtendedStreamReader reader, PackageDescription.Builder pkgBuilder) throws XMLStreamException {
         pkgBuilder.setName(parseName(reader, false));
-        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.PACKAGE, Element.DEPENDENCIES);
-                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -136,7 +132,6 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
                     switch (element) {
                         case DEPENDENCIES:
                             readDependencies(reader, pkgBuilder);
-                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
