@@ -16,6 +16,7 @@
  */
 package org.jboss.provisioning.descr;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,12 +41,12 @@ public class ProvisionedInstallationDescription {
         public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) {
             switch(featurePacks.size()) {
                 case 0:
-                    featurePacks = Collections.singletonMap(fp.getGAV(), fp);
+                    featurePacks = Collections.singletonMap(fp.getGav(), fp);
                     break;
                 case 1:
                     featurePacks = new LinkedHashMap<>(featurePacks);
                 default:
-                    featurePacks.put(fp.getGAV(), fp);
+                    featurePacks.put(fp.getGav(), fp);
             }
             return this;
         }
@@ -69,8 +70,16 @@ public class ProvisionedInstallationDescription {
         return !featurePacks.isEmpty();
     }
 
-    public Set<Gav> getFeaturePackGAVs() {
+    public Set<Gav> getFeaturePackGavs() {
         return featurePacks.keySet();
+    }
+
+    public Collection<ProvisionedFeaturePackDescription> getFeaturePacks() {
+        return featurePacks.values();
+    }
+
+    public ProvisionedFeaturePackDescription getFeaturePack(Gav gav) {
+        return featurePacks.get(gav);
     }
 
     @Override

@@ -69,11 +69,11 @@ public class ProvisioningXmlParserTest {
                 .validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGAV(new Gav("org.jboss.group1", "fp1", "0.0.1")).build())
+                        .setGav(new Gav("org.jboss.group1", "fp1", "0.0.1")).build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGAV(new Gav("org.jboss.group1", "fp2", "0.0.2")).build())
+                        .setGav(new Gav("org.jboss.group1", "fp2", "0.0.2")).build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGAV(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
+                        .setGav(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
                 .build();
         Assert.assertEquals(expected, found);
     }

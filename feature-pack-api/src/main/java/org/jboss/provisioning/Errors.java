@@ -87,4 +87,8 @@ public interface Errors {
     static String missingParameter(String string) {
         return "Missing " + string;
     }
+
+    static String packageExcludesIncludes() {
+        return "Provisioned feature-pack may include or exclude packages but not both.";
+    }
 }

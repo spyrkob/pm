@@ -94,12 +94,12 @@ public class FeaturePackDescription {
             assert gav != null : "Gav is null";
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dependency.getGAV(), dependency);
+                    dependencies = Collections.singletonMap(dependency.getGav(), dependency);
                     break;
                 case 1:
                     dependencies = new HashMap<Gav, ProvisionedFeaturePackDescription>(dependencies);
                 default:
-                    dependencies.put(dependency.getGAV(), dependency);
+                    dependencies.put(dependency.getGav(), dependency);
             }
             return this;
         }
@@ -158,7 +158,7 @@ public class FeaturePackDescription {
         this.provisioningPlugins = provisioningPlugins;
     }
 
-    public Gav getGAV() {
+    public Gav getGav() {
         return gav;
     }
 

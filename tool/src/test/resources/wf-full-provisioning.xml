@@ -17,7 +17,12 @@
 
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
-  <universe name="org.wildfly">
-    <feature-pack name="wildfly-feature-pack-new" version="11.0.0.Alpha1-SNAPSHOT" />
-  </universe>
+  <feature-pack groupId="org.wildfly" artifactId="wildfly-feature-pack-new" version="11.0.0.Alpha1-SNAPSHOT">
+  <!--
+    <excludes>
+      <package name="appclient"/>
+      <package name="schema"/>
+    </excludes>
+    -->
+  </feature-pack>
 </installation>

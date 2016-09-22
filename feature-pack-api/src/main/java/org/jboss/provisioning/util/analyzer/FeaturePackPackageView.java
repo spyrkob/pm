@@ -76,15 +76,15 @@ class FeaturePackPackageView {
             Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws ProvisioningDescriptionException {
         if (fpDescr.hasDependencies()) {
             for (ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
-                final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGAV());
+                final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGav());
                 resolveFeaturePack(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding), collectedPackages, dep.getExcludedPackages());
             }
         }
-        final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpDescr.getGAV());
+        final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpDescr.getGav());
         for (String name : fpDescr.getPackageNames()) {
             if (!excludePackages.contains(name)) {
                 //if(Files.exists(LayoutUtils.getPackageContentDir(fpDir, name))) {
-                    collectedPackages.put(name, new ResolvedPackage(name, fpDescr.getGAV(), fpDescr.getPackageDescription(name)));
+                    collectedPackages.put(name, new ResolvedPackage(name, fpDescr.getGav(), fpDescr.getPackageDescription(name)));
                 //}
             }
         }

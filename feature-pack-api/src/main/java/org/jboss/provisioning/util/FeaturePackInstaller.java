@@ -26,6 +26,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 
 /**
  * Installs feature pack content to the target directory.
@@ -38,25 +39,36 @@ public class FeaturePackInstaller {
     private Path fpPackagesDir;
     private FeaturePackDescription featurePack;
     private Set<String> installedPackages;
+    private ProvisionedFeaturePackDescription provisionedFp;
 
     /**
      * Installs feature pack content to the specified directory.
      *
-     * @param featurePack  feature-pack description
+     * @param featurePack  full feature-pack description
+     * @param provisionedFp  provisioned feature-pack description
      * @param fpDir  feature-pack source directory
      * @param installDir  target installation directory
      * @throws FeaturePackInstallException
      */
-    public void install(FeaturePackDescription featurePack, Path fpDir, Path installDir) throws FeaturePackInstallException {
+    public void install(FeaturePackDescription featurePack, ProvisionedFeaturePackDescription provisionedDescr, Path fpDir, Path installDir) throws FeaturePackInstallException {
 
         fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
         this.installDir = installDir;
         this.featurePack = featurePack;
         installedPackages = new HashSet<String>();
+        provisionedFp = provisionedDescr;
 
-        for(String name : featurePack.getTopPackageNames()) {
-            if(!isPackageInstalled(name)) {
-                install(featurePack.getPackageDescription(name));
+        if(provisionedDescr != null && provisionedDescr.hasIncludedPackages()) {
+            for(String name : provisionedDescr.getIncludedPackages()) {
+                if(packageApproved(name)) {
+                    install(featurePack.getPackageDescription(name));
+                }
+            }
+        } else {
+            for (String name : featurePack.getTopPackageNames()) {
+                if (packageApproved(name)) {
+                    install(featurePack.getPackageDescription(name));
+                }
             }
         }
     }
@@ -65,7 +77,7 @@ public class FeaturePackInstaller {
         installedPackages.add(pkg.getName());
         if(pkg.hasDependencies()) {
             for(String name : pkg.getDependencies()) {
-                if(!isPackageInstalled(name)) {
+                if(packageApproved(name)) {
                     final PackageDescription dependency = featurePack.getPackageDescription(name);
                     if(dependency == null) {
                         throw new FeaturePackInstallException(Errors.packageNotFound(name));
@@ -84,7 +96,10 @@ public class FeaturePackInstaller {
         }
     }
 
-    private boolean isPackageInstalled(String name) {
-        return installedPackages.contains(name);
+    private boolean packageApproved(String packageName) {
+        if(provisionedFp != null && provisionedFp.isExcluded(packageName)) {
+            return false;
+        }
+        return !installedPackages.contains(packageName);
     }
 }

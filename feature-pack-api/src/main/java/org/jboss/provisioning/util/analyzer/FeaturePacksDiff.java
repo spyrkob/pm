@@ -82,8 +82,8 @@ public class FeaturePacksDiff {
     }
 
     FeaturePackDescriptionDiffs compare() throws ProvisioningDescriptionException {
-        final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGAV());
-        final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGAV());
+        final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGav());
+        final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGav());
         compareDependencies(fp1Diff, fp2Diff);
         comparePackages(fp1Diff, fp2Diff);
         return new FeaturePackDescriptionDiffs(fp1Diff.build(), fp2Diff.build());

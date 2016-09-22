@@ -25,7 +25,9 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -42,8 +44,11 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
     enum Element implements LocalNameProvider {
 
+        EXCLUDES("excludes"),
         FEATURE_PACK("feature-pack"),
+        INCLUDES("includes"),
         INSTALLATION("installation"),
+        PACKAGE("package"),
 
         // default unknown element
         UNKNOWN(null);
@@ -90,8 +95,9 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
     enum Attribute implements LocalNameProvider {
 
-        GROUP_ID("groupId"),
         ARTIFACT_ID("artifactId"),
+        GROUP_ID("groupId"),
+        NAME("name"),
         VERSION("version"),
 
         // default unknown attribute
@@ -190,11 +196,90 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         if (artifactId == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ARTIFACT_ID));
         }
-        ParsingUtils.parseNoContent(reader);
 
         final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
-        fpBuilder.setGAV(new Gav(groupId, artifactId, version));
-        return fpBuilder.build();
+        fpBuilder.setGav(new Gav(groupId, artifactId, version));
+
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return fpBuilder.build();
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case EXCLUDES:
+                            readPackageList(reader, fpBuilder, true);
+                            break;
+                        case INCLUDES:
+                            readPackageList(reader, fpBuilder, false);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
+    private void readPackageList(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder, boolean excludes) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            try {
+                                if (excludes) {
+                                    builder.excludePackage(parseName(reader));
+                                } else {
+                                    builder.includePackage(parseName(reader));
+                                }
+                            } catch (ProvisioningException e) {
+                                throw new XMLStreamException(Errors.packageExcludesIncludes(), e);
+                            }
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        String name = null;
+        boolean parsedTarget = false;
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    parsedTarget = true;
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (!parsedTarget) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+        ParsingUtils.parseNoContent(reader);
+        return name;
+    }
 }

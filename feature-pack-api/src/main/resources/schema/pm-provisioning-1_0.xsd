@@ -40,6 +40,10 @@
         TODO: what is feature-pack
       </xs:documentation>
     </xs:annotation>
+    <xs:choice maxOccurs="1" minOccurs="0">
+      <xs:element name="excludes" type="excludesType" />
+      <xs:element name="includes" type="includesType" />
+    </xs:choice>
     <xs:attribute name="groupId" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
@@ -62,5 +66,52 @@
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
+  
+  <xs:complexType name="excludesType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes excluded content from the provisioned feature-pack
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="packageListType"/>
+    </xs:complexContent>
+  </xs:complexType>
 
+  <xs:complexType name="includesType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes excluded content from the provisioned feature-pack
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="packageListType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:complexType name="packageListType">
+    <xs:annotation>
+      <xs:documentation>
+        Lists packages
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="package" type="packageType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="packageType">
+    <xs:annotation>
+      <xs:documentation>
+        Names a package
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Package name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
 </xs:schema>

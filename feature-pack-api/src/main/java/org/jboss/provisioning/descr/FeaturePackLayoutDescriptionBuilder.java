@@ -47,7 +47,7 @@ public class FeaturePackLayoutDescriptionBuilder {
 
     public FeaturePackLayoutDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
         assert fp != null : "fp is null";
-        final Gav fpGav = fp.getGAV();
+        final Gav fpGav = fp.getGav();
         checkGav(fpGav);
         switch(featurePacks.size()) {
             case 0:

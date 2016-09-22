@@ -17,9 +17,12 @@
 package org.jboss.provisioning.util;
 
 import java.nio.file.Path;
+
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
@@ -41,21 +44,29 @@ public class FeaturePackLayoutInstaller {
      */
     public static void install(Path fpLayoutDir, Path installDir, String encoding)
             throws ProvisioningDescriptionException, FeaturePackInstallException {
+        final FeaturePackLayoutDescription layoutDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding);
+        final ProvisionedInstallationDescription.Builder installationBuilder = ProvisionedInstallationDescription.builder();
+        for(FeaturePackDescription fpDescr : layoutDescr.getFeaturePacks()) {
+            installationBuilder.addFeaturePack(ProvisionedFeaturePackDescription.builder().setGav(fpDescr.getGav()).build());
+        }
         install(fpLayoutDir,
-                FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding),
+                layoutDescr,
+                installationBuilder.build(),
                 installDir);
     }
 
-    public static void install(Path fpLayoutDir, FeaturePackLayoutDescription descr, Path installDir)
+    public static void install(Path layoutDir, FeaturePackLayoutDescription layoutDescr,
+            ProvisionedInstallationDescription provisionedDescr, Path installDir)
             throws FeaturePackInstallException {
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
-        for(FeaturePackDescription fp : descr.getFeaturePacks()) {
-            final Gav fpGav = fp.getGAV();
+        for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
+            final Gav fpGav = fp.getGav();
+            final ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav);
             System.out.println("Installing " + fpGav + " to " + installDir);
-            final Path fpDir = fpLayoutDir.resolve(fpGav.getGroupId())
+            final Path fpDir = layoutDir.resolve(fpGav.getGroupId())
                     .resolve(fpGav.getArtifactId())
                     .resolve(fpGav.getVersion());
-            fpInstaller.install(fp, fpDir, installDir);
+            fpInstaller.install(fp, provisionedFp, fpDir, installDir);
         }
     }
 }
