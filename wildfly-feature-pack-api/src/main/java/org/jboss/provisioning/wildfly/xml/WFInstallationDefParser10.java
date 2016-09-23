@@ -31,7 +31,7 @@ import org.jboss.provisioning.wildfly.descr.WfFeaturePackDescription;
 import org.jboss.provisioning.wildfly.descr.WfInstallationDescription;
 import org.jboss.provisioning.wildfly.descr.WfModulesDescription;
 import org.jboss.provisioning.wildfly.descr.WfPackageDescription;
-import org.jboss.provisioning.xml.LocalNameProvider;
+import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -43,7 +43,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WfInstallationDescri
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-install-def:1.0";
 
-    enum Element {
+    enum Element implements XmlNameProvider {
 
         FEATURE_PACK("feature-pack"),
         FEATURE_PACKS("feature-packs"),
@@ -85,6 +85,7 @@ class WFInstallationDefParser10 implements XMLElementReader<WfInstallationDescri
         }
 
         private final String name;
+        private final String namespace = NAMESPACE_1_0;
 
         Element(final String name) {
             this.name = name;
@@ -95,12 +96,18 @@ class WFInstallationDefParser10 implements XMLElementReader<WfInstallationDescri
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
+
+        @Override
+        public String getNamespace() {
+            return namespace;
+        }
     }
 
-    enum Attribute implements LocalNameProvider {
+    enum Attribute implements XmlNameProvider {
 
         ARTIFACT_ID("artifact-id"),
         GROUP_ID("group-id"),
@@ -143,6 +150,11 @@ class WFInstallationDefParser10 implements XMLElementReader<WfInstallationDescri
         @Override
         public String getLocalName() {
             return name;
+        }
+
+        @Override
+        public String getNamespace() {
+            return null;
         }
     }
 

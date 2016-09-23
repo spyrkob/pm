@@ -26,7 +26,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.xml.LocalNameProvider;
+import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
@@ -145,9 +145,9 @@ public class ParsingUtils {
         return new XMLStreamException("Unexpected end of document ", location);
     }
 
-    public static XMLStreamException missingAttributes(final Location location, final Set<? extends LocalNameProvider> requiredAttributes) {
+    public static XMLStreamException missingAttributes(final Location location, final Set<? extends XmlNameProvider> requiredAttributes) {
         final StringBuilder b = new StringBuilder();
-        for (LocalNameProvider attribute : requiredAttributes) {
+        for (XmlNameProvider attribute : requiredAttributes) {
             b.append(' ').append(attribute.getLocalName());
         }
         return new XMLStreamException("Missing required attributes " + b.toString(), location);
@@ -168,7 +168,7 @@ public class ParsingUtils {
 
     }
 
-    public static XMLStreamException expectedAtLeastOneChild(LocalNameProvider parent, LocalNameProvider child) {
+    public static XMLStreamException expectedAtLeastOneChild(XmlNameProvider parent, XmlNameProvider child) {
         return new XMLStreamException(String.format("There must be at least one %s under %s", child.getLocalName(), parent.getLocalName()));
     }
 }

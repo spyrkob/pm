@@ -23,6 +23,9 @@
       <package name="appclient"/>
       <package name="schema"/>
     </excludes>
+    <includes>
+      <package name="docs"/>
+    </includes>
     -->
   </feature-pack>
 </installation>

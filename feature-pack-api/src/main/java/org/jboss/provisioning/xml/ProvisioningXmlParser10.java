@@ -42,7 +42,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
 
-    enum Element implements LocalNameProvider {
+    enum Element implements XmlNameProvider {
 
         EXCLUDES("excludes"),
         FEATURE_PACK("feature-pack"),
@@ -72,6 +72,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         }
 
         private final String name;
+        private final String namespace = NAMESPACE_1_0;
 
         Element(final String name) {
             this.name = name;
@@ -88,12 +89,17 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         }
 
         @Override
+        public String getNamespace() {
+            return namespace;
+        }
+
+        @Override
         public String toString() {
             return name;
         }
     }
 
-    enum Attribute implements LocalNameProvider {
+    enum Attribute implements XmlNameProvider {
 
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
@@ -128,6 +134,11 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         @Override
         public String getLocalName() {
             return name;
+        }
+
+        @Override
+        public String getNamespace() {
+            return null;
         }
 
         @Override

@@ -21,6 +21,7 @@ package org.jboss.provisioning.xml;
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public interface LocalNameProvider {
+public interface XmlNameProvider {
+    String getNamespace();
     String getLocalName();
 }

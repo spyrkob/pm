@@ -40,7 +40,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
 
-    public enum Element implements LocalNameProvider {
+    public enum Element implements XmlNameProvider {
 
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -68,6 +68,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         }
 
         private final String name;
+        private final String namespace = NAMESPACE_1_0;
 
         Element(final String name) {
             this.name = name;
@@ -82,9 +83,14 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         public String getLocalName() {
             return name;
         }
+
+        @Override
+        public String getNamespace() {
+            return namespace;
+        }
     }
 
-    enum Attribute implements LocalNameProvider {
+    enum Attribute implements XmlNameProvider {
 
         NAME("name"),
         // default unknown attribute
@@ -116,6 +122,11 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         @Override
         public String getLocalName() {
             return name;
+        }
+
+        @Override
+        public String getNamespace() {
+            return null;
         }
     }
 

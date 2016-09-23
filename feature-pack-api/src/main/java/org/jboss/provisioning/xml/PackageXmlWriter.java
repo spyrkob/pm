@@ -28,7 +28,6 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
-import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
 import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
@@ -36,7 +35,7 @@ import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXmlWriter {
+public class PackageXmlWriter extends BaseXmlWriter {
 
     public static final PackageXmlWriter INSTANCE = new PackageXmlWriter();
 
@@ -45,11 +44,11 @@ public class PackageXmlWriter {
 
     public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
 
-        final ElementNode pkg = newElement(null, Element.PACKAGE);
+        final ElementNode pkg = addElement(null, Element.PACKAGE);
         addAttribute(pkg, Attribute.NAME, pkgDescr.getName());
 
         if(pkgDescr.hasDependencies()) {
-            final ElementNode deps = newElement(pkg, Element.DEPENDENCIES);
+            final ElementNode deps = addElement(pkg, Element.DEPENDENCIES);
             final String[] names = pkgDescr.getDependencies().toArray(new String[0]);
             Arrays.sort(names);
             for(String name : names) {
@@ -67,18 +66,6 @@ public class PackageXmlWriter {
     }
 
     private static void writeDependency(ElementNode deps, String name) {
-        addAttribute(newElement(deps, Element.DEPENDENCY), Attribute.NAME, name);
-    }
-
-    private static ElementNode newElement(ElementNode parent, Element e) {
-        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), PackageXmlParser10.NAMESPACE_1_0);
-        if(parent != null) {
-            parent.addChild(eNode);
-        }
-        return eNode;
-    }
-
-    private static void addAttribute(ElementNode e, Attribute a, String value) {
-        e.addAttribute(a.getLocalName(), new AttributeValue(value));
+        addAttribute(addElement(deps, Element.DEPENDENCY), Attribute.NAME, name);
     }
 }
