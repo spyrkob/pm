@@ -63,7 +63,7 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public void addTopPackageName(String packageName) {
+        public Builder addTopPackageName(String packageName) {
             assert packageName != null : "packageName is null";
             switch(topPackages.size()) {
                 case 0:
@@ -74,6 +74,7 @@ public class FeaturePackDescription {
                 default:
                     topPackages.add(packageName);
             }
+            return this;
         }
 
         public Builder addPackage(PackageDescription pkg) {
@@ -111,7 +112,7 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public void addProvisioningPlugin(Gav gav) {
+        public Builder addProvisioningPlugin(Gav gav) {
             assert gav != null : "gav is null";
             switch(provisioningPlugins.size()) {
                 case 0:
@@ -122,6 +123,7 @@ public class FeaturePackDescription {
                 default:
                     provisioningPlugins.add(gav);
             }
+            return this;
         }
 
         public FeaturePackDescription build() {
@@ -254,5 +256,60 @@ public class FeaturePackDescription {
             logger.decreaseOffset();
         }
         logger.decreaseOffset();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
+        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
+        result = prime * result + ((packages == null) ? 0 : packages.hashCode());
+        result = prime * result + ((provisioningPlugins == null) ? 0 : provisioningPlugins.hashCode());
+        result = prime * result + ((topPackages == null) ? 0 : topPackages.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        FeaturePackDescription other = (FeaturePackDescription) obj;
+        if (dependencies == null) {
+            if (other.dependencies != null)
+                return false;
+        } else if (!dependencies.equals(other.dependencies))
+            return false;
+        if (gav == null) {
+            if (other.gav != null)
+                return false;
+        } else if (!gav.equals(other.gav))
+            return false;
+        if (packages == null) {
+            if (other.packages != null)
+                return false;
+        } else if (!packages.equals(other.packages))
+            return false;
+        if (provisioningPlugins == null) {
+            if (other.provisioningPlugins != null)
+                return false;
+        } else if (!provisioningPlugins.equals(other.provisioningPlugins))
+            return false;
+        if (topPackages == null) {
+            if (other.topPackages != null)
+                return false;
+        } else if (!topPackages.equals(other.topPackages))
+            return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "FeaturePackDescription [gav=" + gav + ", dependencies=" + dependencies + ", topPackages=" + topPackages
+                + ", packages=" + packages + ", provisioningPlugins=" + provisioningPlugins + "]";
     }
 }

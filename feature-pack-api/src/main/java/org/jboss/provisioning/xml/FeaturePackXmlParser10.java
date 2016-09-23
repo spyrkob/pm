@@ -16,11 +16,12 @@
  */
 package org.jboss.provisioning.xml;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -29,8 +30,8 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -43,7 +44,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
 
-    public enum Element {
+    public enum Element implements LocalNameProvider {
 
         ARTIFACT("artifact"),
         DEPENDENCIES("dependencies"),
@@ -61,21 +62,8 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         private static final Map<QName, Element> elements;
 
         static {
-            Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            addElement(elementsMap, Element.ARTIFACT);
-            addElement(elementsMap, Element.DEPENDENCIES);
-            addElement(elementsMap, Element.DEPENDENCY);
-            addElement(elementsMap, Element.EXCLUDES);
-            addElement(elementsMap, Element.FEATURE_PACK);
-            addElement(elementsMap, Element.INCLUDES);
-            addElement(elementsMap, Element.PACKAGES);
-            addElement(elementsMap, Element.PACKAGE);
-            addElement(elementsMap, Element.PROVISIONING_PLUGINS);
-            elements = elementsMap;
-        }
-
-        private static void addElement(Map<QName, Element> map, Element e) {
-            map.put(new QName(NAMESPACE_1_0,  e.getLocalName()), e);
+            elements = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
         }
 
         static Element of(QName qName) {
@@ -100,6 +88,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
          *
          * @return the local name
          */
+        @Override
         public String getLocalName() {
             return name;
         }
@@ -107,8 +96,8 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     enum Attribute implements LocalNameProvider {
 
-        GROUP_ID("group-id"),
-        ARTIFACT_ID("artifact-id"),
+        ARTIFACT_ID("artifactId"),
+        GROUP_ID("groupId"),
         CLASSIFIER("classifier"),
         EXTENSION("extension"),
         VERSION("version"),
@@ -119,14 +108,8 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         private static final Map<QName, Attribute> attributes;
 
         static {
-            Map<QName, Attribute> attributesMap = new HashMap<QName, Attribute>();
-            attributesMap.put(new QName(GROUP_ID.getLocalName()), GROUP_ID);
-            attributesMap.put(new QName(ARTIFACT_ID.getLocalName()), ARTIFACT_ID);
-            attributesMap.put(new QName(CLASSIFIER.getLocalName()), CLASSIFIER);
-            attributesMap.put(new QName(EXTENSION.getLocalName()), EXTENSION);
-            attributesMap.put(new QName(VERSION.getLocalName()), VERSION);
-            attributesMap.put(new QName(NAME.getLocalName()), NAME);
-            attributes = attributesMap;
+            attributes = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
         }
 
         static Attribute of(QName qName) {
@@ -215,9 +198,13 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
+        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.DEPENDENCY);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -225,6 +212,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     switch (element) {
                         case DEPENDENCY:
                             readDependency(reader, fpBuilder);
+                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -355,9 +343,13 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     private void readPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
+        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.PACKAGES, Element.PACKAGE);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -365,6 +357,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     switch (element) {
                         case PACKAGE:
                             fpBuilder.addTopPackageName(parseName(reader));
+                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -381,9 +374,13 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     private void readProvisioningPlugins(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
+        boolean hasChildren = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.PROVISIONING_PLUGINS, Element.ARTIFACT);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -392,6 +389,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                         case ARTIFACT:
                             fpBuilder.addProvisioningPlugin(readGAV(reader));
                             ParsingUtils.parseNoContent(reader);
+                            hasChildren = true;
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

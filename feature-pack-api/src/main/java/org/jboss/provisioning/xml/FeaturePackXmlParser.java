@@ -31,7 +31,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlParser {
+public class FeaturePackXmlParser implements XmlParser<FeaturePackDescription>{
 
     private static final QName ROOT_1_0 = new QName(FeaturePackXmlParser10.NAMESPACE_1_0, FeaturePackXmlParser10.Element.FEATURE_PACK.getLocalName());
 
@@ -59,5 +59,12 @@ public class FeaturePackXmlParser {
     public void parse(final Reader input, final FeaturePackDescription.Builder fpBuilder) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         mapper.parseDocument(fpBuilder, streamReader);
+    }
+
+    @Override
+    public FeaturePackDescription parse(Reader input) throws XMLStreamException {
+        FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
+        parse(input, fpBuilder);
+        return fpBuilder.build();
     }
 }
