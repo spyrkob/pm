@@ -44,7 +44,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
 
-    public enum Element implements LocalNameProvider {
+    public enum Element implements XmlNameProvider {
 
         ARTIFACT("artifact"),
         DEPENDENCIES("dependencies"),
@@ -78,6 +78,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         }
 
         private final String name;
+        private final String namespace = NAMESPACE_1_0;
 
         Element(final String name) {
             this.name = name;
@@ -92,9 +93,14 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         public String getLocalName() {
             return name;
         }
+
+        @Override
+        public String getNamespace() {
+            return namespace;
+        }
     }
 
-    enum Attribute implements LocalNameProvider {
+    enum Attribute implements XmlNameProvider {
 
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
@@ -131,6 +137,11 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         @Override
         public String getLocalName() {
             return name;
+        }
+
+        @Override
+        public String getNamespace() {
+            return null;
         }
     }
 

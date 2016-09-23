@@ -26,7 +26,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.provisioning.xml.LocalNameProvider;
+import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -126,7 +126,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         }
     }
 
-    enum Attribute implements LocalNameProvider {
+    enum Attribute implements XmlNameProvider {
 
         ARTIFACT_ID("artifact-id"),
         GROUP_ID("group-id"),
@@ -166,6 +166,11 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         @Override
         public String getLocalName() {
             return name;
+        }
+
+        @Override
+        public String getNamespace() {
+            return null;
         }
     }
 

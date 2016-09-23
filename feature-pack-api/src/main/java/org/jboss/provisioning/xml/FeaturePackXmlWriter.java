@@ -32,7 +32,6 @@ import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
-import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
 import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
@@ -40,7 +39,7 @@ import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlWriter {
+public class FeaturePackXmlWriter extends BaseXmlWriter {
 
     public static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
 
@@ -54,12 +53,12 @@ public class FeaturePackXmlWriter {
     }
 
     public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
-        final ElementNode fp = newElement(null, Element.FEATURE_PACK);
+        final ElementNode fp = addElement(null, Element.FEATURE_PACK);
         final Gav fpGav = fpDescr.getGav();
         addGAV(fp, fpGav);
 
         if (fpDescr.hasDependencies()) {
-            final ElementNode deps = newElement(fp, Element.DEPENDENCIES);
+            final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
             final Gav[] gavs = fpDescr.getDependencyGAVs().toArray(new Gav[0]);
             Arrays.sort(gavs);
             for (Gav gav : gavs) {
@@ -68,7 +67,7 @@ public class FeaturePackXmlWriter {
         }
 
         if (fpDescr.hasTopPackages()) {
-            final ElementNode pkgs = newElement(fp, Element.PACKAGES);
+            final ElementNode pkgs = addElement(fp, Element.PACKAGES);
             final String[] pkgNames = fpDescr.getTopPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
@@ -77,9 +76,9 @@ public class FeaturePackXmlWriter {
         }
 
         if(fpDescr.hasProvisioningPlugins()) {
-            final ElementNode plugins = newElement(fp, Element.PROVISIONING_PLUGINS);
+            final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
             for(Gav gav : fpDescr.getProvisioningPlugins()) {
-                addGAV(newElement(plugins, Element.ARTIFACT), gav);
+                addGAV(addElement(plugins, Element.ARTIFACT), gav);
             }
         }
 
@@ -98,11 +97,11 @@ public class FeaturePackXmlWriter {
     }
 
     private static void write(ElementNode pkgs, PackageDescription pkg) {
-        addAttribute(newElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
+        addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
     }
 
     private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
-        final ElementNode depsElement = newElement(deps, Element.DEPENDENCY);
+        final ElementNode depsElement = addElement(deps, Element.DEPENDENCY);
         final Gav gav = dependency.getGav();
         addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
@@ -110,32 +109,20 @@ public class FeaturePackXmlWriter {
             addAttribute(depsElement, Attribute.VERSION, gav.getVersion());
         }
         if(dependency.hasExcludedPackages()) {
-            final ElementNode excludes = newElement(depsElement, Element.EXCLUDES);
+            final ElementNode excludes = addElement(depsElement, Element.EXCLUDES);
             final String[] packageNames = dependency.getExcludedPackages().toArray(new String[0]);
             Arrays.sort(packageNames);
             for (String packageName : packageNames) {
-                addAttribute(newElement(excludes, Element.PACKAGE), Attribute.NAME, packageName);
+                addAttribute(addElement(excludes, Element.PACKAGE), Attribute.NAME, packageName);
             }
         }
         if(dependency.hasIncludedPackages()) {
-            final ElementNode includes = newElement(depsElement, Element.INCLUDES);
+            final ElementNode includes = addElement(depsElement, Element.INCLUDES);
             final String[] packageNames = dependency.getIncludedPackages().toArray(new String[0]);
             Arrays.sort(packageNames);
             for (String packageName : packageNames) {
-                addAttribute(newElement(includes, Element.PACKAGE), Attribute.NAME, packageName);
+                addAttribute(addElement(includes, Element.PACKAGE), Attribute.NAME, packageName);
             }
         }
-    }
-
-    private static ElementNode newElement(ElementNode parent, Element e) {
-        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), FeaturePackXmlParser10.NAMESPACE_1_0);
-        if(parent != null) {
-            parent.addChild(eNode);
-        }
-        return eNode;
-    }
-
-    private static void addAttribute(ElementNode e, Attribute a, String value) {
-        e.addAttribute(a.getLocalName(), new AttributeValue(value));
     }
 }

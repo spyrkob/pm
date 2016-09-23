@@ -16,14 +16,19 @@
  */
 package org.jboss.provisioning.util;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
+import javax.xml.stream.XMLStreamException;
+
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
  * Turns feature-pack layout into a target installation.
@@ -67,6 +72,13 @@ public class FeaturePackLayoutInstaller {
                     .resolve(fpGav.getArtifactId())
                     .resolve(fpGav.getVersion());
             fpInstaller.install(fp, provisionedFp, fpDir, installDir);
+        }
+
+        final Path provisionedXml = installDir.resolve(".pm").resolve("provisioned-state.xml");
+        try {
+            ProvisioningXmlWriter.INSTANCE.write(provisionedDescr, provisionedXml);
+        } catch (XMLStreamException | IOException e) {
+            throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
         }
     }
 }
