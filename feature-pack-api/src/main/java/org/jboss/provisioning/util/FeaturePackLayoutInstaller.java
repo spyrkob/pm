@@ -21,7 +21,6 @@ import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
@@ -29,6 +28,7 @@ import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
@@ -81,10 +81,12 @@ public class FeaturePackLayoutInstaller {
                     .resolve(fpGav.getArtifactId())
                     .resolve(fpGav.getVersion());
             fpInstaller.install(fp, provisionedFp, fpDir, installDir);
+
+            recordFeaturePack(fp, installDir);
         }
 
-        writeState(provisionedDescr, installDir.resolve(Constants.PROVISIONED_STATE_DIR).resolve(Constants.USER_PROVISIONED_STATE_XML));
-        writeState(provisionedLayout.build(), installDir.resolve(Constants.PROVISIONED_STATE_DIR).resolve(Constants.LAYOUT_STATE_XML));
+        writeState(provisionedDescr, PathsUtils.getUserProvisionedXml(installDir));
+        writeState(provisionedLayout.build(), PathsUtils.getLayoutStateXml(installDir));
     }
 
     private static void writeState(ProvisionedInstallationDescription provisionedDescr, final Path provisionedXml)
@@ -93,6 +95,15 @@ public class FeaturePackLayoutInstaller {
             ProvisioningXmlWriter.INSTANCE.write(provisionedDescr, provisionedXml);
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
+        }
+    }
+
+    private static void recordFeaturePack(FeaturePackDescription fpDescr, final Path installDir)
+            throws FeaturePackInstallException {
+        try {
+            FeaturePackXmlWriter.INSTANCE.write(fpDescr, PathsUtils.getInstalledFeaturePackXml(installDir, fpDescr.getGav()));
+        } catch (XMLStreamException | IOException e) {
+            throw new FeaturePackInstallException(Errors.writeXml(installDir), e);
         }
     }
 }
