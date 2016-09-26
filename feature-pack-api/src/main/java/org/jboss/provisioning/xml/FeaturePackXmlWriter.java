@@ -47,6 +47,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
     }
 
     public void write(FeaturePackDescription fpDescr, Path outputFile) throws XMLStreamException, IOException {
+        ensureParentDir(outputFile);
         try (Writer writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)) {
             write(fpDescr, writer);
         }

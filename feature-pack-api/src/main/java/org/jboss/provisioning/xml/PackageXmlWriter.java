@@ -56,6 +56,7 @@ public class PackageXmlWriter extends BaseXmlWriter {
             }
         }
 
+        ensureParentDir(outputFile);
         try (FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(
                         Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
