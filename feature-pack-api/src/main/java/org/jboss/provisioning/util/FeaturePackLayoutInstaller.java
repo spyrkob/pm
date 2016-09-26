@@ -21,6 +21,7 @@ import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
@@ -63,10 +64,18 @@ public class FeaturePackLayoutInstaller {
     public static void install(Path layoutDir, FeaturePackLayoutDescription layoutDescr,
             ProvisionedInstallationDescription provisionedDescr, Path installDir)
             throws FeaturePackInstallException {
+
+        final ProvisionedInstallationDescription.Builder provisionedLayout = ProvisionedInstallationDescription.builder();
+
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
             final Gav fpGav = fp.getGav();
-            final ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav);
+            ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav);
+            if(provisionedFp == null) {
+                provisionedFp = ProvisionedFeaturePackDescription.builder().setGav(fpGav).build();
+            }
+            provisionedLayout.addFeaturePack(provisionedFp);
+
             System.out.println("Installing " + fpGav + " to " + installDir);
             final Path fpDir = layoutDir.resolve(fpGav.getGroupId())
                     .resolve(fpGav.getArtifactId())
@@ -74,7 +83,12 @@ public class FeaturePackLayoutInstaller {
             fpInstaller.install(fp, provisionedFp, fpDir, installDir);
         }
 
-        final Path provisionedXml = installDir.resolve(".pm").resolve("provisioned-state.xml");
+        writeState(provisionedDescr, installDir.resolve(Constants.PROVISIONED_STATE_DIR).resolve(Constants.USER_PROVISIONED_STATE_XML));
+        writeState(provisionedLayout.build(), installDir.resolve(Constants.PROVISIONED_STATE_DIR).resolve(Constants.LAYOUT_STATE_XML));
+    }
+
+    private static void writeState(ProvisionedInstallationDescription provisionedDescr, final Path provisionedXml)
+            throws FeaturePackInstallException {
         try {
             ProvisioningXmlWriter.INSTANCE.write(provisionedDescr, provisionedXml);
         } catch (XMLStreamException | IOException e) {
