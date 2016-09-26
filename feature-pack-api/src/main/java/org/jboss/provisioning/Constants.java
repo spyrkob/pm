@@ -33,4 +33,8 @@ public interface Constants {
     String PACKAGE_XML = "package.xml";
     String PACKAGES = "packages";
     String PROVISIONING_XML = "provisioning.xml";
+
+    String PROVISIONED_STATE_DIR = ".pm";
+    String LAYOUT_STATE_XML = "layout-state.xml";
+    String USER_PROVISIONED_STATE_XML = "user-provisioned-state.xml";
 }
