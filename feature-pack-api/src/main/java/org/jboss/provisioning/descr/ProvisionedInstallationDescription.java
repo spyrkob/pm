@@ -22,7 +22,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.ProvisioningException;
 
 /**
  * This class describes the state of provisioned installation.
@@ -33,20 +35,44 @@ public class ProvisionedInstallationDescription {
 
     public static class Builder {
 
-        private Map<Gav, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
 
-        public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) {
+        private Builder(ProvisionedInstallationDescription installDescr) throws ProvisioningDescriptionException {
+            for(ProvisionedFeaturePackDescription fp : installDescr.getFeaturePacks()) {
+                addFeaturePack(fp);
+            }
+        }
+
+        public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) throws ProvisioningDescriptionException {
+            final Gav.GaPart gaPart = fp.getGav().getGaPart();
+            if(featurePacks.containsKey(gaPart)) {
+                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
+            }
             switch(featurePacks.size()) {
                 case 0:
-                    featurePacks = Collections.singletonMap(fp.getGav(), fp);
+                    featurePacks = Collections.singletonMap(gaPart, fp);
                     break;
                 case 1:
                     featurePacks = new LinkedHashMap<>(featurePacks);
                 default:
-                    featurePacks.put(fp.getGav(), fp);
+                    featurePacks.put(gaPart, fp);
+            }
+            return this;
+        }
+
+        public Builder removeFeaturePack(Gav gav) throws ProvisioningException {
+            if(featurePacks.size() == 1) {
+                if(!featurePacks.containsKey(gav)) {
+                    throw new ProvisioningException("Installation does not contain feature-pack " + gav);
+                }
+                featurePacks = Collections.emptyMap();
+            } else {
+                if(featurePacks.remove(gav) == null) {
+                    throw new ProvisioningException("Installation does not contain feature-pack " + gav);
+                }
             }
             return this;
         }
@@ -60,9 +86,21 @@ public class ProvisionedInstallationDescription {
         return new Builder();
     }
 
-    private Map<Gav, ProvisionedFeaturePackDescription> featurePacks;
+    /**
+     * Allows to build an installation description starting from the passed in
+     * initial state.
+     *
+     * @param installDescr  initial state of the description to be built
+     * @return  this builder instance
+     * @throws ProvisioningDescriptionException
+     */
+    public static Builder builder(ProvisionedInstallationDescription installDescr) throws ProvisioningDescriptionException {
+        return new Builder(installDescr);
+    }
 
-    private ProvisionedInstallationDescription(Map<Gav, ProvisionedFeaturePackDescription> featurePacks) {
+    private Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks;
+
+    private ProvisionedInstallationDescription(Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks) {
         this.featurePacks = featurePacks;
     }
 
@@ -70,7 +108,11 @@ public class ProvisionedInstallationDescription {
         return !featurePacks.isEmpty();
     }
 
-    public Set<Gav> getFeaturePackGavs() {
+    public boolean containsFeaturePack(Gav.GaPart gaPart) {
+        return featurePacks.containsKey(gaPart);
+    }
+
+    public Set<Gav.GaPart> getFeaturePackGaParts() {
         return featurePacks.keySet();
     }
 
@@ -78,8 +120,8 @@ public class ProvisionedInstallationDescription {
         return featurePacks.values();
     }
 
-    public ProvisionedFeaturePackDescription getFeaturePack(Gav gav) {
-        return featurePacks.get(gav);
+    public ProvisionedFeaturePackDescription getFeaturePack(Gav.GaPart gaPart) {
+        return featurePacks.get(gaPart);
     }
 
     @Override

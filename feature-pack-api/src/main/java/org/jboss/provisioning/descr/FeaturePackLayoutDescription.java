@@ -31,9 +31,9 @@ import org.jboss.provisioning.util.DescrFormatter;
  */
 public class FeaturePackLayoutDescription {
 
-    private final Map<Gav, FeaturePackDescription> featurePacks;
+    private final Map<Gav.GaPart, FeaturePackDescription> featurePacks;
 
-    FeaturePackLayoutDescription(Map<Gav, FeaturePackDescription> featurePacks) {
+    FeaturePackLayoutDescription(Map<Gav.GaPart, FeaturePackDescription> featurePacks) {
         assert featurePacks != null : "featurePacks is null";
         this.featurePacks = featurePacks;
     }
@@ -42,8 +42,13 @@ public class FeaturePackLayoutDescription {
         return !featurePacks.isEmpty();
     }
 
-    public FeaturePackDescription getFeaturePack(Gav gav) {
-        return featurePacks.get(gav);
+    public boolean contains(Gav.GaPart fpGa) {
+        return featurePacks.containsKey(fpGa);
+    }
+
+    public Gav getGav(Gav.GaPart fpGa) {
+        final FeaturePackDescription fpDescr = featurePacks.get(fpGa);
+        return fpDescr == null ? null : fpDescr.getGav();
     }
 
     public Collection<FeaturePackDescription> getFeaturePacks() {

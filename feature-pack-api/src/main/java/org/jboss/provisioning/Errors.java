@@ -91,4 +91,12 @@ public interface Errors {
     static String packageExcludesIncludes() {
         return "Provisioned feature-pack may include or exclude packages but not both.";
     }
+
+    static String unknownFeaturePack(Gav gav) {
+        return "Feature-pack " + gav + " is not found";
+    }
+
+    static String featurePackVersionConflict(Gav gav, Gav gav2) {
+        return "Feature-pack " + gav.getGaPart() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
+    }
 }

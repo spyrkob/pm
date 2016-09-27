@@ -60,10 +60,10 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
-            final Gav[] gavs = fpDescr.getDependencyGAVs().toArray(new Gav[0]);
-            Arrays.sort(gavs);
-            for (Gav gav : gavs) {
-                write(deps, fpDescr.getDependency(gav));
+            final Gav.GaPart[] gaParts = fpDescr.getDependencyGaParts().toArray(new Gav.GaPart[0]);
+            Arrays.sort(gaParts);
+            for (Gav.GaPart gaPart : gaParts) {
+                write(deps, fpDescr.getDependency(gaPart));
             }
         }
 

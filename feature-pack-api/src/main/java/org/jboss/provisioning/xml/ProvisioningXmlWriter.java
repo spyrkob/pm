@@ -50,11 +50,11 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
         if (installDescr.hasFeaturePacks()) {
-            final Gav[] gavs = installDescr.getFeaturePackGavs().toArray(new Gav[0]);
-            Arrays.sort(gavs);
-            for (Gav gav : gavs) {
+            final Gav.GaPart[] gaParts = installDescr.getFeaturePackGaParts().toArray(new Gav.GaPart[0]);
+            Arrays.sort(gaParts);
+            for (Gav.GaPart gaPart : gaParts) {
                 final ElementNode fp = addElement(pkg, Element.FEATURE_PACK);
-                writeFeaturePack(fp, installDescr.getFeaturePack(gav));
+                writeFeaturePack(fp, installDescr.getFeaturePack(gaPart));
             }
         }
 
