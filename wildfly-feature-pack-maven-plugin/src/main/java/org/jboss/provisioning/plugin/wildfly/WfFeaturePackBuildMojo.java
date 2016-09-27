@@ -136,7 +136,15 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        try {
+            doExecute();
+        } catch(RuntimeException | Error | MojoExecutionException | MojoFailureException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
+    private void doExecute() throws MojoExecutionException, MojoFailureException {
         artifactVersions = MavenProjectArtifactVersions.getInstance(project);
 
         /* normalize resourcesDir */

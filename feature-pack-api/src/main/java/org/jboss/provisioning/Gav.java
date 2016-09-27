@@ -43,9 +43,85 @@ public class Gav implements Comparable<Gav> {
         return new Gav(groupId, artifactId, version);
     }
 
+    public static GaPart toGaPart(String groupId, String artifactId) {
+        return new Gav(groupId, artifactId).getGaPart();
+    }
+
+    public class GaPart implements Comparable<GaPart> {
+
+        public String getGroupId() {
+            return groupId;
+        }
+
+        public String getArtifactId() {
+            return artifactId;
+        }
+
+        public Gav getGav() {
+            return Gav.this;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder buf = new StringBuilder();
+            if(groupId != null) {
+                buf.append(groupId);
+            }
+            buf.append(':');
+            if(artifactId != null) {
+                buf.append(artifactId);
+            }
+            return buf.toString();
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((artifactId == null) ? 0 : artifactId.hashCode());
+            result = prime * result + ((groupId == null) ? 0 : groupId.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            GaPart other = (GaPart) obj;
+            if (artifactId == null) {
+                if (other.getArtifactId() != null)
+                    return false;
+            } else if (!artifactId.equals(other.getArtifactId()))
+                return false;
+            if (groupId == null) {
+                if (other.getGroupId() != null)
+                    return false;
+            } else if (!groupId.equals(other.getGroupId()))
+                return false;
+            return true;
+        }
+
+        @Override
+        public int compareTo(GaPart o) {
+            if(o == null) {
+                return 1;
+            }
+            int i = groupId.compareTo(o.getGroupId());
+            if(i != 0) {
+                return i;
+            }
+            return artifactId.compareTo(o.getArtifactId());
+        }
+    }
+
     private final String groupId;
     private final String artifactId;
     private final String version;
+    private final GaPart gaPart;
 
     public Gav(String groupId, String artifactId) {
         this(groupId, artifactId, null);
@@ -55,6 +131,7 @@ public class Gav implements Comparable<Gav> {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
+        this.gaPart = new GaPart();
     }
 
     public String getGroupId() {
@@ -67,6 +144,10 @@ public class Gav implements Comparable<Gav> {
 
     public String getVersion() {
         return version;
+    }
+
+    public GaPart getGaPart() {
+        return gaPart;
     }
 
     @Override

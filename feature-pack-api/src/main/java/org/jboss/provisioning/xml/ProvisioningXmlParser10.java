@@ -30,6 +30,7 @@ import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -165,7 +166,11 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
                     switch (element) {
                         case FEATURE_PACK:
                             hasFp = true;
-                            builder.addFeaturePack(readFeaturePack(reader));
+                            try {
+                                builder.addFeaturePack(readFeaturePack(reader));
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to add feature-pack", e);
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

@@ -17,10 +17,10 @@
 package org.jboss.provisioning.descr;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 
 /**
@@ -35,8 +35,7 @@ public class FeaturePackLayoutDescriptionBuilder {
         return new FeaturePackLayoutDescriptionBuilder();
     }
 
-    private Map<Gav, FeaturePackDescription> featurePacks = Collections.emptyMap();
-    private Map<String, Map<String, String>> gavs = Collections.emptyMap();
+    private Map<Gav.GaPart, FeaturePackDescription> featurePacks = Collections.emptyMap();
 
     FeaturePackLayoutDescriptionBuilder() {
     }
@@ -47,53 +46,23 @@ public class FeaturePackLayoutDescriptionBuilder {
 
     public FeaturePackLayoutDescriptionBuilder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
         assert fp != null : "fp is null";
-        final Gav fpGav = fp.getGav();
-        checkGav(fpGav);
+        final Gav.GaPart fpGa = fp.getGav().getGaPart();
+        if(featurePacks.containsKey(fpGa)) {
+            throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(fpGa).getGav()));
+        }
         switch(featurePacks.size()) {
             case 0:
-                featurePacks = Collections.singletonMap(fpGav, fp);
+                featurePacks = Collections.singletonMap(fpGa, fp);
                 break;
             case 1:
-                featurePacks = new LinkedHashMap<Gav, FeaturePackDescription>(featurePacks);
+                featurePacks = new LinkedHashMap<Gav.GaPart, FeaturePackDescription>(featurePacks);
             default:
-                if(addLast && featurePacks.containsKey(fpGav)) {
-                    featurePacks.remove(fpGav);
+                if(addLast && featurePacks.containsKey(fpGa)) {
+                    featurePacks.remove(fpGa);
                 }
-                featurePacks.put(fpGav, fp);
+                featurePacks.put(fpGa, fp);
         }
         return this;
-    }
-
-    private void checkGav(final Gav fpGav) throws ProvisioningDescriptionException {
-        Map<String, String> group = gavs.get(fpGav.getGroupId());
-        if(group == null) {
-            final Map<String, String> result = Collections.singletonMap(fpGav.getArtifactId(), fpGav.getVersion());
-            switch(gavs.size()) {
-                case 0:
-                    gavs = Collections.singletonMap(fpGav.getGroupId(), result);
-                    break;
-                case 1:
-                    gavs = new HashMap<String, Map<String, String>>(gavs);
-                default:
-                    gavs.put(fpGav.getGroupId(), result);
-            }
-        } else if (group.containsKey(fpGav.getArtifactId())) {
-            if (!group.get(fpGav.getArtifactId()).equals(fpGav.getVersion())) {
-                throw new ProvisioningDescriptionException("The installation requires two versions of artifact "
-                        + fpGav.getGroupId() + ':' + fpGav.getArtifactId() + ": " + fpGav.getVersion() + " and "
-                        + group.get(fpGav.getArtifactId()));
-            }
-        } else {
-            if(group.size() == 1) {
-                group = new HashMap<String, String>(group);
-                if(gavs.size() == 1) {
-                    gavs = Collections.singletonMap(fpGav.getGroupId(), group);
-                } else {
-                    gavs.put(fpGav.getGroupId(), group);
-                }
-            }
-            group.put(fpGav.getArtifactId(), fpGav.getVersion());
-        }
     }
 
     public FeaturePackLayoutDescription build() throws ProvisioningDescriptionException {

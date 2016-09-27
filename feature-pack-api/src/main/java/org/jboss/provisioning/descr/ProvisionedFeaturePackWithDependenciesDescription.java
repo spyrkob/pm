@@ -23,7 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.Gav.GaPart;
 
 /**
  * Provisioned feature-pack with dependencies on other provisioned feature-packs.
@@ -36,21 +38,25 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
 
     public static class Builder extends ProvisionedFeaturePackDescription.Builder {
 
-        protected Map<Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        protected Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
 
         protected Builder() {
             super();
         }
 
-        public Builder addDependency(ProvisionedFeaturePackDescription dependency) {
+        public Builder addDependency(ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
+            final GaPart gaPart = dependency.getGav().getGaPart();
+            if(dependencies.containsKey(gaPart)) {
+                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(dependency.getGav(), dependencies.get(gaPart).getGav()));
+            }
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dependency.getGav(), dependency);
+                    dependencies = Collections.singletonMap(gaPart, dependency);
                     break;
                 case 1:
                     dependencies = new LinkedHashMap<>(dependencies);
                 default:
-                    dependencies.put(dependency.getGav(), dependency);
+                    dependencies.put(gaPart, dependency);
             }
             return this;
         }
@@ -66,10 +72,10 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
         return new Builder();
     }
 
-    private final Map<Gav, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies;
 
     protected ProvisionedFeaturePackWithDependenciesDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
-            Map<Gav, ProvisionedFeaturePackDescription> dependencies) {
+            Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies) {
         super(gav, excludedPackages, includedPackages);
         this.dependencies = dependencies;
     }

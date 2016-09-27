@@ -39,7 +39,7 @@ public class FeaturePackDescription {
     public static class Builder {
 
         private Gav gav;
-        private Map<Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
         private Set<String> topPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
         private List<Gav> provisioningPlugins = Collections.emptyList();
@@ -95,12 +95,12 @@ public class FeaturePackDescription {
             assert gav != null : "Gav is null";
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dependency.getGav(), dependency);
+                    dependencies = Collections.singletonMap(dependency.getGav().getGaPart(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashMap<Gav, ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new HashMap<Gav.GaPart, ProvisionedFeaturePackDescription>(dependencies);
                 default:
-                    dependencies.put(dependency.getGav(), dependency);
+                    dependencies.put(dependency.getGav().getGaPart(), dependency);
             }
             return this;
         }
@@ -141,13 +141,13 @@ public class FeaturePackDescription {
     }
 
     private final Gav gav;
-    private final Map<Gav, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies;
     private final Set<String> topPackages;
     private final Map<String, PackageDescription> packages;
     private final List<Gav> provisioningPlugins;
 
     protected FeaturePackDescription(Gav gav, Set<String> topPackages, Map<String, PackageDescription> packages,
-            Map<Gav, ProvisionedFeaturePackDescription> dependencies,
+            Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies,
             List<Gav> provisioningPlugins) {
         assert gav != null : "Gav is null";
         assert dependencies != null : "dependencies is null";
@@ -200,7 +200,7 @@ public class FeaturePackDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<Gav> getDependencyGAVs() {
+    public Set<Gav.GaPart> getDependencyGaParts() {
         return dependencies.keySet();
     }
 
@@ -208,8 +208,8 @@ public class FeaturePackDescription {
         return dependencies.values();
     }
 
-    public ProvisionedFeaturePackDescription getDependency(Gav gav) {
-        return dependencies.get(gav);
+    public ProvisionedFeaturePackDescription getDependency(Gav.GaPart gaPart) {
+        return dependencies.get(gaPart);
     }
 
     public boolean hasProvisioningPlugins() {
@@ -242,8 +242,8 @@ public class FeaturePackDescription {
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
-            for(Gav gav : dependencies.keySet()) {
-                logger.println(gav.toString());
+            for(Gav.GaPart ga : dependencies.keySet()) {
+                logger.println(ga.getGav().toString());
             }
             logger.decreaseOffset();
         }

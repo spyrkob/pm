@@ -31,6 +31,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
@@ -262,15 +263,22 @@ public class FeaturePacksDiff {
             if(!fp2Descr.hasDependencies()) {
                 fp1Diff.addAllDependencies(fp1Descr.getDependencies());
             } else {
-                final Set<Gav> fp2Deps = new HashSet<Gav>(fp2Descr.getDependencyGAVs());
-                for(Gav gav : fp1Descr.getDependencyGAVs()) {
-                    if(!fp2Deps.remove(gav)) {
-                        fp1Diff.addDependency(fp1Descr.getDependency(gav));
+                final Set<Gav.GaPart> fp2Deps = new HashSet<>(fp2Descr.getDependencyGaParts());
+                for(Gav.GaPart gaPart : fp1Descr.getDependencyGaParts()) {
+                    if(!fp2Deps.remove(gaPart)) {
+                        fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
+                    } else {
+                        final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart);
+                        if(!fp2Dep.getGav().equals(gaPart.getGav())) {
+                            fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
+                        } else {
+                            fp2Diff.addDependency(fp2Dep);
+                        }
                     }
                 }
                 if(!fp2Deps.isEmpty()) {
-                    for(Gav gav : fp2Deps) {
-                        fp2Diff.addDependency(fp2Descr.getDependency(gav));
+                    for(Gav.GaPart gaPart : fp2Deps) {
+                        fp2Diff.addDependency(fp2Descr.getDependency(gaPart));
                     }
                 }
             }

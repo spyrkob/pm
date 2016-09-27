@@ -70,11 +70,15 @@ public class FeaturePackLayoutInstaller {
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
             final Gav fpGav = fp.getGav();
-            ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav);
+            ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav.getGaPart());
             if(provisionedFp == null) {
                 provisionedFp = ProvisionedFeaturePackDescription.builder().setGav(fpGav).build();
             }
-            provisionedLayout.addFeaturePack(provisionedFp);
+            try {
+                provisionedLayout.addFeaturePack(provisionedFp);
+            } catch (ProvisioningDescriptionException e) {
+                throw new FeaturePackInstallException("Failed to add feature-pack", e);
+            }
 
             System.out.println("Installing " + fpGav + " to " + installDir);
             final Path fpDir = layoutDir.resolve(fpGav.getGroupId())
