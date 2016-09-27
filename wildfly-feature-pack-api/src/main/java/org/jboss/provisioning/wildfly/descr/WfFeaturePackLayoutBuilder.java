@@ -35,7 +35,6 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
@@ -59,7 +58,7 @@ public class WfFeaturePackLayoutBuilder {
     private Path homeDir;
     private String modulesPath;
     private Path modulesDir;
-    private FeaturePackLayoutDescriptionBuilder installBuilder;
+    private FeaturePackLayoutDescription.Builder installBuilder;
 
     private String fpGroupId;
     private String fpArtifactId;
@@ -75,7 +74,7 @@ public class WfFeaturePackLayoutBuilder {
         this.homeDir = homeDir;
         modulesPath = wfDescr.getModulesPath();
         modulesDir = homeDir.resolve(modulesPath);
-        installBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
+        installBuilder = FeaturePackLayoutDescription.builder();
         for(WfFeaturePackDescription fpDescr : wfDescr.getFeaturePacks()) {
             build(fpDescr);
         }

@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.util.PathsUtils;
@@ -177,7 +179,11 @@ public class ProvisioningManager {
         }
     }
 
-    private static void syntaxSandbox() throws Throwable {
+    public static void main(String[] args) throws Throwable {
+
+        FeaturePackLayoutDescription.builder()
+            .addFeaturePack(FeaturePackDescription.builder(Gav.fromString("g1:a1:v1")).build())
+            .addFeaturePack(FeaturePackDescription.builder(Gav.fromString("g1:a1:v2")).build());
 
         final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(Paths.get("installation/home")).build();
 

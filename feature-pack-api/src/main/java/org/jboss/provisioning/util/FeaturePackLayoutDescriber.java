@@ -29,7 +29,6 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
@@ -51,7 +50,7 @@ public class FeaturePackLayoutDescriber {
             throw new UnsupportedOperationException(); // TODO
         }
 
-        final FeaturePackLayoutDescriptionBuilder installBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
+        final FeaturePackLayoutDescription.Builder installBuilder = FeaturePackLayoutDescription.builder();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(fpLayout)) {
             for(Path packageDir : stream) {
                 processGroup(installBuilder, packageDir, encoding);
@@ -62,7 +61,7 @@ public class FeaturePackLayoutDescriber {
         return installBuilder.build();
     }
 
-    private static void processGroup(final FeaturePackLayoutDescriptionBuilder installBuilder, Path pkgDir, String encoding) throws ProvisioningDescriptionException {
+    private static void processGroup(final FeaturePackLayoutDescription.Builder installBuilder, Path pkgDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(pkgDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pkgDir)) {
             for(Path artifactDir : stream) {
@@ -73,7 +72,7 @@ public class FeaturePackLayoutDescriber {
         }
     }
 
-    private static void processArtifact(final FeaturePackLayoutDescriptionBuilder installBuilder, Path artifactDir, String encoding) throws ProvisioningDescriptionException {
+    private static void processArtifact(final FeaturePackLayoutDescription.Builder installBuilder, Path artifactDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(artifactDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(artifactDir)) {
             for(Path p : stream) {
