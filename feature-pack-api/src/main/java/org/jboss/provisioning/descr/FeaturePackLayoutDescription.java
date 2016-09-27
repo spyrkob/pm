@@ -18,8 +18,11 @@ package org.jboss.provisioning.descr;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -30,6 +33,47 @@ import org.jboss.provisioning.util.DescrFormatter;
  * @author Alexey Loubyansky
  */
 public class FeaturePackLayoutDescription {
+
+    public static class Builder {
+
+        private Map<Gav.GaPart, FeaturePackDescription> featurePacks = Collections.emptyMap();
+
+        private Builder() {
+        }
+
+        public Builder addFeaturePack(FeaturePackDescription fp) throws ProvisioningDescriptionException {
+            return addFeaturePack(fp, true);
+        }
+
+        public Builder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
+            assert fp != null : "fp is null";
+            final Gav.GaPart fpGa = fp.getGav().getGaPart();
+            if(featurePacks.containsKey(fpGa)) {
+                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(fpGa).getGav()));
+            }
+            switch(featurePacks.size()) {
+                case 0:
+                    featurePacks = Collections.singletonMap(fpGa, fp);
+                    break;
+                case 1:
+                    featurePacks = new LinkedHashMap<Gav.GaPart, FeaturePackDescription>(featurePacks);
+                default:
+                    if(addLast && featurePacks.containsKey(fpGa)) {
+                        featurePacks.remove(fpGa);
+                    }
+                    featurePacks.put(fpGa, fp);
+            }
+            return this;
+        }
+
+        public FeaturePackLayoutDescription build() throws ProvisioningDescriptionException {
+            return new FeaturePackLayoutDescription(Collections.unmodifiableMap(featurePacks));
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     private final Map<Gav.GaPart, FeaturePackDescription> featurePacks;
 

@@ -73,7 +73,6 @@ import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescriptionBuilder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
@@ -164,7 +163,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         workDir = IoUtils.createRandomTmpDir();
         final Path layoutDir = workDir.resolve("layout");
         try {
-            final FeaturePackLayoutDescriptionBuilder descrBuilder = FeaturePackLayoutDescriptionBuilder.newInstance();
+            final FeaturePackLayoutDescription.Builder descrBuilder = FeaturePackLayoutDescription.builder();
             layoutFeaturePacks(provisionedDescr.getFeaturePacks(), descrBuilder, layoutDir);
             layoutDescr = descrBuilder.build();
             if (!Files.exists(installDir)) {
@@ -262,7 +261,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     }
 
     private void layoutFeaturePacks(Collection<ProvisionedFeaturePackDescription> provisionedFps,
-            FeaturePackLayoutDescriptionBuilder layoutBuilder, Path layoutDir) throws MojoExecutionException {
+            FeaturePackLayoutDescription.Builder layoutBuilder, Path layoutDir) throws MojoExecutionException {
 
         for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
             final Gav fpGav = provisionedFp.getGav();
