@@ -18,8 +18,8 @@ package org.jboss.provisioning.util;
 
 import java.nio.file.Path;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
-import org.jboss.provisioning.Gav;
 
 /**
  * Utility class to resolve directories and files that represent
@@ -41,7 +41,7 @@ public class PathsUtils {
         return getProvisionedStateDir(installationDir).resolve(Constants.LAYOUT_STATE_XML);
     }
 
-    public static Path getInstalledFeaturePackXml(Path installationDir, Gav fpGav) {
+    public static Path getInstalledFeaturePackXml(Path installationDir, ArtifactCoords.GavPart fpGav) {
         return getProvisionedStateDir(installationDir)
                 .resolve(Constants.FEATURE_PACKS)
                 .resolve(fpGav.getGroupId())

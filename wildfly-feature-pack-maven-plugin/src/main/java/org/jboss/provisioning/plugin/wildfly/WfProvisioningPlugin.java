@@ -36,9 +36,9 @@ import java.util.zip.ZipEntry;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
@@ -160,7 +160,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                             for(Path version : versionStream) {
                                 if(++count > 1) {
                                     throw new ProvisioningException("There is more than one version of feature-pack " +
-                                        new Gav(groupId.getFileName().toString(), artifactId.getFileName().toString()));
+                                            ArtifactCoords.getGaPart(groupId.getFileName().toString(), artifactId.getFileName().toString()));
                                 }
                                 collectFeaturePackSubsystemsInput(ctx, version);
                             }

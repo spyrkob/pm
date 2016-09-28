@@ -30,9 +30,9 @@ import java.util.Properties;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
@@ -131,8 +131,8 @@ public class WfFeaturePackLayoutBuilder {
             }
             fpDir = fpTarget;
         }
-        fpBuilder.setGAV(new Gav(fpGroupId, fpArtifactId, fpVersion));
-        fpBuilder.addProvisioningPlugin(new Gav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.setGav(ArtifactCoords.getGavPart(fpGroupId, fpArtifactId, fpVersion));
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {

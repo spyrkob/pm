@@ -69,7 +69,6 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
@@ -111,22 +110,22 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
     private FeaturePackLayoutDescription layoutDescr;
     private Path workDir;
-    private Set<Gav> provisioningPlugins = Collections.emptySet();
+    private Set<ArtifactCoords.GavPart> provisioningPlugins = Collections.emptySet();
 
-    private void addProvisioningPlugin(Gav gav) {
+    private void addProvisioningPlugin(ArtifactCoords.GavPart gav) {
         switch(provisioningPlugins.size()) {
             case 0:
                 provisioningPlugins = Collections.singleton(gav);
                 break;
             case 1:
-                provisioningPlugins = new LinkedHashSet<Gav>(provisioningPlugins);
+                provisioningPlugins = new LinkedHashSet<ArtifactCoords.GavPart>(provisioningPlugins);
             default:
                 provisioningPlugins.add(gav);
         }
     }
 
-    private void addAllProvisioningPlugins(List<Gav> gavs) {
-        for(Gav gav : gavs) {
+    private void addAllProvisioningPlugins(List<ArtifactCoords.GavPart> gavs) {
+        for(ArtifactCoords.GavPart gav : gavs) {
             addProvisioningPlugin(gav);
         }
     }
@@ -264,7 +263,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             FeaturePackLayoutDescription.Builder layoutBuilder, Path layoutDir) throws MojoExecutionException {
 
         for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
-            final Gav fpGav = provisionedFp.getGav();
+            final ArtifactCoords.GavPart fpGav = provisionedFp.getGav();
             final ArtifactResult res = resolveArtifact(fpGav, "zip");
             if(!res.isResolved()) {
                 throw new MojoExecutionException(FpMavenErrors.artifactResolution(new ArtifactCoords(fpGav.getGroupId(), fpGav.getArtifactId(), fpGav.getVersion(), "", "zip")));
@@ -312,13 +311,13 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
     }
 
-    private List<ArtifactResult> resolveArtifacts(final Collection<Gav> fpGavs, String extension) throws MojoExecutionException {
+    private List<ArtifactResult> resolveArtifacts(final Collection<ArtifactCoords.GavPart> fpGavs, String extension) throws MojoExecutionException {
         final List<ArtifactRequest> requests;
         if (fpGavs.size() == 1) {
             requests = Collections.singletonList(getArtifactRequest(ArtifactCoords.fromGav(fpGavs.iterator().next(), extension)));
         } else {
             requests = new ArrayList<ArtifactRequest>(fpGavs.size());
-            for (Gav gav : fpGavs) {
+            for (ArtifactCoords.GavPart gav : fpGavs) {
                 requests.add(getArtifactRequest(ArtifactCoords.fromGav(gav, extension)));
             }
         }
@@ -326,14 +325,14 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             return repoSystem.resolveArtifacts(repoSession, requests);
         } catch (ArtifactResolutionException e) {
             final Collection<ArtifactCoords> coords = new ArrayList<>(fpGavs.size());
-            for(Gav gav : fpGavs) {
-                coords.add(ArtifactCoords.fromGav(gav));
+            for(ArtifactCoords.GavPart gav : fpGavs) {
+                coords.add(gav.getArtifactCoords());
             }
             throw new MojoExecutionException(FpMavenErrors.artifactResolution(coords), e);
         }
     }
 
-    private ArtifactResult resolveArtifact(Gav fpGav, String extension) throws MojoExecutionException {
+    private ArtifactResult resolveArtifact(ArtifactCoords.GavPart fpGav, String extension) throws MojoExecutionException {
         final ArtifactRequest requests = getArtifactRequest(ArtifactCoords.fromGav(fpGav, extension));
         try {
             return repoSystem.resolveArtifact(repoSession, requests);

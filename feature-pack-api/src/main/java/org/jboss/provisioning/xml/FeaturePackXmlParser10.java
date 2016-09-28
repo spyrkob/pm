@@ -27,7 +27,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
@@ -147,7 +147,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        fpBuilder.setGAV(readGAV(reader));
+        fpBuilder.setGav(readGAV(reader));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -178,7 +178,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private Gav readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ArtifactCoords.GavPart readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -204,7 +204,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        return new Gav(groupId, artifactId, version);
+        return ArtifactCoords.getGavPart(groupId, artifactId, version);
     }
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
@@ -264,7 +264,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(new Gav(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {

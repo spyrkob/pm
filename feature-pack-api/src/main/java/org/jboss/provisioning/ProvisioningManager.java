@@ -114,7 +114,7 @@ public class ProvisioningManager {
      * @param fpGav  feature-pack GAV
      * @throws ProvisioningException  in case the installation fails
      */
-    public void install(Gav fpGav) throws ProvisioningException {
+    public void install(ArtifactCoords.GavPart fpGav) throws ProvisioningException {
         install(ProvisionedFeaturePackDescription.builder().setGav(fpGav).build());
     }
 
@@ -146,7 +146,7 @@ public class ProvisioningManager {
      * @param gav  feature-pack GAV
      * @throws ProvisioningException  in case the uninstallation fails
      */
-    public void unistall(Gav gav) throws ProvisioningException {
+    public void unistall(ArtifactCoords.GavPart gav) throws ProvisioningException {
         final ProvisionedInstallationDescription currentState = this.getCurrentState(false);
         if(currentState == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
@@ -181,16 +181,19 @@ public class ProvisioningManager {
 
     public static void main(String[] args) throws Throwable {
 
-        FeaturePackLayoutDescription.builder()
-            .addFeaturePack(FeaturePackDescription.builder(Gav.fromString("g1:a1:v1")).build())
-            .addFeaturePack(FeaturePackDescription.builder(Gav.fromString("g1:a1:v2")).build());
+        final FeaturePackLayoutDescription layout = FeaturePackLayoutDescription.builder()
+            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a1:v1")).build())
+            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a2:v2")).build())
+            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g2:a3:v3")).build())
+            .build();
+        System.out.println(layout.getGav(ArtifactCoords.getGaPart("g2", "a3")));
 
         final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(Paths.get("installation/home")).build();
 
-        pm.install(Gav.fromString("g1:a1:v1"));
+        pm.install(ArtifactCoords.getGavPart("g1:a1:v1"));
         pm.install(
                 ProvisionedFeaturePackDescription.builder()
-                .setGav(Gav.fromString("g1:a1:v1"))
+                .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
                 .excludePackage("p1")
                 .excludePackage("p2")
                 .build());
@@ -198,13 +201,13 @@ public class ProvisioningManager {
         pm.provision(ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription.builder()
-                        .setGav(Gav.fromString("g1:a1:v1"))
+                        .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
                         .excludePackage("p1")
                         .excludePackage("p2")
                         .build())
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription.builder()
-                        .setGav(Gav.fromString("g2:a2:v2"))
+                        .setGav(ArtifactCoords.getGavPart("g2:a2:v2"))
                         .excludePackage("p3")
                         .excludePackage("p4")
                         .build())

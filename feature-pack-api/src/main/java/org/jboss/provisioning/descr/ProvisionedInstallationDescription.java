@@ -22,8 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -35,7 +35,7 @@ public class ProvisionedInstallationDescription {
 
     public static class Builder {
 
-        private Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
@@ -47,7 +47,7 @@ public class ProvisionedInstallationDescription {
         }
 
         public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) throws ProvisioningDescriptionException {
-            final Gav.GaPart gaPart = fp.getGav().getGaPart();
+            final ArtifactCoords.GaPart gaPart = fp.getGav().getGaPart();
             if(featurePacks.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
             }
@@ -63,7 +63,7 @@ public class ProvisionedInstallationDescription {
             return this;
         }
 
-        public Builder removeFeaturePack(Gav gav) throws ProvisioningException {
+        public Builder removeFeaturePack(ArtifactCoords.GavPart gav) throws ProvisioningException {
             if(featurePacks.size() == 1) {
                 if(!featurePacks.containsKey(gav)) {
                     throw new ProvisioningException("Installation does not contain feature-pack " + gav);
@@ -98,9 +98,9 @@ public class ProvisionedInstallationDescription {
         return new Builder(installDescr);
     }
 
-    private Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks;
+    private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks;
 
-    private ProvisionedInstallationDescription(Map<Gav.GaPart, ProvisionedFeaturePackDescription> featurePacks) {
+    private ProvisionedInstallationDescription(Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks) {
         this.featurePacks = featurePacks;
     }
 
@@ -108,11 +108,11 @@ public class ProvisionedInstallationDescription {
         return !featurePacks.isEmpty();
     }
 
-    public boolean containsFeaturePack(Gav.GaPart gaPart) {
+    public boolean containsFeaturePack(ArtifactCoords.GaPart gaPart) {
         return featurePacks.containsKey(gaPart);
     }
 
-    public Set<Gav.GaPart> getFeaturePackGaParts() {
+    public Set<ArtifactCoords.GaPart> getFeaturePackGaParts() {
         return featurePacks.keySet();
     }
 
@@ -120,7 +120,7 @@ public class ProvisionedInstallationDescription {
         return featurePacks.values();
     }
 
-    public ProvisionedFeaturePackDescription getFeaturePack(Gav.GaPart gaPart) {
+    public ProvisionedFeaturePackDescription getFeaturePack(ArtifactCoords.GaPart gaPart) {
         return featurePacks.get(gaPart);
     }
 

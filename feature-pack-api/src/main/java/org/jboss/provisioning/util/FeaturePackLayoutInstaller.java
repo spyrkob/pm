@@ -21,8 +21,8 @@ import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -69,7 +69,7 @@ public class FeaturePackLayoutInstaller {
 
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
-            final Gav fpGav = fp.getGav();
+            final ArtifactCoords.GavPart fpGav = fp.getGav();
             ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav.getGaPart());
             if(provisionedFp == null) {
                 provisionedFp = ProvisionedFeaturePackDescription.builder().setGav(fpGav).build();

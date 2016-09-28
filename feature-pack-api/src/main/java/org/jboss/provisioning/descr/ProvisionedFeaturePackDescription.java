@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -35,14 +35,14 @@ public class ProvisionedFeaturePackDescription {
 
     public static class Builder {
 
-        protected Gav gav;
+        protected ArtifactCoords.GavPart gav;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
 
         protected Builder() {
         }
 
-        public Builder setGav(Gav gav) {
+        public Builder setGav(ArtifactCoords.GavPart gav) {
             this.gav = gav;
             return this;
         }
@@ -99,18 +99,18 @@ public class ProvisionedFeaturePackDescription {
         return new Builder();
     }
 
-    private final Gav gav;
+    private final ArtifactCoords.GavPart gav;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages) {
+    protected ProvisionedFeaturePackDescription(ArtifactCoords.GavPart gav, Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
         this.excludedPackages = excludedPackages;
         this.includedPackages = includedPackages;
     }
 
-    public Gav getGav() {
+    public ArtifactCoords.GavPart getGav() {
         return gav;
     }
 
