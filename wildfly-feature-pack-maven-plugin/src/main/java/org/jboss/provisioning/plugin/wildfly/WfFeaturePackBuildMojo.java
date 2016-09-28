@@ -57,7 +57,6 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -174,7 +173,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final Builder fpBuilder = FeaturePackDescription.builder(new Gav(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final Builder fpBuilder = FeaturePackDescription.builder(ArtifactCoords.getGavPart(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
         WildFlyFeaturePackBuild build;
@@ -206,7 +205,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
-        fpBuilder.addProvisioningPlugin(new Gav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
         final FeaturePackDescription fpDescr = fpBuilder.addTopPackage(modulesPkg).build();
         try {
@@ -330,7 +329,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 final String depStr = dep.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
-                final Gav gav = Gav.fromString(gavStr);
+                final ArtifactCoords.GavPart gav = ArtifactCoords.getGavPart(gavStr);
                 final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(gav);
                 if (dep.hasExcludedPackages()) {
                     try {

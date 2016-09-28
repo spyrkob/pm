@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
@@ -50,9 +50,9 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
         if (installDescr.hasFeaturePacks()) {
-            final Gav.GaPart[] gaParts = installDescr.getFeaturePackGaParts().toArray(new Gav.GaPart[0]);
+            final ArtifactCoords.GaPart[] gaParts = installDescr.getFeaturePackGaParts().toArray(new ArtifactCoords.GaPart[0]);
             Arrays.sort(gaParts);
-            for (Gav.GaPart gaPart : gaParts) {
+            for (ArtifactCoords.GaPart gaPart : gaParts) {
                 final ElementNode fp = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fp, installDescr.getFeaturePack(gaPart));
             }

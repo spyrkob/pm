@@ -92,11 +92,11 @@ public interface Errors {
         return "Provisioned feature-pack may include or exclude packages but not both.";
     }
 
-    static String unknownFeaturePack(Gav gav) {
+    static String unknownFeaturePack(ArtifactCoords.GavPart gav) {
         return "Feature-pack " + gav + " is not found";
     }
 
-    static String featurePackVersionConflict(Gav gav, Gav gav2) {
+    static String featurePackVersionConflict(ArtifactCoords.GavPart gav, ArtifactCoords.GavPart gav2) {
         return "Feature-pack " + gav.getGaPart() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
     }
 }

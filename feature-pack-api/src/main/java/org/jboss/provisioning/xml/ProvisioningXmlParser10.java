@@ -25,8 +25,8 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
@@ -214,7 +214,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         }
 
         final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
-        fpBuilder.setGav(new Gav(groupId, artifactId, version));
+        fpBuilder.setGav(ArtifactCoords.getGavPart(groupId, artifactId, version));
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

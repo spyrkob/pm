@@ -47,9 +47,9 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.IoUtils;
@@ -282,7 +282,7 @@ public class FpCommand extends CommandBase {
 
         final FeaturePackDescriptionDiffs diff;
         try {
-            diff = FeaturePacksDiff.compare(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
+            diff = FeaturePacksDiff.compare(workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
         } catch (ProvisioningDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
@@ -313,7 +313,8 @@ public class FpCommand extends CommandBase {
 
         if (xmlOnly) {
             try (StringWriter writer = new StringWriter()) {
-                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
+                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(
+                        workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
                 FeaturePackXmlWriter.INSTANCE.write(newChildDescr, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (ProvisioningDescriptionException e) {
@@ -325,7 +326,7 @@ public class FpCommand extends CommandBase {
             }
         } else {
             try {
-                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, Gav.fromString(gav1), Gav.fromString(gav2));
+                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to extract parent as a dependency", e);
             }

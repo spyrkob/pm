@@ -18,8 +18,8 @@ package org.jboss.provisioning.xml;
 
 import java.nio.file.Paths;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.junit.Assert;
@@ -40,16 +40,16 @@ public class ProvisioningXmlExcludesIncludesTest {
                 .validateAndParse("src/test/resources/provisioning/provisioning-excludes.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group1", "fp1", "0.0.1"))
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group1", "fp1", "0.0.1"))
                         .excludePackage("p1")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group1", "fp2", "0.0.2"))
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group1", "fp2", "0.0.2"))
                         .excludePackage("p2")
                         .excludePackage("p3")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group2", "fp3", "0.0.3")).build())
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -60,16 +60,16 @@ public class ProvisioningXmlExcludesIncludesTest {
                 .validateAndParse("src/test/resources/provisioning/provisioning-includes.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group1", "fp1", "0.0.1"))
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group1", "fp1", "0.0.1"))
                         .includePackage("p1")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group1", "fp2", "0.0.2"))
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group1", "fp2", "0.0.2"))
                         .includePackage("p2")
                         .includePackage("p3")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(new Gav("org.jboss.group2", "fp3", "0.0.3")).build())
+                        .setGav(ArtifactCoords.getGavPart("org.jboss.group2", "fp3", "0.0.3")).build())
                 .build();
         Assert.assertEquals(expected, found);
     }

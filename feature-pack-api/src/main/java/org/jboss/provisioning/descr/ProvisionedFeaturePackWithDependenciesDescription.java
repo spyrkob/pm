@@ -23,9 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
-import org.jboss.provisioning.Gav.GaPart;
 
 /**
  * Provisioned feature-pack with dependencies on other provisioned feature-packs.
@@ -38,14 +37,14 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
 
     public static class Builder extends ProvisionedFeaturePackDescription.Builder {
 
-        protected Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        protected Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
 
         protected Builder() {
             super();
         }
 
         public Builder addDependency(ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
-            final GaPart gaPart = dependency.getGav().getGaPart();
+            final ArtifactCoords.GaPart gaPart = dependency.getGav().getGaPart();
             if(dependencies.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(dependency.getGav(), dependencies.get(gaPart).getGav()));
             }
@@ -72,10 +71,10 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
         return new Builder();
     }
 
-    private final Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies;
 
-    protected ProvisionedFeaturePackWithDependenciesDescription(Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
-            Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies) {
+    protected ProvisionedFeaturePackWithDependenciesDescription(ArtifactCoords.GavPart gav, Set<String> excludedPackages, Set<String> includedPackages,
+            Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies) {
         super(gav, excludedPackages, includedPackages);
         this.dependencies = dependencies;
     }

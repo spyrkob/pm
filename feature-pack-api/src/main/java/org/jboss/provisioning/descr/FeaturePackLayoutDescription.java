@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -36,7 +36,7 @@ public class FeaturePackLayoutDescription {
 
     public static class Builder {
 
-        private Map<Gav.GaPart, FeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
@@ -47,7 +47,7 @@ public class FeaturePackLayoutDescription {
 
         public Builder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
             assert fp != null : "fp is null";
-            final Gav.GaPart fpGa = fp.getGav().getGaPart();
+            final ArtifactCoords.GaPart fpGa = fp.getGav().getGaPart();
             if(featurePacks.containsKey(fpGa)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(fpGa).getGav()));
             }
@@ -56,7 +56,7 @@ public class FeaturePackLayoutDescription {
                     featurePacks = Collections.singletonMap(fpGa, fp);
                     break;
                 case 1:
-                    featurePacks = new LinkedHashMap<Gav.GaPart, FeaturePackDescription>(featurePacks);
+                    featurePacks = new LinkedHashMap<ArtifactCoords.GaPart, FeaturePackDescription>(featurePacks);
                 default:
                     if(addLast && featurePacks.containsKey(fpGa)) {
                         featurePacks.remove(fpGa);
@@ -75,9 +75,9 @@ public class FeaturePackLayoutDescription {
         return new Builder();
     }
 
-    private final Map<Gav.GaPart, FeaturePackDescription> featurePacks;
+    private final Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks;
 
-    FeaturePackLayoutDescription(Map<Gav.GaPart, FeaturePackDescription> featurePacks) {
+    FeaturePackLayoutDescription(Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks) {
         assert featurePacks != null : "featurePacks is null";
         this.featurePacks = featurePacks;
     }
@@ -86,11 +86,11 @@ public class FeaturePackLayoutDescription {
         return !featurePacks.isEmpty();
     }
 
-    public boolean contains(Gav.GaPart fpGa) {
+    public boolean contains(ArtifactCoords.GaPart fpGa) {
         return featurePacks.containsKey(fpGa);
     }
 
-    public Gav getGav(Gav.GaPart fpGa) {
+    public ArtifactCoords.GavPart getGav(ArtifactCoords.GaPart fpGa) {
         final FeaturePackDescription fpDescr = featurePacks.get(fpGa);
         return fpDescr == null ? null : fpDescr.getGav();
     }

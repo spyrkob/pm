@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.Gav;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -38,21 +38,21 @@ public class FeaturePackDescription {
 
     public static class Builder {
 
-        private Gav gav;
-        private Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private ArtifactCoords.GavPart gav;
+        private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
         private Set<String> topPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
-        private List<Gav> provisioningPlugins = Collections.emptyList();
+        private List<ArtifactCoords.GavPart> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
         }
 
-        protected Builder(Gav gav) {
+        protected Builder(ArtifactCoords.GavPart gav) {
             this.gav = gav;
         }
 
-        public Builder setGAV(Gav gav) {
+        public Builder setGav(ArtifactCoords.GavPart gav) {
             this.gav = gav;
             return this;
         }
@@ -98,7 +98,7 @@ public class FeaturePackDescription {
                     dependencies = Collections.singletonMap(dependency.getGav().getGaPart(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashMap<Gav.GaPart, ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new HashMap<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription>(dependencies);
                 default:
                     dependencies.put(dependency.getGav().getGaPart(), dependency);
             }
@@ -112,14 +112,14 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addProvisioningPlugin(Gav gav) {
+        public Builder addProvisioningPlugin(ArtifactCoords.GavPart gav) {
             assert gav != null : "gav is null";
             switch(provisioningPlugins.size()) {
                 case 0:
                     provisioningPlugins = Collections.singletonList(gav);
                     break;
                 case 1:
-                    provisioningPlugins = new ArrayList<Gav>(provisioningPlugins);
+                    provisioningPlugins = new ArrayList<ArtifactCoords.GavPart>(provisioningPlugins);
                 default:
                     provisioningPlugins.add(gav);
             }
@@ -136,19 +136,19 @@ public class FeaturePackDescription {
         return builder(null);
     }
 
-    public static Builder builder(Gav gav) {
+    public static Builder builder(ArtifactCoords.GavPart gav) {
         return new Builder(gav);
     }
 
-    private final Gav gav;
-    private final Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies;
+    private final ArtifactCoords.GavPart gav;
+    private final Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies;
     private final Set<String> topPackages;
     private final Map<String, PackageDescription> packages;
-    private final List<Gav> provisioningPlugins;
+    private final List<ArtifactCoords.GavPart> provisioningPlugins;
 
-    protected FeaturePackDescription(Gav gav, Set<String> topPackages, Map<String, PackageDescription> packages,
-            Map<Gav.GaPart, ProvisionedFeaturePackDescription> dependencies,
-            List<Gav> provisioningPlugins) {
+    protected FeaturePackDescription(ArtifactCoords.GavPart gav, Set<String> topPackages, Map<String, PackageDescription> packages,
+            Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies,
+            List<ArtifactCoords.GavPart> provisioningPlugins) {
         assert gav != null : "Gav is null";
         assert dependencies != null : "dependencies is null";
         assert topPackages != null : "topPackages is null";
@@ -160,7 +160,7 @@ public class FeaturePackDescription {
         this.provisioningPlugins = provisioningPlugins;
     }
 
-    public Gav getGav() {
+    public ArtifactCoords.GavPart getGav() {
         return gav;
     }
 
@@ -200,7 +200,7 @@ public class FeaturePackDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<Gav.GaPart> getDependencyGaParts() {
+    public Set<ArtifactCoords.GaPart> getDependencyGaParts() {
         return dependencies.keySet();
     }
 
@@ -208,7 +208,7 @@ public class FeaturePackDescription {
         return dependencies.values();
     }
 
-    public ProvisionedFeaturePackDescription getDependency(Gav.GaPart gaPart) {
+    public ProvisionedFeaturePackDescription getDependency(ArtifactCoords.GaPart gaPart) {
         return dependencies.get(gaPart);
     }
 
@@ -216,7 +216,7 @@ public class FeaturePackDescription {
         return !provisioningPlugins.isEmpty();
     }
 
-    public List<Gav> getProvisioningPlugins() {
+    public List<ArtifactCoords.GavPart> getProvisioningPlugins() {
         return provisioningPlugins;
     }
 
@@ -242,15 +242,15 @@ public class FeaturePackDescription {
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
-            for(Gav.GaPart ga : dependencies.keySet()) {
-                logger.println(ga.getGav().toString());
+            for(ArtifactCoords.GaPart ga : dependencies.keySet()) {
+                logger.println(ga.getGavPart().toString());
             }
             logger.decreaseOffset();
         }
 
         if(!provisioningPlugins.isEmpty()) {
             logger.println("Provisioning plugins:").increaseOffset();
-            for(Gav gav : provisioningPlugins) {
+            for(ArtifactCoords.GavPart gav : provisioningPlugins) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();

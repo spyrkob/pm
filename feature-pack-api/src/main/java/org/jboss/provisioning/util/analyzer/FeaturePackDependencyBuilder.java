@@ -22,9 +22,9 @@ import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
@@ -43,22 +43,22 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  */
 public class FeaturePackDependencyBuilder {
 
-    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav) throws ProvisioningDescriptionException {
+    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav) throws ProvisioningDescriptionException {
         new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, true).extractParentAsDependency();
     }
 
-    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav) throws ProvisioningDescriptionException {
+    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav) throws ProvisioningDescriptionException {
         return new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, false).describeParentAsDependency();
     }
 
     private final Path fpLayoutDir;
     private final String encoding;
-    private final Gav childGav;
-    private final Gav parentGav;
+    private final ArtifactCoords.GavPart childGav;
+    private final ArtifactCoords.GavPart parentGav;
     private final boolean updateXml;
 
 
-    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, Gav childGav, Gav parentGav, boolean updateXml) {
+    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav, boolean updateXml) {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         this.childGav = childGav;

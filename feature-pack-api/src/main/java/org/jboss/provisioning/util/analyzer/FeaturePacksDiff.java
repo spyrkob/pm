@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.Gav;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -46,11 +46,11 @@ import org.jboss.provisioning.util.analyzer.FeaturePackSpecificDescription.Build
  */
 public class FeaturePacksDiff {
 
-    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
+    static FeaturePacksDiff newInstance(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart gav1, ArtifactCoords.GavPart gav2) throws ProvisioningDescriptionException {
         return new FeaturePacksDiff(fpLayoutDir, encoding, gav1, gav2);
     }
 
-    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
+    public static FeaturePackDescriptionDiffs compare(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart gav1, ArtifactCoords.GavPart gav2) throws ProvisioningDescriptionException {
         return newInstance(fpLayoutDir, encoding, gav1, gav2).compare();
     }
 
@@ -67,7 +67,7 @@ public class FeaturePacksDiff {
     private final FeaturePackDescription fp1Descr;
     private final FeaturePackDescription fp2Descr;
 
-    FeaturePacksDiff(Path fpLayoutDir, String encoding, Gav gav1, Gav gav2) throws ProvisioningDescriptionException {
+    FeaturePacksDiff(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart gav1, ArtifactCoords.GavPart gav2) throws ProvisioningDescriptionException {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
@@ -131,8 +131,8 @@ public class FeaturePacksDiff {
 
         compareDependencies(fp1Pkg.getDescription(), fp2Pkg.getDescription(), g1Diff, g2Diff);
 
-        final Path g1Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp1Pkg.getGAV()), fp1Pkg.getName());
-        final Path g2Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp2Pkg.getGAV()), fp2Pkg.getName());
+        final Path g1Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp1Pkg.getGav()), fp1Pkg.getName());
+        final Path g2Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp2Pkg.getGav()), fp2Pkg.getName());
 
         final boolean g1ContentExists = Files.exists(g1Content);
         final boolean g2ContentExists = Files.exists(g2Content);
@@ -263,13 +263,13 @@ public class FeaturePacksDiff {
             if(!fp2Descr.hasDependencies()) {
                 fp1Diff.addAllDependencies(fp1Descr.getDependencies());
             } else {
-                final Set<Gav.GaPart> fp2Deps = new HashSet<>(fp2Descr.getDependencyGaParts());
-                for(Gav.GaPart gaPart : fp1Descr.getDependencyGaParts()) {
+                final Set<ArtifactCoords.GaPart> fp2Deps = new HashSet<>(fp2Descr.getDependencyGaParts());
+                for(ArtifactCoords.GaPart gaPart : fp1Descr.getDependencyGaParts()) {
                     if(!fp2Deps.remove(gaPart)) {
                         fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
                     } else {
                         final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart);
-                        if(!fp2Dep.getGav().equals(gaPart.getGav())) {
+                        if(!fp2Dep.getGav().equals(gaPart.getGavPart())) {
                             fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
                         } else {
                             fp2Diff.addDependency(fp2Dep);
@@ -277,7 +277,7 @@ public class FeaturePacksDiff {
                     }
                 }
                 if(!fp2Deps.isEmpty()) {
-                    for(Gav.GaPart gaPart : fp2Deps) {
+                    for(ArtifactCoords.GaPart gaPart : fp2Deps) {
                         fp2Diff.addDependency(fp2Descr.getDependency(gaPart));
                     }
                 }
