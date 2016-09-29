@@ -68,6 +68,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         return (value == null || value.length() <= 0) ? defaultValue : value;
     }
 
+    /**
+     * GroupId/ArtifactId/Version view of ArtifactCoords
+     *
+     * @author Alexey Loubyansky
+     */
     public class GavPart implements Comparable<GavPart> {
 
         public String getGroupId() {
@@ -166,6 +171,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         }
     }
 
+    /**
+     * GroupId/ArtifactId view of ArtifactCoords
+     *
+     * @author Alexey Loubyansky
+     */
     public class GaPart implements Comparable<GaPart> {
 
         public String getGroupId() {
