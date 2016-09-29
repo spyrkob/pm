@@ -195,6 +195,10 @@ public class ProvisioningManager {
      */
     public void provision(ProvisionedInstallationDescription installationDescr) throws ProvisioningException {
 
+        if(artifactResolver == null) {
+            throw new ProvisioningException("Artifact resolver has not been provided.");
+        }
+
         final Path workDir = IoUtils.createRandomTmpDir();
         final Path layoutDir = workDir.resolve("layout");
         try {
@@ -211,9 +215,27 @@ public class ProvisioningManager {
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(provisioningPlugins, layoutDescr, layoutDir, workDir);
             }
+            this.userProvisionedDescr = null;
+            this.layoutProvisionedDescr = null;
         } finally {
             IoUtils.recursiveDelete(workDir);
         }
+    }
+
+    /**
+     * Exports the current provisioned state of the installation to
+     * the specified file.
+     *
+     * @param location  file to which the current installation state should be exported
+     * @throws ProvisioningException  in case the provisioning state record is missing
+     * @throws IOException  in case writing to the specified file fails
+     */
+    public void exportProvisionedState(Path location) throws ProvisioningException, IOException {
+        final Path userProvisionedXml = PathsUtils.getUserProvisionedXml(installationHome);
+        if(!Files.exists(userProvisionedXml)) {
+            throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
+        }
+        IoUtils.copy(userProvisionedXml, location);
     }
 
     private void layoutFeaturePacks(Collection<ProvisionedFeaturePackDescription> provisionedFps,
@@ -350,7 +372,10 @@ public class ProvisioningManager {
             .build();
         System.out.println(layout.getGav(ArtifactCoords.getGaPart("g2", "a3")));
 
-        final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(Paths.get("installation/home")).build();
+        final Path installDir = Paths.get("/home/olubyans/pm/wf");
+        final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(installDir).build();
+
+        pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
 
         pm.install(ArtifactCoords.getGavPart("g1:a1:v1"));
         pm.install(
