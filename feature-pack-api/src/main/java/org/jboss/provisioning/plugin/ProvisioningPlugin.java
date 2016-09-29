@@ -14,11 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util.plugin;
+package org.jboss.provisioning.plugin;
 
 import org.jboss.provisioning.ProvisioningException;
 
 /**
+ * Provisioning plug-in can be referenced from a feature-pack configuration.
+ * Plug-ins are executed as post-provisioning tasks to complete
+ * the provisioning/installation.
+ *
+ * Examples of such post-provisioning tasks could be:
+ * - adjust the configuration;
+ * - set file permissions;
+ * - create directory structures;
+ * - etc.
  *
  * @author Alexey Loubyansky
  */

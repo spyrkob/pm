@@ -42,6 +42,8 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
+import org.jboss.provisioning.plugin.ProvisioningContext;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.configassembly.ConfigurationAssembler;
 import org.jboss.provisioning.plugin.wildfly.configassembly.InputStreamSource;
 import org.jboss.provisioning.plugin.wildfly.configassembly.SubsystemConfig;
@@ -51,8 +53,6 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFileDescrip
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.util.PropertyUtils;
-import org.jboss.provisioning.util.plugin.ProvisioningContext;
-import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
