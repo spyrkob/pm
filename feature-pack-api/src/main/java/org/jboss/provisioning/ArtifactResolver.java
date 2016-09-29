@@ -14,23 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util;
+package org.jboss.provisioning;
 
-import org.jboss.provisioning.ProvisioningException;
+import java.nio.file.Path;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackInstallException extends ProvisioningException {
+public interface ArtifactResolver {
 
-    private static final long serialVersionUID = 1L;
-
-    public FeaturePackInstallException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public FeaturePackInstallException(String message) {
-        super(message);
-    }
+    Path resolve(ArtifactCoords coords) throws ArtifactResolutionException;
 }
