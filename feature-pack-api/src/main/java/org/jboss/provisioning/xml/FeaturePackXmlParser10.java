@@ -147,7 +147,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        fpBuilder.setGav(readGAV(reader));
+        fpBuilder.setGav(readArtifactCoords(reader, "zip").getGavPart());
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -178,7 +178,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private ArtifactCoords.GavPart readGAV(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ArtifactCoords readArtifactCoords(XMLExtendedStreamReader reader, String extension) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -204,7 +204,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        return ArtifactCoords.getGavPart(groupId, artifactId, version);
+        return new ArtifactCoords(groupId, artifactId, version, "", extension);
     }
 
     private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
@@ -398,7 +398,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case ARTIFACT:
-                            fpBuilder.addProvisioningPlugin(readGAV(reader));
+                            fpBuilder.addProvisioningPlugin(readArtifactCoords(reader, "jar").getGavPart());
                             ParsingUtils.parseNoContent(reader);
                             hasChildren = true;
                             break;

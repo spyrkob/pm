@@ -22,19 +22,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -67,22 +59,12 @@ import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.util.FeaturePackInstallException;
-import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
-import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
-import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.util.LayoutUtils;
-import org.jboss.provisioning.util.ZipUtils;
-import org.jboss.provisioning.util.plugin.ProvisioningContext;
-import org.jboss.provisioning.util.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -107,28 +89,6 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     /** The encoding to use when reading descriptor files */
     @Parameter(defaultValue = "${project.build.sourceEncoding}", required = true, property = "pm.encoding")
     private String encoding;
-
-    private FeaturePackLayoutDescription layoutDescr;
-    private Path workDir;
-    private Set<ArtifactCoords.GavPart> provisioningPlugins = Collections.emptySet();
-
-    private void addProvisioningPlugin(ArtifactCoords.GavPart gav) {
-        switch(provisioningPlugins.size()) {
-            case 0:
-                provisioningPlugins = Collections.singleton(gav);
-                break;
-            case 1:
-                provisioningPlugins = new LinkedHashSet<ArtifactCoords.GavPart>(provisioningPlugins);
-            default:
-                provisioningPlugins.add(gav);
-        }
-    }
-
-    private void addAllProvisioningPlugins(List<ArtifactCoords.GavPart> gavs) {
-        for(ArtifactCoords.GavPart gav : gavs) {
-            addProvisioningPlugin(gav);
-        }
-    }
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -159,25 +119,29 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.openFile(provXml), e);
         }
 
-        workDir = IoUtils.createRandomTmpDir();
-        final Path layoutDir = workDir.resolve("layout");
         try {
-            final FeaturePackLayoutDescription.Builder descrBuilder = FeaturePackLayoutDescription.builder();
-            layoutFeaturePacks(provisionedDescr.getFeaturePacks(), descrBuilder, layoutDir);
-            layoutDescr = descrBuilder.build();
-            if (!Files.exists(installDir)) {
-                mkdirs(installDir);
-            }
-            FeaturePackLayoutInstaller.install(layoutDir, layoutDescr, provisionedDescr, installDir);
-
-            if(!provisioningPlugins.isEmpty()) {
-                executePlugins(installDir, layoutDir);
-            }
-        } catch (ProvisioningDescriptionException | FeaturePackInstallException e) {
-            // TODO Auto-generated catch block
+            ProvisioningManager.builder().setEncoding(encoding).setInstallationHome(installDir)
+                    .setArtifactResolver(new ArtifactResolver() {
+                        @Override
+                        public Path resolve(ArtifactCoords coords) throws org.jboss.provisioning.ArtifactResolutionException {
+                            final ArtifactResult result;
+                            try {
+                                result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
+                            } catch (ArtifactResolutionException e) {
+                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactResolution(coords), e);
+                            }
+                            if(!result.isResolved()) {
+                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactResolution(coords));
+                            }
+                            if(result.isMissing()) {
+                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactMissing(coords));
+                            }
+                            return Paths.get(result.getArtifact().getFile().toURI());
+                        }
+                    }).build().provision(provisionedDescr);
+        } catch (ProvisioningException e) {
             e.printStackTrace();
-        } finally {
-            IoUtils.recursiveDelete(workDir);
+            throw new MojoExecutionException("Failed to provision the installation", e);
         }
 
         //collectDependencies(artifact);
@@ -186,167 +150,6 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         //artifactRequest(new DefaultArtifact("org.wildfly.core", "wildfly-cli", "jar", "3.0.0.Alpha3-SNAPSHOT"));
         //artifactRequest(new DefaultArtifact("org.wildfly.core", "wildfly-cli", "jar", "LATEST"));
         //artifactRequest(new DefaultArtifact("org.wildfly.feature-pack", "wildfly", "zip", "10.1.0.Final-SNAPSHOT"));
-    }
-
-    private void executePlugins(final Path installDir, final Path layoutDir) throws MojoExecutionException {
-        final List<java.net.URL> urls = new ArrayList<java.net.URL>();
-        for(ArtifactResult res : resolveArtifacts(provisioningPlugins, "jar")) {
-            final Artifact artifact = res.getArtifact();
-            if(!res.isResolved()) {
-                throw new MojoExecutionException(FpMavenErrors.artifactResolution(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
-            }
-            if(res.isMissing()) {
-                throw new MojoExecutionException(FpMavenErrors.artifactMissing(new ArtifactCoords(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), "", "jar")));
-            }
-            try {
-                urls.add(artifact.getFile().toURI().toURL());
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-
-        if (!urls.isEmpty()) {
-            final ProvisioningContext ctx = new ProvisioningContext() {
-                @Override
-                public Path getLayoutDir() {
-                    return layoutDir;
-                }
-                @Override
-                public Path getInstallDir() {
-                    return installDir;
-                }
-                @Override
-                public Path getResourcesDir() {
-                    return workDir.resolve("resources");
-                }
-                @Override
-                public FeaturePackLayoutDescription getInstallationDescription() {
-                    return layoutDescr;
-                }
-                @Override
-                public Path resolveArtifact(ArtifactCoords coords) throws ProvisioningException {
-                    final ArtifactResult result;
-                    try {
-                        result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
-                    } catch (ArtifactResolutionException e) {
-                        throw new ProvisioningException(FpMavenErrors.artifactResolution(coords), e);
-                    }
-                    if(!result.isResolved()) {
-                        throw new ProvisioningException(FpMavenErrors.artifactResolution(coords));
-                    }
-                    if(result.isMissing()) {
-                        throw new ProvisioningException(FpMavenErrors.artifactMissing(coords));
-                    }
-                    return Paths.get(result.getArtifact().getFile().toURI());
-                }
-                @Override
-                public String getEncoding() {
-                    return FeaturePackProvisioningMojo.this.encoding;
-                }
-            };
-            final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
-                    urls.toArray(new java.net.URL[urls.size()]),
-                    Thread.currentThread().getContextClassLoader());
-            final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-            for (ProvisioningPlugin plugin : plugins) {
-                try {
-                    plugin.execute(ctx);
-                } catch (ProvisioningException e) {
-                    throw new MojoExecutionException("Provisioning plugin failed", e);
-                }
-            }
-        }
-    }
-
-    private void layoutFeaturePacks(Collection<ProvisionedFeaturePackDescription> provisionedFps,
-            FeaturePackLayoutDescription.Builder layoutBuilder, Path layoutDir) throws MojoExecutionException {
-
-        for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
-            final ArtifactCoords.GavPart fpGav = provisionedFp.getGav();
-            final ArtifactResult res = resolveArtifact(fpGav, "zip");
-            if(!res.isResolved()) {
-                throw new MojoExecutionException(FpMavenErrors.artifactResolution(new ArtifactCoords(fpGav.getGroupId(), fpGav.getArtifactId(), fpGav.getVersion(), "", "zip")));
-            }
-            if(res.isMissing()) {
-                throw new MojoExecutionException(FpMavenErrors.artifactMissing(new ArtifactCoords(fpGav.getGroupId(), fpGav.getArtifactId(), fpGav.getVersion(), "", "zip")));
-            }
-            final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
-            mkdirs(fpWorkDir);
-            try {
-                System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
-                ZipUtils.unzip(Paths.get(res.getArtifact().getFile().getAbsolutePath()), fpWorkDir);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to unzip " + res.getArtifact().getFile().getAbsolutePath() + " to " + layoutDir, e);
-            }
-
-            final FeaturePackDescription fpDescr;
-            try {
-                fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
-            } catch (ProvisioningDescriptionException e) {
-                throw new MojoExecutionException("Failed to describe feature-pack " + fpGav, e);
-            }
-            if(fpDescr.hasDependencies()) {
-                layoutFeaturePacks(fpDescr.getDependencies(), layoutBuilder, layoutDir);
-            }
-
-            final Path fpResources = fpWorkDir.resolve("resources");
-            if(Files.exists(fpResources)) {
-                try {
-                    IoUtils.copy(fpResources, workDir.resolve("resources"));
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to copy " + fpGav + " resources", e);
-                }
-            }
-
-            if(fpDescr.hasProvisioningPlugins()) {
-                addAllProvisioningPlugins(fpDescr.getProvisioningPlugins());
-            }
-
-            try {
-                layoutBuilder.addFeaturePack(fpDescr);
-            } catch (ProvisioningDescriptionException e) {
-                throw new MojoExecutionException("Failed to layout feature packs", e);
-            }
-        }
-    }
-
-    private List<ArtifactResult> resolveArtifacts(final Collection<ArtifactCoords.GavPart> fpGavs, String extension) throws MojoExecutionException {
-        final List<ArtifactRequest> requests;
-        if (fpGavs.size() == 1) {
-            requests = Collections.singletonList(getArtifactRequest(ArtifactCoords.fromGav(fpGavs.iterator().next(), extension)));
-        } else {
-            requests = new ArrayList<ArtifactRequest>(fpGavs.size());
-            for (ArtifactCoords.GavPart gav : fpGavs) {
-                requests.add(getArtifactRequest(ArtifactCoords.fromGav(gav, extension)));
-            }
-        }
-        try {
-            return repoSystem.resolveArtifacts(repoSession, requests);
-        } catch (ArtifactResolutionException e) {
-            final Collection<ArtifactCoords> coords = new ArrayList<>(fpGavs.size());
-            for(ArtifactCoords.GavPart gav : fpGavs) {
-                coords.add(gav.getArtifactCoords());
-            }
-            throw new MojoExecutionException(FpMavenErrors.artifactResolution(coords), e);
-        }
-    }
-
-    private ArtifactResult resolveArtifact(ArtifactCoords.GavPart fpGav, String extension) throws MojoExecutionException {
-        final ArtifactRequest requests = getArtifactRequest(ArtifactCoords.fromGav(fpGav, extension));
-        try {
-            return repoSystem.resolveArtifact(repoSession, requests);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException(FpMavenErrors.artifactResolution(ArtifactCoords.fromGav(fpGav, extension)), e);
-        }
-    }
-
-    private void mkdirs(final Path path) throws MojoExecutionException {
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            throw new MojoExecutionException(Errors.mkdirs(path));
-        }
     }
 
     private void collectDependencies(final Artifact artifact) throws MojoExecutionException {

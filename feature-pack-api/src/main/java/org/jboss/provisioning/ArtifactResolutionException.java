@@ -14,23 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util;
-
-import org.jboss.provisioning.ProvisioningException;
+package org.jboss.provisioning;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackInstallException extends ProvisioningException {
+public class ArtifactResolutionException extends ProvisioningException {
 
     private static final long serialVersionUID = 1L;
 
-    public FeaturePackInstallException(String message, Throwable cause) {
-        super(message, cause);
+    public ArtifactResolutionException(String message) {
+        super(message);
     }
 
-    public FeaturePackInstallException(String message) {
-        super(message);
+    public ArtifactResolutionException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
