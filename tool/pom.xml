@@ -35,10 +35,40 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-aether-provider</artifactId>
+    </dependency>
+  
+    <dependency>
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>maven-invoker</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-connector-basic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-transport-file</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-transport-http</artifactId>
+    </dependency>
+  
     <dependency>
       <groupId>org.jboss.aesh</groupId>
       <artifactId>aesh</artifactId>
@@ -67,24 +97,6 @@
 
   <build>
     <plugins>
-    <!--
-      <plugin>
-        <groupId>org.jboss.pm</groupId>
-        <artifactId>feature-pack-build-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>feature-pack-build</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>build</goal>
-            </goals>
-            <configuration>
-              <config-file>feature-pack-build.xml</config-file>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
--->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
