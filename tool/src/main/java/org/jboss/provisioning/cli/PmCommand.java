@@ -25,12 +25,20 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Properties;
 
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.impl.DefaultServiceLocator;
+import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
@@ -42,7 +50,7 @@ import org.jboss.provisioning.util.IoUtils;
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="pm", description="pm description")
+@CommandDefinition(name="pm", description="Provisioning Manager CLI interface")
 class PmCommand extends CommandBase {
 
     private static final String PROVISIONING_POM_XML = "maven/provisioning-pom.xml";
@@ -55,7 +63,20 @@ class PmCommand extends CommandBase {
 
     @Override
     protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
+/*
+        final RepositorySystem repoSystem = newRepositorySystem();
+        System.out.println("repoSystem=" + repoSystem);
+        RepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
+        ArtifactRequest req = new ArtifactRequest();
+        req.setArtifact(new DefaultArtifact("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
+        try {
+            repoSystem.resolveArtifact(session, req);
+        } catch (ArtifactResolutionException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+*/
         final String toolHome = Paths.get("").toAbsolutePath().toString();
 
         final Path provisioningFile;
@@ -121,6 +142,13 @@ class PmCommand extends CommandBase {
         } finally {
             IoUtils.recursiveDelete(workDir);
         }
+    }
 
+    private static RepositorySystem newRepositorySystem() {
+        DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+        locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
+        locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+        locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+        return locator.getService(RepositorySystem.class);
     }
 }
