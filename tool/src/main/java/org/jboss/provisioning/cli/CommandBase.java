@@ -16,9 +16,8 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.io.IOException;
-
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
@@ -29,7 +28,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 public abstract class CommandBase implements Command<CommandInvocation> {
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException {
         try {
             runCommand(commandInvocation);
             return CommandResult.SUCCESS;

@@ -38,12 +38,6 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-aether-provider</artifactId>
     </dependency>
-  
-    <dependency>
-      <groupId>org.apache.maven.shared</groupId>
-      <artifactId>maven-invoker</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.eclipse.aether</groupId>
       <artifactId>aether-api</artifactId>
@@ -51,10 +45,6 @@
     <dependency>
       <groupId>org.eclipse.aether</groupId>
       <artifactId>aether-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.plugin-tools</groupId>
-      <artifactId>maven-plugin-annotations</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
@@ -78,20 +68,15 @@
       <groupId>org.jboss.pm</groupId>
       <artifactId>feature-pack-api</artifactId>
     </dependency>
-
+ 
     <dependency>
       <groupId>org.jboss.pm</groupId>
       <artifactId>feature-pack-build-maven-plugin</artifactId>
     </dependency>
-
+ 
     <dependency>
       <groupId>org.jboss.pm</groupId>
       <artifactId>wildfly-feature-pack-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.pm</groupId>
-      <artifactId>wildfly-feature-pack-maven-plugin</artifactId>
     </dependency>
   </dependencies>
 

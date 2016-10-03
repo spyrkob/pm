@@ -16,7 +16,21 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.io.File;
 import java.io.InputStream;
+
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.impl.DefaultServiceLocator;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.jboss.provisioning.util.PropertyUtils;
 
 
 /**
@@ -32,5 +46,31 @@ class Util {
             throw new CommandExecutionException(resource + " not found");
         }
         return pomIs;
+    }
+
+    static String getMavenRepositoryPath() {
+        String repoPath = PropertyUtils.getSystemProperty("maven.repo.path");
+        if(repoPath == null) {
+            repoPath = new StringBuilder(PropertyUtils.getSystemProperty("user.home")).append(File.separatorChar)
+                    .append(".m2").append(File.separatorChar)
+                    .append("repository")
+                    .toString();
+        }
+        return repoPath;
+    }
+
+    static RepositorySystemSession newRepositorySession(final RepositorySystem repoSystem) {
+        final DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        final LocalRepository localRepo = new LocalRepository(getMavenRepositoryPath());
+        session.setLocalRepositoryManager(repoSystem.newLocalRepositoryManager(session, localRepo));
+        return session;
+    }
+
+    static RepositorySystem newRepositorySystem() {
+        DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+        locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
+        locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+        locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+        return locator.getService(RepositorySystem.class);
     }
 }

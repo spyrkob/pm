@@ -21,11 +21,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
-import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
@@ -35,14 +33,9 @@ import org.jboss.provisioning.util.ZipUtils;
  */
 public class MavenPluginUtil {
 
-    public static InstallRequest getInstallLayoutRequest(final Path layoutDir) throws MojoExecutionException {
+    public static InstallRequest getInstallLayoutRequest(final Path layoutDir) throws IOException {
         final InstallRequest installReq = new InstallRequest();
-        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(layoutDir, new DirectoryStream.Filter<Path>() {
-            @Override
-            public boolean accept(Path entry) throws IOException {
-                return Files.isDirectory(entry);
-            }
-        })) {
+        try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(layoutDir, entry -> Files.isDirectory(entry))) {
             for (Path groupDir : wdStream) {
                 final String groupId = groupDir.getFileName().toString();
                 try (DirectoryStream<Path> groupStream = Files.newDirectoryStream(groupDir)) {
@@ -67,8 +60,6 @@ public class MavenPluginUtil {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new MojoExecutionException(FpMavenErrors.featurePackBuild(), e);
         }
         return installReq;
     }
