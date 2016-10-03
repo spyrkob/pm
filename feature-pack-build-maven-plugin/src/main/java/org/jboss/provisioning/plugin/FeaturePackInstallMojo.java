@@ -16,9 +16,11 @@
  */
 package org.jboss.provisioning.plugin;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -61,7 +63,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
 
         try {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
-        } catch (InstallationException e) {
+        } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }
     }

@@ -33,13 +33,12 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 public class CliMain {
 
     public static void main(String[] args) throws Exception {
-        Settings settings = new SettingsBuilder().logging(true).create();
-        AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(new Prompt("[pm] "))
+        final Settings settings = new SettingsBuilder().logging(true).create();
+        final AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(new Prompt("[pm] "))
                 .addCommand(new ExitCommand())
                 .addCommand(new PmCommand())
                 .addCommand(new FpCommand())
                 .create();
-
         aeshConsole.start();
     }
 

@@ -23,21 +23,14 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
-
 import javax.xml.stream.XMLStreamException;
 
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.installation.InstallationException;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.activation.OptionActivator;
@@ -48,10 +41,10 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackDependencyBuilder;
 import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
@@ -72,7 +65,6 @@ import org.jboss.provisioning.xml.FeaturePackXmlWriter;
                   "- dependency analyzis.")
 public class FpCommand extends CommandBase {
 
-    private static final String INSTALL_FEATURE_PACKS_POM = "maven/install-feature-packs-pom.xml";
     private static final String WF_FP_DEF_XML = "wildfly-feature-pack-def.xml";
 
     private static final String ACTION_ARG_NAME = "action";
@@ -381,39 +373,13 @@ public class FpCommand extends CommandBase {
     }
 
     private void installLayout(final Path workDir) throws CommandExecutionException {
-        final InputStream pomIs = Util.getResourceStream(INSTALL_FEATURE_PACKS_POM);
-        final Path pomXml;
+
+        final RepositorySystem repoSystem = Util.newRepositorySystem();
+        final RepositorySystemSession repoSession = Util.newRepositorySession(repoSystem);
         try {
-            pomXml = Files.createTempFile("fpcmd", "pom.xml");
-        } catch (IOException e) {
-            throw new CommandExecutionException("Failed to create a temp file.", e);
-        }
-        try {
-            InvocationRequest request = new DefaultInvocationRequest();
-
-            final Properties props = new Properties();
-            props.setProperty(Constants.PM_INSTALL_WORK_DIR, workDir.toAbsolutePath().toString());
-            request.setProperties(props);
-
-            Files.copy(pomIs, pomXml, StandardCopyOption.REPLACE_EXISTING);
-            request.setPomFile(pomXml.toFile());
-            request.setGoals(Collections.singletonList("compile"));
-
-            Invoker invoker = new DefaultInvoker();
-            InvocationResult result;
-            try {
-                result = invoker.execute(request);
-                if (result.getExitCode() != 0) {
-                    throw new CommandExecutionException("Build failed.");
-                }
-            } catch (MavenInvocationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
-            throw new CommandExecutionException(Errors.copyFile(Paths.get(INSTALL_FEATURE_PACKS_POM), pomXml), e);
-        } finally {
-            IoUtils.recursiveDelete(pomXml);
+            repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
+        } catch (InstallationException | IOException e) {
+            throw new CommandExecutionException("Failed to install layout", e);
         }
     }
 

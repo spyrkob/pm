@@ -223,6 +223,16 @@ public class ProvisioningManager {
     }
 
     /**
+     * Provision the state described in the specified XML file.
+     *
+     * @param provisionedStateXml  file describing the desired provisioned state
+     * @throws ProvisioningException  in case provisioning fails
+     */
+    public void provision(Path provisionedStateXml) throws ProvisioningException {
+        provision(readProvisionedState(provisionedStateXml));
+    }
+
+    /**
      * Exports the current provisioned state of the installation to
      * the specified file.
      *
