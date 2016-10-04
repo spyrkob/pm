@@ -73,6 +73,7 @@
     <version.org.eclipse.aether>1.1.0</version.org.eclipse.aether>
     <version.org.jboss.modules.jboss-modules>1.5.1.Final</version.org.jboss.modules.jboss-modules>
     <version.org.jboss.aesh.aesh>0.66.11</version.org.jboss.aesh.aesh>
+    <version.org.jboss.aesh.aesh-extensions>0.66</version.org.jboss.aesh.aesh-extensions>
 
     <!-- Checkstyle configuration -->
     <linkXRef>false</linkXRef>
@@ -213,6 +214,11 @@
         <groupId>org.jboss.aesh</groupId>
         <artifactId>aesh</artifactId>
         <version>${version.org.jboss.aesh.aesh}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.aesh</groupId>
+        <artifactId>aesh-extensions</artifactId>
+        <version>${version.org.jboss.aesh.aesh-extensions}</version>
       </dependency>
 
       <dependency>

@@ -23,26 +23,21 @@ import java.nio.file.Paths;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="pm", description="Provisioning Manager CLI interface")
-class PmCommand extends CommandBase {
+@CommandDefinition(name="install", description="Installs specified feature-packs")
+class InstallCommand extends ProvisioningCommand {
 
-    @Option(name="provisioning-xml", completer=FileOptionCompleter.class)
+    @Option(name="provisioning-xml", completer=FileOptionCompleter.class, description="File describing the desired provisioned state.")
     private String provisioningXmlArg;
 
-    @Option(name="install-dir", completer=FileOptionCompleter.class)
-    private String installDirArg;
-
     @Override
-    protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
+    protected void runCommand(PmSession session) throws CommandExecutionException {
 
         final String toolHome = Paths.get("").toAbsolutePath().toString();
 
@@ -60,22 +55,10 @@ class PmCommand extends CommandBase {
             }
         }
 
-        final Path installDir;
-        if(installDirArg == null) {
-            installDir = Paths.get(toolHome);
-        } else {
-            installDir = Paths.get(installDirArg);
-        }
-
-        final ProvisioningManager pm = ProvisioningManager.builder()
-                .setArtifactResolver(ArtifactResolverImpl.getInstance())
-                .setInstallationHome(installDir)
-                .build();
         try {
-            pm.provision(provisioningFile);
-        } catch (ProvisioningException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
+            getManager(session).provision(provisioningFile);
+        } catch (ProvisioningException e) {
+            throw new CommandExecutionException("Provisioning failed", e);
         }
     }
 }

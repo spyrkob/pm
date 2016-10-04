@@ -63,7 +63,7 @@ import org.jboss.provisioning.xml.FeaturePackXmlWriter;
                   "- creation;\n" +
                   "- installation into the maven repository;\n" +
                   "- dependency analyzis.")
-public class FpCommand extends CommandBase {
+public class FpCommand extends PmSessionCommand {
 
     private static final String WF_FP_DEF_XML = "wildfly-feature-pack-def.xml";
 
@@ -244,13 +244,13 @@ public class FpCommand extends CommandBase {
     private boolean xmlOnly;
 
     @Override
-    protected void runCommand(CommandInvocation ci) throws CommandExecutionException {
+    protected void runCommand(PmSession session) throws CommandExecutionException {
         if(INSTALL.equals(actionArg)) {
             installAction();
         } else if(ANALYZE.equals(actionArg)) {
-            analyzeAction(ci);
+            analyzeAction(session);
         } else if(EXTRACT_PARENT.equals(actionArg)) {
-            extractParentAction(ci);
+            extractParentAction(session);
         } else {
             throw new CommandExecutionException("Unrecognized action '" + actionArg + "'");
         }
