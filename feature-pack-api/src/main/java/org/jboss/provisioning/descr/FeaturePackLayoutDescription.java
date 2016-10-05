@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.GavPart;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -49,7 +50,12 @@ public class FeaturePackLayoutDescription {
             assert fp != null : "fp is null";
             final ArtifactCoords.GaPart fpGa = fp.getGav().getGaPart();
             if(featurePacks.containsKey(fpGa)) {
-                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(fpGa).getGav()));
+                final GavPart existingGav = featurePacks.get(fpGa).getGav();
+                if(existingGav.getVersion().equals(fp.getGav().getVersion())) {
+                    // TODO decide what to do
+                    return this;
+                }
+                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), existingGav));
             }
             switch(featurePacks.size()) {
                 case 0:

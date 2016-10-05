@@ -16,35 +16,35 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.util.List;
+
+import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.ProvisioningManager;
+
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="provisioned-spec", description="Prints provisioned spec for the specified installation.")
-public class ProvisionedStateCommand extends ProvisioningCommand {
+@CommandDefinition(name="uninstall", description="Uninstalls specified feature-packs")
+class UninstallCommand extends ProvisioningCommand {
 
-    @Option(shortName = 'v', name = "verbose", hasValue = false, description = "Include the dependencies")
-    private boolean verbose;
+    @Arguments(completer=GavCompleter.class)
+    private List<String> coords;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        final ProvisionedInstallationDescription provisionedState;
+
+        final ProvisioningManager manager = getManager(session);
         try {
-            provisionedState = getManager(session).getCurrentState(verbose);
+            for(String coord : coords) {
+                manager.uninstall(ArtifactCoords.getGavPart(coord));
+            }
         } catch (ProvisioningException e) {
-            throw new CommandExecutionException("Failed to read provisioned state", e);
-        }
-        if(provisionedState == null || !provisionedState.hasFeaturePacks()) {
-            return;
-        }
-        for(ProvisionedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
-            session.println(fp.getGav().toString());
+            throw new CommandExecutionException("Provisioning failed", e);
         }
     }
 }

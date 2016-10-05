@@ -50,6 +50,10 @@ class PmSession extends DelegatingCommandInvocation implements CommandInvocation
         return Paths.get(getAeshContext().getCurrentWorkingDirectory().getAbsolutePath());
     }
 
+    Path resolvePath(String path) {
+        return getWorkDir().resolve(path);
+    }
+
     @Override
     public PmSession enhanceCommandInvocation(CommandInvocation commandInvocation) {
         commandInvocation.setPrompt(prompt);

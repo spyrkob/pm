@@ -64,15 +64,17 @@ public class ProvisionedInstallationDescription {
         }
 
         public Builder removeFeaturePack(ArtifactCoords.GavPart gav) throws ProvisioningException {
+            final ProvisionedFeaturePackDescription fpDescr = featurePacks.get(gav.getGaPart());
+            if(fpDescr == null) {
+                throw new ProvisioningException(Errors.unknownFeaturePack(gav));
+            }
+            if(!fpDescr.getGav().equals(gav)) {
+                throw new ProvisioningException(Errors.unknownFeaturePack(gav));
+            }
             if(featurePacks.size() == 1) {
-                if(!featurePacks.containsKey(gav)) {
-                    throw new ProvisioningException("Installation does not contain feature-pack " + gav);
-                }
                 featurePacks = Collections.emptyMap();
             } else {
-                if(featurePacks.remove(gav) == null) {
-                    throw new ProvisioningException("Installation does not contain feature-pack " + gav);
-                }
+                featurePacks.remove(gav.getGaPart());
             }
             return this;
         }
