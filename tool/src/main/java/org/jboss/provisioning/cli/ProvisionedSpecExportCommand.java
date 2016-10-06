@@ -16,7 +16,7 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -27,36 +27,32 @@ import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
 
-
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="provision-spec", description="(Re)Provisions the installation according to the specification provided in an XML file")
-public class ProvisionSpecCommand extends ProvisioningCommand {
+@CommandDefinition(name="export", description="Saves current provisioned spec into the specified file.")
+public class ProvisionedSpecExportCommand extends ProvisioningCommand {
 
-    @Arguments(completer=FileOptionCompleter.class, description="File describing the desired provisioned state.")
-    private List<Resource> specArg;
+    @Arguments(completer=FileOptionCompleter.class, description="File to save the provisioned spec too.")
+    private List<Resource> fileArg;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-
-        if(specArg == null || specArg.isEmpty()) {
+        if(fileArg == null || fileArg.isEmpty()) {
             throw new CommandExecutionException("Missing required file path argument.");
         }
-        if(specArg.size() > 1) {
+        if(fileArg.size() > 1) {
             throw new CommandExecutionException("The command expects only one argument.");
         }
 
-        final Resource specResource = specArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
-        final Path provisioningFile = Paths.get(specResource.getAbsolutePath());
-        if(!Files.exists(provisioningFile)) {
-            throw new CommandExecutionException("Failed to locate provisioning file " + provisioningFile.toAbsolutePath());
-        }
+        final Resource specResource = fileArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
+        final Path targetFile = Paths.get(specResource.getAbsolutePath());
+
         try {
-            getManager(session).provision(provisioningFile);
-        } catch (ProvisioningException e) {
-            throw new CommandExecutionException("Provisioning failed", e);
+            getManager(session).exportProvisionedState(targetFile);
+        } catch (ProvisioningException | IOException e) {
+            throw new CommandExecutionException("Failed to export provisioned state", e);
         }
     }
 }

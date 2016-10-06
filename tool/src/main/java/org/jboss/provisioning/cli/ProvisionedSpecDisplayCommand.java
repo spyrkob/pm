@@ -16,35 +16,35 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.util.List;
-
-import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.aesh.cl.Option;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
-
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="install", description="Installs specified feature-packs")
-public class InstallCommand extends ProvisioningCommand {
+@CommandDefinition(name="display", description="Prints provisioned spec for the specified installation.")
+public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
 
-    @Arguments(completer=GavCompleter.class)
-    private List<String> coords;
+    @Option(shortName = 'v', name = "verbose", hasValue = false, description = "Include the dependencies")
+    private boolean verbose;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-
-        final ProvisioningManager manager = getManager(session);
+        final ProvisionedInstallationDescription provisionedState;
         try {
-            for(String coord : coords) {
-                manager.install(ArtifactCoords.getGavPart(coord));
-            }
+            provisionedState = getManager(session).getCurrentState(verbose);
         } catch (ProvisioningException e) {
-            throw new CommandExecutionException("Provisioning failed", e);
+            throw new CommandExecutionException("Failed to read provisioned state", e);
+        }
+        if(provisionedState == null || !provisionedState.hasFeaturePacks()) {
+            return;
+        }
+        for(ProvisionedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
+            session.println(fp.getGav().toString());
         }
     }
 }

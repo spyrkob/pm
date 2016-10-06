@@ -16,35 +16,21 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
-import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.aesh.cl.GroupCommandDefinition;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="provisioned-spec", description="Prints provisioned spec for the specified installation.")
-public class ProvisionedSpecCommand extends ProvisioningCommand {
-
-    @Option(shortName = 'v', name = "verbose", hasValue = false, description = "Include the dependencies")
-    private boolean verbose;
+@GroupCommandDefinition(description = "", name = "provisioned-spec", groupCommands={ProvisionedSpecDisplayCommand.class,ProvisionedSpecExportCommand.class})
+public class ProvisionedSpecCommand implements Command<CommandInvocation> {
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
-        final ProvisionedInstallationDescription provisionedState;
-        try {
-            provisionedState = getManager(session).getCurrentState(verbose);
-        } catch (ProvisioningException e) {
-            throw new CommandExecutionException("Failed to read provisioned state", e);
-        }
-        if(provisionedState == null || !provisionedState.hasFeaturePacks()) {
-            return;
-        }
-        for(ProvisionedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
-            session.println(fp.getGav().toString());
-        }
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        throw new UnsupportedOperationException();
     }
 }

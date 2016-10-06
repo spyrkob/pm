@@ -47,8 +47,8 @@ public class CliMain {
                 // provisioning commands
                 .addCommand(new FpCommand())
                 .addCommand(new InstallCommand())
-                .addCommand(new ProvisionSpecCommand())
                 .addCommand(new ProvisionedSpecCommand())
+                .addCommand(new ProvisionSpecCommand())
                 .addCommand(new UninstallCommand())
                 // filesystem-related commands
                 .addCommand(new CdCommand())
