@@ -19,18 +19,17 @@ package org.jboss.provisioning.cli;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public abstract class CommandBase implements Command<CommandInvocation> {
+public abstract class PmSessionCommand implements Command<PmSession> {
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException {
+    public CommandResult execute(PmSession session) throws CommandException {
         try {
-            runCommand(commandInvocation);
+            runCommand(session);
             return CommandResult.SUCCESS;
         } catch (Throwable t) {
             if(t instanceof RuntimeException) {
@@ -46,10 +45,10 @@ public abstract class CommandBase implements Command<CommandInvocation> {
                 }
                 t = t.getCause();
             }
-            commandInvocation.println(buf.toString());
+            session.println(buf.toString());
             return CommandResult.FAILURE;
         }
     }
 
-    protected abstract void runCommand(CommandInvocation ci) throws CommandExecutionException;
+    protected abstract void runCommand(PmSession session) throws CommandExecutionException;
 }

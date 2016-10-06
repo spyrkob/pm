@@ -16,15 +16,17 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.extensions.exit.Exit;
+import org.jboss.aesh.extensions.less.aesh.Less;
+import org.jboss.aesh.extensions.ls.Ls;
+import org.jboss.aesh.extensions.mkdir.Mkdir;
+import org.jboss.aesh.extensions.pwd.Pwd;
+import org.jboss.aesh.extensions.rm.Rm;
 
 /**
  *
@@ -34,20 +36,30 @@ public class CliMain {
 
     public static void main(String[] args) throws Exception {
         final Settings settings = new SettingsBuilder().logging(true).create();
-        final AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(new Prompt("[pm] "))
-                .addCommand(new ExitCommand())
-                .addCommand(new PmCommand())
+
+        final PmSession pmSession = new PmSession();
+        pmSession.updatePrompt(settings.getAeshContext());
+
+        final CommandInvocationServices ciServices = new CommandInvocationServices();
+        ciServices.registerDefaultProvider(pmSession);
+
+        final AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(pmSession.getPrompt())
+                // provisioning commands
                 .addCommand(new FpCommand())
+                .addCommand(new InstallCommand())
+                .addCommand(new ProvisionedSpecCommand())
+                .addCommand(new ProvisionSpecCommand())
+                .addCommand(new UninstallCommand())
+                // filesystem-related commands
+                .addCommand(new CdCommand())
+                .addCommand(new Exit())
+                .addCommand(new Less())
+                .addCommand(new Ls())
+                .addCommand(new Mkdir())
+                .addCommand(new Rm())
+                .addCommand(new Pwd())
+                .commandInvocationProvider(ciServices)
                 .create();
         aeshConsole.start();
-    }
-
-    @CommandDefinition(name="exit", description = "exit the program")
-    public static class ExitCommand implements Command<CommandInvocation> {
-        @Override
-        public CommandResult execute(CommandInvocation invocation) {
-            invocation.stop();
-            return CommandResult.SUCCESS;
-        }
     }
 }

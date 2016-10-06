@@ -19,6 +19,7 @@ package org.jboss.provisioning;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -176,8 +177,8 @@ public class ProvisioningManager {
      * @param gav  feature-pack GAV
      * @throws ProvisioningException  in case the uninstallation fails
      */
-    public void unistall(ArtifactCoords.GavPart gav) throws ProvisioningException {
-        final ProvisionedInstallationDescription currentState = this.getCurrentState(false);
+    public void uninstall(ArtifactCoords.GavPart gav) throws ProvisioningException {
+        final ProvisionedInstallationDescription currentState = getCurrentState(false);
         if(currentState == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else if(!currentState.containsFeaturePack(gav.getGaPart())) {
@@ -194,6 +195,19 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the re-provisioning fails
      */
     public void provision(ProvisionedInstallationDescription installationDescr) throws ProvisioningException {
+
+        if(!installationDescr.hasFeaturePacks()) {
+            if(Files.exists(installationHome)) {
+                try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
+                    for(Path p : stream) {
+                        IoUtils.recursiveDelete(p);
+                    }
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.readDirectory(installationHome));
+                }
+            }
+            return;
+        }
 
         if(artifactResolver == null) {
             throw new ProvisioningException("Artifact resolver has not been provided.");
