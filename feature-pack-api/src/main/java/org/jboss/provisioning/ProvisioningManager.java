@@ -227,7 +227,7 @@ public class ProvisioningManager {
             FeaturePackLayoutInstaller.install(layoutDir, layoutDescr, installationDescr, installationHome);
 
             if(!provisioningPlugins.isEmpty()) {
-                executePlugins(provisioningPlugins, layoutDescr, layoutDir, workDir);
+                executePlugins(provisioningPlugins, installationDescr, layoutDescr, layoutDir, workDir);
             }
             this.userProvisionedDescr = null;
             this.layoutProvisionedDescr = null;
@@ -314,6 +314,7 @@ public class ProvisioningManager {
     }
 
     private void executePlugins(final Collection<ArtifactCoords.GavPart> provisioningPlugins,
+            final ProvisionedInstallationDescription installationDescr,
             final FeaturePackLayoutDescription layoutDescr,
             final Path layoutDir,
             final Path workDir) throws ProvisioningException {
@@ -340,6 +341,10 @@ public class ProvisioningManager {
                 @Override
                 public Path getResourcesDir() {
                     return workDir.resolve("resources");
+                }
+                @Override
+                public ProvisionedInstallationDescription getInstallationDescription() {
+                    return installationDescr;
                 }
                 @Override
                 public FeaturePackLayoutDescription getLayoutDescription() {
@@ -389,20 +394,13 @@ public class ProvisioningManager {
 
     public static void main(String[] args) throws Throwable {
 
-        final FeaturePackLayoutDescription layout = FeaturePackLayoutDescription.builder()
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a1:v1")).build())
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a2:v2")).build())
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g2:a3:v3")).build())
-            .build();
-        System.out.println(layout.getGav(ArtifactCoords.getGaPart("g2", "a3")));
-
-        final Path installDir = Paths.get("/home/olubyans/pm/wf");
+        final Path installDir = Paths.get("/home/olubyans/demo/wf");
         final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(installDir).build();
 
-        pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
+        //pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
 
-        pm.install(ArtifactCoords.getGavPart("g1:a1:v1"));
-        pm.install(
+        pm.install(ArtifactCoords.getGavPart("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
+/*        pm.install(
                 ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
                 .excludePackage("p1")
@@ -423,7 +421,7 @@ public class ProvisioningManager {
                         .excludePackage("p4")
                         .build())
                 .build());
-
+*/
 
     }
 }

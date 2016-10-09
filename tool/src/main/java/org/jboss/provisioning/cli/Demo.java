@@ -16,29 +16,30 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.nio.file.Path;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
+import java.nio.file.Paths;
+
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningManager;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 
 /**
+ * @author olubyans
  *
- * @author Alexey Loubyansky
  */
-public abstract class ProvisioningCommand extends PmSessionCommand {
+public class Demo {
 
-    @Option(name="dir", completer=FileOptionCompleter.class, required=false,
-            description="Target installation directory.")
-    protected String targetDirArg;
+    public static void main(String[] args) throws Exception {
 
-    protected Path getTargetDir(PmSession session) {
-        return targetDirArg == null ? session.getWorkDir() : session.getWorkDir().resolve(targetDirArg);
-    }
-
-    protected ProvisioningManager getManager(PmSession session) {
-        return ProvisioningManager.builder()
+        final ProvisioningManager pm = ProvisioningManager.builder()
                 .setArtifactResolver(ArtifactResolverImpl.getInstance())
-                .setInstallationHome(getTargetDir(session))
+                .setInstallationHome(Paths.get("/home/olubyans/demo/wf"))
                 .build();
+
+        //pm.install(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"));
+        pm.install(ProvisionedFeaturePackDescription.builder()
+                .setGav(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
+                .excludePackage("org.jboss.as.deployment-scanner.main")
+                .excludePackage("docs")
+                .build());
     }
 }

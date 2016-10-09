@@ -31,6 +31,7 @@ public class ProvisionedSpecCommand implements Command<CommandInvocation> {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        throw new UnsupportedOperationException();
+        commandInvocation.println("subcommand missing");
+        return CommandResult.FAILURE;
     }
 }
