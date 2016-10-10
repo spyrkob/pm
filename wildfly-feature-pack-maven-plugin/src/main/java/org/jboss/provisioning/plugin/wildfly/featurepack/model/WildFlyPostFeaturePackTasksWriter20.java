@@ -19,10 +19,12 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
 import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
@@ -40,6 +42,23 @@ public class WildFlyPostFeaturePackTasksWriter20 {
     public void write(WildFlyPostFeaturePackTasks featurePackDescription, Path outputFile) throws XMLStreamException, IOException {
         final ElementNode tasksElement = new ElementNode(null, WildFlyPostFeaturePackTasksParser20.Element.TASKS.getLocalName(), WildFlyPostFeaturePackTasksParser20.NAMESPACE_2_0);
         ConfigXmlWriter20.INSTANCE.write(featurePackDescription.getConfig(), tasksElement);
+
+        final List<String> mkDirs = featurePackDescription.getMkDirs();
+        if (!mkDirs.isEmpty()) {
+            final ElementNode mkdirsElement = new ElementNode(tasksElement,
+                    WildFlyPostFeaturePackTasksParser20.Element.MKDIRS.getLocalName(),
+                    WildFlyPostFeaturePackTasksParser20.NAMESPACE_2_0);
+            tasksElement.addChild(mkdirsElement);
+            for (String mkdir : mkDirs) {
+                final ElementNode dirElement = new ElementNode(mkdirsElement,
+                        WildFlyPostFeaturePackTasksParser20.Element.DIR.getLocalName(),
+                        WildFlyPostFeaturePackTasksParser20.NAMESPACE_2_0);
+                mkdirsElement.addChild(dirElement);
+                dirElement.addAttribute(WildFlyPostFeaturePackTasksParser20.Attribute.NAME.getLocalName(), new AttributeValue(
+                        mkdir));
+            }
+        }
+
         FilePermissionsXMLWriter20.INSTANCE.write(featurePackDescription.getFilePermissions(), tasksElement);
         try(FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(
                 XMLOutputFactory.newInstance().createXMLStreamWriter(

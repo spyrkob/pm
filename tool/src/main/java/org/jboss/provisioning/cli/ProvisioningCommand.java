@@ -17,8 +17,6 @@
 package org.jboss.provisioning.cli;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.provisioning.ProvisioningManager;
@@ -34,7 +32,7 @@ public abstract class ProvisioningCommand extends PmSessionCommand {
     protected String targetDirArg;
 
     protected Path getTargetDir(PmSession session) {
-        return targetDirArg == null ? session.getWorkDir() : Paths.get(targetDirArg);
+        return targetDirArg == null ? session.getWorkDir() : session.getWorkDir().resolve(targetDirArg);
     }
 
     protected ProvisioningManager getManager(PmSession session) {

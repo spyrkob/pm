@@ -46,6 +46,10 @@ public class ProvisionedInstallationDescription {
             }
         }
 
+        public Builder addFeaturePack(ArtifactCoords.GavPart fpGav) throws ProvisioningDescriptionException {
+            return addFeaturePack(ProvisionedFeaturePackDescription.builder().setGav(fpGav).build());
+        }
+
         public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) throws ProvisioningDescriptionException {
             final ArtifactCoords.GaPart gaPart = fp.getGav().getGaPart();
             if(featurePacks.containsKey(gaPart)) {

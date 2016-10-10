@@ -218,7 +218,7 @@ public class ProvisioningManager {
         try {
             final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
             final Collection<ArtifactCoords.GavPart> provisioningPlugins = new LinkedHashSet<>();
-            layoutFeaturePacks(installationDescr.getFeaturePacks(), layoutBuilder, provisioningPlugins, layoutDir, workDir);
+            layoutFeaturePacks(installationDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir);
             if (Files.exists(installationHome)) {
                 IoUtils.recursiveDelete(installationHome);
             }
@@ -227,7 +227,7 @@ public class ProvisioningManager {
             FeaturePackLayoutInstaller.install(layoutDir, layoutDescr, installationDescr, installationHome);
 
             if(!provisioningPlugins.isEmpty()) {
-                executePlugins(provisioningPlugins, layoutDescr, layoutDir, workDir);
+                executePlugins(provisioningPlugins, installationDescr, layoutDescr, layoutDir, workDir);
             }
             this.userProvisionedDescr = null;
             this.layoutProvisionedDescr = null;
@@ -262,58 +262,71 @@ public class ProvisioningManager {
         IoUtils.copy(userProvisionedXml, location);
     }
 
-    private void layoutFeaturePacks(Collection<ProvisionedFeaturePackDescription> provisionedFps,
+    private void layoutFeaturePacks(ProvisionedInstallationDescription installDescr,
             FeaturePackLayoutDescription.Builder layoutBuilder,
             Collection<ArtifactCoords.GavPart> provisioningPlugins,
             Path layoutDir,
             Path workDir) throws ProvisioningException {
 
-        for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
-            final ArtifactCoords.GavPart fpGav = provisionedFp.getGav();
-            final Path artifactPath = artifactResolver.resolve(fpGav.getArtifactCoords());
-            final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
-            mkdirs(fpWorkDir);
-            try {
-                System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
-                ZipUtils.unzip(artifactPath, fpWorkDir);
-            } catch (IOException e) {
-                throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
-            }
-
-            final FeaturePackDescription fpDescr;
-            try {
-                fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
-            } catch (ProvisioningDescriptionException e) {
-                throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
-            }
-            if(fpDescr.hasDependencies()) {
-                layoutFeaturePacks(fpDescr.getDependencies(), layoutBuilder, provisioningPlugins, layoutDir, workDir);
-            }
-
-            final Path fpResources = fpWorkDir.resolve("resources");
-            if(Files.exists(fpResources)) {
-                try {
-                    IoUtils.copy(fpResources, workDir.resolve("resources"));
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve("resources")), e);
-                }
-            }
-
-            if(fpDescr.hasProvisioningPlugins()) {
-                for(ArtifactCoords.GavPart gavPart : fpDescr.getProvisioningPlugins()) {
-                    provisioningPlugins.add(gavPart);
-                }
-            }
-
-            try {
-                layoutBuilder.addFeaturePack(fpDescr);
-            } catch (ProvisioningDescriptionException e) {
-                throw new ProvisioningException("Failed to layout feature packs", e);
-            }
+        for (ProvisionedFeaturePackDescription provisionedFp : installDescr.getFeaturePacks()) {
+            layoutFeaturePack(installDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir, provisionedFp);
         }
     }
 
+    private FeaturePackDescription layoutFeaturePack(ProvisionedInstallationDescription installDescr,
+            FeaturePackLayoutDescription.Builder layoutBuilder, Collection<ArtifactCoords.GavPart> provisioningPlugins,
+            Path layoutDir, Path workDir, ProvisionedFeaturePackDescription provisionedFp) throws ArtifactResolutionException,
+            ProvisioningException {
+        final ArtifactCoords.GavPart fpGav = provisionedFp.getGav();
+        final Path artifactPath = artifactResolver.resolve(fpGav.getArtifactCoords());
+        final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
+        mkdirs(fpWorkDir);
+        try {
+            System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
+            ZipUtils.unzip(artifactPath, fpWorkDir);
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
+        }
+
+        final FeaturePackDescription fpDescr;
+        try {
+            fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
+        } catch (ProvisioningDescriptionException e) {
+            throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
+        }
+        if(fpDescr.hasDependencies()) {
+            for(ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
+                if(!installDescr.containsFeaturePack(dep.getGav().getGaPart())) {
+                    layoutFeaturePack(installDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir, dep);
+                }
+            }
+        }
+
+        final Path fpResources = fpWorkDir.resolve("resources");
+        if(Files.exists(fpResources)) {
+            try {
+                IoUtils.copy(fpResources, workDir.resolve("resources"));
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve("resources")), e);
+            }
+        }
+
+        if(fpDescr.hasProvisioningPlugins()) {
+            for(ArtifactCoords.GavPart gavPart : fpDescr.getProvisioningPlugins()) {
+                provisioningPlugins.add(gavPart);
+            }
+        }
+
+        try {
+            layoutBuilder.addFeaturePack(fpDescr);
+        } catch (ProvisioningDescriptionException e) {
+            throw new ProvisioningException("Failed to layout feature packs", e);
+        }
+        return fpDescr;
+    }
+
     private void executePlugins(final Collection<ArtifactCoords.GavPart> provisioningPlugins,
+            final ProvisionedInstallationDescription installationDescr,
             final FeaturePackLayoutDescription layoutDescr,
             final Path layoutDir,
             final Path workDir) throws ProvisioningException {
@@ -340,6 +353,10 @@ public class ProvisioningManager {
                 @Override
                 public Path getResourcesDir() {
                     return workDir.resolve("resources");
+                }
+                @Override
+                public ProvisionedInstallationDescription getInstallationDescription() {
+                    return installationDescr;
                 }
                 @Override
                 public FeaturePackLayoutDescription getLayoutDescription() {
@@ -389,20 +406,13 @@ public class ProvisioningManager {
 
     public static void main(String[] args) throws Throwable {
 
-        final FeaturePackLayoutDescription layout = FeaturePackLayoutDescription.builder()
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a1:v1")).build())
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g1:a2:v2")).build())
-            .addFeaturePack(FeaturePackDescription.builder(ArtifactCoords.getGavPart("g2:a3:v3")).build())
-            .build();
-        System.out.println(layout.getGav(ArtifactCoords.getGaPart("g2", "a3")));
-
-        final Path installDir = Paths.get("/home/olubyans/pm/wf");
+        final Path installDir = Paths.get("/home/olubyans/demo/wf");
         final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(installDir).build();
 
-        pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
+        //pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
 
-        pm.install(ArtifactCoords.getGavPart("g1:a1:v1"));
-        pm.install(
+        pm.install(ArtifactCoords.getGavPart("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
+/*        pm.install(
                 ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
                 .excludePackage("p1")
@@ -423,7 +433,7 @@ public class ProvisioningManager {
                         .excludePackage("p4")
                         .build())
                 .build());
-
+*/
 
     }
 }

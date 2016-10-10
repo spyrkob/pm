@@ -41,6 +41,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -103,7 +104,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         // make dirs
         for (String dirName : tasks.getMkDirs()) {
             final Path dir = installDir.resolve(dirName);
-            if(!Files.isDirectory(dir)) {
+            if(!Files.exists(dir)) {
                 try {
                     Files.createDirectories(dir);
                 } catch (IOException e) {
@@ -162,7 +163,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                     throw new ProvisioningException("There is more than one version of feature-pack " +
                                             ArtifactCoords.getGaPart(groupId.getFileName().toString(), artifactId.getFileName().toString()));
                                 }
-                                collectFeaturePackSubsystemsInput(ctx, version);
+                                collectFeaturePackSubsystemsInput(ctx,
+                                        ctx.getInstallationDescription().getFeaturePack(ArtifactCoords.getGaPart(groupId.getFileName().toString(), artifactId.getFileName().toString())),
+                                        version);
                             }
                         } catch (IOException e) {
                             throw new ProvisioningException(Errors.readDirectory(artifactId), e);
@@ -177,7 +180,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, Path fpDir) throws ProvisioningException {
+    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, ProvisionedFeaturePackDescription fpDescr, Path fpDir) throws ProvisioningException {
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         final Path modulesPackageXml = packagesDir.resolve("modules").resolve(Constants.PACKAGE_XML);
         if (!Files.exists(modulesPackageXml)) {
@@ -191,58 +194,72 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             throw new ProvisioningException(Errors.parseXml(modulesPackageXml), e);
         }
 
-        for (String modulePkg : modulesDescr.getDependencies()) {
-            final Path moduleDir = packagesDir.resolve(modulePkg).resolve(Constants.CONTENT);
-            if (!Files.exists(moduleDir)) {
-                throw new ProvisioningException(Errors.pathDoesNotExist(moduleDir));
+        if(fpDescr != null && fpDescr.hasIncludedPackages()) {
+            for (String modulePkg : fpDescr.getIncludedPackages()) {
+                processModule(ctx, packagesDir, modulePkg);
             }
-            try {
-                Files.walkFileTree(moduleDir, new FileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        } else {
+            for (String modulePkg : modulesDescr.getDependencies()) {
+                if (fpDescr != null && fpDescr.isExcluded(modulePkg)) {
+                    continue;
+                }
+                processModule(ctx, packagesDir, modulePkg);
+            }
+        }
+    }
+
+    private void processModule(final ProvisioningContext ctx, final Path packagesDir, String modulePkg)
+            throws ProvisioningException {
+        final Path moduleDir = packagesDir.resolve(modulePkg).resolve(Constants.CONTENT);
+        if (!Files.exists(moduleDir)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(moduleDir));
+        }
+        try {
+            Files.walkFileTree(moduleDir, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(final Path file, BasicFileAttributes attrs) throws IOException {
+                    if (!file.getFileName().toString().equals("module.xml")) {
                         return FileVisitResult.CONTINUE;
                     }
-
-                    @Override
-                    public FileVisitResult visitFile(final Path file, BasicFileAttributes attrs) throws IOException {
-                        if (!file.getFileName().toString().equals("module.xml")) {
-                            return FileVisitResult.CONTINUE;
+                    Util.processModuleArtifacts(file, (coords) -> {
+                        final Path artifactFile;
+                        try {
+                            artifactFile = ctx.resolveArtifact(coords);
+                        } catch(ProvisioningException e) {
+                            throw new IOException(FpMavenErrors.artifactResolution(coords), e);
                         }
-                        Util.processModuleArtifacts(file, (coords) -> {
-                            final Path artifactFile;
-                            try {
-                                artifactFile = ctx.resolveArtifact(coords);
-                            } catch(ProvisioningException e) {
-                                throw new IOException(FpMavenErrors.artifactResolution(coords), e);
-                            }
 
-                            final FileSystem jarFS = FileSystems.newFileSystem(artifactFile, null);
-                            final Path subsystemTemplates = jarFS.getPath("subsystem-templates");
-                            if (Files.exists(subsystemTemplates)) {
-                                try (DirectoryStream<Path> stream = Files.newDirectoryStream(subsystemTemplates)) {
-                                    for (Path path : stream) {
-                                        subsystemsInput.addSubsystemFileSource(path.getFileName().toString(),
-                                                artifactFile.toFile(), new ZipEntry(path.toString().substring(1)));
-                                    }
+                        final FileSystem jarFS = FileSystems.newFileSystem(artifactFile, null);
+                        final Path subsystemTemplates = jarFS.getPath("subsystem-templates");
+                        if (Files.exists(subsystemTemplates)) {
+                            try (DirectoryStream<Path> stream = Files.newDirectoryStream(subsystemTemplates)) {
+                                for (Path path : stream) {
+                                    subsystemsInput.addSubsystemFileSource(path.getFileName().toString(),
+                                            artifactFile.toFile(), new ZipEntry(path.toString().substring(1)));
                                 }
                             }
-                        });
-                        return FileVisitResult.CONTINUE;
-                    }
+                        }
+                    });
+                    return FileVisitResult.CONTINUE;
+                }
 
-                    @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                        return FileVisitResult.TERMINATE;
-                    }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.TERMINATE;
+                }
 
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readDirectory(moduleDir), e);
-            }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.readDirectory(moduleDir), e);
         }
     }
 
