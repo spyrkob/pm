@@ -104,7 +104,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         // make dirs
         for (String dirName : tasks.getMkDirs()) {
             final Path dir = installDir.resolve(dirName);
-            if(!Files.isDirectory(dir)) {
+            if(!Files.exists(dir)) {
                 try {
                     Files.createDirectories(dir);
                 } catch (IOException e) {

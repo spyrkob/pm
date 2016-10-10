@@ -21,10 +21,11 @@ import java.nio.file.Paths;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 
 /**
- * @author olubyans
  *
+ * @author Alexey Loubyansky
  */
 public class Demo {
 
@@ -35,11 +36,15 @@ public class Demo {
                 .setInstallationHome(Paths.get("/home/olubyans/demo/wf"))
                 .build();
 
-        //pm.install(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"));
-        pm.install(ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
-                .excludePackage("org.jboss.as.deployment-scanner.main")
-                .excludePackage("docs")
+        // pm.install(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"));
+        pm.provision(ProvisionedInstallationDescription.builder()
+                .addFeaturePack(
+                        ProvisionedFeaturePackDescription.builder()
+                                .setGav(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
+                                .excludePackage("org.jboss.as.deployment-scanner.main")
+                                .excludePackage("docs")
+                                .build())
+                .addFeaturePack(ArtifactCoords.getGavPart("org.wildfly", "wildfly-servlet-feature-pack-new", "11.0.0.Alpha1-SNAPSHOT"))
                 .build());
     }
 }
