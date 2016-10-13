@@ -41,7 +41,7 @@ public class PathsUtils {
         return getProvisionedStateDir(installationDir).resolve(Constants.LAYOUT_STATE_XML);
     }
 
-    public static Path getInstalledFeaturePackXml(Path installationDir, ArtifactCoords.GavPart fpGav) {
+    public static Path getInstalledFeaturePackXml(Path installationDir, ArtifactCoords.Gav fpGav) {
         return getProvisionedStateDir(installationDir)
                 .resolve(Constants.FEATURE_PACKS)
                 .resolve(fpGav.getGroupId())

@@ -173,7 +173,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final Builder fpBuilder = FeaturePackDescription.builder(ArtifactCoords.getGavPart(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final Builder fpBuilder = FeaturePackDescription.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
         WildFlyFeaturePackBuild build;
@@ -205,7 +205,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
-        fpBuilder.addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
         final FeaturePackDescription fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
         try {
@@ -329,7 +329,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 final String depStr = dep.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
-                final ArtifactCoords.GavPart gav = ArtifactCoords.getGavPart(gavStr);
+                final ArtifactCoords.Gav gav = ArtifactCoords.newGav(gavStr);
                 final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(gav);
                 if (dep.hasExcludedPackages()) {
                     try {

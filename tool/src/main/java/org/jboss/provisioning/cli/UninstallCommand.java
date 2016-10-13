@@ -41,7 +41,7 @@ class UninstallCommand extends ProvisioningCommand {
         final ProvisioningManager manager = getManager(session);
         try {
             for(String coord : coords) {
-                manager.uninstall(ArtifactCoords.getGavPart(coord));
+                manager.uninstall(ArtifactCoords.newGav(coord));
             }
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);

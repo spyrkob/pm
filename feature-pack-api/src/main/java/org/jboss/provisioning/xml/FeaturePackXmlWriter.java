@@ -55,14 +55,14 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
     public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
         final ElementNode fp = addElement(null, Element.FEATURE_PACK);
-        final ArtifactCoords.GavPart fpGav = fpDescr.getGav();
+        final ArtifactCoords.Gav fpGav = fpDescr.getGav();
         addGAV(fp, fpGav);
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
-            final ArtifactCoords.GaPart[] gaParts = fpDescr.getDependencyGaParts().toArray(new ArtifactCoords.GaPart[0]);
+            final ArtifactCoords.Ga[] gaParts = fpDescr.getDependencyGaParts().toArray(new ArtifactCoords.Ga[0]);
             Arrays.sort(gaParts);
-            for (ArtifactCoords.GaPart gaPart : gaParts) {
+            for (ArtifactCoords.Ga gaPart : gaParts) {
                 write(deps, fpDescr.getDependency(gaPart));
             }
         }
@@ -78,7 +78,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
         if(fpDescr.hasProvisioningPlugins()) {
             final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
-            for(ArtifactCoords.GavPart gav : fpDescr.getProvisioningPlugins()) {
+            for(ArtifactCoords.Gav gav : fpDescr.getProvisioningPlugins()) {
                 addGAV(addElement(plugins, Element.ARTIFACT), gav);
             }
         }
@@ -91,7 +91,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private void addGAV(final ElementNode fp, final ArtifactCoords.GavPart fpGav) {
+    private void addGAV(final ElementNode fp, final ArtifactCoords.Gav fpGav) {
         addAttribute(fp, Attribute.GROUP_ID, fpGav.getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, fpGav.getArtifactId());
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
@@ -103,7 +103,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
     private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
         final ElementNode depsElement = addElement(deps, Element.DEPENDENCY);
-        final ArtifactCoords.GavPart gav = dependency.getGav();
+        final ArtifactCoords.Gav gav = dependency.getGav();
         addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
         if(gav.getVersion() != null) {

@@ -145,7 +145,7 @@ public class ProvisioningManager {
      * @param fpGav  feature-pack GAV
      * @throws ProvisioningException  in case the installation fails
      */
-    public void install(ArtifactCoords.GavPart fpGav) throws ProvisioningException {
+    public void install(ArtifactCoords.Gav fpGav) throws ProvisioningException {
         install(ProvisionedFeaturePackDescription.builder().setGav(fpGav).build());
     }
 
@@ -159,8 +159,8 @@ public class ProvisioningManager {
         final ProvisionedInstallationDescription currentState = this.getCurrentState(false);
         if(currentState == null) {
             provision(ProvisionedInstallationDescription.builder().addFeaturePack(fpDescr).build());
-        } else if(currentState.containsFeaturePack(fpDescr.getGav().getGaPart())) {
-            final ProvisionedFeaturePackDescription presentDescr = currentState.getFeaturePack(fpDescr.getGav().getGaPart());
+        } else if(currentState.containsFeaturePack(fpDescr.getGav().getGa())) {
+            final ProvisionedFeaturePackDescription presentDescr = currentState.getFeaturePack(fpDescr.getGav().getGa());
             if(presentDescr.getGav().equals(fpDescr.getGav())) {
                 throw new ProvisioningException("Feature-pack " + fpDescr.getGav() + " is already installed");
             } else {
@@ -177,11 +177,11 @@ public class ProvisioningManager {
      * @param gav  feature-pack GAV
      * @throws ProvisioningException  in case the uninstallation fails
      */
-    public void uninstall(ArtifactCoords.GavPart gav) throws ProvisioningException {
+    public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
         final ProvisionedInstallationDescription currentState = getCurrentState(false);
         if(currentState == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!currentState.containsFeaturePack(gav.getGaPart())) {
+        } else if(!currentState.containsFeaturePack(gav.getGa())) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else {
             provision(ProvisionedInstallationDescription.builder(currentState).removeFeaturePack(gav).build());
@@ -217,7 +217,7 @@ public class ProvisioningManager {
         final Path layoutDir = workDir.resolve("layout");
         try {
             final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
-            final Collection<ArtifactCoords.GavPart> provisioningPlugins = new LinkedHashSet<>();
+            final Collection<ArtifactCoords.Gav> provisioningPlugins = new LinkedHashSet<>();
             layoutFeaturePacks(installationDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir);
             if (Files.exists(installationHome)) {
                 IoUtils.recursiveDelete(installationHome);
@@ -264,7 +264,7 @@ public class ProvisioningManager {
 
     private void layoutFeaturePacks(ProvisionedInstallationDescription installDescr,
             FeaturePackLayoutDescription.Builder layoutBuilder,
-            Collection<ArtifactCoords.GavPart> provisioningPlugins,
+            Collection<ArtifactCoords.Gav> provisioningPlugins,
             Path layoutDir,
             Path workDir) throws ProvisioningException {
 
@@ -274,11 +274,11 @@ public class ProvisioningManager {
     }
 
     private FeaturePackDescription layoutFeaturePack(ProvisionedInstallationDescription installDescr,
-            FeaturePackLayoutDescription.Builder layoutBuilder, Collection<ArtifactCoords.GavPart> provisioningPlugins,
+            FeaturePackLayoutDescription.Builder layoutBuilder, Collection<ArtifactCoords.Gav> provisioningPlugins,
             Path layoutDir, Path workDir, ProvisionedFeaturePackDescription provisionedFp) throws ArtifactResolutionException,
             ProvisioningException {
-        final ArtifactCoords.GavPart fpGav = provisionedFp.getGav();
-        final Path artifactPath = artifactResolver.resolve(fpGav.getArtifactCoords());
+        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
+        final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
         final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
         mkdirs(fpWorkDir);
         try {
@@ -296,7 +296,7 @@ public class ProvisioningManager {
         }
         if(fpDescr.hasDependencies()) {
             for(ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
-                if(!installDescr.containsFeaturePack(dep.getGav().getGaPart())) {
+                if(!installDescr.containsFeaturePack(dep.getGav().getGa())) {
                     layoutFeaturePack(installDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir, dep);
                 }
             }
@@ -312,7 +312,7 @@ public class ProvisioningManager {
         }
 
         if(fpDescr.hasProvisioningPlugins()) {
-            for(ArtifactCoords.GavPart gavPart : fpDescr.getProvisioningPlugins()) {
+            for(ArtifactCoords.Gav gavPart : fpDescr.getProvisioningPlugins()) {
                 provisioningPlugins.add(gavPart);
             }
         }
@@ -325,15 +325,15 @@ public class ProvisioningManager {
         return fpDescr;
     }
 
-    private void executePlugins(final Collection<ArtifactCoords.GavPart> provisioningPlugins,
+    private void executePlugins(final Collection<ArtifactCoords.Gav> provisioningPlugins,
             final ProvisionedInstallationDescription installationDescr,
             final FeaturePackLayoutDescription layoutDescr,
             final Path layoutDir,
             final Path workDir) throws ProvisioningException {
         final List<java.net.URL> urls = new ArrayList<java.net.URL>(provisioningPlugins.size());
-        for(ArtifactCoords.GavPart gavPart : provisioningPlugins) {
+        for(ArtifactCoords.Gav gavPart : provisioningPlugins) {
             try {
-                urls.add(artifactResolver.resolve(gavPart.getArtifactCoords()).toUri().toURL());
+                urls.add(artifactResolver.resolve(gavPart.toArtifactCoords()).toUri().toURL());
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -411,7 +411,7 @@ public class ProvisioningManager {
 
         //pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
 
-        pm.install(ArtifactCoords.getGavPart("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
+        pm.install(ArtifactCoords.newGav("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
 /*        pm.install(
                 ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))

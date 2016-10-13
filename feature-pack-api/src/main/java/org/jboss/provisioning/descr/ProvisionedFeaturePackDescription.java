@@ -35,14 +35,14 @@ public class ProvisionedFeaturePackDescription {
 
     public static class Builder {
 
-        protected ArtifactCoords.GavPart gav;
+        protected ArtifactCoords.Gav gav;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
 
         protected Builder() {
         }
 
-        public Builder setGav(ArtifactCoords.GavPart gav) {
+        public Builder setGav(ArtifactCoords.Gav gav) {
             this.gav = gav;
             return this;
         }
@@ -99,18 +99,18 @@ public class ProvisionedFeaturePackDescription {
         return new Builder();
     }
 
-    private final ArtifactCoords.GavPart gav;
+    private final ArtifactCoords.Gav gav;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(ArtifactCoords.GavPart gav, Set<String> excludedPackages, Set<String> includedPackages) {
+    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
         this.excludedPackages = excludedPackages;
         this.includedPackages = includedPackages;
     }
 
-    public ArtifactCoords.GavPart getGav() {
+    public ArtifactCoords.Gav getGav() {
         return gav;
     }
 

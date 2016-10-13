@@ -103,7 +103,7 @@ public class FeaturePackXmlParserTest  {
     public void readEmpty() throws Exception {
         FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-empty.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
-                .setGav(ArtifactCoords.getGavPart("org.jboss.fp.group1", "fp1", "1.0.0")).build();
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0")).build();
         Assert.assertEquals(expected, found);
     }
 
@@ -111,14 +111,14 @@ public class FeaturePackXmlParserTest  {
     public void readValid() throws Exception {
         FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
-                .setGav(ArtifactCoords.getGavPart("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart("org.jboss.dep.group1", "dep1", "0.0.1")).build())
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart("org.jboss.dep.group2", "dep2", "0.0.2")).build())
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
+                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")).build())
+                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2")).build())
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
                 //.addTopPackage(PackageDescription.builder().setName("package2").build())
-                .addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.plugin.group1", "plugin1", "0.1.0"))
-                .addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.plugin.group2", "plugin2", "0.2.0"))
+                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group1", "plugin1", "0.1.0"))
+                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group2", "plugin2", "0.2.0"))
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -127,14 +127,14 @@ public class FeaturePackXmlParserTest  {
     public void readVersionOptional() throws Exception {
         FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-version-optional.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
-                .setGav(ArtifactCoords.getGavPart("org.jboss.fp.group1", "fp1", null))
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart("org.jboss.dep.group1", "dep1", null)).build())
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart("org.jboss.dep.group2", "dep2", null)).build())
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", null))
+                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)).build())
+                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)).build())
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
                 //.addTopPackage(PackageDescription.builder().setName("package2").build())
-                .addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.plugin.group1", "plugin1", null))
-                .addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.plugin.group2", "plugin2", null))
+                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group1", "plugin1", null))
+                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group2", "plugin2", null))
                 .build();
         Assert.assertEquals(expected, found);
     }

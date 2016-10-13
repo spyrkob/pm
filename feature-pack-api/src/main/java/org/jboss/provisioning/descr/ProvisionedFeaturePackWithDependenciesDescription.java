@@ -37,14 +37,14 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
 
     public static class Builder extends ProvisionedFeaturePackDescription.Builder {
 
-        protected Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        protected Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
 
         protected Builder() {
             super();
         }
 
         public Builder addDependency(ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
-            final ArtifactCoords.GaPart gaPart = dependency.getGav().getGaPart();
+            final ArtifactCoords.Ga gaPart = dependency.getGav().getGa();
             if(dependencies.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(dependency.getGav(), dependencies.get(gaPart).getGav()));
             }
@@ -71,10 +71,10 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
         return new Builder();
     }
 
-    private final Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies;
 
-    protected ProvisionedFeaturePackWithDependenciesDescription(ArtifactCoords.GavPart gav, Set<String> excludedPackages, Set<String> includedPackages,
-            Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies) {
+    protected ProvisionedFeaturePackWithDependenciesDescription(ArtifactCoords.Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
+            Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies) {
         super(gav, excludedPackages, includedPackages);
         this.dependencies = dependencies;
     }

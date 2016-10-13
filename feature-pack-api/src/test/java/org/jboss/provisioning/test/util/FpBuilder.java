@@ -57,7 +57,7 @@ public class FpBuilder {
         return repo;
     }
 
-    public FpBuilder setGav(ArtifactCoords.GavPart gav) {
+    public FpBuilder setGav(ArtifactCoords.Gav gav) {
         fpBuilder.setGav(gav);
         return this;
     }

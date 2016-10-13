@@ -49,7 +49,7 @@ public class FpRepoBuilder {
         return newFeaturePack(null);
     }
 
-    public FpBuilder newFeaturePack(ArtifactCoords.GavPart gav) {
+    public FpBuilder newFeaturePack(ArtifactCoords.Gav gav) {
         final FpBuilder fp = FpBuilder.newInstance(this);
         if(gav != null) {
             fp.setGav(gav);

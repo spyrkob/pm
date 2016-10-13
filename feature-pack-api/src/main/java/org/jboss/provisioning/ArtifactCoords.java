@@ -28,7 +28,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
 
     private static final Pattern COORDS_PATTERN = Pattern.compile("([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)");
 
-    public static ArtifactCoords fromGav(GavPart gav, String extension) {
+    public static ArtifactCoords fromGav(Gav gav, String extension) {
         return new ArtifactCoords(gav.getGroupId(), gav.getArtifactId(), gav.getVersion(), null, extension);
     }
 
@@ -36,11 +36,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         return new ArtifactCoords(str);
     }
 
-    public static GavPart getGavPart(String groupId, String artifactId, String version) {
-        return new ArtifactCoords(groupId, artifactId, version, "", "zip").getGavPart();
+    public static Gav newGav(String groupId, String artifactId, String version) {
+        return new ArtifactCoords(groupId, artifactId, version, "", "zip").toGav();
     }
 
-    public static GavPart getGavPart(String str) {
+    public static Gav newGav(String str) {
 
         int i = str.indexOf(':');
         if(i <= 0) {
@@ -57,11 +57,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
             artifactId = str.substring(groupId.length() + 1, i);
             version = str.substring(i + 1);
         }
-        return getGavPart(groupId, artifactId, version);
+        return newGav(groupId, artifactId, version);
     }
 
-    public static GaPart getGaPart(String groupId, String artifactId) {
-        return new ArtifactCoords(groupId, artifactId, null, "", "zip").getGaPart();
+    public static Ga newGa(String groupId, String artifactId) {
+        return new ArtifactCoords(groupId, artifactId, null, "", "zip").toGa();
     }
 
     private static String get(String value, String defaultValue) {
@@ -73,7 +73,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
      *
      * @author Alexey Loubyansky
      */
-    public class GavPart implements Comparable<GavPart> {
+    public class Gav implements Comparable<Gav> {
 
         public String getGroupId() {
             return groupId;
@@ -87,12 +87,12 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
             return version;
         }
 
-        public ArtifactCoords getArtifactCoords() {
+        public ArtifactCoords toArtifactCoords() {
             return ArtifactCoords.this;
         }
 
-        public GaPart getGaPart() {
-            return ArtifactCoords.this.getGaPart();
+        public Ga getGa() {
+            return ArtifactCoords.this.toGa();
         }
 
         @Override
@@ -129,7 +129,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            GavPart other = (GavPart) obj;
+            Gav other = (Gav) obj;
             if (artifactId == null) {
                 if (other.getArtifactId() != null)
                     return false;
@@ -149,7 +149,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         }
 
         @Override
-        public int compareTo(GavPart o) {
+        public int compareTo(Gav o) {
             if(o == null) {
                 return 1;
             }
@@ -176,7 +176,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
      *
      * @author Alexey Loubyansky
      */
-    public class GaPart implements Comparable<GaPart> {
+    public class Ga implements Comparable<Ga> {
 
         public String getGroupId() {
             return groupId;
@@ -186,8 +186,8 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
             return artifactId;
         }
 
-        public GavPart getGavPart() {
-            return ArtifactCoords.this.getGavPart();
+        public Gav toGav() {
+            return ArtifactCoords.this.toGav();
         }
 
         @Override
@@ -220,7 +220,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            GaPart other = (GaPart) obj;
+            Ga other = (Ga) obj;
             if (artifactId == null) {
                 if (other.getArtifactId() != null)
                     return false;
@@ -235,7 +235,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         }
 
         @Override
-        public int compareTo(GaPart o) {
+        public int compareTo(Ga o) {
             if(o == null) {
                 return 1;
             }
@@ -253,8 +253,8 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
     private final String classifier;
     private final String extension;
 
-    private final GavPart gavPart;
-    private final GaPart gaPart;
+    private final Gav gavPart;
+    private final Ga gaPart;
 
     private ArtifactCoords(String str) {
         final Matcher m = COORDS_PATTERN.matcher(str);
@@ -268,8 +268,8 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         classifier = get(m.group(6), "");
         version = m.group(7);
 
-        gavPart = new GavPart();
-        gaPart = new GaPart();
+        gavPart = new Gav();
+        gaPart = new Ga();
     }
 
     public ArtifactCoords(String groupId, String artifactId, String version, String classifier, String extension) {
@@ -279,8 +279,8 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         this.classifier = get(classifier, "");
         this.extension = get(extension, "jar");
 
-        gavPart = new GavPart();
-        gaPart = new GaPart();
+        gavPart = new Gav();
+        gaPart = new Ga();
     }
 
     public String getGroupId() {
@@ -303,11 +303,11 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
         return extension;
     }
 
-    public GavPart getGavPart() {
+    public Gav toGav() {
         return gavPart;
     }
 
-    public GaPart getGaPart() {
+    public Ga toGa() {
         return gaPart;
     }
 

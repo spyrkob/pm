@@ -69,8 +69,8 @@ public class FeaturePackLayoutInstaller {
 
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
         for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
-            final ArtifactCoords.GavPart fpGav = fp.getGav();
-            ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav.getGaPart());
+            final ArtifactCoords.Gav fpGav = fp.getGav();
+            ProvisionedFeaturePackDescription provisionedFp = provisionedDescr.getFeaturePack(fpGav.getGa());
             if(provisionedFp == null) {
                 provisionedFp = ProvisionedFeaturePackDescription.builder().setGav(fpGav).build();
             }
