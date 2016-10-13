@@ -39,8 +39,12 @@ public class LayoutUtils {
     }
 
     public static Path getPackageDir(Path fpDir, String packageName) throws ProvisioningDescriptionException {
+        return getPackageDir(fpDir, packageName, true);
+    }
+
+    public static Path getPackageDir(Path fpDir, String packageName, boolean existing) throws ProvisioningDescriptionException {
         final Path dir = fpDir.resolve(Constants.PACKAGES).resolve(packageName);
-        if(!Files.exists(dir)) {
+        if(existing && !Files.exists(dir)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(dir));
         }
         return dir;
