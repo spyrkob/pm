@@ -67,6 +67,10 @@ public class FpBuilder {
         return this;
     }
 
+    public FpBuilder addDependency(ArtifactCoords.Gav gav) {
+        return addDependency(ProvisionedFeaturePackDescription.builder().setGav(gav).build());
+    }
+
     public FpBuilder addPackage(PkgBuilder pkg) {
         switch (pkgs.size()) {
             case 0:

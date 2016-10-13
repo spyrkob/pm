@@ -62,6 +62,7 @@ import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
@@ -207,10 +208,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
-        final FeaturePackDescription fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
+        final FeaturePackDescription fpDescr;
         try {
+            fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
             FeaturePackXmlWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
-        } catch (XMLStreamException | IOException e) {
+        } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)));
         }
 
