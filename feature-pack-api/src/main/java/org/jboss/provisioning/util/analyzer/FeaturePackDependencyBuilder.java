@@ -43,22 +43,22 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  */
 public class FeaturePackDependencyBuilder {
 
-    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav) throws ProvisioningDescriptionException {
+    public static void extractParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.Gav childGav, ArtifactCoords.Gav parentGav) throws ProvisioningDescriptionException {
         new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, true).extractParentAsDependency();
     }
 
-    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav) throws ProvisioningDescriptionException {
+    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.Gav childGav, ArtifactCoords.Gav parentGav) throws ProvisioningDescriptionException {
         return new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, false).describeParentAsDependency();
     }
 
     private final Path fpLayoutDir;
     private final String encoding;
-    private final ArtifactCoords.GavPart childGav;
-    private final ArtifactCoords.GavPart parentGav;
+    private final ArtifactCoords.Gav childGav;
+    private final ArtifactCoords.Gav parentGav;
     private final boolean updateXml;
 
 
-    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart childGav, ArtifactCoords.GavPart parentGav, boolean updateXml) {
+    private FeaturePackDependencyBuilder(Path fpLayoutDir, String encoding, ArtifactCoords.Gav childGav, ArtifactCoords.Gav parentGav, boolean updateXml) {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
         this.childGav = childGav;
@@ -120,8 +120,8 @@ public class FeaturePackDependencyBuilder {
             for(String name : childDiff.getConflictingPackageNames()) {
                 final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackageDescription(name));
                 fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isTopPackage(name)) {
-                    fpBuilder.addTopPackageName(name);
+                if(childDescr.isDefaultPackage(name)) {
+                    fpBuilder.markAsDefaultPackage(name);
                 }
             }
         }
@@ -132,8 +132,8 @@ public class FeaturePackDependencyBuilder {
             for(String name : childDiff.getUniquePackageNames()) {
                 final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDiff.getUniquePackage(name));
                 fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isTopPackage(name)) {
-                    fpBuilder.addTopPackageName(name);
+                if(childDescr.isDefaultPackage(name)) {
+                    fpBuilder.markAsDefaultPackage(name);
                 }
             }
         }

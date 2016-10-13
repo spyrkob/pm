@@ -161,10 +161,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                             for(Path version : versionStream) {
                                 if(++count > 1) {
                                     throw new ProvisioningException("There is more than one version of feature-pack " +
-                                            ArtifactCoords.getGaPart(groupId.getFileName().toString(), artifactId.getFileName().toString()));
+                                            ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString()));
                                 }
                                 collectFeaturePackSubsystemsInput(ctx,
-                                        ctx.getInstallationDescription().getFeaturePack(ArtifactCoords.getGaPart(groupId.getFileName().toString(), artifactId.getFileName().toString())),
+                                        ctx.getInstallationDescription().getFeaturePack(ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString())),
                                         version);
                             }
                         } catch (IOException e) {

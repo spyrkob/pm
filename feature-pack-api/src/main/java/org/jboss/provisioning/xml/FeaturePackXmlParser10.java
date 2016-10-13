@@ -147,7 +147,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        fpBuilder.setGav(readArtifactCoords(reader, "zip").getGavPart());
+        fpBuilder.setGav(readArtifactCoords(reader, "zip").toGav());
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -264,7 +264,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.getGavPart(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -367,7 +367,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            fpBuilder.addTopPackageName(parseName(reader));
+                            fpBuilder.markAsDefaultPackage(parseName(reader));
                             hasChildren = true;
                             break;
                         default:
@@ -398,7 +398,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case ARTIFACT:
-                            fpBuilder.addProvisioningPlugin(readArtifactCoords(reader, "jar").getGavPart());
+                            fpBuilder.addProvisioningPlugin(readArtifactCoords(reader, "jar").toGav());
                             ParsingUtils.parseNoContent(reader);
                             hasChildren = true;
                             break;

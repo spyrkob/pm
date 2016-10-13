@@ -39,13 +39,13 @@ public class FeaturePackSpecificDescription {
 
     static class Builder {
 
-        private final ArtifactCoords.GavPart gav;
-        private Map<ArtifactCoords.GavPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private final ArtifactCoords.Gav gav;
+        private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
         private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
         private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
         private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
 
-        private Builder(ArtifactCoords.GavPart gav) {
+        private Builder(ArtifactCoords.Gav gav) {
             this.gav = gav;
         }
 
@@ -134,18 +134,18 @@ public class FeaturePackSpecificDescription {
         }
     }
 
-    static Builder builder(ArtifactCoords.GavPart gav) {
+    static Builder builder(ArtifactCoords.Gav gav) {
         return new Builder(gav);
     }
 
-    private final ArtifactCoords.GavPart gav;
-    private final Map<ArtifactCoords.GavPart, ProvisionedFeaturePackDescription> dependencies;
+    private final ArtifactCoords.Gav gav;
+    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies;
     private final Map<String, PackageDescription> uniquePackages;
     private final Map<String, PackageSpecificDescription> conflictingPackages;
     private final Map<String, PackageDescription> matchedPackages;
 
-    FeaturePackSpecificDescription(ArtifactCoords.GavPart gav,
-            Map<ArtifactCoords.GavPart, ProvisionedFeaturePackDescription> dependencies,
+    FeaturePackSpecificDescription(ArtifactCoords.Gav gav,
+            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies,
             Map<String, PackageDescription> uniquePackages,
             Map<String, PackageSpecificDescription> conflictingPackages,
             Map<String, PackageDescription> matchedPackages) {
@@ -156,7 +156,7 @@ public class FeaturePackSpecificDescription {
         this.matchedPackages = matchedPackages;
     }
 
-    public ArtifactCoords.GavPart getGav() {
+    public ArtifactCoords.Gav getGav() {
         return gav;
     }
 
@@ -164,7 +164,7 @@ public class FeaturePackSpecificDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<ArtifactCoords.GavPart> getDependencyGAVs() {
+    public Set<ArtifactCoords.Gav> getDependencyGAVs() {
         return dependencies.keySet();
     }
 
@@ -223,7 +223,7 @@ public class FeaturePackSpecificDescription {
         if(!dependencies.isEmpty()) {
             out.println("Dependencies:");
             out.increaseOffset();
-            for(ArtifactCoords.GavPart gav : dependencies.keySet()) {
+            for(ArtifactCoords.Gav gav : dependencies.keySet()) {
                 out.println(gav.toString());
             }
             out.decreaseOffset();

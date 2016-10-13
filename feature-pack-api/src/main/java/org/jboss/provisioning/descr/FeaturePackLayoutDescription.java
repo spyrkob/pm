@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactCoords.GavPart;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -37,7 +37,7 @@ public class FeaturePackLayoutDescription {
 
     public static class Builder {
 
-        private Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
@@ -48,9 +48,9 @@ public class FeaturePackLayoutDescription {
 
         public Builder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
             assert fp != null : "fp is null";
-            final ArtifactCoords.GaPart fpGa = fp.getGav().getGaPart();
+            final ArtifactCoords.Ga fpGa = fp.getGav().getGa();
             if(featurePacks.containsKey(fpGa)) {
-                final GavPart existingGav = featurePacks.get(fpGa).getGav();
+                final Gav existingGav = featurePacks.get(fpGa).getGav();
                 if(existingGav.getVersion().equals(fp.getGav().getVersion())) {
                     // TODO decide what to do
                     return this;
@@ -62,7 +62,7 @@ public class FeaturePackLayoutDescription {
                     featurePacks = Collections.singletonMap(fpGa, fp);
                     break;
                 case 1:
-                    featurePacks = new LinkedHashMap<ArtifactCoords.GaPart, FeaturePackDescription>(featurePacks);
+                    featurePacks = new LinkedHashMap<ArtifactCoords.Ga, FeaturePackDescription>(featurePacks);
                 default:
                     if(addLast && featurePacks.containsKey(fpGa)) {
                         featurePacks.remove(fpGa);
@@ -81,9 +81,9 @@ public class FeaturePackLayoutDescription {
         return new Builder();
     }
 
-    private final Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks;
+    private final Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks;
 
-    FeaturePackLayoutDescription(Map<ArtifactCoords.GaPart, FeaturePackDescription> featurePacks) {
+    FeaturePackLayoutDescription(Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks) {
         assert featurePacks != null : "featurePacks is null";
         this.featurePacks = featurePacks;
     }
@@ -92,11 +92,11 @@ public class FeaturePackLayoutDescription {
         return !featurePacks.isEmpty();
     }
 
-    public boolean contains(ArtifactCoords.GaPart fpGa) {
+    public boolean contains(ArtifactCoords.Ga fpGa) {
         return featurePacks.containsKey(fpGa);
     }
 
-    public ArtifactCoords.GavPart getGav(ArtifactCoords.GaPart fpGa) {
+    public ArtifactCoords.Gav getGav(ArtifactCoords.Ga fpGa) {
         final FeaturePackDescription fpDescr = featurePacks.get(fpGa);
         return fpDescr == null ? null : fpDescr.getGav();
     }

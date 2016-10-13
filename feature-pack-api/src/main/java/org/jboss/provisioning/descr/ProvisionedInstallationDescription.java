@@ -35,7 +35,7 @@ public class ProvisionedInstallationDescription {
 
     public static class Builder {
 
-        private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
@@ -46,12 +46,12 @@ public class ProvisionedInstallationDescription {
             }
         }
 
-        public Builder addFeaturePack(ArtifactCoords.GavPart fpGav) throws ProvisioningDescriptionException {
+        public Builder addFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningDescriptionException {
             return addFeaturePack(ProvisionedFeaturePackDescription.builder().setGav(fpGav).build());
         }
 
         public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) throws ProvisioningDescriptionException {
-            final ArtifactCoords.GaPart gaPart = fp.getGav().getGaPart();
+            final ArtifactCoords.Ga gaPart = fp.getGav().getGa();
             if(featurePacks.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
             }
@@ -67,8 +67,8 @@ public class ProvisionedInstallationDescription {
             return this;
         }
 
-        public Builder removeFeaturePack(ArtifactCoords.GavPart gav) throws ProvisioningException {
-            final ProvisionedFeaturePackDescription fpDescr = featurePacks.get(gav.getGaPart());
+        public Builder removeFeaturePack(ArtifactCoords.Gav gav) throws ProvisioningException {
+            final ProvisionedFeaturePackDescription fpDescr = featurePacks.get(gav.getGa());
             if(fpDescr == null) {
                 throw new ProvisioningException(Errors.unknownFeaturePack(gav));
             }
@@ -78,7 +78,7 @@ public class ProvisionedInstallationDescription {
             if(featurePacks.size() == 1) {
                 featurePacks = Collections.emptyMap();
             } else {
-                featurePacks.remove(gav.getGaPart());
+                featurePacks.remove(gav.getGa());
             }
             return this;
         }
@@ -104,9 +104,9 @@ public class ProvisionedInstallationDescription {
         return new Builder(installDescr);
     }
 
-    private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks;
+    private Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks;
 
-    private ProvisionedInstallationDescription(Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> featurePacks) {
+    private ProvisionedInstallationDescription(Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks) {
         this.featurePacks = featurePacks;
     }
 
@@ -114,11 +114,11 @@ public class ProvisionedInstallationDescription {
         return !featurePacks.isEmpty();
     }
 
-    public boolean containsFeaturePack(ArtifactCoords.GaPart gaPart) {
+    public boolean containsFeaturePack(ArtifactCoords.Ga gaPart) {
         return featurePacks.containsKey(gaPart);
     }
 
-    public Set<ArtifactCoords.GaPart> getFeaturePackGaParts() {
+    public Set<ArtifactCoords.Ga> getFeaturePackGaParts() {
         return featurePacks.keySet();
     }
 
@@ -126,7 +126,7 @@ public class ProvisionedInstallationDescription {
         return featurePacks.values();
     }
 
-    public ProvisionedFeaturePackDescription getFeaturePack(ArtifactCoords.GaPart gaPart) {
+    public ProvisionedFeaturePackDescription getFeaturePack(ArtifactCoords.Ga gaPart) {
         return featurePacks.get(gaPart);
     }
 

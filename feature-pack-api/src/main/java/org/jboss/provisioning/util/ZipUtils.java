@@ -100,7 +100,7 @@ public class ZipUtils {
                         throws IOException {
                         final Path targetDir = zipfs.getPath(srcRoot.relativize(dir).toString());
                         try {
-                            Files.copy(dir, targetDir, StandardCopyOption.REPLACE_EXISTING);
+                            Files.copy(dir, targetDir);
                         } catch (FileAlreadyExistsException e) {
                              if (!Files.isDirectory(targetDir)) {
                                  throw e;

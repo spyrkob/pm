@@ -40,11 +40,11 @@ public class Demo {
         pm.provision(ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
+                                .setGav(ArtifactCoords.newGav("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
                                 .excludePackage("org.jboss.as.deployment-scanner.main")
                                 .excludePackage("docs")
                                 .build())
-                .addFeaturePack(ArtifactCoords.getGavPart("org.wildfly", "wildfly-servlet-feature-pack-new", "11.0.0.Alpha1-SNAPSHOT"))
+                .addFeaturePack(ArtifactCoords.newGav("org.wildfly", "wildfly-servlet-feature-pack-new", "11.0.0.Alpha1-SNAPSHOT"))
                 .build());
     }
 }

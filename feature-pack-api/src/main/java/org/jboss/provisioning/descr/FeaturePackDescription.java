@@ -38,41 +38,41 @@ public class FeaturePackDescription {
 
     public static class Builder {
 
-        private ArtifactCoords.GavPart gav;
-        private Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
-        private Set<String> topPackages = Collections.emptySet();
+        private ArtifactCoords.Gav gav;
+        private Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private Set<String> defPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
-        private List<ArtifactCoords.GavPart> provisioningPlugins = Collections.emptyList();
+        private List<ArtifactCoords.Gav> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
         }
 
-        protected Builder(ArtifactCoords.GavPart gav) {
+        protected Builder(ArtifactCoords.Gav gav) {
             this.gav = gav;
         }
 
-        public Builder setGav(ArtifactCoords.GavPart gav) {
+        public Builder setGav(ArtifactCoords.Gav gav) {
             this.gav = gav;
             return this;
         }
 
-        public Builder addTopPackage(PackageDescription pkg) {
-            addTopPackageName(pkg.getName());
+        public Builder addDefaultPackage(PackageDescription pkg) {
+            markAsDefaultPackage(pkg.getName());
             addPackage(pkg);
             return this;
         }
 
-        public Builder addTopPackageName(String packageName) {
+        public Builder markAsDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
-            switch(topPackages.size()) {
+            switch(defPackages.size()) {
                 case 0:
-                    topPackages = Collections.singleton(packageName);
+                    defPackages = Collections.singleton(packageName);
                     break;
                 case 1:
-                    topPackages = new HashSet<String>(topPackages);
+                    defPackages = new HashSet<String>(defPackages);
                 default:
-                    topPackages.add(packageName);
+                    defPackages.add(packageName);
             }
             return this;
         }
@@ -95,12 +95,12 @@ public class FeaturePackDescription {
             assert gav != null : "Gav is null";
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dependency.getGav().getGaPart(), dependency);
+                    dependencies = Collections.singletonMap(dependency.getGav().getGa(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashMap<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new HashMap<ArtifactCoords.Ga, ProvisionedFeaturePackDescription>(dependencies);
                 default:
-                    dependencies.put(dependency.getGav().getGaPart(), dependency);
+                    dependencies.put(dependency.getGav().getGa(), dependency);
             }
             return this;
         }
@@ -112,14 +112,14 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addProvisioningPlugin(ArtifactCoords.GavPart gav) {
+        public Builder addProvisioningPlugin(ArtifactCoords.Gav gav) {
             assert gav != null : "gav is null";
             switch(provisioningPlugins.size()) {
                 case 0:
                     provisioningPlugins = Collections.singletonList(gav);
                     break;
                 case 1:
-                    provisioningPlugins = new ArrayList<ArtifactCoords.GavPart>(provisioningPlugins);
+                    provisioningPlugins = new ArrayList<ArtifactCoords.Gav>(provisioningPlugins);
                 default:
                     provisioningPlugins.add(gav);
             }
@@ -127,7 +127,7 @@ public class FeaturePackDescription {
         }
 
         public FeaturePackDescription build() {
-            return new FeaturePackDescription(gav, Collections.unmodifiableSet(topPackages), Collections.unmodifiableMap(packages),
+            return new FeaturePackDescription(gav, Collections.unmodifiableSet(defPackages), Collections.unmodifiableMap(packages),
                     Collections.unmodifiableMap(dependencies), Collections.unmodifiableList(provisioningPlugins));
         }
     }
@@ -136,44 +136,44 @@ public class FeaturePackDescription {
         return builder(null);
     }
 
-    public static Builder builder(ArtifactCoords.GavPart gav) {
+    public static Builder builder(ArtifactCoords.Gav gav) {
         return new Builder(gav);
     }
 
-    private final ArtifactCoords.GavPart gav;
-    private final Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies;
-    private final Set<String> topPackages;
+    private final ArtifactCoords.Gav gav;
+    private final Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies;
+    private final Set<String> defPackages;
     private final Map<String, PackageDescription> packages;
-    private final List<ArtifactCoords.GavPart> provisioningPlugins;
+    private final List<ArtifactCoords.Gav> provisioningPlugins;
 
-    protected FeaturePackDescription(ArtifactCoords.GavPart gav, Set<String> topPackages, Map<String, PackageDescription> packages,
-            Map<ArtifactCoords.GaPart, ProvisionedFeaturePackDescription> dependencies,
-            List<ArtifactCoords.GavPart> provisioningPlugins) {
+    protected FeaturePackDescription(ArtifactCoords.Gav gav, Set<String> topPackages, Map<String, PackageDescription> packages,
+            Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies,
+            List<ArtifactCoords.Gav> provisioningPlugins) {
         assert gav != null : "Gav is null";
         assert dependencies != null : "dependencies is null";
         assert topPackages != null : "topPackages is null";
         assert packages != null : "packages is null";
         this.gav = gav;
-        this.topPackages = topPackages;
+        this.defPackages = topPackages;
         this.packages = packages;
         this.dependencies = dependencies;
         this.provisioningPlugins = provisioningPlugins;
     }
 
-    public ArtifactCoords.GavPart getGav() {
+    public ArtifactCoords.Gav getGav() {
         return gav;
     }
 
-    public boolean hasTopPackages() {
-        return !topPackages.isEmpty();
+    public boolean hasDefaultPackages() {
+        return !defPackages.isEmpty();
     }
 
-    public Set<String> getTopPackageNames() {
-        return topPackages;
+    public Set<String> getDefaultPackageNames() {
+        return defPackages;
     }
 
-    public boolean isTopPackage(String name) {
-        return topPackages.contains(name);
+    public boolean isDefaultPackage(String name) {
+        return defPackages.contains(name);
     }
 
     public boolean hasPackages() {
@@ -200,7 +200,7 @@ public class FeaturePackDescription {
         return !dependencies.isEmpty();
     }
 
-    public Set<ArtifactCoords.GaPart> getDependencyGaParts() {
+    public Set<ArtifactCoords.Ga> getDependencyGaParts() {
         return dependencies.keySet();
     }
 
@@ -208,7 +208,7 @@ public class FeaturePackDescription {
         return dependencies.values();
     }
 
-    public ProvisionedFeaturePackDescription getDependency(ArtifactCoords.GaPart gaPart) {
+    public ProvisionedFeaturePackDescription getDependency(ArtifactCoords.Ga gaPart) {
         return dependencies.get(gaPart);
     }
 
@@ -216,7 +216,7 @@ public class FeaturePackDescription {
         return !provisioningPlugins.isEmpty();
     }
 
-    public List<ArtifactCoords.GavPart> getProvisioningPlugins() {
+    public List<ArtifactCoords.Gav> getProvisioningPlugins() {
         return provisioningPlugins;
     }
 
@@ -242,15 +242,15 @@ public class FeaturePackDescription {
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
-            for(ArtifactCoords.GaPart ga : dependencies.keySet()) {
-                logger.println(ga.getGavPart().toString());
+            for(ArtifactCoords.Ga ga : dependencies.keySet()) {
+                logger.println(ga.toGav().toString());
             }
             logger.decreaseOffset();
         }
 
         if(!provisioningPlugins.isEmpty()) {
             logger.println("Provisioning plugins:").increaseOffset();
-            for(ArtifactCoords.GavPart gav : provisioningPlugins) {
+            for(ArtifactCoords.Gav gav : provisioningPlugins) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();
@@ -266,7 +266,7 @@ public class FeaturePackDescription {
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((packages == null) ? 0 : packages.hashCode());
         result = prime * result + ((provisioningPlugins == null) ? 0 : provisioningPlugins.hashCode());
-        result = prime * result + ((topPackages == null) ? 0 : topPackages.hashCode());
+        result = prime * result + ((defPackages == null) ? 0 : defPackages.hashCode());
         return result;
     }
 
@@ -299,17 +299,17 @@ public class FeaturePackDescription {
                 return false;
         } else if (!provisioningPlugins.equals(other.provisioningPlugins))
             return false;
-        if (topPackages == null) {
-            if (other.topPackages != null)
+        if (defPackages == null) {
+            if (other.defPackages != null)
                 return false;
-        } else if (!topPackages.equals(other.topPackages))
+        } else if (!defPackages.equals(other.defPackages))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "FeaturePackDescription [gav=" + gav + ", dependencies=" + dependencies + ", topPackages=" + topPackages
+        return "FeaturePackDescription [gav=" + gav + ", dependencies=" + dependencies + ", topPackages=" + defPackages
                 + ", packages=" + packages + ", provisioningPlugins=" + provisioningPlugins + "]";
     }
 }

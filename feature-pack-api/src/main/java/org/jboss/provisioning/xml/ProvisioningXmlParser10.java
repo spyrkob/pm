@@ -214,7 +214,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         }
 
         final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
-        fpBuilder.setGav(ArtifactCoords.getGavPart(groupId, artifactId, version));
+        fpBuilder.setGav(ArtifactCoords.newGav(groupId, artifactId, version));
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

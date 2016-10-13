@@ -41,7 +41,7 @@ public class InstallCommand extends ProvisioningCommand {
         final ProvisioningManager manager = getManager(session);
         try {
             for(String coord : coords) {
-                manager.install(ArtifactCoords.getGavPart(coord));
+                manager.install(ArtifactCoords.newGav(coord));
             }
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);

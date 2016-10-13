@@ -131,8 +131,8 @@ public class WfFeaturePackLayoutBuilder {
             }
             fpDir = fpTarget;
         }
-        fpBuilder.setGav(ArtifactCoords.getGavPart(fpGroupId, fpArtifactId, fpVersion));
-        fpBuilder.addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.setGav(ArtifactCoords.newGav(fpGroupId, fpArtifactId, fpVersion));
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {
@@ -195,7 +195,7 @@ public class WfFeaturePackLayoutBuilder {
         }
 
         final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addTopPackage(pkgDescr);
+        fpBuilder.addDefaultPackage(pkgDescr);
 
         writePackageXml(pkgDescr, pkgDir);
         pkgBuilder = null;

@@ -274,7 +274,7 @@ public class FpCommand extends PmSessionCommand {
 
         final FeaturePackDescriptionDiffs diff;
         try {
-            diff = FeaturePacksDiff.compare(workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
+            diff = FeaturePacksDiff.compare(workDir, encodingArg, ArtifactCoords.newGav(gav1), ArtifactCoords.newGav(gav2));
         } catch (ProvisioningDescriptionException e) {
             throw new CommandExecutionException("Failed to analyze feature packs", e);
         }
@@ -306,7 +306,7 @@ public class FpCommand extends PmSessionCommand {
         if (xmlOnly) {
             try (StringWriter writer = new StringWriter()) {
                 final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(
-                        workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
+                        workDir, encodingArg, ArtifactCoords.newGav(gav1), ArtifactCoords.newGav(gav2));
                 FeaturePackXmlWriter.INSTANCE.write(newChildDescr, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (ProvisioningDescriptionException e) {
@@ -318,7 +318,7 @@ public class FpCommand extends PmSessionCommand {
             }
         } else {
             try {
-                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, ArtifactCoords.getGavPart(gav1), ArtifactCoords.getGavPart(gav2));
+                FeaturePackDependencyBuilder.extractParentAsDependency(workDir, encodingArg, ArtifactCoords.newGav(gav1), ArtifactCoords.newGav(gav2));
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to extract parent as a dependency", e);
             }

@@ -38,10 +38,10 @@ class FeaturePackPackageView {
 
     static class ResolvedPackage {
         private final String name;
-        private final ArtifactCoords.GavPart fpGav;
+        private final ArtifactCoords.Gav fpGav;
         private final PackageDescription descr;
 
-        ResolvedPackage(String name, ArtifactCoords.GavPart fpGav, PackageDescription descr) {
+        ResolvedPackage(String name, ArtifactCoords.Gav fpGav, PackageDescription descr) {
             super();
             this.name = name;
             this.fpGav = fpGav;
@@ -52,7 +52,7 @@ class FeaturePackPackageView {
             return name;
         }
 
-        ArtifactCoords.GavPart getGav() {
+        ArtifactCoords.Gav getGav() {
             return fpGav;
         }
 
@@ -61,7 +61,7 @@ class FeaturePackPackageView {
         }
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, ArtifactCoords.GavPart fpGav) throws ProvisioningDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, ArtifactCoords.Gav fpGav) throws ProvisioningDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpGav);
         return resolve(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding));
     }
