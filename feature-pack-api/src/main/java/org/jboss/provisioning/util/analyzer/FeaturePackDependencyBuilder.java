@@ -120,8 +120,8 @@ public class FeaturePackDependencyBuilder {
             for(String name : childDiff.getConflictingPackageNames()) {
                 final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackageDescription(name));
                 fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isTopPackage(name)) {
-                    fpBuilder.addTopPackageName(name);
+                if(childDescr.isDefaultPackage(name)) {
+                    fpBuilder.markAsDefaultPackage(name);
                 }
             }
         }
@@ -132,8 +132,8 @@ public class FeaturePackDependencyBuilder {
             for(String name : childDiff.getUniquePackageNames()) {
                 final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDiff.getUniquePackage(name));
                 fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isTopPackage(name)) {
-                    fpBuilder.addTopPackageName(name);
+                if(childDescr.isDefaultPackage(name)) {
+                    fpBuilder.markAsDefaultPackage(name);
                 }
             }
         }

@@ -65,7 +65,7 @@ public class FeaturePackInstaller {
                 }
             }
         } else {
-            for (String name : featurePack.getTopPackageNames()) {
+            for (String name : featurePack.getDefaultPackageNames()) {
                 if (packageApproved(name)) {
                     install(featurePack.getPackageDescription(name));
                 }

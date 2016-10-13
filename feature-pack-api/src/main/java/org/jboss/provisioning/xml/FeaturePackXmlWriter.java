@@ -67,9 +67,9 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             }
         }
 
-        if (fpDescr.hasTopPackages()) {
+        if (fpDescr.hasDefaultPackages()) {
             final ElementNode pkgs = addElement(fp, Element.PACKAGES);
-            final String[] pkgNames = fpDescr.getTopPackageNames().toArray(new String[0]);
+            final String[] pkgNames = fpDescr.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
                 write(pkgs, fpDescr.getPackageDescription(name));

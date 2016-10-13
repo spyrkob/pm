@@ -195,7 +195,7 @@ public class WfFeaturePackLayoutBuilder {
         }
 
         final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addTopPackage(pkgDescr);
+        fpBuilder.addDefaultPackage(pkgDescr);
 
         writePackageXml(pkgDescr, pkgDir);
         pkgBuilder = null;

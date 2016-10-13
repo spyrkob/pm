@@ -207,7 +207,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.getGavPart("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
-        final FeaturePackDescription fpDescr = fpBuilder.addTopPackage(modulesPkg).build();
+        final FeaturePackDescription fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
         try {
             FeaturePackXmlWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException e) {
@@ -361,13 +361,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                     PackageDescription docsDescr = docsBuilder.build();
                     writeXml(docsDescr, packagesDir.resolve(pkgName));
-                    fpBuilder.addTopPackage(docsDescr);
+                    fpBuilder.addDefaultPackage(docsDescr);
                 } else {
                     final Path pkgDir = packagesDir.resolve(pkgName);
                     IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(pkgName));
                     final PackageDescription pkgDescr = PackageDescription.builder(pkgName).build();
                     writeXml(pkgDescr, pkgDir);
-                    fpBuilder.addTopPackage(pkgDescr);
+                    fpBuilder.addDefaultPackage(pkgDescr);
                 }
             }
         }

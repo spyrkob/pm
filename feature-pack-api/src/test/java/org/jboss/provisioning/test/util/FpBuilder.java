@@ -107,7 +107,7 @@ public class FpBuilder {
             for (PkgBuilder pkg : pkgs) {
                 final PackageDescription pkgDescr = pkg.write(fpWorkDir);
                 if(pkg.isDefault()) {
-                    fpBuilder.addTopPackage(pkgDescr);
+                    fpBuilder.addDefaultPackage(pkgDescr);
                 } else {
                     fpBuilder.addPackage(pkgDescr);
                 }
