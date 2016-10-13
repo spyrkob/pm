@@ -23,7 +23,9 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.staxmapper.XMLMapper;
 
 
@@ -65,6 +67,10 @@ public class FeaturePackXmlParser implements XmlParser<FeaturePackDescription>{
     public FeaturePackDescription parse(Reader input) throws XMLStreamException {
         FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
         parse(input, fpBuilder);
-        return fpBuilder.build();
+        try {
+            return fpBuilder.build();
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException(Errors.parseXml(), e);
+        }
     }
 }

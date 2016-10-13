@@ -33,10 +33,12 @@ public class FeaturePackInstallTestCase {
 
         FpRepoBuilder.newInstance()
             .setHome(Paths.get("/home/olubyans/pm-test"))
-            .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0"))
-                .newPackage("p1-default", true)
+            .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+                .addDependency(ArtifactCoords.newGav("org.pm.test", "fp-parent", "1.2.3.Final"))
+                .newPackage("p1")
                     .getFeaturePack()
-                .newPackage("p2")
+                .newPackage("p2-default", true)
+                    .addDependency("p1")
                     .getFeaturePack()
                 .getRepo()
             .write();

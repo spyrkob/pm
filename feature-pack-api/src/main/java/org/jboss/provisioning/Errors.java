@@ -17,6 +17,7 @@
 package org.jboss.provisioning;
 
 import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  *
@@ -62,6 +63,10 @@ public interface Errors {
         return "Failed to read " + p.toAbsolutePath();
     }
 
+    static String parseXml() {
+        return "Failed to parse XML";
+    }
+
     static String parseXml(Path p) {
         return "Failed to parse " + p.toAbsolutePath();
     }
@@ -98,5 +103,9 @@ public interface Errors {
 
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
         return "Feature-pack " + gav.getGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
+    }
+
+    static String unsatisfiedPackageDependencies(String packageName, Collection<String> unsatisfiedDeps) {
+        return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
     }
 }

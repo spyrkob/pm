@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -126,7 +127,21 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public FeaturePackDescription build() {
+        public FeaturePackDescription build() throws ProvisioningDescriptionException {
+            // package dependency consistency check
+            if (!packages.isEmpty()) {
+                final Set<String> allPackageNames = packages.keySet();
+                for (PackageDescription pkg : packages.values()) {
+                    if (pkg.hasDependencies()) {
+                        if (!allPackageNames.containsAll(pkg.getDependencies())) {
+                            final Set<String> names = new HashSet<>(pkg.getDependencies());
+                            names.removeAll(allPackageNames);
+                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), names));
+                        }
+                    }
+                }
+            }
+
             return new FeaturePackDescription(gav, Collections.unmodifiableSet(defPackages), Collections.unmodifiableMap(packages),
                     Collections.unmodifiableMap(dependencies), Collections.unmodifiableList(provisioningPlugins));
         }
