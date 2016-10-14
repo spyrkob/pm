@@ -25,6 +25,8 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.test.util.fs.FsTaskContext;
+import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 
@@ -44,7 +46,8 @@ public class PackageBuilder {
 
     private final FeaturePackBuilder fp;
     private boolean isDefault;
-    private PackageDescription.Builder pkg = PackageDescription.builder();
+    private final PackageDescription.Builder pkg = PackageDescription.builder();
+    private final FsTaskList tasks = FsTaskList.newList();
 
     private PackageBuilder(FeaturePackBuilder fp) {
         this.fp = fp;
@@ -73,6 +76,21 @@ public class PackageBuilder {
         return this;
     }
 
+    public PackageBuilder addPath(Path src, String relativeTarget) {
+        tasks.copy(src, relativeTarget);
+        return this;
+    }
+
+    public PackageBuilder addDir(Path src, String relativeTarget, boolean contentOnly) {
+        tasks.copyDir(src, relativeTarget, contentOnly);
+        return this;
+    }
+
+    public PackageBuilder writeContent(String content, String relativeTarget) {
+        tasks.write(content, relativeTarget);
+        return this;
+    }
+
     public PackageDescription build(Path fpDir) {
         final PackageDescription pkgDescr = pkg.build();
         final Path pkgDir;
@@ -81,8 +99,11 @@ public class PackageBuilder {
         } catch (ProvisioningDescriptionException e) {
             throw new IllegalStateException(e);
         }
-        TestFiles.mkdirs(pkgDir);
+        TestUtils.mkdirs(pkgDir);
         try {
+            if(!tasks.isEmpty()) {
+                tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
+            }
             PackageXmlWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new IllegalStateException(e);

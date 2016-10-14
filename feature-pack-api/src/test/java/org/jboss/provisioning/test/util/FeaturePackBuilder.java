@@ -119,7 +119,7 @@ public class FeaturePackBuilder {
     }
 
     public FeaturePackDescription build(Path repoHome) {
-        final Path fpWorkDir = TestFiles.mkRandomTmpDir();
+        final Path fpWorkDir = TestUtils.mkRandomTmpDir();
         final FeaturePackDescription fpDescr;
         try {
             for (PackageBuilder pkg : pkgs) {
@@ -136,7 +136,7 @@ public class FeaturePackBuilder {
 
             final Path fpZip;
             fpZip = getFeaturePackArtifactPath(repoHome, fpDescr.getGav());
-            TestFiles.mkdirs(fpZip.getParent());
+            TestUtils.mkdirs(fpZip.getParent());
             ZipUtils.zip(fpWorkDir, fpZip);
             return fpDescr;
         } catch (Exception e) {

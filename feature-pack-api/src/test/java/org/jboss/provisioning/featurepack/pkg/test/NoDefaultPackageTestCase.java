@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test;
-
-import java.nio.file.Paths;
+package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.test.FeaturePackRepoTestBase;
 import org.jboss.provisioning.test.util.FeaturePackRepoManager;
 import org.junit.Test;
 
@@ -27,21 +26,23 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackInstallTestCase {
+public class NoDefaultPackageTestCase extends FeaturePackRepoTestBase {
 
     @Test
     public void testMain() throws Exception {
-
-        FeaturePackRepoManager.newInstance(Paths.get("/home/olubyans/pm-test"))
-            .installer()
+        final FeaturePackRepoManager repoManager = getRepoManager();
+        repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .addDependency(ArtifactCoords.newGav("org.pm.test", "fp-parent", "1.2.3.Final"))
-                .newPackage("p1")
-                    .getFeaturePack()
-                .newPackage("p2-default", true)
-                    .addDependency("p1")
+                .newPackage("ab")
+                    .writeContent("a", "a.txt")
+                    .writeContent("b", "b/b.txt")
                     .getFeaturePack()
                 .getInstaller()
             .install();
+
+        getPm().install(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"));
+
+        assertDoesNotExist("a.txt");
+        assertDoesNotExist("b/b.txt");
     }
 }

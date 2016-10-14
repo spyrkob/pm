@@ -74,10 +74,10 @@ public class FeaturePackRepoManager implements ArtifactResolver {
         public Path install() {
             final Path p;
             if(repoHome == null) {
-                p = TestFiles.mkRandomTmpDir();
+                p = TestUtils.mkRandomTmpDir();
             } else {
                 p = repoHome;
-                TestFiles.mkdirs(p);
+                TestUtils.mkdirs(p);
             }
             for(FeaturePackBuilder fp : fps) {
                 fp.build(p);
