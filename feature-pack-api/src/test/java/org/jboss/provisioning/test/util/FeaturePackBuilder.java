@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
@@ -35,43 +36,56 @@ import org.jboss.provisioning.xml.FeaturePackXmlWriter;
  *
  * @author Alexey Loubyansky
  */
-public class FpBuilder {
+public class FeaturePackBuilder {
 
-    public static FpBuilder newInstance() {
+    static Path getFeaturePackArtifactPath(Path repoHome, final Gav gav) {
+        Path p = repoHome;
+        final String[] groupParts = gav.getGroupId().split("\\.");
+        for (String part : groupParts) {
+            p = p.resolve(part);
+        }
+        p = p.resolve(gav.getArtifactId());
+        p = p.resolve(gav.getVersion());
+        final StringBuilder fileName = new StringBuilder();
+        fileName.append(gav.getArtifactId()).append('-').append(gav.getVersion()).append(".zip");
+        return p.resolve(fileName.toString());
+    }
+
+    public static FeaturePackBuilder newInstance() {
         return newInstance(null);
     }
 
-    public static FpBuilder newInstance(FpRepoBuilder repo) {
-        return new FpBuilder(repo);
+    public static FeaturePackBuilder newInstance(FeaturePackRepoManager.Installer installer) {
+        return new FeaturePackBuilder(installer);
     }
 
-    private final FpRepoBuilder repo;
+    private final FeaturePackRepoManager.Installer installer;
     private final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
-    private List<PkgBuilder> pkgs = Collections.emptyList();
+    private List<PackageBuilder> pkgs = Collections.emptyList();
 
-    protected FpBuilder(FpRepoBuilder repo) {
-        this.repo = repo;
+    protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
+        this.installer = repo;
     }
 
-    public FpRepoBuilder getRepo() {
-        return repo;
+    public FeaturePackRepoManager.Installer getInstaller() {
+        return installer;
     }
 
-    public FpBuilder setGav(ArtifactCoords.Gav gav) {
+    public FeaturePackBuilder setGav(ArtifactCoords.Gav gav) {
         fpBuilder.setGav(gav);
         return this;
     }
 
-    public FpBuilder addDependency(ProvisionedFeaturePackDescription dep) {
+    public FeaturePackBuilder addDependency(ProvisionedFeaturePackDescription dep) {
         fpBuilder.addDependency(dep);
         return this;
     }
 
-    public FpBuilder addDependency(ArtifactCoords.Gav gav) {
+    public FeaturePackBuilder addDependency(ArtifactCoords.Gav gav) {
         return addDependency(ProvisionedFeaturePackDescription.builder().setGav(gav).build());
     }
 
-    public FpBuilder addPackage(PkgBuilder pkg) {
+    public FeaturePackBuilder addPackage(PackageBuilder pkg) {
         switch (pkgs.size()) {
             case 0:
                 pkgs = Collections.singletonList(pkg);
@@ -84,16 +98,16 @@ public class FpBuilder {
         return this;
     }
 
-    public PkgBuilder newPackage() {
+    public PackageBuilder newPackage() {
         return newPackage(null);
     }
 
-    public PkgBuilder newPackage(String name) {
+    public PackageBuilder newPackage(String name) {
         return newPackage(name, false);
     }
 
-    public PkgBuilder newPackage(String name, boolean isDefault) {
-        final PkgBuilder pkg = PkgBuilder.newInstance(this);
+    public PackageBuilder newPackage(String name, boolean isDefault) {
+        final PackageBuilder pkg = PackageBuilder.newInstance(this);
         if(name != null) {
             pkg.setName(name);
         }
@@ -104,12 +118,12 @@ public class FpBuilder {
         return pkg;
     }
 
-    void write(Path repoHome) {
+    public FeaturePackDescription build(Path repoHome) {
         final Path fpWorkDir = TestFiles.mkRandomTmpDir();
         final FeaturePackDescription fpDescr;
         try {
-            for (PkgBuilder pkg : pkgs) {
-                final PackageDescription pkgDescr = pkg.write(fpWorkDir);
+            for (PackageBuilder pkg : pkgs) {
+                final PackageDescription pkgDescr = pkg.build(fpWorkDir);
                 if(pkg.isDefault()) {
                     fpBuilder.addDefaultPackage(pkgDescr);
                 } else {
@@ -121,21 +135,10 @@ public class FpBuilder {
             writer.write(fpDescr, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
 
             final Path fpZip;
-            {
-                Path p = repoHome;
-                final String[] groupParts = fpDescr.getGav().getGroupId().split("\\.");
-                for (String part : groupParts) {
-                    p = p.resolve(part);
-                }
-                p = p.resolve(fpDescr.getGav().getArtifactId());
-                p = p.resolve(fpDescr.getGav().getVersion());
-                final StringBuilder fileName = new StringBuilder();
-                fileName.append(fpDescr.getGav().getArtifactId()).append('-').append(fpDescr.getGav().getVersion()).append(".zip");
-                p = p.resolve(fileName.toString());
-                fpZip = p;
-            }
+            fpZip = getFeaturePackArtifactPath(repoHome, fpDescr.getGav());
             TestFiles.mkdirs(fpZip.getParent());
             ZipUtils.zip(fpWorkDir, fpZip);
+            return fpDescr;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         } finally {

@@ -32,29 +32,29 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  *
  * @author Alexey Loubyansky
  */
-public class PkgBuilder {
+public class PackageBuilder {
 
-    public static PkgBuilder newInstance() {
+    public static PackageBuilder newInstance() {
         return newInstance(null);
     }
 
-    public static PkgBuilder newInstance(FpBuilder fp) {
-        return new PkgBuilder(fp);
+    public static PackageBuilder newInstance(FeaturePackBuilder fp) {
+        return new PackageBuilder(fp);
     }
 
-    private final FpBuilder fp;
+    private final FeaturePackBuilder fp;
     private boolean isDefault;
     private PackageDescription.Builder pkg = PackageDescription.builder();
 
-    private PkgBuilder(FpBuilder fp) {
+    private PackageBuilder(FeaturePackBuilder fp) {
         this.fp = fp;
     }
 
-    public FpBuilder getFeaturePack() {
+    public FeaturePackBuilder getFeaturePack() {
         return fp;
     }
 
-    public PkgBuilder setDefault() {
+    public PackageBuilder setDefault() {
         isDefault = true;
         return this;
     }
@@ -63,17 +63,17 @@ public class PkgBuilder {
         return isDefault;
     }
 
-    public PkgBuilder setName(String name) {
+    public PackageBuilder setName(String name) {
         pkg.setName(name);
         return this;
     }
 
-    public PkgBuilder addDependency(String dep) {
+    public PackageBuilder addDependency(String dep) {
         this.pkg.addDependency(dep);
         return this;
     }
 
-    PackageDescription write(Path fpDir) {
+    public PackageDescription build(Path fpDir) {
         final PackageDescription pkgDescr = pkg.build();
         final Path pkgDir;
         try {

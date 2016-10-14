@@ -20,7 +20,8 @@ package org.jboss.provisioning.test;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.test.util.FpRepoBuilder;
+import org.jboss.provisioning.test.util.FeaturePackRepoManager;
+import org.junit.Test;
 
 /**
  *
@@ -28,11 +29,11 @@ import org.jboss.provisioning.test.util.FpRepoBuilder;
  */
 public class FeaturePackInstallTestCase {
 
-//    @Test
+    @Test
     public void testMain() throws Exception {
 
-        FpRepoBuilder.newInstance()
-            .setHome(Paths.get("/home/olubyans/pm-test"))
+        FeaturePackRepoManager.newInstance(Paths.get("/home/olubyans/pm-test"))
+            .installer()
             .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .addDependency(ArtifactCoords.newGav("org.pm.test", "fp-parent", "1.2.3.Final"))
                 .newPackage("p1")
@@ -40,7 +41,7 @@ public class FeaturePackInstallTestCase {
                 .newPackage("p2-default", true)
                     .addDependency("p1")
                     .getFeaturePack()
-                .getRepo()
-            .write();
+                .getInstaller()
+            .install();
     }
 }
