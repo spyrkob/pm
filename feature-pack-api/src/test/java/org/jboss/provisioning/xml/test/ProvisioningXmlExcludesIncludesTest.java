@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml;
+package org.jboss.provisioning.xml.test;
 
 import java.nio.file.Paths;
 
@@ -22,6 +22,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.xml.ProvisioningXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
 

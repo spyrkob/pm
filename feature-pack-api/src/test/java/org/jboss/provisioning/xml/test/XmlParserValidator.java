@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml;
+package org.jboss.provisioning.xml.test;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -30,6 +30,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.jboss.provisioning.xml.XmlParser;
 import org.junit.Assert;
 import org.xml.sax.SAXException;
 
