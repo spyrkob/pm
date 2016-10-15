@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml;
+package org.jboss.provisioning.xml.test;
 
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.xml.PackageXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
 
