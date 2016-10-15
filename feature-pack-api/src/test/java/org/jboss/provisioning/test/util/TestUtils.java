@@ -17,7 +17,10 @@
 
 package org.jboss.provisioning.test.util;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,11 +32,11 @@ import org.jboss.provisioning.util.IoUtils;
  *
  * @author Alexey Loubyansky
  */
-class TestFiles {
+public class TestUtils {
 
     private static final Path TMP_DIR = Paths.get(System.getProperty("java.io.tmpdir"));
 
-    static Path mkTmpDir(String name) {
+    public static Path mkTmpDir(String name) {
         final Path dir = TMP_DIR.resolve(name);
         if(Files.exists(dir)) {
             throw new IllegalStateException("Path already exists " + dir);
@@ -50,15 +53,15 @@ class TestFiles {
         }
     }
 
-    static Path mkRandomTmpDir() {
+    public static Path mkRandomTmpDir() {
         return mkTmpDir(UUID.randomUUID().toString());
     }
 
-    static void rm(Path p) {
+    public static void rm(Path p) {
         IoUtils.recursiveDelete(p);
     }
 
-    static Path mkdirs(Path dir, String... name) {
+    public static Path mkdirs(Path dir, String... name) {
         if(!Files.exists(dir)) {
             mkdirs(dir);
         }
@@ -72,5 +75,27 @@ class TestFiles {
             }
         }
         return p;
+    }
+
+    public static String read(Path p) {
+        final StringWriter strWriter = new StringWriter();
+        try(BufferedReader reader = Files.newBufferedReader(p);
+                BufferedWriter writer = new BufferedWriter(strWriter)) {
+            String line = reader.readLine();
+            if (line != null) {
+                writer.write(line);
+                line = reader.readLine();
+                while (line != null) {
+                    writer.newLine();
+                    writer.write(line);
+                    line = reader.readLine();
+                }
+                writer.flush();
+                return strWriter.getBuffer().toString();
+            }
+            return null;
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read " + p, e);
+        }
     }
 }

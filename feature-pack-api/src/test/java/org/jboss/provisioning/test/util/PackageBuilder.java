@@ -25,6 +25,8 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.test.util.fs.FsTaskContext;
+import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 
@@ -32,29 +34,30 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  *
  * @author Alexey Loubyansky
  */
-public class PkgBuilder {
+public class PackageBuilder {
 
-    public static PkgBuilder newInstance() {
+    public static PackageBuilder newInstance() {
         return newInstance(null);
     }
 
-    public static PkgBuilder newInstance(FpBuilder fp) {
-        return new PkgBuilder(fp);
+    public static PackageBuilder newInstance(FeaturePackBuilder fp) {
+        return new PackageBuilder(fp);
     }
 
-    private final FpBuilder fp;
+    private final FeaturePackBuilder fp;
     private boolean isDefault;
-    private PackageDescription.Builder pkg = PackageDescription.builder();
+    private final PackageDescription.Builder pkg = PackageDescription.builder();
+    private final FsTaskList tasks = FsTaskList.newList();
 
-    private PkgBuilder(FpBuilder fp) {
+    private PackageBuilder(FeaturePackBuilder fp) {
         this.fp = fp;
     }
 
-    public FpBuilder getFeaturePack() {
+    public FeaturePackBuilder getFeaturePack() {
         return fp;
     }
 
-    public PkgBuilder setDefault() {
+    public PackageBuilder setDefault() {
         isDefault = true;
         return this;
     }
@@ -63,17 +66,32 @@ public class PkgBuilder {
         return isDefault;
     }
 
-    public PkgBuilder setName(String name) {
+    public PackageBuilder setName(String name) {
         pkg.setName(name);
         return this;
     }
 
-    public PkgBuilder addDependency(String dep) {
+    public PackageBuilder addDependency(String dep) {
         this.pkg.addDependency(dep);
         return this;
     }
 
-    PackageDescription write(Path fpDir) {
+    public PackageBuilder addPath(Path src, String relativeTarget) {
+        tasks.copy(src, relativeTarget);
+        return this;
+    }
+
+    public PackageBuilder addDir(Path src, String relativeTarget, boolean contentOnly) {
+        tasks.copyDir(src, relativeTarget, contentOnly);
+        return this;
+    }
+
+    public PackageBuilder writeContent(String content, String relativeTarget) {
+        tasks.write(content, relativeTarget);
+        return this;
+    }
+
+    public PackageDescription build(Path fpDir) {
         final PackageDescription pkgDescr = pkg.build();
         final Path pkgDir;
         try {
@@ -81,8 +99,11 @@ public class PkgBuilder {
         } catch (ProvisioningDescriptionException e) {
             throw new IllegalStateException(e);
         }
-        TestFiles.mkdirs(pkgDir);
+        TestUtils.mkdirs(pkgDir);
         try {
+            if(!tasks.isEmpty()) {
+                tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
+            }
             PackageXmlWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new IllegalStateException(e);

@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.ProvisioningException;
 
 /**
  * This class represents user's choice to install a feature-pack
@@ -47,9 +46,9 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        public Builder excludePackage(String packageName) throws ProvisioningException {
+        public Builder excludePackage(String packageName) throws ProvisioningDescriptionException {
             if(!includedPackages.isEmpty()) {
-                throw new ProvisioningException(Errors.packageExcludesIncludes());
+                throw new ProvisioningDescriptionException(Errors.packageExcludesIncludes());
             }
             if(!excludedPackages.contains(packageName)) {
                 switch(excludedPackages.size()) {
@@ -65,16 +64,16 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        public Builder excludeAllPackages(Collection<String> packageNames) throws ProvisioningException {
+        public Builder excludeAllPackages(Collection<String> packageNames) throws ProvisioningDescriptionException {
             for(String packageName : packageNames) {
                 excludePackage(packageName);
             }
             return this;
         }
 
-        public Builder includePackage(String packageName) throws ProvisioningException {
+        public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
             if(!excludedPackages.isEmpty()) {
-                throw new ProvisioningException(Errors.packageExcludesIncludes());
+                throw new ProvisioningDescriptionException(Errors.packageExcludesIncludes());
             }
             if(!includedPackages.contains(packageName)) {
                 switch(includedPackages.size()) {

@@ -17,30 +17,27 @@
 
 package org.jboss.provisioning.test;
 
-import java.nio.file.Paths;
-
-import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.test.util.FpRepoBuilder;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.test.util.FeaturePackRepoManager;
+import org.junit.Test;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackInstallTestCase {
+public abstract class FeaturePackSpecInstallTestBase extends FeaturePackRepoTestBase {
 
-//    @Test
+    protected abstract void setupRepo(FeaturePackRepoManager repoManager);
+
+    protected abstract ProvisionedFeaturePackDescription buildFeaturePackSpec() throws ProvisioningDescriptionException;
+
+    protected abstract void assertInstalled();
+
+    @Test
     public void testMain() throws Exception {
-
-        FpRepoBuilder.newInstance()
-            .setHome(Paths.get("/home/olubyans/pm-test"))
-            .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .addDependency(ArtifactCoords.newGav("org.pm.test", "fp-parent", "1.2.3.Final"))
-                .newPackage("p1")
-                    .getFeaturePack()
-                .newPackage("p2-default", true)
-                    .addDependency("p1")
-                    .getFeaturePack()
-                .getRepo()
-            .write();
+        setupRepo(getRepoManager());
+        getPm().install(buildFeaturePackSpec());
+        assertInstalled();
     }
 }
