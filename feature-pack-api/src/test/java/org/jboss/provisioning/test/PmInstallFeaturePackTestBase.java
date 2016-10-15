@@ -17,27 +17,27 @@
 
 package org.jboss.provisioning.test;
 
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.test.util.FeaturePackRepoManager;
-import org.junit.Test;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public abstract class FeaturePackSpecInstallTestBase extends FeaturePackRepoTestBase {
+public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
 
-    protected abstract void setupRepo(FeaturePackRepoManager repoManager);
+    @Override
+    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningException {
+        return ProvisionedInstallationDescription.builder().addFeaturePack(provisionedFeaturePack(includeDependencies)).build();
+    }
 
-    protected abstract ProvisionedFeaturePackDescription buildFeaturePackSpec() throws ProvisioningDescriptionException;
+    protected abstract ProvisionedFeaturePackDescription provisionedFeaturePack(boolean includeDependencies) throws ProvisioningDescriptionException;
 
-    protected abstract void assertInstalled();
-
-    @Test
-    public void testMain() throws Exception {
-        setupRepo(getRepoManager());
-        getPm().install(buildFeaturePackSpec());
-        assertInstalled();
+    @Override
+    protected void callPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        pm.install(provisionedFeaturePack(false));
     }
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util;
+package org.jboss.provisioning.test.util.repomanager;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +27,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.test.util.TestUtils;
 
 /**
  *

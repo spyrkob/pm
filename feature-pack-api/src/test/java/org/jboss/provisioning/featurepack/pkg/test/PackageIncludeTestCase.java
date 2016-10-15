@@ -20,14 +20,16 @@ package org.jboss.provisioning.featurepack.pkg.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.test.FeaturePackSpecInstallTestBase;
-import org.jboss.provisioning.test.util.FeaturePackRepoManager;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.pathstate.DirState;
+import org.jboss.provisioning.test.util.pathstate.DirState.DirBuilder;
+import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PackageIncludeTestCase extends FeaturePackSpecInstallTestBase {
+public class PackageIncludeTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
@@ -53,7 +55,7 @@ public class PackageIncludeTestCase extends FeaturePackSpecInstallTestBase {
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription buildFeaturePackSpec() throws ProvisioningDescriptionException {
+    protected ProvisionedFeaturePackDescription provisionedFeaturePack(boolean includeDependencies) throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .includePackage("b")
@@ -62,10 +64,11 @@ public class PackageIncludeTestCase extends FeaturePackSpecInstallTestBase {
     }
 
     @Override
-    protected void assertInstalled() {
-        assertDoesNotExist("a.txt");
-        assertContent("b", "b/b.txt");
-        assertContent("c", "c/c/c.txt");
-        assertContent("d", "c/d.txt");
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder
+                .addFile("b/b.txt", "b")
+                .addFile("c/c/c.txt", "c")
+                .addFile("c/d.txt", "d")
+                .build();
     }
 }
