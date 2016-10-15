@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.pathstate;
+package org.jboss.provisioning.test.util.fs.state;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;

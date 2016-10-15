@@ -20,7 +20,7 @@ package org.jboss.provisioning.test;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.test.util.pathstate.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Test;
 

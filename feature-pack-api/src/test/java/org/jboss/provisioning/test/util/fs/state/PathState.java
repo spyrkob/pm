@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.pathstate;
+package org.jboss.provisioning.test.util.fs.state;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
