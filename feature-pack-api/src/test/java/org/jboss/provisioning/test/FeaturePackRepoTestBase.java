@@ -20,7 +20,9 @@ package org.jboss.provisioning.test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.test.util.FeaturePackRepoManager;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.util.IoUtils;
@@ -88,8 +90,23 @@ public class FeaturePackRepoTestBase {
     protected ProvisioningManager getPm() {
         return ProvisioningManager.builder().setArtifactResolver(getRepoManager()).setInstallationHome(installHome).build();
     }
+
     protected Path resolve(String relativePath) {
         return installHome.resolve(relativePath);
+    }
+
+    protected void assertSpec(ProvisionedInstallationDescription spec) throws ProvisioningException {
+        assertSpec(getPm(), spec);
+    }
+
+    protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec)
+            throws ProvisioningException {
+        assertSpec(pm, spec, false);
+    }
+
+    protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec,
+            boolean includeDependencies) throws ProvisioningException {
+        Assert.assertEquals(spec, pm.getCurrentState(includeDependencies));
     }
 
     protected void assertDoesNotExist(String relativePath) {

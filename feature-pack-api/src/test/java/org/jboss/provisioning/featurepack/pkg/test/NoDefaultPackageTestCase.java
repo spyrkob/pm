@@ -18,30 +18,35 @@
 package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.test.FeaturePackRepoTestBase;
+import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.test.FeaturePackSpecInstallTestBase;
 import org.jboss.provisioning.test.util.FeaturePackRepoManager;
-import org.junit.Test;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NoDefaultPackageTestCase extends FeaturePackRepoTestBase {
+public class NoDefaultPackageTestCase extends FeaturePackSpecInstallTestBase {
 
-    @Test
-    public void testMain() throws Exception {
-        final FeaturePackRepoManager repoManager = getRepoManager();
+    @Override
+    protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
-            .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .newPackage("ab")
-                    .writeContent("a", "a.txt")
-                    .writeContent("b", "b/b.txt")
-                    .getFeaturePack()
-                .getInstaller()
-            .install();
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+            .newPackage("ab")
+                .writeContent("a", "a.txt")
+                .writeContent("b", "b/b.txt")
+                .getFeaturePack()
+            .getInstaller()
+        .install();
+    }
 
-        getPm().install(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"));
+    @Override
+    protected ProvisionedFeaturePackDescription buildFeaturePackSpec() {
+        return ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1")).build();
+    }
 
+    @Override
+    protected void assertInstalled() {
         assertDoesNotExist("a.txt");
         assertDoesNotExist("b/b.txt");
     }

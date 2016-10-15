@@ -19,45 +19,49 @@ package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.test.FeaturePackRepoTestBase;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.test.FeaturePackSpecInstallTestBase;
 import org.jboss.provisioning.test.util.FeaturePackRepoManager;
-import org.junit.Test;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PackageExcludeTestCase extends FeaturePackRepoTestBase {
+public class PackageExcludeTestCase extends FeaturePackSpecInstallTestBase {
 
-    @Test
-    public void testMain() throws Exception {
-        final FeaturePackRepoManager repoManager = getRepoManager();
+    @Override
+    protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
-            .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .newPackage("a", true)
-                    .addDependency("b")
-                    .writeContent("a", "a.txt")
-                    .getFeaturePack()
-                .newPackage("b")
-                    .addDependency("c")
-                    .writeContent("b", "b/b.txt")
-                    .getFeaturePack()
-                .newPackage("c", true)
-                    .addDependency("d")
-                    .writeContent("c", "c/c/c.txt")
-                    .getFeaturePack()
-                .newPackage("d")
-                    .writeContent("d", "c/d.txt")
-                    .getFeaturePack()
-                .getInstaller()
-            .install();
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+            .newPackage("a", true)
+                .addDependency("b")
+                .writeContent("a", "a.txt")
+                .getFeaturePack()
+            .newPackage("b")
+                .addDependency("c")
+                .writeContent("b", "b/b.txt")
+                .getFeaturePack()
+            .newPackage("c", true)
+                .addDependency("d")
+                .writeContent("c", "c/c/c.txt")
+                .getFeaturePack()
+            .newPackage("d")
+                .writeContent("d", "c/d.txt")
+                .getFeaturePack()
+            .getInstaller()
+        .install();
+    }
 
-        getPm().install(
-                ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                        .excludePackage("b")
-                        .build());
+    @Override
+    protected ProvisionedFeaturePackDescription buildFeaturePackSpec() throws ProvisioningDescriptionException {
+        return ProvisionedFeaturePackDescription.builder()
+                .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+                .excludePackage("b")
+                .build();
+    }
 
+    @Override
+    protected void assertInstalled() {
         assertContent("a", "a.txt");
         assertDoesNotExist("b/b.txt");
         assertContent("c", "c/c/c.txt");
