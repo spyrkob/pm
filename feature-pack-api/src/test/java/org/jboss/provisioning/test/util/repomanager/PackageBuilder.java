@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util;
+package org.jboss.provisioning.test.util.repomanager;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.fs.FsTaskContext;
 import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.LayoutUtils;

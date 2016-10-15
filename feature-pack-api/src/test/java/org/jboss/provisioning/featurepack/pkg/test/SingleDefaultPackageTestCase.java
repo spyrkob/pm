@@ -19,14 +19,16 @@ package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.test.FeaturePackSpecInstallTestBase;
-import org.jboss.provisioning.test.util.FeaturePackRepoManager;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.pathstate.DirState;
+import org.jboss.provisioning.test.util.pathstate.DirState.DirBuilder;
+import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class SingleDefaultPackageTestCase extends FeaturePackSpecInstallTestBase {
+public class SingleDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
@@ -41,14 +43,16 @@ public class SingleDefaultPackageTestCase extends FeaturePackSpecInstallTestBase
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription buildFeaturePackSpec() {
+    protected ProvisionedFeaturePackDescription provisionedFeaturePack(boolean includeDependencies) {
         return ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1")).build();
     }
 
     @Override
-    protected void assertInstalled() {
-        assertContent("a", "a.txt");
-        assertContent("b", "b/b.txt");
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder
+                .addFile("a.txt", "a")
+                .addFile("b/b.txt", "b")
+                .build();
     }
 }

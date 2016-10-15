@@ -17,14 +17,13 @@
 
 package org.jboss.provisioning.test;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.test.util.FeaturePackRepoManager;
 import org.jboss.provisioning.test.util.TestUtils;
+import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.util.IoUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -37,11 +36,6 @@ import org.junit.BeforeClass;
  * @author Alexey Loubyansky
  */
 public class FeaturePackRepoTestBase {
-
-    private static final String PATH_DOES_NOT_EXIST = "path does not exist";
-    private static final String PATH_EXISTS = "path exists";
-    private static final String PATH_IS_DIR = "path is a directory";
-    private static final String PATH_IS_NOT_DIR = "path is not a directory";
 
     private static Path repoHome;
 
@@ -67,7 +61,7 @@ public class FeaturePackRepoTestBase {
         return FeaturePackRepoManager.newInstance(repoHome);
     }
 
-    private Path installHome;
+    protected Path installHome;
 
     @Before
     public void before() throws Exception {
@@ -107,17 +101,5 @@ public class FeaturePackRepoTestBase {
     protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec,
             boolean includeDependencies) throws ProvisioningException {
         Assert.assertEquals(spec, pm.getCurrentState(includeDependencies));
-    }
-
-    protected void assertDoesNotExist(String relativePath) {
-        final Path p = resolve(relativePath);
-        Assert.assertFalse(PATH_DOES_NOT_EXIST, Files.exists(p));
-    }
-
-    protected void assertContent(String content, String relativePath) {
-        final Path path = resolve(relativePath);
-        Assert.assertTrue(PATH_EXISTS, Files.exists(path));
-        Assert.assertTrue(PATH_IS_NOT_DIR, !Files.isDirectory(path));
-        Assert.assertEquals(content, TestUtils.read(path));
     }
 }
