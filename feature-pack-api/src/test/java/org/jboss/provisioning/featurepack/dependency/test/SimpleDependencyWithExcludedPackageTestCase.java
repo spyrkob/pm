@@ -30,7 +30,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyExcludePackageTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleDependencyWithExcludedPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()

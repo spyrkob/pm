@@ -46,26 +46,24 @@ public class ProvisionedFeaturePackDescription {
         protected Builder(ProvisionedFeaturePackDescription descr) {
             this.gav = descr.getGav();
 
-            final Set<String> excludedDescr = descr.getExcludedPackages();
-            switch(excludedDescr.size()) {
+            switch(descr.excludedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    excludedPackages = Collections.singleton(excludedDescr.iterator().next());
+                    excludedPackages = Collections.singleton(descr.excludedPackages.iterator().next());
                     break;
                 default:
-                    excludedPackages = new HashSet<String>(excludedDescr);
+                    excludedPackages = new HashSet<String>(descr.excludedPackages);
             }
 
-            final Set<String> includedDescr = descr.getIncludedPackages();
-            switch(includedDescr.size()) {
+            switch(descr.includedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    includedPackages = Collections.singleton(includedDescr.iterator().next());
+                    includedPackages = Collections.singleton(descr.includedPackages.iterator().next());
                     break;
                 default:
-                    includedPackages = new HashSet<String>(includedDescr);
+                    includedPackages = new HashSet<String>(descr.includedPackages);
             }
         }
 
