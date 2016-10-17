@@ -154,4 +154,9 @@ public class ProvisionedInstallationDescription {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return featurePacks.values().toString();
+    }
 }

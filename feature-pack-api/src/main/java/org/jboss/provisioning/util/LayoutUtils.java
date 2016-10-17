@@ -31,8 +31,12 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 public class LayoutUtils {
 
     public static Path getFeaturePackDir(Path fpLayoutDir, ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
+        return getFeaturePackDir(fpLayoutDir, gav, true);
+    }
+
+    public static Path getFeaturePackDir(Path fpLayoutDir, ArtifactCoords.Gav gav, boolean existing) throws ProvisioningDescriptionException {
         final Path fpPath = fpLayoutDir.resolve(gav.getGroupId()).resolve(gav.getArtifactId()).resolve(gav.getVersion());
-        if(!Files.exists(fpPath)) {
+        if(existing && !Files.exists(fpPath)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpPath));
         }
         return fpPath;

@@ -21,6 +21,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
@@ -30,14 +31,21 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningException {
-        return ProvisionedInstallationDescription.builder().addFeaturePack(provisionedFeaturePack(includeDependencies)).build();
+    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningDescriptionException {
+        Builder builder = ProvisionedInstallationDescription.builder();
+        if(includeDependencies) {
+            provisionedDependencies(builder);
+        }
+        return builder.addFeaturePack(provisionedFeaturePack()).build();
     }
 
-    protected abstract ProvisionedFeaturePackDescription provisionedFeaturePack(boolean includeDependencies) throws ProvisioningDescriptionException;
+    protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
+    }
+
+    protected abstract ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException;
 
     @Override
-    protected void callPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        pm.install(provisionedFeaturePack(false));
+    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        pm.install(provisionedFeaturePack());
     }
 }

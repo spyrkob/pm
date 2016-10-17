@@ -20,6 +20,7 @@ package org.jboss.provisioning.test;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Test;
@@ -30,21 +31,39 @@ import org.junit.Test;
  */
 public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
-    protected abstract void setupRepo(FeaturePackRepoManager repoManager);
+    protected abstract void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException;
 
     protected abstract ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningException;
 
     protected abstract DirState provisionedHomeDir(DirState.DirBuilder builder);
 
-    protected abstract void callPmMethod(ProvisioningManager pm) throws ProvisioningException;
+    protected abstract void testPmMethod(ProvisioningManager pm) throws ProvisioningException;
+
+    @Override
+    protected void doBefore() throws Exception {
+        super.doBefore();
+        setupRepo(getRepoManager());
+    }
 
     @Test
     public void testMain() throws Exception {
         setupRepo(getRepoManager());
         final ProvisioningManager pm = getPm();
-        callPmMethod(pm);
-        provisionedHomeDir(DirState.rootBuilder().skip(".pm")).assertState(installHome);
-        assertSpec(pm, provisionedInstallation(false), false);
+        testPmMethod(pm);
+        testProvisionedContent();
+        testUserSpec(pm);
+        testFullSpec(pm);
+    }
+
+    private void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
         assertSpec(pm, provisionedInstallation(true), true);
+    }
+
+    private void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
+        assertSpec(pm, provisionedInstallation(false), false);
+    }
+
+    private void testProvisionedContent() {
+        provisionedHomeDir(DirState.rootBuilder().skip(".pm")).assertState(installHome);
     }
 }
