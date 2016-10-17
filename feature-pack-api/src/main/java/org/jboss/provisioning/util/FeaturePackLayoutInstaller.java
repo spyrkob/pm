@@ -62,23 +62,24 @@ public class FeaturePackLayoutInstaller {
                 fpLayoutDir, installDir);
     }
 
-    public static void install(ProvisionedInstallationDescription resolvedDescr, ProvisionedInstallationDescription userDescr,
+    public static void install(ProvisionedInstallationDescription resolvedDescr,
+            ProvisionedInstallationDescription userDescr,
             FeaturePackLayoutDescription layoutDescr, Path layoutDir, Path installDir)
             throws FeaturePackInstallException {
 
         final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
-        for(FeaturePackDescription fp : layoutDescr.getFeaturePacks()) {
-            final ArtifactCoords.Gav fpGav = fp.getGav();
-            ProvisionedFeaturePackDescription provisionedFp = resolvedDescr.getFeaturePack(fpGav.getGa());
-            if(provisionedFp == null) {
-                provisionedFp = ProvisionedFeaturePackDescription.builder().setGav(fpGav).build();
-            }
+        for(ProvisionedFeaturePackDescription provisionedFp : resolvedDescr.getFeaturePacks()) {
+            final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
             System.out.println("Installing " + fpGav + " to " + installDir);
             Path fpDir;
             try {
                 fpDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav);
             } catch (ProvisioningDescriptionException e) {
                 throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav), e);
+            }
+            final FeaturePackDescription fp = layoutDescr.getFeaturePack(fpGav.getGa());
+            if(fp == null) {
+                throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav));
             }
             fpInstaller.install(fp, provisionedFp, fpDir, installDir);
 

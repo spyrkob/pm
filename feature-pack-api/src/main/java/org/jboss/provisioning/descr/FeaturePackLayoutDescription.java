@@ -72,6 +72,14 @@ public class FeaturePackLayoutDescription {
             return this;
         }
 
+        public boolean hasFeaturePack(ArtifactCoords.Ga fpGa) {
+            return featurePacks.containsKey(fpGa);
+        }
+
+        public FeaturePackDescription getFeaturePack(ArtifactCoords.Ga fpGa) {
+            return featurePacks.get(fpGa);
+        }
+
         public FeaturePackLayoutDescription build() throws ProvisioningDescriptionException {
             return new FeaturePackLayoutDescription(Collections.unmodifiableMap(featurePacks));
         }
@@ -99,6 +107,10 @@ public class FeaturePackLayoutDescription {
     public ArtifactCoords.Gav getGav(ArtifactCoords.Ga fpGa) {
         final FeaturePackDescription fpDescr = featurePacks.get(fpGa);
         return fpDescr == null ? null : fpDescr.getGav();
+    }
+
+    public FeaturePackDescription getFeaturePack(ArtifactCoords.Ga fpGa) {
+        return featurePacks.get(fpGa);
     }
 
     public Collection<FeaturePackDescription> getFeaturePacks() {

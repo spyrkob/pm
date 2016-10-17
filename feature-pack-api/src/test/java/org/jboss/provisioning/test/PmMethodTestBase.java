@@ -46,7 +46,7 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
     }
 
     @Test
-    public void testMain() throws Exception {
+    public void main() throws Exception {
         setupRepo(getRepoManager());
         final ProvisioningManager pm = getPm();
         testPmMethod(pm);
