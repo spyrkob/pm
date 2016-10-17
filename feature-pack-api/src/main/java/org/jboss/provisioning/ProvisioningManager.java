@@ -18,32 +18,16 @@ package org.jboss.provisioning;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ServiceLoader;
-
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
-import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
 import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.PathsUtils;
-import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -213,27 +197,9 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        final Path workDir = IoUtils.createRandomTmpDir();
-        final Path layoutDir = workDir.resolve("layout");
-        try {
-            final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
-            final Collection<ArtifactCoords.Gav> provisioningPlugins = new LinkedHashSet<>();
-            layoutFeaturePacks(installationDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir);
-            if (Files.exists(installationHome)) {
-                IoUtils.recursiveDelete(installationHome);
-            }
-            mkdirs(installationHome);
-            final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
-            FeaturePackLayoutInstaller.install(layoutDir, layoutDescr, installationDescr, installationHome);
-
-            if(!provisioningPlugins.isEmpty()) {
-                executePlugins(provisioningPlugins, installationDescr, layoutDescr, layoutDir, workDir);
-            }
-            this.userProvisionedDescr = null;
-            this.layoutProvisionedDescr = null;
-        } finally {
-            IoUtils.recursiveDelete(workDir);
-        }
+        new ProvisioningTask(artifactResolver, installationHome, encoding, installationDescr).execute();
+        this.userProvisionedDescr = null;
+        this.layoutProvisionedDescr = null;
     }
 
     /**
@@ -262,129 +228,6 @@ public class ProvisioningManager {
         IoUtils.copy(userProvisionedXml, location);
     }
 
-    private void layoutFeaturePacks(ProvisionedInstallationDescription installDescr,
-            FeaturePackLayoutDescription.Builder layoutBuilder,
-            Collection<ArtifactCoords.Gav> provisioningPlugins,
-            Path layoutDir,
-            Path workDir) throws ProvisioningException {
-
-        for (ProvisionedFeaturePackDescription provisionedFp : installDescr.getFeaturePacks()) {
-            layoutFeaturePack(installDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir, provisionedFp);
-        }
-    }
-
-    private FeaturePackDescription layoutFeaturePack(ProvisionedInstallationDescription installDescr,
-            FeaturePackLayoutDescription.Builder layoutBuilder, Collection<ArtifactCoords.Gav> provisioningPlugins,
-            Path layoutDir, Path workDir, ProvisionedFeaturePackDescription provisionedFp) throws ArtifactResolutionException,
-            ProvisioningException {
-        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
-        final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
-        final Path fpWorkDir = layoutDir.resolve(fpGav.getGroupId()).resolve(fpGav.getArtifactId()).resolve(fpGav.getVersion());
-        mkdirs(fpWorkDir);
-        try {
-            System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
-            ZipUtils.unzip(artifactPath, fpWorkDir);
-        } catch (IOException e) {
-            throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
-        }
-
-        final FeaturePackDescription fpDescr;
-        try {
-            fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), encoding);
-        } catch (ProvisioningDescriptionException e) {
-            throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
-        }
-        if(fpDescr.hasDependencies()) {
-            for(ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
-                if(!installDescr.containsFeaturePack(dep.getGav().getGa())) {
-                    layoutFeaturePack(installDescr, layoutBuilder, provisioningPlugins, layoutDir, workDir, dep);
-                }
-            }
-        }
-
-        final Path fpResources = fpWorkDir.resolve("resources");
-        if(Files.exists(fpResources)) {
-            try {
-                IoUtils.copy(fpResources, workDir.resolve("resources"));
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve("resources")), e);
-            }
-        }
-
-        if(fpDescr.hasProvisioningPlugins()) {
-            for(ArtifactCoords.Gav gavPart : fpDescr.getProvisioningPlugins()) {
-                provisioningPlugins.add(gavPart);
-            }
-        }
-
-        try {
-            layoutBuilder.addFeaturePack(fpDescr);
-        } catch (ProvisioningDescriptionException e) {
-            throw new ProvisioningException("Failed to layout feature packs", e);
-        }
-        return fpDescr;
-    }
-
-    private void executePlugins(final Collection<ArtifactCoords.Gav> provisioningPlugins,
-            final ProvisionedInstallationDescription installationDescr,
-            final FeaturePackLayoutDescription layoutDescr,
-            final Path layoutDir,
-            final Path workDir) throws ProvisioningException {
-        final List<java.net.URL> urls = new ArrayList<java.net.URL>(provisioningPlugins.size());
-        for(ArtifactCoords.Gav gavPart : provisioningPlugins) {
-            try {
-                urls.add(artifactResolver.resolve(gavPart.toArtifactCoords()).toUri().toURL());
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-
-        if (!urls.isEmpty()) {
-            final ProvisioningContext ctx = new ProvisioningContext() {
-                @Override
-                public Path getLayoutDir() {
-                    return layoutDir;
-                }
-                @Override
-                public Path getInstallDir() {
-                    return installationHome;
-                }
-                @Override
-                public Path getResourcesDir() {
-                    return workDir.resolve("resources");
-                }
-                @Override
-                public ProvisionedInstallationDescription getInstallationDescription() {
-                    return installationDescr;
-                }
-                @Override
-                public FeaturePackLayoutDescription getLayoutDescription() {
-                    return layoutDescr;
-                }
-                @Override
-                public Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException {
-                    return artifactResolver.resolve(coords);
-                }
-                @Override
-                public String getEncoding() {
-                    return encoding;
-                }
-            };
-            final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
-                    urls.toArray(new java.net.URL[urls.size()]),
-                    Thread.currentThread().getContextClassLoader());
-            final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-            for (ProvisioningPlugin plugin : plugins) {
-                try {
-                    plugin.execute(ctx);
-                } catch (ProvisioningException e) {
-                    throw new ProvisioningException("Provisioning plugin failed", e);
-                }
-            }
-        }
-    }
-
     private ProvisionedInstallationDescription readProvisionedState(Path ps) throws ProvisioningException {
         if (!Files.exists(ps)) {
             return null;
@@ -393,14 +236,6 @@ public class ProvisioningManager {
             return new ProvisioningXmlParser().parse(reader);
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(ps));
-        }
-    }
-
-    private void mkdirs(final Path path) throws ProvisioningException {
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            throw new ProvisioningException(Errors.mkdirs(path));
         }
     }
 

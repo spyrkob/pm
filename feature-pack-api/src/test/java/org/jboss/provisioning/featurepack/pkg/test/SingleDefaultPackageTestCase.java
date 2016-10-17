@@ -43,7 +43,7 @@ public class SingleDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack(boolean includeDependencies) {
+    protected ProvisionedFeaturePackDescription provisionedFeaturePack() {
         return ProvisionedFeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1")).build();
     }
