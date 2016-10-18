@@ -213,7 +213,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
             FeaturePackXmlWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
-            throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)));
+            throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
 
         // collect feature-pack resources
@@ -357,6 +357,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                             final Path docDir = packagesDir.resolve(docName);
                             IoUtils.copy(docPath, docDir.resolve(Constants.CONTENT).resolve("docs").resolve(docName));
                             final PackageDescription docDescr = PackageDescription.builder(docName).build();
+                            fpBuilder.addPackage(docDescr);
                             writeXml(docDescr, docDir);
                             docsBuilder.addDependency(docName);
                         }
