@@ -38,6 +38,8 @@ import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
  */
 public class PackageXmlWriter extends BaseXmlWriter {
 
+    private static final String TRUE = "true";
+
     public static final PackageXmlWriter INSTANCE = new PackageXmlWriter();
 
     private PackageXmlWriter() {
@@ -68,6 +70,10 @@ public class PackageXmlWriter extends BaseXmlWriter {
     }
 
     private static void writeDependency(ElementNode deps, PackageDependencyDescription depDescr) {
-        addAttribute(addElement(deps, Element.DEPENDENCY), Attribute.NAME, depDescr.getName());
+        final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
+        addAttribute(depElement, Attribute.NAME, depDescr.getName());
+        if(depDescr.isOptional()) {
+            addAttribute(depElement, Attribute.OPTIONAL, TRUE);
+        }
     }
 }

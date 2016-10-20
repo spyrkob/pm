@@ -36,42 +36,42 @@ public class PackageXmlParserTest  {
         /*
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
-        validator.validateAndParse("src/test/resources/package/package-1.0.1.xml",
+        validator.validateAndParse("xml/package/package-1.0.1.xml",
                 "cvc-elt.1: Cannot find the declaration of element 'package'.",
                 "Message: Unexpected element '{urn:wildfly:pm-package:1.0.1}package'");
     }
 
     @Test
     public void readMissingPackageName() throws Exception {
-        validator.validateAndParse("src/test/resources/package/package-1.0-missing-package-name.xml",
+        validator.validateAndParse("xml/package/package-1.0-missing-package-name.xml",
                 "cvc-complex-type.4: Attribute 'name' must appear on element 'package'.",
                 "Message: Missing required attributes  name");
     }
 
     @Test
     public void readMissingDependencyName() throws Exception {
-        validator.validateAndParse("src/test/resources/package/package-1.0-missing-dependency-name.xml",
+        validator.validateAndParse("xml/package/package-1.0-missing-dependency-name.xml",
                 "cvc-complex-type.4: Attribute 'name' must appear on element 'dependency'.",
                 "Message: Missing required attributes  name");
     }
 
     @Test
     public void readEmptyDependencies() throws Exception {
-        validator.validateAndParse("src/test/resources/package/package-1.0-empty-dependencies.xml",
+        validator.validateAndParse("xml/package/package-1.0-empty-dependencies.xml",
                 "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":dependency}' is expected.",
                 "There must be at least one dependency under dependencies");
     }
 
     @Test
     public void readMissingDependencies() throws Exception {
-        final PackageDescription parsedPkg = validator.validateAndParse("src/test/resources/package/package-1.0-missing-dependencies.xml", null, null);
+        final PackageDescription parsedPkg = validator.validateAndParse("xml/package/package-1.0-missing-dependencies.xml", null, null);
         final PackageDescription expectedPkg = PackageDescription.builder().setName("package1").build();
         Assert.assertEquals(expectedPkg, parsedPkg);
     }
 
     @Test
     public void readValid() throws Exception {
-        PackageDescription found = validator.validateAndParse("src/test/resources/package/package-1.0.xml", null, null);
+        PackageDescription found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
         PackageDescription expected = PackageDescription.builder()
                 .setName("package1")
                 .addDependency("dep1")
@@ -80,4 +80,15 @@ public class PackageXmlParserTest  {
         Assert.assertEquals(expected, found);
     }
 
+    @Test
+    public void readOptionalDependencies() throws Exception {
+        PackageDescription found = validator.validateAndParse("xml/package/package-1.0-optional-dependencies.xml", null, null);
+        PackageDescription expected = PackageDescription.builder()
+                .setName("package1")
+                .addDependency("dep1")
+                .addDependency("dep2")
+                .addDependency("dep3", true)
+                .build();
+        Assert.assertEquals(expected, found);
+    }
 }

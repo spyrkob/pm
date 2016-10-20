@@ -93,6 +93,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     enum Attribute implements XmlNameProvider {
 
         NAME("name"),
+        OPTIONAL("optional"),
         // default unknown attribute
         UNKNOWN(null);
 
@@ -189,11 +190,28 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     }
 
     private void readDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
-        pkgBuilder.addDependency(parseName(reader));
-    }
+        String name = null;
+        boolean optional = false;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case OPTIONAL:
+                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        ParsingUtils.parseNoContent(reader);
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
 
-    private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {
-        return parseName(reader, true);
+        pkgBuilder.addDependency(name, optional);
     }
 
     private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {

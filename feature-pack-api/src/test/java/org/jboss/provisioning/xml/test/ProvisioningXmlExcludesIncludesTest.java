@@ -38,7 +38,7 @@ public class ProvisioningXmlExcludesIncludesTest {
     @Test
     public void readExcludes() throws Exception {
         ProvisionedInstallationDescription found = validator
-                .validateAndParse("src/test/resources/provisioning/provisioning-excludes.xml", null, null);
+                .validateAndParse("xml/provisioning/provisioning-excludes.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
                         .setGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
@@ -58,7 +58,7 @@ public class ProvisioningXmlExcludesIncludesTest {
     @Test
     public void readIncludes() throws Exception {
         ProvisionedInstallationDescription found = validator
-                .validateAndParse("src/test/resources/provisioning/provisioning-includes.xml", null, null);
+                .validateAndParse("xml/provisioning/provisioning-includes.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
                         .setGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
@@ -80,7 +80,7 @@ public class ProvisioningXmlExcludesIncludesTest {
         /*
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
-        validator.validateAndParse("src/test/resources/provisioning/provisioning-excludes-includes.xml",
+        validator.validateAndParse("xml/provisioning/provisioning-excludes-includes.xml",
                 "cvc-complex-type.2.4.d: Invalid content was found starting with element 'excludes'. No child element is expected at this point.",
                 Errors.packageExcludesIncludes());
     }

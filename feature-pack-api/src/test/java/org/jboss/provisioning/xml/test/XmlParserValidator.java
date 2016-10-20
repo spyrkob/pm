@@ -63,10 +63,10 @@ public class XmlParserValidator<T> {
         validator.validate(new StreamSource(Files.newBufferedReader(p, Charset.forName("utf-8"))));
     }
 
-    public T validateAndParse(String xmlFile, String xsdValidationExceptionMessage,
+    public T validateAndParse(String resourcePath, String xsdValidationExceptionMessage,
             String parseExceptionMessage) throws Exception {
 
-        Path p = Paths.get(xmlFile);
+        final Path p = getResource(resourcePath);
 
         XMLStreamException parseException = null;
         SAXException xsdValidationException = null;
@@ -99,7 +99,7 @@ public class XmlParserValidator<T> {
         /* Make sure XSD and parser both either accept or reject the document */
 
         String msg = parser.getClass().getSimpleName() + " "
-                + (parseException == null ? "accepts" : "does not accept") + " the file [" + xmlFile
+                + (parseException == null ? "accepts" : "does not accept") + " the file [" + resourcePath
                 + "] while the schema " + schemaPath.toString() + " "
                 + (xsdValidationException == null ? "does" : "does not");
 
@@ -107,5 +107,15 @@ public class XmlParserValidator<T> {
                 || (xsdValidationException != null && parseException != null));
 
         return result;
+    }
+
+    private static Path getResource(String path) {
+        java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
+        Assert.assertNotNull("Resource is not on the classpath", resUrl);
+        try {
+            return Paths.get(resUrl.toURI());
+        } catch (java.net.URISyntaxException e) {
+            throw new IllegalStateException("Failed to get URI from URL", e);
+        }
     }
 }
