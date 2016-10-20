@@ -40,6 +40,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
@@ -199,11 +200,11 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 processModule(ctx, packagesDir, modulePkg);
             }
         } else {
-            for (String modulePkg : modulesDescr.getDependencies()) {
-                if (fpDescr != null && fpDescr.isExcluded(modulePkg)) {
+            for (PackageDependencyDescription modulePkg : modulesDescr.getDependencies()) {
+                if (fpDescr != null && fpDescr.isExcluded(modulePkg.getName())) {
                     continue;
                 }
-                processModule(ctx, packagesDir, modulePkg);
+                processModule(ctx, packagesDir, modulePkg.getName());
             }
         }
     }

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
@@ -49,10 +50,10 @@ public class PackageXmlWriter extends BaseXmlWriter {
 
         if(pkgDescr.hasDependencies()) {
             final ElementNode deps = addElement(pkg, Element.DEPENDENCIES);
-            final String[] names = pkgDescr.getDependencies().toArray(new String[0]);
-            Arrays.sort(names);
-            for(String name : names) {
-                writeDependency(deps, name);
+            final PackageDependencyDescription[] pkgDeps = pkgDescr.getDependencies().toArray(new PackageDependencyDescription[0]);
+            Arrays.sort(pkgDeps);
+            for(PackageDependencyDescription depDescr : pkgDeps) {
+                writeDependency(deps, depDescr);
             }
         }
 
@@ -66,7 +67,7 @@ public class PackageXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private static void writeDependency(ElementNode deps, String name) {
-        addAttribute(addElement(deps, Element.DEPENDENCY), Attribute.NAME, name);
+    private static void writeDependency(ElementNode deps, PackageDependencyDescription depDescr) {
+        addAttribute(addElement(deps, Element.DEPENDENCY), Attribute.NAME, depDescr.getName());
     }
 }

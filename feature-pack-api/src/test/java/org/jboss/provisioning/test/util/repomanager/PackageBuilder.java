@@ -73,7 +73,11 @@ public class PackageBuilder {
     }
 
     public PackageBuilder addDependency(String dep) {
-        this.pkg.addDependency(dep);
+        return addDependency(dep, false);
+    }
+
+    public PackageBuilder addDependency(String dep, boolean optional) {
+        this.pkg.addDependency(dep, optional);
         return this;
     }
 

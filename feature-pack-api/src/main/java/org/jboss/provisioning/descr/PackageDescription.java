@@ -17,9 +17,11 @@
 package org.jboss.provisioning.descr;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -33,7 +35,7 @@ public class PackageDescription {
     public static class Builder {
 
         protected String name;
-        protected List<String> dependencies = Collections.emptyList();
+        protected Map<String, PackageDependencyDescription> dependencies = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -49,21 +51,28 @@ public class PackageDescription {
         }
 
         public Builder addDependency(String dependencyName) {
-            assert dependencyName != null : "dependency is null";
+            return addDependency(dependencyName, false);
+        }
+
+        public Builder addDependency(String dependencyName, boolean optional) {
+            return addDependency(PackageDependencyDescription.create(dependencyName, optional));
+        }
+
+        public Builder addDependency(PackageDependencyDescription depDescr) {
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonList(dependencyName);
+                    dependencies = Collections.singletonMap(depDescr.getName(), depDescr);
                     break;
                 case 1:
-                    dependencies = new ArrayList<String>(dependencies);
+                    dependencies = new HashMap<>(dependencies);
                 default:
-                    dependencies.add(dependencyName);
+                    dependencies.put(depDescr.getName(), depDescr);
             }
             return this;
         }
 
         public PackageDescription build() {
-            return new PackageDescription(name, Collections.unmodifiableList(dependencies));
+            return new PackageDescription(name, Collections.unmodifiableMap(dependencies));
         }
     }
 
@@ -76,9 +85,9 @@ public class PackageDescription {
     }
 
     protected final String name;
-    protected final List<String> dependencies;
+    protected final Map<String, PackageDependencyDescription> dependencies;
 
-    protected PackageDescription(String name, List<String> dependencies) {
+    protected PackageDescription(String name, Map<String, PackageDependencyDescription> dependencies) {
         assert name != null : "name is null";
         assert dependencies != null : "dependencies is null";
         this.name = name;
@@ -93,8 +102,11 @@ public class PackageDescription {
         return !dependencies.isEmpty();
     }
 
-    public List<String> getDependencies() {
-        return dependencies;
+    public Set<String> getDependencyNames() {
+        return dependencies.keySet();
+    }
+    public Collection<PackageDependencyDescription> getDependencies() {
+        return dependencies.values();
     }
 
     void logContent(DescrFormatter logger) throws IOException {
@@ -104,8 +116,8 @@ public class PackageDescription {
             logger.increaseOffset();
             logger.println("Dependencies");
             logger.increaseOffset();
-            for(String dependency : dependencies) {
-                logger.println(dependency);
+            for(PackageDependencyDescription dependency : dependencies.values()) {
+                logger.println(dependency.toString());
             }
             logger.decreaseOffset();
             logger.decreaseOffset();

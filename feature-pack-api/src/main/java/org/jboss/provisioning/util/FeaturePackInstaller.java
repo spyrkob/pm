@@ -25,6 +25,7 @@ import java.util.Set;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 
@@ -76,11 +77,11 @@ public class FeaturePackInstaller {
     private void install(PackageDescription pkg) throws FeaturePackInstallException {
         installedPackages.add(pkg.getName());
         if(pkg.hasDependencies()) {
-            for(String name : pkg.getDependencies()) {
-                if(packageApproved(name)) {
-                    final PackageDescription dependency = featurePack.getPackageDescription(name);
+            for(PackageDependencyDescription dep : pkg.getDependencies()) {
+                if(packageApproved(dep.getName())) {
+                    final PackageDescription dependency = featurePack.getPackageDescription(dep.getName());
                     if(dependency == null) {
-                        throw new FeaturePackInstallException(Errors.packageNotFound(name));
+                        throw new FeaturePackInstallException(Errors.packageNotFound(dep.getName()));
                     }
                     install(dependency);
                 }

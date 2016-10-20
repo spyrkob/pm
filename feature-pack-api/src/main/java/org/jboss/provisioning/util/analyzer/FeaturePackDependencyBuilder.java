@@ -28,6 +28,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
+import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -146,9 +147,9 @@ public class FeaturePackDependencyBuilder {
             PackageDescription pkgDescr) throws ProvisioningDescriptionException {
         if(pkgDescr.hasDependencies()) {
             final PackageDescription.Builder pkgBuilder = PackageDescription.builder(pkgDescr.getName());
-            for(String dep : pkgDescr.getDependencies()) {
-                if(!childDiff.isMatchedPackage(dep)) {
-                    pkgBuilder.addDependency(dep);
+            for(PackageDependencyDescription dep : pkgDescr.getDependencies()) {
+                if(!childDiff.isMatchedPackage(dep.getName())) {
+                    pkgBuilder.addDependency(dep.getName(), dep.isOptional());
                 }
             }
             pkgDescr = pkgBuilder.build();
