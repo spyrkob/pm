@@ -36,15 +36,23 @@ public class ProvisionedFeaturePackDescription {
 
     public static class Builder {
 
-        protected ArtifactCoords.Gav gav;
+        protected final ArtifactCoords.Gav gav;
+        protected boolean includeDefault;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
 
-        protected Builder() {
+        protected Builder(ArtifactCoords.Gav gav) {
+            this(gav, true);
+        }
+
+        protected Builder(ArtifactCoords.Gav gav, boolean includeDefault) {
+            this.gav = gav;
+            this.includeDefault = includeDefault;
         }
 
         protected Builder(ProvisionedFeaturePackDescription descr) {
             this.gav = descr.getGav();
+            includeDefault = descr.includeDefault;
 
             switch(descr.excludedPackages.size()) {
                 case 0:
@@ -67,14 +75,14 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public Builder setGav(ArtifactCoords.Gav gav) {
-            this.gav = gav;
+        public Builder setIncludeDefaultPackages(boolean includeDefault) {
+            this.includeDefault = includeDefault;
             return this;
         }
 
         public Builder excludePackage(String packageName) throws ProvisioningDescriptionException {
-            if(!includedPackages.isEmpty()) {
-                throw new ProvisioningDescriptionException(Errors.packageExcludesIncludes());
+            if(includedPackages.contains(packageName)) {
+                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
             }
             if(!excludedPackages.contains(packageName)) {
                 switch(excludedPackages.size()) {
@@ -101,8 +109,8 @@ public class ProvisionedFeaturePackDescription {
         }
 
         public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
-            if(!excludedPackages.isEmpty()) {
-                throw new ProvisioningDescriptionException(Errors.packageExcludesIncludes());
+            if(excludedPackages.contains(packageName)) {
+                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
             }
             if(!includedPackages.contains(packageName)) {
                 switch(includedPackages.size()) {
@@ -225,7 +233,9 @@ public class ProvisionedFeaturePackDescription {
         }
 
         public ProvisionedFeaturePackDescription build() {
-            return new ProvisionedFeaturePackDescription(gav, Collections.unmodifiableSet(excludedPackages), Collections.unmodifiableSet(includedPackages));
+            return new ProvisionedFeaturePackDescription(gav, includeDefault,
+                    Collections.unmodifiableSet(excludedPackages),
+                    Collections.unmodifiableSet(includedPackages));
         }
     }
 
@@ -233,23 +243,38 @@ public class ProvisionedFeaturePackDescription {
         return new Builder(descr);
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(ArtifactCoords.Gav gav) {
+        return new Builder(gav);
+    }
+
+    public static Builder builder(ArtifactCoords.Gav gav, boolean includeDefault) {
+        return new Builder(gav, includeDefault);
+    }
+
+    public static ProvisionedFeaturePackDescription forGav(ArtifactCoords.Gav gav) {
+        return new ProvisionedFeaturePackDescription(gav, true, Collections.emptySet(), Collections.emptySet());
     }
 
     private final ArtifactCoords.Gav gav;
+    private final boolean includeDefault;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, Set<String> excludedPackages, Set<String> includedPackages) {
+    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, boolean includeDefault,
+            Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
+        this.includeDefault = includeDefault;
         this.excludedPackages = excludedPackages;
         this.includedPackages = includedPackages;
     }
 
     public ArtifactCoords.Gav getGav() {
         return gav;
+    }
+
+    public boolean isIncludeDefault() {
+        return includeDefault;
     }
 
     public boolean hasIncludedPackages() {
@@ -317,6 +342,9 @@ public class ProvisionedFeaturePackDescription {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
+        if(!includeDefault) {
+            builder.append(" includeDefault=false ");
+        }
         if(!excludedPackages.isEmpty()) {
             final String[] array = excludedPackages.toArray(new String[excludedPackages.size()]);
             Arrays.sort(array);

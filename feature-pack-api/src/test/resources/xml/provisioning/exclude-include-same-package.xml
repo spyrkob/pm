@@ -19,15 +19,9 @@
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
   <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="0.0.1">
-    <excludes>
-      <package name="p1"/>
-    </excludes>
+    <packages>
+      <include name="p1"/>
+      <exclude name="p1"/>
+    </packages>
   </feature-pack>
-  <feature-pack groupId="org.jboss.group1" artifactId="fp2" version="0.0.2">
-    <excludes>
-      <package name="p2"/>
-      <package name="p3"/>
-    </excludes>
-  </feature-pack>
-  <feature-pack groupId="org.jboss.group2" artifactId="fp3" version="0.0.3" />
 </installation>

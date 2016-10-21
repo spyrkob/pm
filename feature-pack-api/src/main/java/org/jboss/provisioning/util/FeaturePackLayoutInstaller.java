@@ -53,7 +53,7 @@ public class FeaturePackLayoutInstaller {
         final FeaturePackLayoutDescription layoutDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding);
         final ProvisionedInstallationDescription.Builder installationBuilder = ProvisionedInstallationDescription.builder();
         for(FeaturePackDescription fpDescr : layoutDescr.getFeaturePacks()) {
-            installationBuilder.addFeaturePack(ProvisionedFeaturePackDescription.builder().setGav(fpDescr.getGav()).build());
+            installationBuilder.addFeaturePack(ProvisionedFeaturePackDescription.forGav(fpDescr.getGav()));
         }
         final ProvisionedInstallationDescription installDescr = installationBuilder.build();
         install(installDescr,
@@ -77,7 +77,7 @@ public class FeaturePackLayoutInstaller {
             } catch (ProvisioningDescriptionException e) {
                 throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav), e);
             }
-            final FeaturePackDescription fp = layoutDescr.getFeaturePack(fpGav.getGa());
+            final FeaturePackDescription fp = layoutDescr.getFeaturePack(fpGav.toGa());
             if(fp == null) {
                 throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav));
             }

@@ -96,12 +96,12 @@ public class FeaturePackDescription {
             assert gav != null : "Gav is null";
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dependency.getGav().getGa(), dependency);
+                    dependencies = Collections.singletonMap(dependency.getGav().toGa(), dependency);
                     break;
                 case 1:
                     dependencies = new HashMap<ArtifactCoords.Ga, ProvisionedFeaturePackDescription>(dependencies);
                 default:
-                    dependencies.put(dependency.getGav().getGa(), dependency);
+                    dependencies.put(dependency.getGav().toGa(), dependency);
             }
             return this;
         }

@@ -332,7 +332,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final ArtifactCoords.Gav gav = ArtifactCoords.newGav(gavStr);
-                final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(gav);
+                final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(gav);
                 if (dep.hasExcludedPackages()) {
                     try {
                         depBuilder.excludeAllPackages(dep.getExcludedPackages()).build();

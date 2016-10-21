@@ -37,8 +37,8 @@ public class ExcludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("b")
                         .build())
                 .newPackage("d", true)
@@ -86,21 +86,20 @@ public class ExcludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
 
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                                .build());
+                        ProvisionedFeaturePackDescription.forGav(
+                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                                 .excludePackage("d")
                                 .build());
         } else {
             builder
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                                 .excludePackage("b")
                                 .excludePackage("d")
                                 .build());

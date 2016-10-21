@@ -26,7 +26,7 @@
   <xs:complexType name="installationType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is installation
+        Describes the specification of the target installation.
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
@@ -37,67 +37,55 @@
   <xs:complexType name="feature-packType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is feature-pack
+        Describes a feature-pack that has to be installed
+        with the possibility to exclude and/or include some of its packages.
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="excludes" type="excludesType" />
-      <xs:element name="includes" type="includesType" />
+      <xs:element name="packages" type="packagesType" />
     </xs:choice>
     <xs:attribute name="groupId" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is feature-pack/@groupId
+          The groupId of the feature-pack artifact.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="artifactId" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is feature-pack/@artifactId
+          The artifactId of the feature-pack artifact.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="version" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is feature-pack/@version
+          The version of the feature-pack artifact.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
-  
-  <xs:complexType name="excludesType">
-    <xs:annotation>
-      <xs:documentation>
-        Describes excluded content from the provisioned feature-pack
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base="packageListType"/>
-    </xs:complexContent>
-  </xs:complexType>
 
-  <xs:complexType name="includesType">
+  <xs:complexType name="packagesType">
     <xs:annotation>
       <xs:documentation>
-        Describes excluded content from the provisioned feature-pack
+        Describes the selection of packages from the feature-pack the user
+        requested to install.
       </xs:documentation>
     </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base="packageListType"/>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:complexType name="packageListType">
-    <xs:annotation>
-      <xs:documentation>
-        Lists packages
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name="package" type="packageType" minOccurs="1" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="exclude" type="packageType" />
+      <xs:element name="include" type="packageType" />
+    </xs:choice>
+    <xs:attribute name="include-default" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+          Whether the default packages should be by default included into
+          the list of packages to be installed.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="packageType">

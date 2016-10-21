@@ -93,16 +93,12 @@ public interface Errors {
         return "Missing " + string;
     }
 
-    static String packageExcludesIncludes() {
-        return "Provisioned feature-pack may include or exclude packages but not both.";
-    }
-
     static String unknownFeaturePack(ArtifactCoords.Gav gav) {
         return "Feature-pack " + gav + " is not found";
     }
 
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
-        return "Feature-pack " + gav.getGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
+        return "Feature-pack " + gav.toGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
     }
 
     static String unsatisfiedPackageDependencies(String packageName, Collection<String> unsatisfiedDeps) {
@@ -111,5 +107,9 @@ public interface Errors {
 
     static String requiredPackageExcluded(String packageName) {
         return "Required package " + packageName + " was excluded";
+    }
+
+    static String packageExcludeInclude(String packageName) {
+        return "Package " + packageName + " is explicitly excluded and included";
     }
 }

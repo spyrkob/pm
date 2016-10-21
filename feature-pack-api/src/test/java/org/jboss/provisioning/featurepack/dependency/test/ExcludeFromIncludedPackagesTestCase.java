@@ -39,8 +39,8 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .includePackage("b")
                         .includePackage("c")
                         .build())
@@ -53,8 +53,8 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .addDependency(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
                         .includePackage("d1")
                         .includePackage("d2")
                         .build())
@@ -100,31 +100,31 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
 
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                                 .excludePackage("e")
                                 .build());
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                                 .excludePackage("b").build());
 /*                .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
                                 .excludePackage("d1")
                                 .build());*/
         } else {
             builder
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                                 .excludePackage("b")
                                 .build())
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
                                 .includePackage("d1")
                                 .includePackage("d2")
                                 .build());

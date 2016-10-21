@@ -130,7 +130,7 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the installation fails
      */
     public void install(ArtifactCoords.Gav fpGav) throws ProvisioningException {
-        install(ProvisionedFeaturePackDescription.builder().setGav(fpGav).build());
+        install(ProvisionedFeaturePackDescription.forGav(fpGav));
     }
 
     /**
@@ -143,8 +143,8 @@ public class ProvisioningManager {
         final ProvisionedInstallationDescription currentState = this.getCurrentState(false);
         if(currentState == null) {
             provision(ProvisionedInstallationDescription.builder().addFeaturePack(fpDescr).build());
-        } else if(currentState.containsFeaturePack(fpDescr.getGav().getGa())) {
-            final ProvisionedFeaturePackDescription presentDescr = currentState.getFeaturePack(fpDescr.getGav().getGa());
+        } else if(currentState.containsFeaturePack(fpDescr.getGav().toGa())) {
+            final ProvisionedFeaturePackDescription presentDescr = currentState.getFeaturePack(fpDescr.getGav().toGa());
             if(presentDescr.getGav().equals(fpDescr.getGav())) {
                 throw new ProvisioningException("Feature-pack " + fpDescr.getGav() + " is already installed");
             } else {
@@ -165,7 +165,7 @@ public class ProvisioningManager {
         final ProvisionedInstallationDescription currentState = getCurrentState(false);
         if(currentState == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!currentState.containsFeaturePack(gav.getGa())) {
+        } else if(!currentState.containsFeaturePack(gav.toGa())) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else {
             provision(ProvisionedInstallationDescription.builder(currentState).removeFeaturePack(gav).build());
@@ -235,7 +235,7 @@ public class ProvisioningManager {
         try (BufferedReader reader = Files.newBufferedReader(ps)) {
             return new ProvisioningXmlParser().parse(reader);
         } catch (IOException | XMLStreamException e) {
-            throw new ProvisioningException(Errors.parseXml(ps));
+            throw new ProvisioningException(Errors.parseXml(ps), e);
         }
     }
 

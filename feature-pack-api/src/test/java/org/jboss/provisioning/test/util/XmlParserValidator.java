@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml.test;
+package org.jboss.provisioning.test.util;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -41,13 +41,10 @@ public class XmlParserValidator<T> {
 
     private final Validator validator;
 
-    private final Path schemaPath;
-
     private final XmlParser<T> parser;
 
     public XmlParserValidator(Path schemaPath, XmlParser<T> parser) {
         super();
-        this.schemaPath = schemaPath;
         this.parser = parser;
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         try (Reader r = Files.newBufferedReader(schemaPath, Charset.forName("utf-8"))) {
@@ -63,31 +60,34 @@ public class XmlParserValidator<T> {
         validator.validate(new StreamSource(Files.newBufferedReader(p, Charset.forName("utf-8"))));
     }
 
+    public T validateAndParse(String resourcePath) throws Exception {
+        return validateAndParse(resourcePath, null, null);
+    }
+
     public T validateAndParse(String resourcePath, String xsdValidationExceptionMessage,
             String parseExceptionMessage) throws Exception {
 
         final Path p = getResource(resourcePath);
 
-        XMLStreamException parseException = null;
-        SAXException xsdValidationException = null;
-
         try {
             validate(p);
+            if(xsdValidationExceptionMessage != null) {
+                Assert.fail("Schema validation passed while expected to fail with error: " + xsdValidationExceptionMessage);
+            }
         } catch (SAXException e) {
-
             if (xsdValidationExceptionMessage == null) {
                 throw e;
             }
-
-            xsdValidationException = e;
             Assert.assertEquals(xsdValidationExceptionMessage, e.getMessage());
         }
 
         T result = null;
         try {
             result = parser.parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
+            if(parseExceptionMessage != null) {
+                Assert.fail("Parsing succeeded while expected to failed with error: " + parseExceptionMessage);
+            }
         } catch (XMLStreamException e) {
-            parseException = e;
             String m = String.format("[%s] should contain [%s]", e.getMessage(), parseExceptionMessage);
             if(parseExceptionMessage == null) {
                 Assert.fail(e.getMessage());
@@ -96,22 +96,12 @@ public class XmlParserValidator<T> {
             }
         }
 
-        /* Make sure XSD and parser both either accept or reject the document */
-
-        String msg = parser.getClass().getSimpleName() + " "
-                + (parseException == null ? "accepts" : "does not accept") + " the file [" + resourcePath
-                + "] while the schema " + schemaPath.toString() + " "
-                + (xsdValidationException == null ? "does" : "does not");
-
-        Assert.assertTrue(msg, (xsdValidationException == null && parseException == null)
-                || (xsdValidationException != null && parseException != null));
-
         return result;
     }
 
     private static Path getResource(String path) {
         java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
-        Assert.assertNotNull("Resource is not on the classpath", resUrl);
+        Assert.assertNotNull("Resource " + path + " is not on the classpath", resUrl);
         try {
             return Paths.get(resUrl.toURI());
         } catch (java.net.URISyntaxException e) {

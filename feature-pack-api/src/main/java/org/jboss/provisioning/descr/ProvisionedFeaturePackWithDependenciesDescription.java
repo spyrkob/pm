@@ -39,12 +39,16 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
 
         protected Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
 
-        protected Builder() {
-            super();
+        protected Builder(ArtifactCoords.Gav gav) {
+            super(gav, true);
+        }
+
+        protected Builder(ArtifactCoords.Gav gav, boolean includeDefault) {
+            super(gav, includeDefault);
         }
 
         public Builder addDependency(ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
-            final ArtifactCoords.Ga gaPart = dependency.getGav().getGa();
+            final ArtifactCoords.Ga gaPart = dependency.getGav().toGa();
             if(dependencies.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(dependency.getGav(), dependencies.get(gaPart).getGav()));
             }
@@ -61,21 +65,26 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
         }
 
         public ProvisionedFeaturePackWithDependenciesDescription build() {
-            return new ProvisionedFeaturePackWithDependenciesDescription(gav,
+            return new ProvisionedFeaturePackWithDependenciesDescription(gav, includeDefault,
                     Collections.unmodifiableSet(excludedPackages), Collections.unmodifiableSet(includedPackages),
                     Collections.unmodifiableMap(dependencies));
         }
     }
 
-    public static Builder builderWithDependencies() {
-        return new Builder();
+    public static Builder builderWithDependencies(ArtifactCoords.Gav gav) {
+        return new Builder(gav);
+    }
+
+    public static Builder builderWithDependencies(ArtifactCoords.Gav gav, boolean includeDefault) {
+        return new Builder(gav, includeDefault);
     }
 
     private final Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies;
 
-    protected ProvisionedFeaturePackWithDependenciesDescription(ArtifactCoords.Gav gav, Set<String> excludedPackages, Set<String> includedPackages,
+    protected ProvisionedFeaturePackWithDependenciesDescription(ArtifactCoords.Gav gav,
+            boolean excludeDefault, Set<String> excludedPackages, Set<String> includedPackages,
             Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> dependencies) {
-        super(gav, excludedPackages, includedPackages);
+        super(gav, excludeDefault, excludedPackages, includedPackages);
         this.dependencies = dependencies;
     }
 

@@ -83,7 +83,7 @@ public class FeaturePackBuilder {
     }
 
     public FeaturePackBuilder addDependency(ArtifactCoords.Gav gav) {
-        return addDependency(ProvisionedFeaturePackDescription.builder().setGav(gav).build());
+        return addDependency(ProvisionedFeaturePackDescription.forGav(gav));
     }
 
     public FeaturePackBuilder addPackage(PackageBuilder pkg) {

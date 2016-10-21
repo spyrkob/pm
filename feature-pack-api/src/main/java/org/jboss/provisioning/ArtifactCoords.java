@@ -91,7 +91,7 @@ public class ArtifactCoords implements Comparable<ArtifactCoords> {
             return ArtifactCoords.this;
         }
 
-        public Ga getGa() {
+        public Ga toGa() {
             return ArtifactCoords.this.toGa();
         }
 

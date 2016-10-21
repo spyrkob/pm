@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml.test;
+package org.jboss.provisioning.featurepack.pkg.xml.test;
 
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.PackageXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,7 +27,7 @@ import org.junit.Test;
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class PackageXmlParserTest  {
+public class PackageXmlParserTestCase  {
 
     private static final XmlParserValidator<PackageDescription> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-package-1_0.xsd"), new PackageXmlParser());

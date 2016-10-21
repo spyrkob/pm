@@ -48,7 +48,7 @@ public class FeaturePackLayoutDescription {
 
         public Builder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
             assert fp != null : "fp is null";
-            final ArtifactCoords.Ga fpGa = fp.getGav().getGa();
+            final ArtifactCoords.Ga fpGa = fp.getGav().toGa();
             if(featurePacks.containsKey(fpGa)) {
                 final Gav existingGav = featurePacks.get(fpGa).getGav();
                 if(existingGav.getVersion().equals(fp.getGav().getVersion())) {

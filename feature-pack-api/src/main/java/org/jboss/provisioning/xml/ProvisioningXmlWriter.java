@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Set;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
@@ -48,13 +46,6 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
         if (installDescr.hasFeaturePacks()) {
-/*            final ArtifactCoords.GaPart[] gaParts = installDescr.getFeaturePackGaParts().toArray(new ArtifactCoords.GaPart[0]);
-            Arrays.sort(gaParts);
-            for (ArtifactCoords.GaPart gaPart : gaParts) {
-                final ElementNode fp = addElement(pkg, Element.FEATURE_PACK);
-                writeFeaturePack(fp, installDescr.getFeaturePack(gaPart));
-            }
-*/
             for(ProvisionedFeaturePackDescription fp : installDescr.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
@@ -77,21 +68,28 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
             addAttribute(fp, Attribute.VERSION, featurePack.getGav().getVersion());
         }
 
+        ElementNode packages = null;
+        if (!featurePack.isIncludeDefault()) {
+            packages = addElement(fp, Element.PACKAGES);
+            addAttribute(packages, Attribute.INCLUDE_DEFAULT, "false");
+        }
         if (featurePack.hasExcludedPackages()) {
-            final ElementNode excludes = addElement(fp, Element.EXCLUDES);
-            writePackageList(excludes, featurePack.getExcludedPackages());
+            if (packages == null) {
+                packages = addElement(fp, Element.PACKAGES);
+            }
+            for (String excluded : featurePack.getExcludedPackages()) {
+                final ElementNode exclude = addElement(packages, Element.EXCLUDE);
+                addAttribute(exclude, Attribute.NAME, excluded);
+            }
         }
-
         if (featurePack.hasIncludedPackages()) {
-            final ElementNode excludes = addElement(fp, Element.INCLUDES);
-            writePackageList(excludes, featurePack.getIncludedPackages());
-        }
-    }
-
-    private void writePackageList(ElementNode excludes, Set<String> packageNames) {
-        for (String packageName : packageNames) {
-            final ElementNode pkg = addElement(excludes, Element.PACKAGE);
-            addAttribute(pkg, Attribute.NAME, packageName);
+            if (packages == null) {
+                packages = addElement(fp, Element.PACKAGES);
+            }
+            for (String included : featurePack.getIncludedPackages()) {
+                final ElementNode include = addElement(packages, Element.INCLUDE);
+                addAttribute(include, Attribute.NAME, included);
+            }
         }
     }
 }
