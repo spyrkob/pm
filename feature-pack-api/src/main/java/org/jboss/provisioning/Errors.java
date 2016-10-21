@@ -108,4 +108,8 @@ public interface Errors {
     static String unsatisfiedPackageDependencies(String packageName, Collection<String> unsatisfiedDeps) {
         return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
     }
+
+    static String requiredPackageExcluded(String packageName) {
+        return "Required package " + packageName + " was excluded";
+    }
 }

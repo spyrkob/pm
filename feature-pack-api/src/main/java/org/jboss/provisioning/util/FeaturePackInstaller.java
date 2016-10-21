@@ -61,13 +61,13 @@ public class FeaturePackInstaller {
 
         if(provisionedDescr != null && provisionedDescr.hasIncludedPackages()) {
             for(String name : provisionedDescr.getIncludedPackages()) {
-                if(packageApproved(name)) {
+                if(canBeInstalled(name, false)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
         } else {
             for (String name : featurePack.getDefaultPackageNames()) {
-                if (packageApproved(name)) {
+                if (canBeInstalled(name, true)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
@@ -78,7 +78,7 @@ public class FeaturePackInstaller {
         installedPackages.add(pkg.getName());
         if(pkg.hasDependencies()) {
             for(PackageDependencyDescription dep : pkg.getDependencies()) {
-                if(packageApproved(dep.getName())) {
+                if(canBeInstalled(dep.getName(), dep.isOptional())) {
                     final PackageDescription dependency = featurePack.getPackageDescription(dep.getName());
                     if(dependency == null) {
                         throw new FeaturePackInstallException(Errors.packageNotFound(dep.getName()));
@@ -97,10 +97,17 @@ public class FeaturePackInstaller {
         }
     }
 
-    private boolean packageApproved(String packageName) {
-        if(provisionedFp != null && provisionedFp.isExcluded(packageName)) {
+    private boolean canBeInstalled(String packageName, boolean optional) throws FeaturePackInstallException {
+        if(installedPackages.contains(packageName)) {
             return false;
         }
-        return !installedPackages.contains(packageName);
+        if(provisionedFp.isExcluded(packageName)) {
+            if(optional) {
+                return false;
+            } else {
+                throw new FeaturePackInstallException(Errors.requiredPackageExcluded(packageName));
+            }
+        }
+        return true;
     }
 }

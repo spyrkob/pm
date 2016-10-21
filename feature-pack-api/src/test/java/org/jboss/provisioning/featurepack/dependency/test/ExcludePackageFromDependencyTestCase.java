@@ -51,7 +51,7 @@ public class ExcludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .newPackage("a", true)
-                    .addDependency("b")
+                    .addDependency("b", true)
                     .addDependency("c")
                     .writeContent("a", "f/p2/a.txt")
                     .getFeaturePack()

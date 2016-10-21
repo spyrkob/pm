@@ -29,14 +29,14 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class PackageExcludeTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("a", true)
-                .addDependency("b")
+                .addDependency("b", true)
                 .writeContent("a", "a.txt")
                 .getFeaturePack()
             .newPackage("b")
