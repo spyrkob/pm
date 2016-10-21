@@ -35,9 +35,7 @@ public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .build();
+        return ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"));
     }
 
     @Override

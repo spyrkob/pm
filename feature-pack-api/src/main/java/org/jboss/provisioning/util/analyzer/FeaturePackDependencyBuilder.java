@@ -98,7 +98,7 @@ public class FeaturePackDependencyBuilder {
 
         // add dependency on the parent
         {
-            final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder().setGav(parentGav);
+            final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(parentGav);
             if (parentDiff.hasUniquePackages()) {
                 // exclude packages not found in the child
                 try {

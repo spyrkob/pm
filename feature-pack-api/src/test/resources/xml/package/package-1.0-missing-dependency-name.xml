@@ -20,6 +20,6 @@
 <package xmlns="urn:wildfly:pm-package:1.0" name="package1">
   <dependencies>
     <dependency name="dep1" />
-    <dependency name="dep2" />
+    <dependency />
   </dependencies>
 </package>

@@ -39,8 +39,8 @@ public class Demo {
         // pm.install(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"));
         pm.provision(ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                                .setGav(ArtifactCoords.newGav("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
+                        ProvisionedFeaturePackDescription
+                                .builder(ArtifactCoords.newGav("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
                                 .excludePackage("org.jboss.as.deployment-scanner.main")
                                 .excludePackage("docs")
                                 .build())

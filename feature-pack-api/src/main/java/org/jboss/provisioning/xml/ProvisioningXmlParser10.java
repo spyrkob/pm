@@ -26,7 +26,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
@@ -45,11 +44,11 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
     enum Element implements XmlNameProvider {
 
-        EXCLUDES("excludes"),
+        EXCLUDE("exclude"),
         FEATURE_PACK("feature-pack"),
-        INCLUDES("includes"),
+        INCLUDE("include"),
         INSTALLATION("installation"),
-        PACKAGE("package"),
+        PACKAGES("packages"),
 
         // default unknown element
         UNKNOWN(null);
@@ -104,6 +103,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
+        INCLUDE_DEFAULT("include-default"),
         NAME("name"),
         VERSION("version"),
 
@@ -213,8 +213,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ARTIFACT_ID));
         }
 
-        final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder();
-        fpBuilder.setGav(ArtifactCoords.newGav(groupId, artifactId, version));
+        final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -224,11 +223,8 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case EXCLUDES:
-                            readPackageList(reader, fpBuilder, true);
-                            break;
-                        case INCLUDES:
-                            readPackageList(reader, fpBuilder, false);
+                        case PACKAGES:
+                            readPackageList(reader, fpBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -243,8 +239,19 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackageList(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder, boolean excludes) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
+    private void readPackageList(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case INCLUDE_DEFAULT:
+                    builder.setIncludeDefaultPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -253,15 +260,18 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case PACKAGE:
+                        case EXCLUDE:
                             try {
-                                if (excludes) {
-                                    builder.excludePackage(parseName(reader));
-                                } else {
-                                    builder.includePackage(parseName(reader));
-                                }
+                                builder.excludePackage(parseName(reader));
                             } catch (ProvisioningException e) {
-                                throw new XMLStreamException(Errors.packageExcludesIncludes(), e);
+                                throw new XMLStreamException(e);
+                            }
+                            break;
+                        case INCLUDE:
+                            try {
+                                builder.includePackage(parseName(reader));
+                            } catch (ProvisioningException e) {
+                                throw new XMLStreamException(e);
                             }
                             break;
                         default:

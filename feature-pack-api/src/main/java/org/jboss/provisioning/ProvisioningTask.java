@@ -114,7 +114,7 @@ class ProvisioningTask {
 
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         final FeaturePackDescription fpDescr;
-        if(!layoutBuilder.hasFeaturePack(fpGav.getGa())) {
+        if(!layoutBuilder.hasFeaturePack(fpGav.toGa())) {
             final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
             final Path fpWorkDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav, false);
             mkdirs(fpWorkDir);
@@ -153,7 +153,7 @@ class ProvisioningTask {
             }
 
         } else {
-            fpDescr = layoutBuilder.getFeaturePack(fpGav.getGa());
+            fpDescr = layoutBuilder.getFeaturePack(fpGav.toGa());
             if(!fpDescr.getGav().equals(fpGav)) {
                 throw new ProvisioningException(Errors.featurePackVersionConflict(fpDescr.getGav(), fpGav));
             }

@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml.test;
+package org.jboss.provisioning.featurepack.xml.test;
 
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.ArtifactCoords;
 import org.junit.Assert;
@@ -28,7 +29,7 @@ import org.junit.Test;
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class FeaturePackXmlParserTest  {
+public class FeaturePackXmlParserTestCase  {
 
     private static final XmlParserValidator<FeaturePackDescription> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), new FeaturePackXmlParser());
@@ -113,8 +114,8 @@ public class FeaturePackXmlParserTest  {
         FeaturePackDescription found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")).build())
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2")).build())
+                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
+                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2")))
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
                 //.addTopPackage(PackageDescription.builder().setName("package2").build())
@@ -129,8 +130,8 @@ public class FeaturePackXmlParserTest  {
         FeaturePackDescription found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-version-optional.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", null))
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)).build())
-                .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)).build())
+                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)))
+                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
                 //.addTopPackage(PackageDescription.builder().setName("package2").build())

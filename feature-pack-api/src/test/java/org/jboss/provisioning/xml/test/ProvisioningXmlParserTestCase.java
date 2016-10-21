@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +29,7 @@ import org.junit.Test;
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class ProvisioningXmlParserTest {
+public class ProvisioningXmlParserTestCase {
 
     private static final XmlParserValidator<ProvisionedInstallationDescription> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-provisioning-1_0.xsd"), new ProvisioningXmlParser());
@@ -69,12 +70,9 @@ public class ProvisioningXmlParserTest {
         ProvisionedInstallationDescription found = validator
                 .validateAndParse("xml/provisioning/provisioning-1.0.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2")).build())
-                .addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")).build())
+                .addFeaturePack(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")))
+                .addFeaturePack(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2")))
+                .addFeaturePack(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
                 .build();
         Assert.assertEquals(expected, found);
     }

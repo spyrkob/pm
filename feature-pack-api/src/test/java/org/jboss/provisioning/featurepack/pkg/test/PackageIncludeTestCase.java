@@ -56,8 +56,8 @@ public class PackageIncludeTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+        return ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .includePackage("b")
                 .includePackage("c")
                 .build();

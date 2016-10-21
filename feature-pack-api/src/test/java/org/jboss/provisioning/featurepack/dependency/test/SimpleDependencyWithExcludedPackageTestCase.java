@@ -35,16 +35,16 @@ public class SimpleDependencyWithExcludedPackageTestCase extends PmInstallFeatur
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+        return ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .excludePackage("d")
                 .build();
     }
 
     @Override
     protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
-        builder.addFeaturePack(ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+        builder.addFeaturePack(ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .excludePackage("b")
                 .build());
     }
@@ -53,8 +53,8 @@ public class SimpleDependencyWithExcludedPackageTestCase extends PmInstallFeatur
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("b")
                         .build())
                 .newPackage("main", true)
