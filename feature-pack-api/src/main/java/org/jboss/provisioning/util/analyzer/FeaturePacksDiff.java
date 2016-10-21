@@ -235,14 +235,14 @@ public class FeaturePacksDiff {
             final PackageSpecificDescription.Builder fp1PkgDiff, final PackageSpecificDescription.Builder fp2PkgDiff) {
         if(!fp1Pkg.hasDependencies()) {
             if(fp2Pkg.hasDependencies()) {
-                fp2PkgDiff.addAllDependencies(fp2Pkg.getDependencies());
+                fp2PkgDiff.addAllDependencies(fp2Pkg.getDependencyNames());
             }
         } else {
             if(!fp2Pkg.hasDependencies()) {
-                fp1PkgDiff.addAllDependencies(fp1Pkg.getDependencies());
+                fp1PkgDiff.addAllDependencies(fp1Pkg.getDependencyNames());
             } else {
-                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getDependencies());
-                for(String dep : fp1Pkg.getDependencies()) {
+                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getDependencyNames());
+                for(String dep : fp1Pkg.getDependencyNames()) {
                     if(!fp2Deps.remove(dep)) {
                         fp1PkgDiff.addDependency(dep);
                     }

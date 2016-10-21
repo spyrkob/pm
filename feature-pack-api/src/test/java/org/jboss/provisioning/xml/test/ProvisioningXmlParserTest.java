@@ -38,28 +38,28 @@ public class ProvisioningXmlParserTest {
         /*
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
-        validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0.1.xml",
+        validator.validateAndParse("xml/provisioning/provisioning-1.0.1.xml",
                 "cvc-elt.1: Cannot find the declaration of element 'installation'.",
                 "Message: Unexpected element '{urn:wildfly:pm-provisioning:1.0.1}installation'");
     }
 
     @Test
     public void readMissingGroupId() throws Exception {
-        validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-groupId.xml",
+        validator.validateAndParse("xml/provisioning/provisioning-1.0-missing-groupId.xml",
                 "cvc-complex-type.4: Attribute 'groupId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  groupId");
     }
 
     @Test
     public void readMissingArtifactId() throws Exception {
-        validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-missing-artifactId.xml",
+        validator.validateAndParse("xml/provisioning/provisioning-1.0-missing-artifactId.xml",
                 "cvc-complex-type.4: Attribute 'artifactId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  artifactId");
     }
 
     @Test
     public void readNoFp() throws Exception {
-        validator.validateAndParse("src/test/resources/provisioning/provisioning-1.0-no-fp.xml",
+        validator.validateAndParse("xml/provisioning/provisioning-1.0-no-fp.xml",
                 "cvc-complex-type.2.4.b: The content of element 'installation' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":feature-pack}' is expected.",
                 "There must be at least one feature-pack under installation");
     }
@@ -67,7 +67,7 @@ public class ProvisioningXmlParserTest {
     @Test
     public void readValid() throws Exception {
         ProvisionedInstallationDescription found = validator
-                .validateAndParse("src/test/resources/provisioning/provisioning-1.0.xml", null, null);
+                .validateAndParse("xml/provisioning/provisioning-1.0.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription.builder()
                         .setGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")).build())

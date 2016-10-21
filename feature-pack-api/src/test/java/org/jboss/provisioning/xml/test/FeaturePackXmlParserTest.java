@@ -38,27 +38,27 @@ public class FeaturePackXmlParserTest  {
         /*
          * urn:wildfly:pm-feature-pack:1.0.1 used in feature-pack-1.0.1.xml is not registered in ProvisioningXmlParser
          */
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0.1.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0.1.xml",
                 "cvc-elt.1: Cannot find the declaration of element 'feature-pack'.",
                 "Message: Unexpected element '{urn:wildfly:pm-feature-pack:1.0.1}feature-pack'");
     }
 
     @Test
     public void readFeaturePackGroupIdMissing() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-feature-pack-groupId-missing.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-feature-pack-groupId-missing.xml",
                 "cvc-complex-type.4: Attribute 'groupId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  groupId");
     }
     @Test
     public void readFeaturePackArtifactIdMissing() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-feature-pack-artifactId-missing.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-feature-pack-artifactId-missing.xml",
                 "cvc-complex-type.4: Attribute 'artifactId' must appear on element 'feature-pack'.",
                 "Message: Missing required attributes  artifactId");
     }
 
     @Test
     public void readPackageNameMissing() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-package-name-missing.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-package-name-missing.xml",
                 "cvc-complex-type.4: Attribute 'name' must appear on element 'package'.",
                 "Message: Missing required attributes  name");
     }
@@ -66,28 +66,28 @@ public class FeaturePackXmlParserTest  {
 //
 //    @Test
 //    public void readMissingDependencyName() throws Exception {
-//        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-missing-dependency-name.xml",
+//        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-missing-dependency-name.xml",
 //                "cvc-complex-type.4: Attribute 'name' must appear on element 'dependency'.",
 //                "Message: Missing required attributes  name");
 //    }
 //
     @Test
     public void readEmptyDependencies() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-empty-dependencies.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-dependencies.xml",
                 "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":dependency}' is expected.",
                 "There must be at least one dependency under dependencies");
     }
 
     @Test
     public void readEmptyPackages() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-empty-packages.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-packages.xml",
                 "cvc-complex-type.2.4.b: The content of element 'packages' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":package}' is expected.",
                 "There must be at least one package under packages");
     }
 
     @Test
     public void readEmptyProvisioningPlugins() throws Exception {
-        validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-empty-provisioning-plugins.xml",
+        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-provisioning-plugins.xml",
                 "cvc-complex-type.2.4.b: The content of element 'provisioning-plugins' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":artifact}' is expected.",
                 "There must be at least one artifact under provisioning-plugins");
     }
@@ -95,14 +95,14 @@ public class FeaturePackXmlParserTest  {
     //
 //    @Test
 //    public void readMissingDependencies() throws Exception {
-//        final PackageDescription parsedPkg = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-missing-dependencies.xml", null, null);
+//        final PackageDescription parsedPkg = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-missing-dependencies.xml", null, null);
 //        final PackageDescription expectedPkg = PackageDescription.builder().setName("feature-pack1").build();
 //        Assert.assertEquals(expectedPkg, parsedPkg);
 //    }
 
     @Test
     public void readEmpty() throws Exception {
-        FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-empty.xml", null, null);
+        FeaturePackDescription found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0")).build();
         Assert.assertEquals(expected, found);
@@ -110,7 +110,7 @@ public class FeaturePackXmlParserTest  {
 
     @Test
     public void readValid() throws Exception {
-        FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0.xml", null, null);
+        FeaturePackDescription found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
                 .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")).build())
@@ -126,7 +126,7 @@ public class FeaturePackXmlParserTest  {
 
     @Test
     public void readVersionOptional() throws Exception {
-        FeaturePackDescription found = validator.validateAndParse("src/test/resources/feature-pack/feature-pack-1.0-version-optional.xml", null, null);
+        FeaturePackDescription found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-version-optional.xml", null, null);
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", null))
                 .addDependency(ProvisionedFeaturePackDescription.builder().setGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)).build())

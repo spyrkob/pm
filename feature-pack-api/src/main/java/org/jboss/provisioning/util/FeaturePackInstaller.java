@@ -25,6 +25,7 @@ import java.util.Set;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 
@@ -60,13 +61,13 @@ public class FeaturePackInstaller {
 
         if(provisionedDescr != null && provisionedDescr.hasIncludedPackages()) {
             for(String name : provisionedDescr.getIncludedPackages()) {
-                if(packageApproved(name)) {
+                if(canBeInstalled(name, false)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
         } else {
             for (String name : featurePack.getDefaultPackageNames()) {
-                if (packageApproved(name)) {
+                if (canBeInstalled(name, true)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
@@ -76,11 +77,11 @@ public class FeaturePackInstaller {
     private void install(PackageDescription pkg) throws FeaturePackInstallException {
         installedPackages.add(pkg.getName());
         if(pkg.hasDependencies()) {
-            for(String name : pkg.getDependencies()) {
-                if(packageApproved(name)) {
-                    final PackageDescription dependency = featurePack.getPackageDescription(name);
+            for(PackageDependencyDescription dep : pkg.getDependencies()) {
+                if(canBeInstalled(dep.getName(), dep.isOptional())) {
+                    final PackageDescription dependency = featurePack.getPackageDescription(dep.getName());
                     if(dependency == null) {
-                        throw new FeaturePackInstallException(Errors.packageNotFound(name));
+                        throw new FeaturePackInstallException(Errors.packageNotFound(dep.getName()));
                     }
                     install(dependency);
                 }
@@ -96,10 +97,17 @@ public class FeaturePackInstaller {
         }
     }
 
-    private boolean packageApproved(String packageName) {
-        if(provisionedFp != null && provisionedFp.isExcluded(packageName)) {
+    private boolean canBeInstalled(String packageName, boolean optional) throws FeaturePackInstallException {
+        if(installedPackages.contains(packageName)) {
             return false;
         }
-        return !installedPackages.contains(packageName);
+        if(provisionedFp.isExcluded(packageName)) {
+            if(optional) {
+                return false;
+            } else {
+                throw new FeaturePackInstallException(Errors.requiredPackageExcluded(packageName));
+            }
+        }
+        return true;
     }
 }

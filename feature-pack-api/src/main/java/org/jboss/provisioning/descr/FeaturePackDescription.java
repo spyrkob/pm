@@ -133,10 +133,22 @@ public class FeaturePackDescription {
                 final Set<String> allPackageNames = packages.keySet();
                 for (PackageDescription pkg : packages.values()) {
                     if (pkg.hasDependencies()) {
-                        if (!allPackageNames.containsAll(pkg.getDependencies())) {
-                            final Set<String> names = new HashSet<>(pkg.getDependencies());
-                            names.removeAll(allPackageNames);
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), names));
+                        List<String> notFound = Collections.emptyList();
+                        for(PackageDependencyDescription pkgDep : pkg.getDependencies()) {
+                            if(!allPackageNames.contains(pkgDep.getName())) {
+                                switch(notFound.size()) {
+                                    case 0:
+                                        notFound = Collections.singletonList(pkgDep.getName());
+                                        break;
+                                    case 1:
+                                        notFound = new ArrayList<>(notFound);
+                                    default:
+                                        notFound.add(pkgDep.getName());
+                                }
+                            }
+                        }
+                        if (!notFound.isEmpty()) {
+                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
                         }
                     }
                 }

@@ -359,7 +359,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                             final PackageDescription docDescr = PackageDescription.builder(docName).build();
                             fpBuilder.addPackage(docDescr);
                             writeXml(docDescr, docDir);
-                            docsBuilder.addDependency(docName);
+                            docsBuilder.addDependency(docName, true);
                         }
                     }
                     PackageDescription docsDescr = docsBuilder.build();
@@ -403,7 +403,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 } catch (XMLStreamException e) {
                     throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
                 }
-                modulesBuilder.addDependency(packageName);
+                modulesBuilder.addDependency(packageName, true);
                 fpBuilder.addPackage(pkgDescr);
 
                 final String moduleXmlContents = IoUtils.readFile(file);

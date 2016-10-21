@@ -26,7 +26,7 @@
   <xs:complexType name="packageType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is package
+        Describes a feature-pack package which is an atomic unit of content.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence minOccurs="0" maxOccurs="1">
@@ -35,7 +35,7 @@
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is package/@name
+          The name of a package which must be unique inside the feature-pack.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -44,7 +44,7 @@
   <xs:complexType name="dependenciesType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is dependencies
+        Describes a list of package dependencies.
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
@@ -55,13 +55,28 @@
   <xs:complexType name="dependencyType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is dependency
+        Describes a package dependency on another package.
+        When a package is selected to be installed, all the packages it depends
+        on will also be installed unless they have been explicitly excluded by
+        the user.
+        If a user installs a package which has a required dependency on an
+        excluded package, the provisioning process will terminate with an error.
+        If a user installs a package which has an optional dependency on an
+        excluded package, the provisioning process will proceed installing
+        the package the user chose to install. 
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is dependency/@name
+          Name of a package, the package declaring dependency depends on. 
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="optional" type="xs:boolean" use="optional" default="false">
+      <xs:annotation>
+        <xs:documentation>
+          Indicates whether the dependency is optional or required.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
