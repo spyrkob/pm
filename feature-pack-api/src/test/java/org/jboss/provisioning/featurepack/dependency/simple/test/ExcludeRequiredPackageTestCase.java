@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
@@ -25,31 +27,42 @@ import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.util.FeaturePackInstallException;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"));
+        return ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                .excludePackage("d")
+                .build();
     }
 
     @Override
     protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
-        builder.addFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"));
+        builder.addFeaturePack(ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .excludePackage("b")
+                .build());
     }
 
     @Override
-    protected void setupRepo(FeaturePackRepoManager repoManager) {
+    protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .excludePackage("b")
+                        .build())
                 .newPackage("main", true)
-                    .addDependency("d")
+                    .addDependency("d", true)
                     .writeContent("c", "f/p1/c.txt")
                     .getFeaturePack()
                 .newPackage("d")
@@ -69,13 +82,25 @@ public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("f/p1/c.txt", "c")
-                .addFile("f/p1/d.txt", "d")
-                .addFile("f/p2/a.txt", "a")
-                .addFile("f/p2/b.txt", "b")
-                .build();
+    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        try {
+            super.testPmMethod(pm);
+            Assert.fail("Required package dependency was ignored");
+        } catch(FeaturePackInstallException e) {
+            // expected
+        }
     }
 
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return DirState.rootBuilder().build();
+    }
+
+    @Override
+    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
+    }
+
+    @Override
+    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
+    }
 }

@@ -29,7 +29,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalDependencyOfPickedTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
@@ -48,7 +48,6 @@ public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
                 .writeContent("c", "c/c/c.txt")
                 .getFeaturePack()
             .newPackage("d")
-                .addDependency("e")
                 .writeContent("d", "c/d.txt")
                 .getFeaturePack()
             .newPackage("e")
@@ -64,6 +63,7 @@ public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"), false)
                 .includePackage("b")
                 .includePackage("c")
+                .excludePackage("d")
                 .build();
     }
 
@@ -72,8 +72,6 @@ public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
         return builder
                 .addFile("b/b.txt", "b")
                 .addFile("c/c/c.txt", "c")
-                .addFile("c/d.txt", "d")
-                .addFile("c/e.txt", "e")
                 .build();
     }
 }

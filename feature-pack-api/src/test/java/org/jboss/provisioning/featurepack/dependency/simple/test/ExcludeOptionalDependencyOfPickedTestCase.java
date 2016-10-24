@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -30,7 +30,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalDependencyOfPickedTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
@@ -46,6 +46,7 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
         builder.addFeaturePack(ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                 .includePackage("b")
+                .excludePackage("c")
                 .build());
     }
 
@@ -56,6 +57,7 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
+                        .excludePackage("c")
                         .build())
                 .newPackage("main", true)
                     .addDependency("d")
@@ -71,7 +73,15 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
                     .writeContent("a", "f/p2/a.txt")
                     .getFeaturePack()
                 .newPackage("b")
+                    .addDependency("c", true)
                     .writeContent("b", "f/p2/b.txt")
+                    .getFeaturePack()
+                .newPackage("c")
+                    .addDependency("d")
+                    .writeContent("c", "f/p2/c.txt")
+                    .getFeaturePack()
+                .newPackage("d")
+                    .writeContent("d", "f/p2/d.txt")
                     .getFeaturePack()
                 .getInstaller()
             .install();
