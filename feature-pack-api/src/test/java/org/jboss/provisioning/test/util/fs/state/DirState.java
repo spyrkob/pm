@@ -137,11 +137,8 @@ public class DirState extends PathState {
                 actualPaths.add(child.getFileName().toString());
             }
             for(Map.Entry<String, PathState> entry : childStates.entrySet()) {
-                if(actualPaths.remove(entry.getKey())) {
-                    entry.getValue().assertState(path);
-                } else {
-                    Assert.fail("Path exists: " + path.resolve(entry.getKey()));
-                }
+                entry.getValue().assertState(path);
+                actualPaths.remove(entry.getKey());
             }
             if(!actualPaths.isEmpty()) {
                 Assert.fail("Dir " + path + " does not contain " + actualPaths);

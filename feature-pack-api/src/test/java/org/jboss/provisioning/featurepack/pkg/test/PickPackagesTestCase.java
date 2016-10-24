@@ -29,7 +29,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExplicitPackageIncludeTestCase extends PmInstallFeaturePackTestBase {
+public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {

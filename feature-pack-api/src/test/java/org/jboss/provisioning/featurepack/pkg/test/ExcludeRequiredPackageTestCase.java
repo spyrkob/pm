@@ -18,32 +18,38 @@
 package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.util.FeaturePackInstallException;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("a", true)
+                .addDependency("b")
                 .writeContent("a", "a.txt")
                 .getFeaturePack()
-            .newPackage("b", true)
+            .newPackage("b")
                 .addDependency("c")
                 .addDependency("d")
                 .writeContent("b", "b/b.txt")
                 .getFeaturePack()
             .newPackage("c", true)
+                .addDependency("d")
                 .writeContent("c", "c/c/c.txt")
                 .getFeaturePack()
             .newPackage("d")
@@ -62,10 +68,25 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
     }
 
     @Override
+    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        try {
+            super.testPmMethod(pm);
+            Assert.fail("Required package dependency was ignored");
+        } catch(FeaturePackInstallException e) {
+            // expected
+        }
+    }
+
+    @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("a.txt", "a")
-                .addFile("c/c/c.txt", "c")
-                .build();
+        return DirState.rootBuilder().build();
+    }
+
+    @Override
+    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
+    }
+
+    @Override
+    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
     }
 }

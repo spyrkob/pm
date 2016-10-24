@@ -40,6 +40,7 @@ public class PackageDependencyChainTestCase extends PmInstallFeaturePackTestBase
                 .getFeaturePack()
             .newPackage("b")
                 .addDependency("c")
+                .addDependency("d")
                 .writeContent("b", "b/b.txt")
                 .getFeaturePack()
             .newPackage("c", true)

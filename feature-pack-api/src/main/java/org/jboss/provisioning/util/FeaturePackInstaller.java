@@ -65,7 +65,8 @@ public class FeaturePackInstaller {
                     install(featurePack.getPackageDescription(name));
                 }
             }
-        } else if(provisionedFp.hasIncludedPackages()) {
+        }
+        if(provisionedFp.hasIncludedPackages()) {
             for(String name : provisionedDescr.getIncludedPackages()) {
                 if(canBeInstalled(name, false)) {
                     install(featurePack.getPackageDescription(name));

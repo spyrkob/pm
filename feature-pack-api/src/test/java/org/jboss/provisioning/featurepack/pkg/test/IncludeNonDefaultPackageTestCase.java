@@ -29,21 +29,22 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("a", true)
+                .addDependency("d")
                 .writeContent("a", "a.txt")
                 .getFeaturePack()
-            .newPackage("b", true)
+            .newPackage("b")
                 .addDependency("c")
-                .addDependency("d")
                 .writeContent("b", "b/b.txt")
                 .getFeaturePack()
             .newPackage("c", true)
+                .addDependency("d")
                 .writeContent("c", "c/c/c.txt")
                 .getFeaturePack()
             .newPackage("d")
@@ -57,7 +58,7 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
     protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .excludePackage("b")
+                .includePackage("b")
                 .build();
     }
 
@@ -65,7 +66,9 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
                 .addFile("a.txt", "a")
+                .addFile("b/b.txt", "b")
                 .addFile("c/c/c.txt", "c")
+                .addFile("c/d.txt", "d")
                 .build();
     }
 }
