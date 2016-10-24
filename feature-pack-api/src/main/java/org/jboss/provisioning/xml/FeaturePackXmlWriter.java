@@ -60,9 +60,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
-            final ArtifactCoords.Ga[] gaParts = fpDescr.getDependencyGaParts().toArray(new ArtifactCoords.Ga[0]);
-            Arrays.sort(gaParts);
-            for (ArtifactCoords.Ga gaPart : gaParts) {
+            for (ArtifactCoords.Ga gaPart : fpDescr.getDependencyGaParts()) {
                 write(deps, fpDescr.getDependency(gaPart));
             }
         }
@@ -109,20 +107,28 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         if(gav.getVersion() != null) {
             addAttribute(depsElement, Attribute.VERSION, gav.getVersion());
         }
-        if(dependency.hasExcludedPackages()) {
-            final ElementNode excludes = addElement(depsElement, Element.EXCLUDES);
-            final String[] packageNames = dependency.getExcludedPackages().toArray(new String[0]);
-            Arrays.sort(packageNames);
-            for (String packageName : packageNames) {
-                addAttribute(addElement(excludes, Element.PACKAGE), Attribute.NAME, packageName);
+
+        ElementNode packages = null;
+        if (!dependency.isIncludeDefault()) {
+            packages = addElement(depsElement, Element.PACKAGES);
+            addAttribute(packages, Attribute.INCLUDE_DEFAULT, "false");
+        }
+        if (dependency.hasExcludedPackages()) {
+            if (packages == null) {
+                packages = addElement(depsElement, Element.PACKAGES);
+            }
+            for (String excluded : dependency.getExcludedPackages()) {
+                final ElementNode exclude = addElement(packages, Element.EXCLUDE);
+                addAttribute(exclude, Attribute.NAME, excluded);
             }
         }
-        if(dependency.hasIncludedPackages()) {
-            final ElementNode includes = addElement(depsElement, Element.INCLUDES);
-            final String[] packageNames = dependency.getIncludedPackages().toArray(new String[0]);
-            Arrays.sort(packageNames);
-            for (String packageName : packageNames) {
-                addAttribute(addElement(includes, Element.PACKAGE), Attribute.NAME, packageName);
+        if (dependency.hasIncludedPackages()) {
+            if (packages == null) {
+                packages = addElement(depsElement, Element.PACKAGES);
+            }
+            for (String included : dependency.getIncludedPackages()) {
+                final ElementNode include = addElement(packages, Element.INCLUDE);
+                addAttribute(include, Attribute.NAME, included);
             }
         }
     }

@@ -18,10 +18,12 @@ package org.jboss.provisioning.descr;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,7 +101,7 @@ public class FeaturePackDescription {
                     dependencies = Collections.singletonMap(dependency.getGav().toGa(), dependency);
                     break;
                 case 1:
-                    dependencies = new HashMap<ArtifactCoords.Ga, ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new LinkedHashMap<ArtifactCoords.Ga, ProvisionedFeaturePackDescription>(dependencies);
                 default:
                     dependencies.put(dependency.getGav().toGa(), dependency);
             }
@@ -336,7 +338,38 @@ public class FeaturePackDescription {
 
     @Override
     public String toString() {
-        return "FeaturePackDescription [gav=" + gav + ", dependencies=" + dependencies + ", topPackages=" + defPackages
-                + ", packages=" + packages + ", provisioningPlugins=" + provisioningPlugins + "]";
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[gav=").append(gav);
+        if(!dependencies.isEmpty()) {
+            buf.append("; dependencies: ");
+            final ArtifactCoords.Ga[] array = dependencies.keySet().toArray(new ArtifactCoords.Ga[dependencies.size()]);
+            Arrays.sort(array);
+            buf.append(dependencies.get(array[0]));
+            for(int i = 1; i < array.length; ++i) {
+                buf.append(',').append(dependencies.get(array[i]));
+            }
+        }
+        if(!defPackages.isEmpty()) {
+            buf.append("; defaultPackages: ");
+            final String[] array = defPackages.toArray(new String[defPackages.size()]);
+            Arrays.sort(array);
+            buf.append(array[0]);
+            for(int i = 1; i < array.length; ++i) {
+                buf.append(',').append(array[i]);
+            }
+        }
+        if(!packages.isEmpty()) {
+            buf.append("; packages=");
+            final String[] array = packages.keySet().toArray(new String[packages.size()]);
+            Arrays.sort(array);
+            buf.append(packages.get(array[0]));
+            for(int i = 1; i < array.length; ++i) {
+                buf.append(',').append(packages.get(array[i]));
+            }
+        }
+        if(!provisioningPlugins.isEmpty()) {
+            buf.append("; provisioningPlugins=").append(provisioningPlugins);
+        }
+        return buf.append("]").toString();
     }
 }

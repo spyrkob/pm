@@ -55,15 +55,15 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
         testFullSpec(pm);
     }
 
-    private void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
+    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
         assertSpec(pm, provisionedInstallation(true), true);
     }
 
-    private void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
+    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
         assertSpec(pm, provisionedInstallation(false), false);
     }
 
-    private void testProvisionedContent() {
+    protected void testProvisionedContent() {
         provisionedHomeDir(DirState.rootBuilder().skip(".pm")).assertState(installHome);
     }
 }

@@ -35,8 +35,8 @@ public class NoDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("ab")
-                .writeContent("a", "a.txt")
-                .writeContent("b", "b/b.txt")
+                .writeContent("a.txt", "a")
+                .writeContent("b/b.txt", "b")
                 .getFeaturePack()
             .getInstaller()
         .install();

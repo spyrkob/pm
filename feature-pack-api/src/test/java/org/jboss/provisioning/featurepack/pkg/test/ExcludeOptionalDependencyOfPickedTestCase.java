@@ -19,6 +19,7 @@ package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -28,33 +29,49 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class DefaultAndIndependentNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalDependencyOfPickedTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-            .newPackage("ab", true)
-                .writeContent("a", "a.txt")
-                .writeContent("b", "b/b.txt")
+            .newPackage("a", true)
+                .addDependency("b")
+                .writeContent("a.txt", "a")
                 .getFeaturePack()
-            .newPackage("c")
-                .writeContent("c", "c.txt")
+            .newPackage("b")
+                .addDependency("c")
+                .writeContent("b/b.txt", "b")
+                .getFeaturePack()
+            .newPackage("c", true)
+                .addDependency("d", true)
+                .writeContent("c/c/c.txt", "c")
+                .getFeaturePack()
+            .newPackage("d")
+                .writeContent("c/d.txt", "d")
+                .getFeaturePack()
+            .newPackage("e")
+                .writeContent("c/e.txt", "e")
                 .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack() {
-        return ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"));
+    protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
+        return ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"), false)
+                .includePackage("b")
+                .includePackage("c")
+                .excludePackage("d")
+                .build();
     }
 
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("a.txt", "a")
                 .addFile("b/b.txt", "b")
+                .addFile("c/c/c.txt", "c")
                 .build();
     }
 }

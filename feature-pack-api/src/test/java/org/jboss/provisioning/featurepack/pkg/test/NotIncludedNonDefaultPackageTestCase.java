@@ -28,7 +28,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SingleDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class NotIncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
@@ -37,6 +37,9 @@ public class SingleDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
             .newPackage("ab", true)
                 .writeContent("a.txt", "a")
                 .writeContent("b/b.txt", "b")
+                .getFeaturePack()
+            .newPackage("c")
+                .writeContent("c.txt", "c")
                 .getFeaturePack()
             .getInstaller()
         .install();

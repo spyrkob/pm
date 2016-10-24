@@ -343,7 +343,7 @@ public class ProvisionedFeaturePackDescription {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
         if(!includeDefault) {
-            builder.append(" includeDefault=false ");
+            builder.append(" includeDefault=false");
         }
         if(!excludedPackages.isEmpty()) {
             final String[] array = excludedPackages.toArray(new String[excludedPackages.size()]);

@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
@@ -25,12 +27,14 @@ import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.util.FeaturePackInstallException;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyWithExcludedPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
@@ -59,30 +63,44 @@ public class SimpleDependencyWithExcludedPackageTestCase extends PmInstallFeatur
                         .build())
                 .newPackage("main", true)
                     .addDependency("d", true)
-                    .writeContent("c", "f/p1/c.txt")
+                    .writeContent("f/p1/c.txt", "c")
                     .getFeaturePack()
                 .newPackage("d")
-                    .writeContent("d", "f/p1/d.txt")
+                    .writeContent("f/p1/d.txt", "d")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .newPackage("main", true)
-                    .addDependency("b", true)
-                    .writeContent("a", "f/p2/a.txt")
+                    .addDependency("b")
+                    .writeContent("f/p2/a.txt", "a")
                     .getFeaturePack()
                 .newPackage("b")
-                    .writeContent("b", "f/p2/b.txt")
+                    .writeContent("f/p2/b.txt", "b")
                     .getFeaturePack()
                 .getInstaller()
             .install();
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("f/p1/c.txt", "c")
-                .addFile("f/p2/a.txt", "a")
-                .build();
+    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        try {
+            super.testPmMethod(pm);
+            Assert.fail("Required package dependency was ignored");
+        } catch(FeaturePackInstallException e) {
+            // expected
+        }
     }
 
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return DirState.rootBuilder().build();
+    }
+
+    @Override
+    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
+    }
+
+    @Override
+    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
+    }
 }

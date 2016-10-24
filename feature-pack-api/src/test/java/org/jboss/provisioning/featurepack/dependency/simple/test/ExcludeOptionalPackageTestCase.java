@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -30,14 +30,14 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
             throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .includePackage("d")
+                .excludePackage("d")
                 .build();
     }
 
@@ -45,7 +45,7 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
     protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
         builder.addFeaturePack(ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .includePackage("b")
+                .excludePackage("b")
                 .build());
     }
 
@@ -55,23 +55,23 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                        .includePackage("b")
+                        .excludePackage("b")
                         .build())
                 .newPackage("main", true)
-                    .addDependency("d")
-                    .writeContent("c", "f/p1/c.txt")
+                    .addDependency("d", true)
+                    .writeContent("f/p1/c.txt", "c")
                     .getFeaturePack()
                 .newPackage("d")
-                    .writeContent("d", "f/p1/d.txt")
+                    .writeContent("f/p1/d.txt", "d")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .newPackage("main", true)
-                    .addDependency("b")
-                    .writeContent("a", "f/p2/a.txt")
+                    .addDependency("b", true)
+                    .writeContent("f/p2/a.txt", "a")
                     .getFeaturePack()
                 .newPackage("b")
-                    .writeContent("b", "f/p2/b.txt")
+                    .writeContent("f/p2/b.txt", "b")
                     .getFeaturePack()
                 .getInstaller()
             .install();
@@ -80,8 +80,8 @@ public class SimpleDependencyWithIncludedPackageTestCase extends PmInstallFeatur
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("f/p1/d.txt", "d")
-                .addFile("f/p2/b.txt", "b")
+                .addFile("f/p1/c.txt", "c")
+                .addFile("f/p2/a.txt", "a")
                 .build();
     }
 

@@ -82,7 +82,7 @@
       <xs:annotation>
         <xs:documentation>
           Whether the default packages should be by default included into
-          the list of packages to be installed.
+          the list of the packages to be installed.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

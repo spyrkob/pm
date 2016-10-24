@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -30,7 +30,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
+public class NotIncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack()
@@ -50,19 +50,22 @@ public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
                 .addDependency(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .newPackage("main", true)
                     .addDependency("d")
-                    .writeContent("c", "f/p1/c.txt")
+                    .writeContent("f/p1/c.txt", "c")
                     .getFeaturePack()
                 .newPackage("d")
-                    .writeContent("d", "f/p1/d.txt")
+                    .writeContent("f/p1/d.txt", "d")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .newPackage("main", true)
                     .addDependency("b")
-                    .writeContent("a", "f/p2/a.txt")
+                    .writeContent("f/p2/a.txt", "a")
                     .getFeaturePack()
                 .newPackage("b")
-                    .writeContent("b", "f/p2/b.txt")
+                    .writeContent("f/p2/b.txt", "b")
+                    .getFeaturePack()
+                .newPackage("c")
+                    .writeContent("f/p2/c.txt", "c")
                     .getFeaturePack()
                 .getInstaller()
             .install();

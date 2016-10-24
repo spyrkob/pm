@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.test.PmProvisionSpecTestBase;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -31,7 +30,25 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBase {
+public class ExcludeOptionalDependencyOfPickedTestCase extends PmInstallFeaturePackTestBase {
+
+    @Override
+    protected ProvisionedFeaturePackDescription provisionedFeaturePack()
+            throws ProvisioningDescriptionException {
+        return ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
+                .includePackage("d")
+                .build();
+    }
+
+    @Override
+    protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
+        builder.addFeaturePack(ProvisionedFeaturePackDescription
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
+                .includePackage("b")
+                .excludePackage("c")
+                .build());
+    }
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -40,81 +57,42 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
+                        .excludePackage("c")
                         .build())
-                .newPackage("d", true)
-                    .addDependency("e")
-                    .writeContent("f/p1/d.txt", "d")
+                .newPackage("main", true)
+                    .addDependency("d")
+                    .writeContent("f/p1/c.txt", "c")
                     .getFeaturePack()
-                .newPackage("e")
-                    .writeContent("f/p1/e.txt", "e")
+                .newPackage("d")
+                    .writeContent("f/p1/d.txt", "d")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .newPackage("a", true)
+                .newPackage("main", true)
                     .addDependency("b")
-                    .addDependency("c")
                     .writeContent("f/p2/a.txt", "a")
                     .getFeaturePack()
                 .newPackage("b")
-                    .addDependency("b1")
+                    .addDependency("c", true)
                     .writeContent("f/p2/b.txt", "b")
                     .getFeaturePack()
-                .newPackage("b1")
-                    .writeContent("f/p2/b1.txt", "b1")
-                    .getFeaturePack()
                 .newPackage("c")
-                    .addDependency("c1")
+                    .addDependency("d")
                     .writeContent("f/p2/c.txt", "c")
                     .getFeaturePack()
-                .newPackage("c1")
-                    .writeContent("f/p2/c1.txt", "c1")
-                    .getFeaturePack()
                 .newPackage("d")
-                    .addDependency("d1")
                     .writeContent("f/p2/d.txt", "d")
-                    .getFeaturePack()
-                .newPackage("d1")
-                    .writeContent("f/p2/d1.txt", "d1")
                     .getFeaturePack()
                 .getInstaller()
             .install();
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies)
-            throws ProvisioningDescriptionException {
-
-        final Builder builder = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
-                                .includePackage("e")
-                                .build());
-        if(!includeDependencies) {
-            builder
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
-                                .includePackage("d")
-                                .build());
-        } else {
-            builder
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
-                                .includePackage("d")
-                                .build());
-        }
-
-        return builder.build();
-    }
-
-    @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("f/p1/e.txt", "e")
-                .addFile("f/p2/d.txt", "d")
-                .addFile("f/p2/d1.txt", "d1")
+                .addFile("f/p1/d.txt", "d")
+                .addFile("f/p2/b.txt", "b")
                 .build();
     }
+
 }

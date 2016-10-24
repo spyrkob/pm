@@ -36,18 +36,18 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("a", true)
-                .writeContent("a", "a.txt")
+                .writeContent("a.txt", "a")
                 .getFeaturePack()
             .newPackage("b", true)
                 .addDependency("c")
-                .writeContent("b", "b/b.txt")
+                .addDependency("d")
+                .writeContent("b/b.txt", "b")
                 .getFeaturePack()
             .newPackage("c", true)
-                .addDependency("d")
-                .writeContent("c", "c/c/c.txt")
+                .writeContent("c/c/c.txt", "c")
                 .getFeaturePack()
             .newPackage("d")
-                .writeContent("d", "c/d.txt")
+                .writeContent("c/d.txt", "d")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -66,7 +66,6 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
         return builder
                 .addFile("a.txt", "a")
                 .addFile("c/c/c.txt", "c")
-                .addFile("c/d.txt", "d")
                 .build();
     }
 }
