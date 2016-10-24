@@ -81,17 +81,17 @@ public class PackageBuilder {
         return this;
     }
 
-    public PackageBuilder addPath(Path src, String relativeTarget) {
+    public PackageBuilder addPath(String relativeTarget, Path src) {
         tasks.copy(src, relativeTarget);
         return this;
     }
 
-    public PackageBuilder addDir(Path src, String relativeTarget, boolean contentOnly) {
+    public PackageBuilder addDir(String relativeTarget, Path src, boolean contentOnly) {
         tasks.copyDir(src, relativeTarget, contentOnly);
         return this;
     }
 
-    public PackageBuilder writeContent(String content, String relativeTarget) {
+    public PackageBuilder writeContent(String relativeTarget, String content) {
         tasks.write(content, relativeTarget);
         return this;
     }
