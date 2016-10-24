@@ -24,10 +24,10 @@
     <dependency groupId="org.jboss.dep.group2" artifactId="dep2" version="0.0.2"  />
   </dependencies>
 
-  <packages>
+  <default-packages>
     <package name="package1" />
     <package name="package2" />
-  </packages>
+  </default-packages>
 
   <provisioning-plugins>
   </provisioning-plugins>

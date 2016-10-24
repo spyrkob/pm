@@ -82,7 +82,7 @@ public class FeaturePackXmlParserTestCase  {
     @Test
     public void readEmptyPackages() throws Exception {
         validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-packages.xml",
-                "cvc-complex-type.2.4.b: The content of element 'packages' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":package}' is expected.",
+                "cvc-complex-type.2.4.b: The content of element 'default-packages' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":package}' is expected.",
                 "There must be at least one package under packages");
     }
 

@@ -47,6 +47,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
     public enum Element implements XmlNameProvider {
 
         ARTIFACT("artifact"),
+        DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
         EXCLUDE("exclude"),
@@ -160,8 +161,8 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                         case DEPENDENCIES:
                             readDependencies(reader, fpBuilder);
                             break;
-                        case PACKAGES:
-                            readPackages(reader, fpBuilder);
+                        case DEFAULT_PACKAGES:
+                            readDefaultPackages(reader, fpBuilder);
                             break;
                         case PROVISIONING_PLUGINS:
                             readProvisioningPlugins(reader, fpBuilder);
@@ -338,7 +339,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    private void readDefaultPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasChildren = false;
         while (reader.hasNext()) {
