@@ -31,7 +31,7 @@
     </xs:annotation>
     <xs:sequence minOccurs="0" maxOccurs="1">
       <xs:element name="dependencies" type="dependenciesType" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="packages" type="packagesType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="default-packages" type="packagesType" minOccurs="0" maxOccurs="1"/>
       <xs:element name="provisioning-plugins" type="provisioning-pluginsType" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attributeGroup ref="gavAttributes"/>

@@ -22,10 +22,10 @@
   <dependencies>
   </dependencies>
 
-  <packages>
+  <default-packages>
     <package name="package1" />
     <package name="package2" />
-  </packages>
+  </default-packages>
 
   <provisioning-plugins>
     <artifact groupId="org.jboss.plugin.group1" artifactId="plugin1" version="0.1.0" />
