@@ -29,7 +29,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class PackageIncludeTestCase extends PmInstallFeaturePackTestBase {
+public class ExplicitPackageIncludeTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
@@ -57,7 +57,7 @@ public class PackageIncludeTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
-                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"), false)
                 .includePackage("b")
                 .includePackage("c")
                 .build();

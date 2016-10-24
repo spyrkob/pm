@@ -17,6 +17,7 @@
 package org.jboss.provisioning.descr;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -153,5 +154,22 @@ public class PackageDescription {
         } else if (!name.equals(other.name))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append('[').append(name);
+        if(!dependencies.isEmpty()) {
+            buf.append(" depends on ");
+            final String[] names = dependencies.keySet().toArray(new String[dependencies.size()]);
+            Arrays.sort(names);
+            buf.append(dependencies.get(names[0]));
+            for(int i = 1; i < names.length; ++i) {
+                buf.append(',').append(dependencies.get(names[i]));
+            }
+        }
+        buf.append(']');
+        return buf.toString();
     }
 }

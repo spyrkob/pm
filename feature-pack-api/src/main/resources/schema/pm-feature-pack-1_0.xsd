@@ -57,7 +57,26 @@
     <xs:attributeGroup ref="gavAttributes"/>
   </xs:complexType>
 
-
+  <xs:complexType name="dependencyPackagesType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes the selection of packages from the feature-pack to be installed.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="exclude" type="packageType" />
+      <xs:element name="include" type="packageType" />
+    </xs:choice>
+    <xs:attribute name="include-default" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+          Whether the default packages should be by default included into
+          the list of the packages to be installed.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  
   <xs:complexType name="packagesType">
     <xs:annotation>
       <xs:documentation>
@@ -72,13 +91,13 @@
   <xs:complexType name="packageType">
     <xs:annotation>
       <xs:documentation>
-        TODO: what is package
+        Names a package
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          TODO: what is package/@name
+          Package name
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

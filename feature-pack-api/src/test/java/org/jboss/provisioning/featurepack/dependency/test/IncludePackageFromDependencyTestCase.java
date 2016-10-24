@@ -38,7 +38,7 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
                         .build())
                 .newPackage("d", true)
@@ -87,21 +87,21 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
                                 .includePackage("e")
                                 .build());
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                                 .includePackage("d")
                                 .build());
         } else {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                                 .includePackage("d")
                                 .build());
         }

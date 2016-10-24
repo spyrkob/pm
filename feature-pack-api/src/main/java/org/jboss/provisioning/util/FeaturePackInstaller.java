@@ -59,15 +59,15 @@ public class FeaturePackInstaller {
         installedPackages = new HashSet<String>();
         provisionedFp = provisionedDescr;
 
-        if(provisionedDescr != null && provisionedDescr.hasIncludedPackages()) {
-            for(String name : provisionedDescr.getIncludedPackages()) {
-                if(canBeInstalled(name, false)) {
+        if(provisionedFp.isIncludeDefault()) {
+            for (String name : featurePack.getDefaultPackageNames()) {
+                if (canBeInstalled(name, true)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
-        } else {
-            for (String name : featurePack.getDefaultPackageNames()) {
-                if (canBeInstalled(name, true)) {
+        } else if(provisionedFp.hasIncludedPackages()) {
+            for(String name : provisionedDescr.getIncludedPackages()) {
+                if(canBeInstalled(name, false)) {
                     install(featurePack.getPackageDescription(name));
                 }
             }
