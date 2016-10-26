@@ -44,7 +44,7 @@ public class SimpleDependencyTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected void setupRepo(FeaturePackRepoManager repoManager) {
+    protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))

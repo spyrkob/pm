@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -161,8 +162,8 @@ class ProvisioningTask {
 
         Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders = Collections.emptyMap();
         if(fpDescr.hasDependencies()) {
-            for(ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
-                fpBuilders = include(fpBuilders, layoutFeaturePack(dep, layoutBuilder, true));
+            for(FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+                fpBuilders = include(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder, true));
             }
         }
 

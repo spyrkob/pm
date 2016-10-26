@@ -27,6 +27,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -34,6 +35,7 @@ import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
 import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
+import org.jboss.provisioning.xml.util.TextNode;
 
 /**
  *
@@ -60,8 +62,8 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
         if (fpDescr.hasDependencies()) {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
-            for (ArtifactCoords.Ga gaPart : fpDescr.getDependencyGaParts()) {
-                write(deps, fpDescr.getDependency(gaPart));
+            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+                write(deps, dep);
             }
         }
 
@@ -70,7 +72,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             final String[] pkgNames = fpDescr.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
-                write(pkgs, fpDescr.getPackageDescription(name));
+                write(pkgs, fpDescr.getPackage(name));
             }
         }
 
@@ -99,34 +101,39 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
     }
 
-    private static void write(ElementNode deps, ProvisionedFeaturePackDescription dependency) {
-        final ElementNode depsElement = addElement(deps, Element.DEPENDENCY);
-        final ArtifactCoords.Gav gav = dependency.getGav();
-        addAttribute(depsElement, Attribute.GROUP_ID, gav.getGroupId());
-        addAttribute(depsElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
+    private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {
+        final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
+        final ProvisionedFeaturePackDescription target = dependency.getTarget();
+        final ArtifactCoords.Gav gav = target.getGav();
+        addAttribute(depElement, Attribute.GROUP_ID, gav.getGroupId());
+        addAttribute(depElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
         if(gav.getVersion() != null) {
-            addAttribute(depsElement, Attribute.VERSION, gav.getVersion());
+            addAttribute(depElement, Attribute.VERSION, gav.getVersion());
+        }
+
+        if(dependency.getName() != null) {
+            addElement(depElement, Element.NAME).addChild(new TextNode(dependency.getName()));
         }
 
         ElementNode packages = null;
-        if (!dependency.isIncludeDefault()) {
-            packages = addElement(depsElement, Element.PACKAGES);
+        if (!target.isIncludeDefault()) {
+            packages = addElement(depElement, Element.PACKAGES);
             addAttribute(packages, Attribute.INCLUDE_DEFAULT, "false");
         }
-        if (dependency.hasExcludedPackages()) {
+        if (target.hasExcludedPackages()) {
             if (packages == null) {
-                packages = addElement(depsElement, Element.PACKAGES);
+                packages = addElement(depElement, Element.PACKAGES);
             }
-            for (String excluded : dependency.getExcludedPackages()) {
+            for (String excluded : target.getExcludedPackages()) {
                 final ElementNode exclude = addElement(packages, Element.EXCLUDE);
                 addAttribute(exclude, Attribute.NAME, excluded);
             }
         }
-        if (dependency.hasIncludedPackages()) {
+        if (target.hasIncludedPackages()) {
             if (packages == null) {
-                packages = addElement(depsElement, Element.PACKAGES);
+                packages = addElement(depElement, Element.PACKAGES);
             }
-            for (String included : dependency.getIncludedPackages()) {
+            for (String included : target.getIncludedPackages()) {
                 final ElementNode include = addElement(packages, Element.INCLUDE);
                 addAttribute(include, Attribute.NAME, included);
             }

@@ -119,7 +119,7 @@ public class FeaturePackDependencyBuilder {
         if(childDiff.hasConflictingPackages()) {
             final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getConflictingPackageNames()) {
-                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackageDescription(name));
+                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackage(name));
                 fpBuilder.addPackage(pkgDescr);
                 if(childDescr.isDefaultPackage(name)) {
                     fpBuilder.markAsDefaultPackage(name);

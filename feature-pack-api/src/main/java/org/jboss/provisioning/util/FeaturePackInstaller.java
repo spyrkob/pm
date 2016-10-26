@@ -62,14 +62,14 @@ public class FeaturePackInstaller {
         if(provisionedFp.isIncludeDefault()) {
             for (String name : featurePack.getDefaultPackageNames()) {
                 if (canBeInstalled(name, true)) {
-                    install(featurePack.getPackageDescription(name));
+                    install(featurePack.getPackage(name));
                 }
             }
         }
         if(provisionedFp.hasIncludedPackages()) {
             for(String name : provisionedDescr.getIncludedPackages()) {
                 if(canBeInstalled(name, false)) {
-                    install(featurePack.getPackageDescription(name));
+                    install(featurePack.getPackage(name));
                 }
             }
         }
@@ -80,7 +80,7 @@ public class FeaturePackInstaller {
         if(pkg.hasDependencies()) {
             for(PackageDependencyDescription dep : pkg.getDependencies()) {
                 if(canBeInstalled(dep.getName(), dep.isOptional())) {
-                    final PackageDescription dependency = featurePack.getPackageDescription(dep.getName());
+                    final PackageDescription dependency = featurePack.getPackage(dep.getName());
                     if(dependency == null) {
                         throw new FeaturePackInstallException(Errors.packageNotFound(dep.getName()));
                     }
