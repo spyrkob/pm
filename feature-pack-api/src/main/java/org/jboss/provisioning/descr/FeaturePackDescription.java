@@ -154,9 +154,9 @@ public class FeaturePackDescription {
             if (!packages.isEmpty()) {
                 final Set<String> allPackageNames = packages.keySet();
                 for (PackageDescription pkg : packages.values()) {
-                    if (pkg.hasDependencies()) {
+                    if (pkg.hasLocalDependencies()) {
                         List<String> notFound = Collections.emptyList();
-                        for(PackageDependencyDescription pkgDep : pkg.getDependencies()) {
+                        for(PackageDependencyDescription pkgDep : pkg.getLocalDependencies().getDescriptions()) {
                             if(!allPackageNames.contains(pkgDep.getName())) {
                                 switch(notFound.size()) {
                                     case 0:

@@ -77,8 +77,8 @@ public class FeaturePackInstaller {
 
     private void install(PackageDescription pkg) throws FeaturePackInstallException {
         installedPackages.add(pkg.getName());
-        if(pkg.hasDependencies()) {
-            for(PackageDependencyDescription dep : pkg.getDependencies()) {
+        if(pkg.hasLocalDependencies()) {
+            for(PackageDependencyDescription dep : pkg.getLocalDependencies().getDescriptions()) {
                 if(canBeInstalled(dep.getName(), dep.isOptional())) {
                     final PackageDescription dependency = featurePack.getPackage(dep.getName());
                     if(dependency == null) {

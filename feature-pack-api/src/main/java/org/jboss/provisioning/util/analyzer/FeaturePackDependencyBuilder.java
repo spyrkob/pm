@@ -145,9 +145,9 @@ public class FeaturePackDependencyBuilder {
     private PackageDescription updatePackageDependencies(
             final FeaturePackSpecificDescription childDiff,
             PackageDescription pkgDescr) throws ProvisioningDescriptionException {
-        if(pkgDescr.hasDependencies()) {
+        if(pkgDescr.hasLocalDependencies()) {
             final PackageDescription.Builder pkgBuilder = PackageDescription.builder(pkgDescr.getName());
-            for(PackageDependencyDescription dep : pkgDescr.getDependencies()) {
+            for(PackageDependencyDescription dep : pkgDescr.getLocalDependencies().getDescriptions()) {
                 if(!childDiff.isMatchedPackage(dep.getName())) {
                     pkgBuilder.addDependency(dep.getName(), dep.isOptional());
                 }

@@ -50,9 +50,9 @@ public class PackageXmlWriter extends BaseXmlWriter {
         final ElementNode pkg = addElement(null, Element.PACKAGE);
         addAttribute(pkg, Attribute.NAME, pkgDescr.getName());
 
-        if(pkgDescr.hasDependencies()) {
+        if(pkgDescr.hasLocalDependencies()) {
             final ElementNode deps = addElement(pkg, Element.DEPENDENCIES);
-            final PackageDependencyDescription[] pkgDeps = pkgDescr.getDependencies().toArray(new PackageDependencyDescription[0]);
+            final PackageDependencyDescription[] pkgDeps = pkgDescr.getLocalDependencies().getDescriptions().toArray(new PackageDependencyDescription[0]);
             Arrays.sort(pkgDeps);
             for(PackageDependencyDescription depDescr : pkgDeps) {
                 writeDependency(deps, depDescr);

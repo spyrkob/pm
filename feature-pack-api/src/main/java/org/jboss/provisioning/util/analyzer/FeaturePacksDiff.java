@@ -234,16 +234,16 @@ public class FeaturePacksDiff {
 
     private void compareDependencies(final PackageDescription fp1Pkg, final PackageDescription fp2Pkg,
             final PackageSpecificDescription.Builder fp1PkgDiff, final PackageSpecificDescription.Builder fp2PkgDiff) {
-        if(!fp1Pkg.hasDependencies()) {
-            if(fp2Pkg.hasDependencies()) {
-                fp2PkgDiff.addAllDependencies(fp2Pkg.getDependencyNames());
+        if(!fp1Pkg.hasLocalDependencies()) {
+            if(fp2Pkg.hasLocalDependencies()) {
+                fp2PkgDiff.addAllDependencies(fp2Pkg.getLocalDependencies().getPackageNames());
             }
         } else {
-            if(!fp2Pkg.hasDependencies()) {
-                fp1PkgDiff.addAllDependencies(fp1Pkg.getDependencyNames());
+            if(!fp2Pkg.hasLocalDependencies()) {
+                fp1PkgDiff.addAllDependencies(fp1Pkg.getLocalDependencies().getPackageNames());
             } else {
-                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getDependencyNames());
-                for(String dep : fp1Pkg.getDependencyNames()) {
+                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getLocalDependencies().getPackageNames());
+                for(String dep : fp1Pkg.getLocalDependencies().getPackageNames()) {
                     if(!fp2Deps.remove(dep)) {
                         fp1PkgDiff.addDependency(dep);
                     }
