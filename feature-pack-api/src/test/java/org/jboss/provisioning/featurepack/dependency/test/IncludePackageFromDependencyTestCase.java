@@ -38,8 +38,8 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                        .excludePackage("b")
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
+                        .includePackage("b")
                         .build())
                 .newPackage("d", true)
                     .addDependency("e")
@@ -86,22 +86,28 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
 
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.forGav(
-                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
+                        ProvisionedFeaturePackDescription.builder(
+                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
+                                .includePackage("e")
+                                .build());
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                                .excludePackage("a")
                                 .excludePackage("d")
+                                .includePackage("c")
                                 .build());
         } else {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("b")
+                                .excludePackage("a")
                                 .excludePackage("d")
+                                .includePackage("b")
+                                .includePackage("c")
                                 .build());
         }
 
@@ -111,9 +117,9 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("f/p1/d.txt", "d")
                 .addFile("f/p1/e.txt", "e")
-                .addFile("f/p2/a.txt", "a")
+                .addFile("f/p2/b.txt", "b")
+                .addFile("f/p2/b1.txt", "b1")
                 .addFile("f/p2/c.txt", "c")
                 .addFile("f/p2/c1.txt", "c1")
                 .build();

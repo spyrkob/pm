@@ -26,14 +26,12 @@ import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
-public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase {
+public class OverrideInheritedIncludeDependencyTestCase extends PmProvisionSpecTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -42,7 +40,6 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
-                        .includePackage("c")
                         .build())
                 .newPackage("d", true)
                     .addDependency("e")
@@ -53,13 +50,8 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
-                        .includePackage("d1")
-                        .includePackage("d2")
-                        .build())
                 .newPackage("a", true)
-                    .addDependency("b")
+                    .addDependency("b", true)
                     .addDependency("c")
                     .writeContent("f/p2/a.txt", "a")
                     .getFeaturePack()
@@ -77,18 +69,12 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
                 .newPackage("c1")
                     .writeContent("f/p2/c1.txt", "c1")
                     .getFeaturePack()
-                .getInstaller()
-            .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
                 .newPackage("d", true)
                     .addDependency("d1")
-                    .addDependency("d2")
-                    .writeContent("f/p3/d.txt", "d")
+                    .writeContent("f/p2/d.txt", "d")
                     .getFeaturePack()
                 .newPackage("d1")
-                    .writeContent("f/p3/d1.txt", "d1")
-                    .getFeaturePack()
-                .newPackage("d2")
-                    .writeContent("f/p3/d2.txt", "d2")
+                    .writeContent("f/p2/d1.txt", "d1")
                     .getFeaturePack()
                 .getInstaller()
             .install();
@@ -100,33 +86,24 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
 
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                                .excludePackage("e")
+                        ProvisionedFeaturePackDescription.builder(
+                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
+                                .includePackage("e")
                                 .build());
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("b").build());
-/*                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
-                                .excludePackage("d1")
-                                .build());*/
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
+                                .includePackage("c")
+                                .build());
         } else {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("b")
-                                .build())
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
-                                .includePackage("d1")
-                                .includePackage("d2")
+                                //.includePackage("b")
+                                .includePackage("c")
                                 .build());
         }
 
@@ -136,13 +113,11 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("f/p1/d.txt", "d")
-                .addFile("f/p2/b.txt", "b") //x
-                .addFile("f/p2/b1.txt", "b1")//x
+                .addFile("f/p1/e.txt", "e")
+                //.addFile("f/p2/b.txt", "b")
+                //.addFile("f/p2/b1.txt", "b1")
                 .addFile("f/p2/c.txt", "c")
                 .addFile("f/p2/c1.txt", "c1")
-                .addFile("f/p3/d1.txt", "d1")//x
-                .addFile("f/p3/d2.txt", "d2")
                 .build();
     }
 }

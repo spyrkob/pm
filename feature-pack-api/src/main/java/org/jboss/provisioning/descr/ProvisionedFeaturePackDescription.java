@@ -152,6 +152,7 @@ public class ProvisionedFeaturePackDescription {
 
         public Builder include(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
+
             if(includeDefault == other.includeDefault) {
                 // this.includes + other.includes
                 // this.excludes - other.includes
@@ -207,61 +208,41 @@ public class ProvisionedFeaturePackDescription {
         public Builder exclude(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
-            if(includeDefault == other.includeDefault) {
-                // addedInclude = other.include - this.exclude
-                // addedExclude = other.exclude - this.include
-                // this.include - addedExclude
-                // this.include + addedInclude
-                // this.exclude - addInclude
-                // this.exclude + addedExclude
-                final Set<String> addedInclude;
+            if(other.includeDefault) {
+                // this.include - other.exclude
+                // this.include + other.include
+
+                if(!includedPackages.isEmpty() && other.hasExcludedPackages()) {
+                    for(String name : other.excludedPackages) {
+                        removeFromIncluded(name);
+                    }
+                }
                 if(other.hasIncludedPackages()) {
-                    if(excludedPackages.isEmpty()) {
-                        addedInclude = other.includedPackages;
-                    } else {
-                        addedInclude = new HashSet<>(other.includedPackages);
-                        addedInclude.removeAll(excludedPackages);
-                    }
-                } else {
-                    addedInclude = Collections.emptySet();
-                }
-                final Set<String> addedExclude;
-                if(other.hasExcludedPackages()) {
-                    if(includedPackages.isEmpty()) {
-                        addedExclude = other.excludedPackages;
-                    } else {
-                        addedExclude = new HashSet<>(other.excludedPackages);
-                        addedExclude.removeAll(includedPackages);
-                    }
-                } else {
-                    addedExclude = Collections.emptySet();
-                }
-                if(includedPackages.isEmpty()) {
-                    includedPackages = addedInclude;
-                } else {
-                    if(!addedExclude.isEmpty()) {
-                        for(String name : addedExclude) {
-                            removeFromIncluded(name);
-                        }
-                    }
-                    if(!addedInclude.isEmpty()) {
-                        for(String name : addedInclude) {
-                            includePackage(name);
-                        }
+                    for(String name : other.includedPackages) {
+                        includePackage(name);
                     }
                 }
-                if(excludedPackages.isEmpty()) {
-                    excludedPackages = addedExclude;
-                } else {
-                    if(!addedInclude.isEmpty()) {
-                        for(String name : addedInclude) {
+
+                if(includeDefault) {
+                    // this.exclude - other.include
+                    // this.exclude + other.exclude
+                    if(!excludedPackages.isEmpty() && other.hasIncludedPackages()) {
+                        for(String name : other.includedPackages) {
                             removeFromExcluded(name);
                         }
                     }
-                    if(!addedExclude.isEmpty()) {
-                        for(String name : addedExclude) {
+                    if(other.hasExcludedPackages()) {
+                        for(String name : other.excludedPackages) {
                             excludePackage(name);
                         }
+                    }
+                } else {
+                    // this.includeDefault = other.includeDefault
+                    // this.exclude = other.exclude
+                    this.includeDefault = other.includeDefault;
+                    this.excludedPackages = Collections.emptySet();
+                    for(String name : other.excludedPackages) {
+                        excludePackage(name);
                     }
                 }
             } else {
@@ -270,14 +251,14 @@ public class ProvisionedFeaturePackDescription {
                 // this.exclude = other.exclude
                 this.includeDefault = other.includeDefault;
                 this.includedPackages = Collections.emptySet();
-                if(!other.includedPackages.isEmpty()) {
-                    for(String name : other.includedPackages) {
+                if (!other.includedPackages.isEmpty()) {
+                    for (String name : other.includedPackages) {
                         includePackage(name);
                     }
                 }
                 this.excludedPackages = Collections.emptySet();
-                if(!other.excludedPackages.isEmpty()) {
-                    for(String name : other.excludedPackages) {
+                if (!other.excludedPackages.isEmpty()) {
+                    for (String name : other.excludedPackages) {
                         excludePackage(name);
                     }
                 }
