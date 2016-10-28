@@ -114,7 +114,6 @@ public class DependencyBranchesPackageAccumulationTestCase extends PmProvisionSp
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
-                        .includePackage("d1")
                         .excludePackage("d3")
                         .build());
         }

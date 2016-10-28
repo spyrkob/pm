@@ -87,9 +87,11 @@ class ProvisioningTask {
                 fpBuilders = exclude(provisionedFp, fpBuilders);
             }
 
+            final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
             final ProvisionedInstallationDescription.Builder installBuilder = ProvisionedInstallationDescription.builder();
-            for(ProvisionedFeaturePackDescription.Builder fpBuilder : fpBuilders.values()) {
-                installBuilder.addFeaturePack(fpBuilder.build());
+            for(Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> entry : fpBuilders.entrySet()) {
+                final FeaturePackDescription fpDescr = layoutDescr.getFeaturePack(entry.getKey().toGa());
+                installBuilder.addFeaturePack(entry.getValue().buildNormalized(fpDescr));
             }
 
             if (Files.exists(installationHome)) {
@@ -97,7 +99,6 @@ class ProvisioningTask {
             }
             mkdirs(installationHome);
 
-            final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
             FeaturePackLayoutInstaller.install(installBuilder.build(), installationDescr, layoutDescr, layoutDir, installationHome);
 
             if(!provisioningPlugins.isEmpty()) {

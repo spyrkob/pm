@@ -291,6 +291,27 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
+        public ProvisionedFeaturePackDescription buildNormalized(FeaturePackDescription descr) {
+            if(includeDefault) {
+                if(!includedPackages.isEmpty() && descr.hasDefaultPackages()) {
+                    for(String name : descr.getDefaultPackageNames()) {
+                        if(includedPackages.contains(name)) {
+                            removeFromIncluded(name);
+                        }
+                    }
+                }
+            } else {
+                if(!excludedPackages.isEmpty() && descr.hasDefaultPackages()) {
+                    for(String name : descr.getDefaultPackageNames()) {
+                        if(excludedPackages.contains(name)) {
+                            removeFromExcluded(name);
+                        }
+                    }
+                }
+            }
+            return build();
+        }
+
         public ProvisionedFeaturePackDescription build() {
             return new ProvisionedFeaturePackDescription(gav, includeDefault,
                     Collections.unmodifiableSet(excludedPackages),
