@@ -175,7 +175,7 @@ class ProvisioningTask {
 
     private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> exclude(
             ProvisionedFeaturePackDescription provisionedFp,
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders) {
+            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders) throws ProvisioningDescriptionException {
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         switch(fpBuilders.size()) {
             case 0:

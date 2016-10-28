@@ -29,14 +29,14 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeDefaultIncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
             .newPackage("a", true)
-                .addDependency("b")
+                .addDependency("d")
                 .writeContent("a.txt", "a")
                 .getFeaturePack()
             .newPackage("b")
@@ -58,7 +58,6 @@ public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBa
     protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .excludePackage("a")
                 .includePackage("b")
                 .build();
     }
@@ -66,6 +65,7 @@ public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBa
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
+                .addFile("a.txt", "a")
                 .addFile("b/b.txt", "b")
                 .addFile("c/c/c.txt", "c")
                 .addFile("c/d.txt", "d")

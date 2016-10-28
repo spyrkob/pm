@@ -40,7 +40,7 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
                         .includePackage("c")
                         .build())
@@ -54,7 +54,7 @@ public class ExcludeFromIncludedPackagesTestCase extends PmProvisionSpecTestBase
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
                         .includePackage("d1")
                         .includePackage("d2")
                         .build())
