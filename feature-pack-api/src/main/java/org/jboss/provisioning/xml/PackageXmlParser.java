@@ -34,7 +34,7 @@ import org.jboss.staxmapper.XMLMapper;
  */
 public class PackageXmlParser implements XmlParser<PackageDescription> {
 
-    private static final QName ROOT_1_0 = new QName(PackageXmlParser10.NAMESPACE_1_0, PackageXmlParser10.Element.PACKAGE.getLocalName());
+    private static final QName ROOT_1_0 = new QName(PackageXmlParser10.NAMESPACE_1_0, PackageXmlParser10.Element.PACKAGE_SPEC.getLocalName());
 
     private static final XMLInputFactory inputFactory;
     static {

@@ -17,5 +17,5 @@
     limitations under the License.
 
 -->
-<package xmlns="urn:wildfly:pm-package:1.0" name="package1">
-</package>
+<package-spec xmlns="urn:wildfly:pm-package:1.0" name="package1">
+</package-spec>

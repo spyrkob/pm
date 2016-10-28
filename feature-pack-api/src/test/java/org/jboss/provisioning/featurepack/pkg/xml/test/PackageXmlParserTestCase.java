@@ -38,29 +38,29 @@ public class PackageXmlParserTestCase  {
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
         validator.validateAndParse("xml/package/package-1.0.1.xml",
-                "cvc-elt.1: Cannot find the declaration of element 'package'.",
-                "Message: Unexpected element '{urn:wildfly:pm-package:1.0.1}package'");
+                "cvc-elt.1: Cannot find the declaration of element 'package-spec'.",
+                "Message: Unexpected element '{urn:wildfly:pm-package:1.0.1}package-spec'");
     }
 
     @Test
     public void readMissingPackageName() throws Exception {
         validator.validateAndParse("xml/package/package-1.0-missing-package-name.xml",
-                "cvc-complex-type.4: Attribute 'name' must appear on element 'package'.",
+                "cvc-complex-type.4: Attribute 'name' must appear on element 'package-spec'.",
                 "Message: Missing required attributes  name");
     }
 
     @Test
     public void readMissingDependencyName() throws Exception {
         validator.validateAndParse("xml/package/package-1.0-missing-dependency-name.xml",
-                "cvc-complex-type.4: Attribute 'name' must appear on element 'dependency'.",
+                "cvc-complex-type.4: Attribute 'name' must appear on element 'package'.",
                 "Message: Missing required attributes  name");
     }
 
     @Test
     public void readEmptyDependencies() throws Exception {
         validator.validateAndParse("xml/package/package-1.0-empty-dependencies.xml",
-                "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":dependency}' is expected.",
-                "There must be at least one dependency under dependencies");
+                "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":package}' is expected.",
+                "There must be at least one package under dependencies");
     }
 
     @Test

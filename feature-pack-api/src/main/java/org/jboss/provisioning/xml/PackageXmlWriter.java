@@ -47,7 +47,7 @@ public class PackageXmlWriter extends BaseXmlWriter {
 
     public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
 
-        final ElementNode pkg = addElement(null, Element.PACKAGE);
+        final ElementNode pkg = addElement(null, Element.PACKAGE_SPEC);
         addAttribute(pkg, Attribute.NAME, pkgDescr.getName());
 
         if(pkgDescr.hasLocalDependencies()) {
@@ -55,7 +55,7 @@ public class PackageXmlWriter extends BaseXmlWriter {
             final PackageDependencyDescription[] pkgDeps = pkgDescr.getLocalDependencies().getDescriptions().toArray(new PackageDependencyDescription[0]);
             Arrays.sort(pkgDeps);
             for(PackageDependencyDescription depDescr : pkgDeps) {
-                writeDependency(deps, depDescr);
+                writePackageDependency(deps, depDescr);
             }
         }
 
@@ -69,8 +69,8 @@ public class PackageXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private static void writeDependency(ElementNode deps, PackageDependencyDescription depDescr) {
-        final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
+    private static void writePackageDependency(ElementNode deps, PackageDependencyDescription depDescr) {
+        final ElementNode depElement = addElement(deps, Element.PACKAGE);
         addAttribute(depElement, Attribute.NAME, depDescr.getName());
         if(depDescr.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);

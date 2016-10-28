@@ -17,10 +17,10 @@
     limitations under the License.
 
 -->
-<package xmlns="urn:wildfly:pm-package:1.0" name="package1">
+<package-spec xmlns="urn:wildfly:pm-package:1.0" name="package1">
   <dependencies>
-    <dependency name="dep1" />
-    <dependency name="dep2" optional="false"/>
-    <dependency name="dep3" optional="true"/>
+    <package name="dep1" />
+    <package name="dep2" optional="false"/>
+    <package name="dep3" optional="true"/>
   </dependencies>
-</package>
+</package-spec>
