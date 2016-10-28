@@ -39,6 +39,7 @@ public class ProvisionedFeaturePackDescription {
         protected boolean includeDefault;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
+        protected FeaturePackDescription fpDescr;
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -49,28 +50,29 @@ public class ProvisionedFeaturePackDescription {
             this.includeDefault = includeDefault;
         }
 
-        protected Builder(ProvisionedFeaturePackDescription descr) {
-            this.gav = descr.getGav();
-            includeDefault = descr.includeDefault;
+        protected Builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
+            this.gav = provisionedDescr.getGav();
+            this.fpDescr = fpDescr;
+            includeDefault = provisionedDescr.includeDefault;
 
-            switch(descr.excludedPackages.size()) {
+            switch(provisionedDescr.excludedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    excludedPackages = Collections.singleton(descr.excludedPackages.iterator().next());
+                    excludedPackages = Collections.singleton(provisionedDescr.excludedPackages.iterator().next());
                     break;
                 default:
-                    excludedPackages = new HashSet<String>(descr.excludedPackages);
+                    excludedPackages = new HashSet<String>(provisionedDescr.excludedPackages);
             }
 
-            switch(descr.includedPackages.size()) {
+            switch(provisionedDescr.includedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    includedPackages = Collections.singleton(descr.includedPackages.iterator().next());
+                    includedPackages = Collections.singleton(provisionedDescr.includedPackages.iterator().next());
                     break;
                 default:
-                    includedPackages = new HashSet<String>(descr.includedPackages);
+                    includedPackages = new HashSet<String>(provisionedDescr.includedPackages);
             }
         }
 
@@ -272,36 +274,35 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public ProvisionedFeaturePackDescription buildNormalized(FeaturePackDescription descr) {
-            if(includeDefault) {
-                if(!includedPackages.isEmpty() && descr.hasDefaultPackages()) {
-                    for(String name : descr.getDefaultPackageNames()) {
-                        if(includedPackages.contains(name)) {
-                            removeFromIncluded(name);
+        public ProvisionedFeaturePackDescription build() {
+            if(fpDescr != null) {
+                // remove redundant explicit excludes/includes
+                if(includeDefault) {
+                    if(!includedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
+                        for(String name : fpDescr.getDefaultPackageNames()) {
+                            if(includedPackages.contains(name)) {
+                                removeFromIncluded(name);
+                            }
                         }
                     }
-                }
-            } else {
-                if(!excludedPackages.isEmpty() && descr.hasDefaultPackages()) {
-                    for(String name : descr.getDefaultPackageNames()) {
-                        if(excludedPackages.contains(name)) {
-                            removeFromExcluded(name);
+                } else {
+                    if(!excludedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
+                        for(String name : fpDescr.getDefaultPackageNames()) {
+                            if(excludedPackages.contains(name)) {
+                                removeFromExcluded(name);
+                            }
                         }
                     }
                 }
             }
-            return build();
-        }
-
-        public ProvisionedFeaturePackDescription build() {
             return new ProvisionedFeaturePackDescription(gav, includeDefault,
                     Collections.unmodifiableSet(excludedPackages),
                     Collections.unmodifiableSet(includedPackages));
         }
     }
 
-    public static Builder builder(ProvisionedFeaturePackDescription descr) {
-        return new Builder(descr);
+    public static Builder builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
+        return new Builder(fpDescr, provisionedDescr);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav) {

@@ -84,14 +84,13 @@ class ProvisioningTask {
             }
 
             for (ProvisionedFeaturePackDescription provisionedFp : installationDescr.getFeaturePacks()) {
-                fpBuilders = exclude(provisionedFp, fpBuilders);
+                fpBuilders = enforce(layoutBuilder.getFeaturePack(provisionedFp.getGav().toGa()), provisionedFp, fpBuilders);
             }
 
             final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
             final ProvisionedInstallationDescription.Builder installBuilder = ProvisionedInstallationDescription.builder();
             for(Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> entry : fpBuilders.entrySet()) {
-                final FeaturePackDescription fpDescr = layoutDescr.getFeaturePack(entry.getKey().toGa());
-                installBuilder.addFeaturePack(entry.getValue().buildNormalized(fpDescr));
+                installBuilder.addFeaturePack(entry.getValue().build());
             }
 
             if (Files.exists(installationHome)) {
@@ -169,18 +168,19 @@ class ProvisioningTask {
         }
 
         if(exclude) {
-            fpBuilders = exclude(provisionedFp, fpBuilders);
+            fpBuilders = enforce(fpDescr, provisionedFp, fpBuilders);
         }
         return fpBuilders;
     }
 
-    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> exclude(
+    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> enforce(
+            FeaturePackDescription fpDescr,
             ProvisionedFeaturePackDescription provisionedFp,
             Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders) throws ProvisioningDescriptionException {
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         switch(fpBuilders.size()) {
             case 0:
-                fpBuilders = Collections.singletonMap(fpGav, ProvisionedFeaturePackDescription.builder(provisionedFp));
+                fpBuilders = Collections.singletonMap(fpGav, ProvisionedFeaturePackDescription.builder(fpDescr, provisionedFp));
                 break;
             case 1:
                 if(fpBuilders.containsKey(fpGav)) {
@@ -192,7 +192,7 @@ class ProvisioningTask {
                 if(fpBuilders.containsKey(fpGav)) {
                     fpBuilders.get(fpGav).exclude(provisionedFp);
                 } else {
-                    fpBuilders.put(fpGav, ProvisionedFeaturePackDescription.builder(provisionedFp));
+                    fpBuilders.put(fpGav, ProvisionedFeaturePackDescription.builder(fpDescr, provisionedFp));
                 }
         }
         return fpBuilders;
