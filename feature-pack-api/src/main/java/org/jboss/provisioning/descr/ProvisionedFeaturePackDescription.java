@@ -309,8 +309,8 @@ public class ProvisionedFeaturePackDescription {
         return new Builder(gav);
     }
 
-    public static Builder builder(ArtifactCoords.Gav gav, boolean includeDefault) {
-        return new Builder(gav, includeDefault);
+    public static Builder builder(ArtifactCoords.Gav gav, boolean inheritPackageSet) {
+        return new Builder(gav, inheritPackageSet);
     }
 
     public static ProvisionedFeaturePackDescription forGav(ArtifactCoords.Gav gav) {

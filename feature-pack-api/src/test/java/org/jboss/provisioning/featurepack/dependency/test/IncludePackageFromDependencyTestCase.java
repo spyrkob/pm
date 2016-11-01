@@ -118,8 +118,7 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
                                 .excludePackage("p1")
                                 .includePackage("p2")
                                 .build());
-        if(!includeDependencies) {
-        } else {
+        if(includeDependencies) {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
