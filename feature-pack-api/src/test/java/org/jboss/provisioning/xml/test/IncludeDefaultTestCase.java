@@ -38,7 +38,7 @@ public class IncludeDefaultTestCase {
     @Test
     public void testMain() throws Exception {
         ProvisionedInstallationDescription found = validator
-                .validateAndParse("xml/provisioning/include-default.xml", null, null);
+                .validateAndParse("xml/provisioning/packages-inherit.xml", null, null);
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription
                         .forGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")))

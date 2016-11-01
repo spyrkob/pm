@@ -103,7 +103,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
 
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
-        INCLUDE_DEFAULT("include-default"),
+        INHERIT("inherit"),
         NAME("name"),
         VERSION("version"),
 
@@ -244,8 +244,8 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case INCLUDE_DEFAULT:
-                    builder.setIncludeDefaultPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                case INHERIT:
+                    builder.setInheritPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);

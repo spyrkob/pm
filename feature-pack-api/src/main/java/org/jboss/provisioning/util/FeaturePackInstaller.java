@@ -59,7 +59,7 @@ public class FeaturePackInstaller {
         installedPackages = new HashSet<String>();
         provisionedFp = provisionedDescr;
 
-        if(provisionedFp.isIncludeDefault()) {
+        if(provisionedFp.isInheritPackages()) {
             for (String name : featurePack.getDefaultPackageNames()) {
                 if (canBeInstalled(name, true)) {
                     install(featurePack.getPackage(name));

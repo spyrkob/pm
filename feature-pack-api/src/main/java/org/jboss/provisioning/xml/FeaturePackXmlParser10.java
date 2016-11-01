@@ -108,7 +108,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         GROUP_ID("groupId"),
         CLASSIFIER("classifier"),
         EXTENSION("extension"),
-        INCLUDE_DEFAULT("include-default"),
+        INHERIT("inherit"),
         VERSION("version"),
         NAME("name"),
         // default unknown attribute
@@ -306,8 +306,8 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case INCLUDE_DEFAULT:
-                    builder.setIncludeDefaultPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                case INHERIT:
+                    builder.setInheritPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);

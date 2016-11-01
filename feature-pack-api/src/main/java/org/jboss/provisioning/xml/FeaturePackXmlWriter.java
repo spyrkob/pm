@@ -116,9 +116,9 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         }
 
         ElementNode packages = null;
-        if (!target.isIncludeDefault()) {
+        if (!target.isInheritPackages()) {
             packages = addElement(depElement, Element.PACKAGES);
-            addAttribute(packages, Attribute.INCLUDE_DEFAULT, "false");
+            addAttribute(packages, Attribute.INHERIT, "false");
         }
         if (target.hasExcludedPackages()) {
             if (packages == null) {

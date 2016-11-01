@@ -90,7 +90,7 @@ public class ProvisioningXmlExcludesIncludesTestCase {
         ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
-                        .setIncludeDefaultPackages(false)
+                        .setInheritPackages(false)
                         .includePackage("p1")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePackDescription

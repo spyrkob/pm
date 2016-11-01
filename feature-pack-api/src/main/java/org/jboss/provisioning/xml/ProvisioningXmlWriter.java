@@ -69,9 +69,9 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
         }
 
         ElementNode packages = null;
-        if (!featurePack.isIncludeDefault()) {
+        if (!featurePack.isInheritPackages()) {
             packages = addElement(fp, Element.PACKAGES);
-            addAttribute(packages, Attribute.INCLUDE_DEFAULT, "false");
+            addAttribute(packages, Attribute.INHERIT, "false");
         }
         if (featurePack.hasExcludedPackages()) {
             if (packages == null) {

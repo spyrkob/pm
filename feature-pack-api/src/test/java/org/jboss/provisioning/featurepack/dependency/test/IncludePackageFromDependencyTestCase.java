@@ -119,14 +119,6 @@ public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBas
                                 .includePackage("p2")
                                 .build());
         if(!includeDependencies) {
-//            builder
-//                .addFeaturePack(
-//                        ProvisionedFeaturePackDescription
-//                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-//                                .excludePackage("a")
-//                                .excludePackage("d")
-//                                .includePackage("c")
-//                                .build());
         } else {
             builder
                 .addFeaturePack(

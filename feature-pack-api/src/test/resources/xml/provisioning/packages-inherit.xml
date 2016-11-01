@@ -19,13 +19,13 @@
 -->
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
   <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="0.0.1">
-    <packages include-default="true"/>
+    <packages inherit="true"/>
   </feature-pack>
   <feature-pack groupId="org.jboss.group1" artifactId="fp2" version="0.0.2">
     <packages/>
   </feature-pack>
   <feature-pack groupId="org.jboss.group2" artifactId="fp3" version="0.0.3" />
   <feature-pack groupId="org.jboss.group2" artifactId="fp4" version="0.0.3">
-    <packages include-default="false"/>
+    <packages inherit="false"/>
   </feature-pack>
 </installation>

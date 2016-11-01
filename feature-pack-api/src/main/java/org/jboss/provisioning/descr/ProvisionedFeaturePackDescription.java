@@ -36,7 +36,7 @@ public class ProvisionedFeaturePackDescription {
     public static class Builder {
 
         protected final ArtifactCoords.Gav gav;
-        protected boolean includeDefault;
+        protected boolean inheritPackages;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
         protected FeaturePackDescription fpDescr;
@@ -47,13 +47,13 @@ public class ProvisionedFeaturePackDescription {
 
         protected Builder(ArtifactCoords.Gav gav, boolean includeDefault) {
             this.gav = gav;
-            this.includeDefault = includeDefault;
+            this.inheritPackages = includeDefault;
         }
 
         protected Builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
             this.gav = provisionedDescr.getGav();
             this.fpDescr = fpDescr;
-            includeDefault = provisionedDescr.includeDefault;
+            inheritPackages = provisionedDescr.inheritPackages;
 
             switch(provisionedDescr.excludedPackages.size()) {
                 case 0:
@@ -76,8 +76,8 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public Builder setIncludeDefaultPackages(boolean includeDefault) {
-            this.includeDefault = includeDefault;
+        public Builder setInheritPackages(boolean inheritSelectedPackages) {
+            this.inheritPackages = inheritSelectedPackages;
             return this;
         }
 
@@ -155,7 +155,7 @@ public class ProvisionedFeaturePackDescription {
         public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
-            if(includeDefault == other.includeDefault) {
+            if(inheritPackages == other.inheritPackages) {
                 // this.includes + other.includes
                 // this.excludes - other.includes
                 // common excludes stay
@@ -186,7 +186,7 @@ public class ProvisionedFeaturePackDescription {
                         excludedPackages = Collections.emptySet();
                     }
                 }
-            } else if (includeDefault) {
+            } else if (inheritPackages) {
                 //this.excludes - other.includes
                 if(other.hasIncludedPackages()) {
                     for(String name : other.includedPackages) {
@@ -202,7 +202,7 @@ public class ProvisionedFeaturePackDescription {
                         removeFromExcluded(name);
                     }
                 }
-                includeDefault = true;
+                inheritPackages = true;
             }
             return this;
         }
@@ -210,7 +210,7 @@ public class ProvisionedFeaturePackDescription {
         public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
-            if(other.includeDefault) {
+            if(other.inheritPackages) {
                 // this.include - other.exclude
                 // this.include + other.include
 
@@ -225,7 +225,7 @@ public class ProvisionedFeaturePackDescription {
                     }
                 }
 
-                if(includeDefault) {
+                if(inheritPackages) {
                     // this.exclude - other.include
                     // this.exclude + other.exclude
                     if(!excludedPackages.isEmpty() && other.hasIncludedPackages()) {
@@ -241,7 +241,7 @@ public class ProvisionedFeaturePackDescription {
                 } else {
                     // this.includeDefault = other.includeDefault
                     // this.exclude = other.exclude
-                    this.includeDefault = other.includeDefault;
+                    this.inheritPackages = other.inheritPackages;
                     this.excludedPackages = Collections.emptySet();
                     for(String name : other.excludedPackages) {
                         excludePackage(name);
@@ -251,7 +251,7 @@ public class ProvisionedFeaturePackDescription {
                 // this.includeDefault = other.includeDefault
                 // this.include = other.include
                 // this.exclude = other.exclude
-                this.includeDefault = other.includeDefault;
+                this.inheritPackages = other.inheritPackages;
                 this.includedPackages = Collections.emptySet();
                 if (!other.includedPackages.isEmpty()) {
                     for (String name : other.includedPackages) {
@@ -277,7 +277,7 @@ public class ProvisionedFeaturePackDescription {
         public ProvisionedFeaturePackDescription build() {
             if(fpDescr != null) {
                 // remove redundant explicit excludes/includes
-                if(includeDefault) {
+                if(inheritPackages) {
                     if(!includedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
                         for(String name : fpDescr.getDefaultPackageNames()) {
                             if(includedPackages.contains(name)) {
@@ -295,7 +295,7 @@ public class ProvisionedFeaturePackDescription {
                     }
                 }
             }
-            return new ProvisionedFeaturePackDescription(gav, includeDefault,
+            return new ProvisionedFeaturePackDescription(gav, inheritPackages,
                     Collections.unmodifiableSet(excludedPackages),
                     Collections.unmodifiableSet(includedPackages));
         }
@@ -318,15 +318,15 @@ public class ProvisionedFeaturePackDescription {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final boolean includeDefault;
+    private final boolean inheritPackages;
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, boolean includeDefault,
+    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, boolean inheritPackages,
             Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
-        this.includeDefault = includeDefault;
+        this.inheritPackages = inheritPackages;
         this.excludedPackages = excludedPackages;
         this.includedPackages = includedPackages;
     }
@@ -335,8 +335,8 @@ public class ProvisionedFeaturePackDescription {
         return gav;
     }
 
-    public boolean isIncludeDefault() {
-        return includeDefault;
+    public boolean isInheritPackages() {
+        return inheritPackages;
     }
 
     public boolean hasIncludedPackages() {
@@ -404,7 +404,7 @@ public class ProvisionedFeaturePackDescription {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
-        if(!includeDefault) {
+        if(!inheritPackages) {
             builder.append(" includeDefault=false");
         }
         if(!excludedPackages.isEmpty()) {

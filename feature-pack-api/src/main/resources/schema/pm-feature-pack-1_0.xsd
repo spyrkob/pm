@@ -72,11 +72,11 @@
       <xs:element name="exclude" type="packageType" />
       <xs:element name="include" type="packageType" />
     </xs:choice>
-    <xs:attribute name="include-default" type="xs:boolean" use="optional" default="true">
+    <xs:attribute name="inherit" type="xs:boolean" use="optional" default="true">
       <xs:annotation>
         <xs:documentation>
-          Whether the default packages should be by default included into
-          the list of the packages to be installed.
+          Whether to inherit the package set from the dependency as the default
+          package set.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
