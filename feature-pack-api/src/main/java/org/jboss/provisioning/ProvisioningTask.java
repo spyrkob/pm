@@ -78,12 +78,12 @@ class ProvisioningTask {
             final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
 
             Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders = Collections.emptyMap();
-            for (ProvisionedFeaturePackDescription provisionedFp : installationDescr.getFeaturePacks()) {
-                final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> newBuilders = layoutFeaturePack(provisionedFp, layoutBuilder, false);
-                fpBuilders = include(fpBuilders, newBuilders);
+            final Collection<ProvisionedFeaturePackDescription> provisionedFps = installationDescr.getFeaturePacks();
+            for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
+                final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> newBuilders = layoutFeaturePack(provisionedFp, layoutBuilder);
+                fpBuilders = merge(fpBuilders, newBuilders);
             }
-
-            for (ProvisionedFeaturePackDescription provisionedFp : installationDescr.getFeaturePacks()) {
+            for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
                 fpBuilders = enforce(layoutBuilder.getFeaturePack(provisionedFp.getGav().toGa()), provisionedFp, fpBuilders);
             }
 
@@ -110,8 +110,7 @@ class ProvisioningTask {
 
     private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> layoutFeaturePack(
             ProvisionedFeaturePackDescription provisionedFp,
-            FeaturePackLayoutDescription.Builder layoutBuilder,
-            boolean exclude) throws ProvisioningException {
+            FeaturePackLayoutDescription.Builder layoutBuilder) throws ProvisioningException {
 
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         final FeaturePackDescription fpDescr;
@@ -163,12 +162,11 @@ class ProvisioningTask {
         Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders = Collections.emptyMap();
         if(fpDescr.hasDependencies()) {
             for(FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
-                fpBuilders = include(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder, true));
+                fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder));
             }
-        }
-
-        if(exclude) {
-            fpBuilders = enforce(fpDescr, provisionedFp, fpBuilders);
+            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+                fpBuilders = enforce(layoutBuilder.getFeaturePack(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
+            }
         }
         return fpBuilders;
     }
@@ -184,13 +182,13 @@ class ProvisioningTask {
                 break;
             case 1:
                 if(fpBuilders.containsKey(fpGav)) {
-                    fpBuilders.get(fpGav).exclude(provisionedFp);
+                    fpBuilders.get(fpGav).enforce(provisionedFp);
                     break;
                 }
                 fpBuilders = new LinkedHashMap<>(fpBuilders);
             default:
                 if(fpBuilders.containsKey(fpGav)) {
-                    fpBuilders.get(fpGav).exclude(provisionedFp);
+                    fpBuilders.get(fpGav).enforce(provisionedFp);
                 } else {
                     fpBuilders.put(fpGav, ProvisionedFeaturePackDescription.builder(fpDescr, provisionedFp));
                 }
@@ -198,7 +196,7 @@ class ProvisioningTask {
         return fpBuilders;
     }
 
-    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> include(
+    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> merge(
             Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> allBuilders,
             final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> depBuilders)
             throws ProvisioningDescriptionException {
@@ -209,7 +207,7 @@ class ProvisioningTask {
             case 1:
                 final ArtifactCoords.Gav provisionedGav = allBuilders.keySet().iterator().next();
                 if(depBuilders.size() == 1 && depBuilders.containsKey(provisionedGav)) {
-                    allBuilders.get(provisionedGav).include(depBuilders.get(provisionedGav).build());
+                    allBuilders.get(provisionedGav).merge(depBuilders.get(provisionedGav).build());
                     break;
                 }
                 allBuilders = new LinkedHashMap<>(allBuilders);
@@ -219,7 +217,7 @@ class ProvisioningTask {
                     if(fpBuilder == null) {
                         allBuilders.put(depEntry.getKey(), depEntry.getValue());
                     } else {
-                        fpBuilder.include(depEntry.getValue().build());
+                        fpBuilder.merge(depEntry.getValue().build());
                     }
                 }
         }

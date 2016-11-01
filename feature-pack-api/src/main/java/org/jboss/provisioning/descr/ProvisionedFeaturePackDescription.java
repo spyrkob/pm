@@ -152,7 +152,7 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public Builder include(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
             if(includeDefault == other.includeDefault) {
@@ -207,7 +207,7 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        public Builder exclude(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
             if(other.includeDefault) {
