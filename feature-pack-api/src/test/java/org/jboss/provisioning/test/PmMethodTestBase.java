@@ -50,9 +50,9 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
         setupRepo(getRepoManager());
         final ProvisioningManager pm = getPm();
         testPmMethod(pm);
-        testProvisionedContent();
         testUserSpec(pm);
         testFullSpec(pm);
+        testProvisionedContent();
     }
 
     protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {

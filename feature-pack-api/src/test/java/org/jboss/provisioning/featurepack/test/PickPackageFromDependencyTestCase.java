@@ -103,9 +103,7 @@ public class PickPackageFromDependencyTestCase extends PmProvisionSpecTestBase {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("a")
-                                .excludePackage("d")
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                                 .includePackage("b")
                                 .includePackage("c")
                                 .build());

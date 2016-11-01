@@ -195,7 +195,7 @@ public class ProvisionedFeaturePackDescription {
                 }
             } else {
                 // this.excludes = other.excludes - this.includes
-                // includeDefault = true
+                // inheritPackages = true
                 excludedPackages = new HashSet<>(other.excludedPackages);
                 if(!includedPackages.isEmpty()) {
                     for(String name : includedPackages) {
@@ -210,10 +210,10 @@ public class ProvisionedFeaturePackDescription {
         public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
-            if(other.inheritPackages) {
+            if(other.inheritPackages) { // the other inherits packages from this builder
+
                 // this.include - other.exclude
                 // this.include + other.include
-
                 if(!includedPackages.isEmpty() && other.hasExcludedPackages()) {
                     for(String name : other.excludedPackages) {
                         removeFromIncluded(name);
@@ -225,29 +225,20 @@ public class ProvisionedFeaturePackDescription {
                     }
                 }
 
-                if(inheritPackages) {
-                    // this.exclude - other.include
-                    // this.exclude + other.exclude
-                    if(!excludedPackages.isEmpty() && other.hasIncludedPackages()) {
-                        for(String name : other.includedPackages) {
-                            removeFromExcluded(name);
-                        }
+                // this.exclude - other.include
+                // this.exclude + other.exclude
+                if (!excludedPackages.isEmpty() && other.hasIncludedPackages()) {
+                    for (String name : other.includedPackages) {
+                        removeFromExcluded(name);
                     }
-                    if(other.hasExcludedPackages()) {
-                        for(String name : other.excludedPackages) {
-                            excludePackage(name);
-                        }
-                    }
-                } else {
-                    // this.includeDefault = other.includeDefault
-                    // this.exclude = other.exclude
-                    this.inheritPackages = other.inheritPackages;
-                    this.excludedPackages = Collections.emptySet();
-                    for(String name : other.excludedPackages) {
+                }
+                if (other.hasExcludedPackages()) {
+                    for (String name : other.excludedPackages) {
                         excludePackage(name);
                     }
                 }
-            } else {
+            } else { // the other ignores this builder selection
+
                 // this.includeDefault = other.includeDefault
                 // this.include = other.include
                 // this.exclude = other.exclude
@@ -370,6 +361,7 @@ public class ProvisionedFeaturePackDescription {
         result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
+        result = prime * result + (inheritPackages ? 1231 : 1237);
         return result;
     }
 
@@ -397,6 +389,8 @@ public class ProvisionedFeaturePackDescription {
                 return false;
         } else if (!includedPackages.equals(other.includedPackages))
             return false;
+        if (inheritPackages != other.inheritPackages)
+            return false;
         return true;
     }
 
@@ -405,7 +399,7 @@ public class ProvisionedFeaturePackDescription {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
         if(!inheritPackages) {
-            builder.append(" includeDefault=false");
+            builder.append(" inheritPackages=false");
         }
         if(!excludedPackages.isEmpty()) {
             final String[] array = excludedPackages.toArray(new String[excludedPackages.size()]);

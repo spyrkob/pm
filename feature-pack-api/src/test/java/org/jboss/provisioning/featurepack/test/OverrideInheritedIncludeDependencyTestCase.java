@@ -101,7 +101,7 @@ public class OverrideInheritedIncludeDependencyTestCase extends PmProvisionSpecT
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                                 .includePackage("c")
                                 .build());
         }
