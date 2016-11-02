@@ -29,26 +29,28 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeDefaultIncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeExcludeMixTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-            .newPackage("a", true)
-                .addDependency("b")
-                .writeContent("a.txt", "a")
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
+            .newPackage("p1", true)
+                .writeContent("p1.txt", "p1")
                 .getFeaturePack()
-            .newPackage("b")
-                .addDependency("c")
-                .writeContent("b/b.txt", "b")
+            .newPackage("p2", true)
+                .addDependency("p21")
+                .writeContent("p2.txt", "p2")
                 .getFeaturePack()
-            .newPackage("c", true)
-                .addDependency("d")
-                .writeContent("c/c/c.txt", "c")
+            .newPackage("p21")
+                .writeContent("p21.txt", "p21")
                 .getFeaturePack()
-            .newPackage("d")
-                .writeContent("c/d.txt", "d")
+            .newPackage("p3")
+                .addDependency("p31", true)
+                .writeContent("p3.txt", "p3")
+                .getFeaturePack()
+            .newPackage("p31")
+                .writeContent("p31.txt", "p31")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -57,18 +59,20 @@ public class ExcludeDefaultIncludeNonDefaultPackageTestCase extends PmInstallFea
     @Override
     protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
-                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .excludePackage("a")
-                .includePackage("b")
+                .builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
+                .excludePackage("p1")
+                .excludePackage("p2")
+                .includePackage("p21")
+                .includePackage("p3")
+                .excludePackage("p31")
                 .build();
     }
 
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("b/b.txt", "b")
-                .addFile("c/c/c.txt", "c")
-                .addFile("c/d.txt", "d")
+                .addFile("p21.txt", "p21")
+                .addFile("p3.txt", "p3")
                 .build();
     }
 }

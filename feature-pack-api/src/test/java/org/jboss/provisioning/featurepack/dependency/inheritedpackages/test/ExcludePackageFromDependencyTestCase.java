@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.inheritedpackages.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;

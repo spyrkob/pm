@@ -21,7 +21,20 @@
 
   <dependencies>
     <dependency groupId="org.jboss.dep.group1" artifactId="dep1" version="0.0.1"  />
-    <dependency groupId="org.jboss.dep.group2" artifactId="dep2" version="0.0.2"  />
+    <dependency groupId="org.jboss.dep.group2" artifactId="dep2" version="0.0.2">
+      <packages>
+        <exclude name="excluded-package1"/>
+        <exclude name="excluded-package2"/>
+        <include name="included-package1"/>
+        <include name="included-package2"/>
+      </packages>
+    </dependency>
+    <dependency groupId="org.jboss.dep.group2" artifactId="dep3" version="0.0.2">
+      <packages inherit="false">
+        <exclude name="excluded-package1"/>
+        <include name="included-package1"/>
+      </packages>
+    </dependency>
   </dependencies>
 
   <default-packages>

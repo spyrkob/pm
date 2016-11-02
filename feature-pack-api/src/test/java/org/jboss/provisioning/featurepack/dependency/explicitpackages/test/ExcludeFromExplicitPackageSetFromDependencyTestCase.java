@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.explicitpackages.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -31,7 +31,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSpecTestBase {
+public class ExcludeFromExplicitPackageSetFromDependencyTestCase extends PmProvisionSpecTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -43,7 +43,7 @@ public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                         .build())
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
-                        .includePackage("p4")
+                        .excludePackage("p31")
                         .build())
                 .newPackage("p1", true)
                     .addDependency("p2")
@@ -57,6 +57,7 @@ public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
                         .includePackage("p2")
+                        .includePackage("p3")
                         .build())
                 .newPackage("p1", true)
                     .addDependency("p2", true)
@@ -92,7 +93,7 @@ public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                     .writeContent("fp3/p21.txt", "p21")
                     .getFeaturePack()
                 .newPackage("p3")
-                    .addDependency("p31")
+                    .addDependency("p31", true)
                     .writeContent("fp3/p3.txt", "p3")
                     .getFeaturePack()
                 .newPackage("p31")
@@ -127,7 +128,8 @@ public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
                                 .includePackage("p2")
-                                .includePackage("p4")
+                                .includePackage("p3")
+                                .excludePackage("p31")
                                 .build());
         }
 
@@ -142,7 +144,7 @@ public class AugmentPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                 .addFile("fp2/p21.txt", "p21")
                 .addFile("fp3/p2.txt", "p2")
                 .addFile("fp3/p21.txt", "p21")
-                .addFile("fp3/p4.txt", "p4")
+                .addFile("fp3/p3.txt", "p3")
                 .build();
     }
 }

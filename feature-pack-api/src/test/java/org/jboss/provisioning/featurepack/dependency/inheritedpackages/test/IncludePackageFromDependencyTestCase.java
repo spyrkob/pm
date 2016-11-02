@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.dependency.test;
+package org.jboss.provisioning.featurepack.dependency.inheritedpackages.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -31,19 +31,20 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class CutDownPickedPackageSetFromDependencyTestCase extends PmProvisionSpecTestBase {
+public class IncludePackageFromDependencyTestCase extends PmProvisionSpecTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .excludePackage("p1")
                         .includePackage("p2")
                         .build())
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
-                        .excludePackage("p31")
+                        .includePackage("p3")
                         .build())
                 .newPackage("p1", true)
                     .addDependency("p2")
@@ -55,9 +56,9 @@ public class CutDownPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                 .addDependency(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
+                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                        .excludePackage("p1")
                         .includePackage("p2")
-                        .includePackage("p3")
                         .build())
                 .newPackage("p1", true)
                     .addDependency("p2", true)
@@ -93,7 +94,7 @@ public class CutDownPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                     .writeContent("fp3/p21.txt", "p21")
                     .getFeaturePack()
                 .newPackage("p3")
-                    .addDependency("p31", true)
+                    .addDependency("p31")
                     .writeContent("fp3/p3.txt", "p3")
                     .getFeaturePack()
                 .newPackage("p31")
@@ -121,15 +122,16 @@ public class CutDownPickedPackageSetFromDependencyTestCase extends PmProvisionSp
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                                .excludePackage("p1")
                                 .includePackage("p2")
                                 .build())
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"), false)
+                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "3.0.0.Final"))
+                                .excludePackage("p1")
                                 .includePackage("p2")
                                 .includePackage("p3")
-                                .excludePackage("p31")
                                 .build());
         }
 
@@ -145,6 +147,7 @@ public class CutDownPickedPackageSetFromDependencyTestCase extends PmProvisionSp
                 .addFile("fp3/p2.txt", "p2")
                 .addFile("fp3/p21.txt", "p21")
                 .addFile("fp3/p3.txt", "p3")
+                .addFile("fp3/p31.txt", "p31")
                 .build();
     }
 }
