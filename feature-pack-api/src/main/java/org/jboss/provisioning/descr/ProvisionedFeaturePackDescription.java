@@ -210,6 +210,11 @@ public class ProvisionedFeaturePackDescription {
         public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
+            this.inheritPackages = other.inheritPackages;
+            this.includedPackages = other.includedPackages;
+            this.excludedPackages = other.excludedPackages;
+
+/*  in case the original package set is the one inherited from the dependency
             if(other.inheritPackages) { // the other inherits packages from this builder
 
                 // this.include - other.exclude
@@ -256,7 +261,7 @@ public class ProvisionedFeaturePackDescription {
                     }
                 }
             }
-            return this;
+*/            return this;
         }
 
         private void assertSameGav(ProvisionedFeaturePackDescription other) {
