@@ -115,10 +115,20 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackDescription expected = FeaturePackDescription.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
                 .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
-                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2")))
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2"))
+                        .excludePackage("excluded-package1")
+                        .excludePackage("excluded-package2")
+                        .includePackage("included-package1")
+                        .includePackage("included-package2")
+                        .build())
+                .addDependency(ProvisionedFeaturePackDescription
+                        .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep3", "0.0.2"), false)
+                        .excludePackage("excluded-package1")
+                        .includePackage("included-package1")
+                        .build())
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
-                //.addTopPackage(PackageDescription.builder().setName("package2").build())
                 .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group1", "plugin1", "0.1.0"))
                 .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group2", "plugin2", "0.2.0"))
                 .build();

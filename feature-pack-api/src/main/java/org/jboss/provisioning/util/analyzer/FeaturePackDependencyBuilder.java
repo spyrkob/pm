@@ -119,7 +119,7 @@ public class FeaturePackDependencyBuilder {
         if(childDiff.hasConflictingPackages()) {
             final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getConflictingPackageNames()) {
-                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackageDescription(name));
+                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackage(name));
                 fpBuilder.addPackage(pkgDescr);
                 if(childDescr.isDefaultPackage(name)) {
                     fpBuilder.markAsDefaultPackage(name);
@@ -145,9 +145,9 @@ public class FeaturePackDependencyBuilder {
     private PackageDescription updatePackageDependencies(
             final FeaturePackSpecificDescription childDiff,
             PackageDescription pkgDescr) throws ProvisioningDescriptionException {
-        if(pkgDescr.hasDependencies()) {
+        if(pkgDescr.hasLocalDependencies()) {
             final PackageDescription.Builder pkgBuilder = PackageDescription.builder(pkgDescr.getName());
-            for(PackageDependencyDescription dep : pkgDescr.getDependencies()) {
+            for(PackageDependencyDescription dep : pkgDescr.getLocalDependencies().getDescriptions()) {
                 if(!childDiff.isMatchedPackage(dep.getName())) {
                     pkgBuilder.addDependency(dep.getName(), dep.isOptional());
                 }

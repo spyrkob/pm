@@ -42,7 +42,7 @@ public class IncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestB
     protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
         builder.addFeaturePack(ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .includePackage("b")
+                .includePackage("d")
                 .build());
     }
 
@@ -52,7 +52,7 @@ public class IncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestB
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                        .includePackage("b")
+                        .includePackage("d")
                         .build())
                 .newPackage("main", true)
                     .addDependency("d")
@@ -73,6 +73,13 @@ public class IncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestB
                 .newPackage("c")
                     .writeContent("f/p2/c.txt", "c")
                     .getFeaturePack()
+                .newPackage("d")
+                    .addDependency("e")
+                    .writeContent("f/p2/d.txt", "d")
+                    .getFeaturePack()
+                .newPackage("e")
+                    .writeContent("f/p2/e.txt", "e")
+                    .getFeaturePack()
                 .getInstaller()
             .install();
     }
@@ -84,6 +91,8 @@ public class IncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTestB
                 .addFile("f/p1/d.txt", "d")
                 .addFile("f/p2/a.txt", "a")
                 .addFile("f/p2/b.txt", "b")
+                .addFile("f/p2/d.txt", "d")
+                .addFile("f/p2/e.txt", "e")
                 .build();
     }
 

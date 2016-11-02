@@ -200,7 +200,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 processModule(ctx, packagesDir, modulePkg);
             }
         } else {
-            for (PackageDependencyDescription modulePkg : modulesDescr.getDependencies()) {
+            for (PackageDependencyDescription modulePkg : modulesDescr.getLocalDependencies().getDescriptions()) {
                 if (fpDescr != null && fpDescr.isExcluded(modulePkg.getName())) {
                     continue;
                 }

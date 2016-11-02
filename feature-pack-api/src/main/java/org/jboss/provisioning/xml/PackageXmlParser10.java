@@ -43,8 +43,8 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     public enum Element implements XmlNameProvider {
 
         DEPENDENCIES("dependencies"),
-        DEPENDENCY("dependency"),
         PACKAGE("package"),
+        PACKAGE_SPEC("package-spec"),
 
         // default unknown element
         UNKNOWN(null);
@@ -165,15 +165,15 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.DEPENDENCY);
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.PACKAGE);
                     }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case DEPENDENCY:
-                            readDependency(reader, pkgBuilder);
+                        case PACKAGE:
+                            readPackageDependency(reader, pkgBuilder);
                             hasChildren = true;
                             break;
                         default:
@@ -189,7 +189,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+    private void readPackageDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
         String name = null;
         boolean optional = false;
         final int count = reader.getAttributeCount();

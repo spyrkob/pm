@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
@@ -233,16 +234,16 @@ public class FeaturePacksDiff {
 
     private void compareDependencies(final PackageDescription fp1Pkg, final PackageDescription fp2Pkg,
             final PackageSpecificDescription.Builder fp1PkgDiff, final PackageSpecificDescription.Builder fp2PkgDiff) {
-        if(!fp1Pkg.hasDependencies()) {
-            if(fp2Pkg.hasDependencies()) {
-                fp2PkgDiff.addAllDependencies(fp2Pkg.getDependencyNames());
+        if(!fp1Pkg.hasLocalDependencies()) {
+            if(fp2Pkg.hasLocalDependencies()) {
+                fp2PkgDiff.addAllDependencies(fp2Pkg.getLocalDependencies().getPackageNames());
             }
         } else {
-            if(!fp2Pkg.hasDependencies()) {
-                fp1PkgDiff.addAllDependencies(fp1Pkg.getDependencyNames());
+            if(!fp2Pkg.hasLocalDependencies()) {
+                fp1PkgDiff.addAllDependencies(fp1Pkg.getLocalDependencies().getPackageNames());
             } else {
-                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getDependencyNames());
-                for(String dep : fp1Pkg.getDependencyNames()) {
+                final Set<String> fp2Deps = new HashSet<String>(fp2Pkg.getLocalDependencies().getPackageNames());
+                for(String dep : fp1Pkg.getLocalDependencies().getPackageNames()) {
                     if(!fp2Deps.remove(dep)) {
                         fp1PkgDiff.addDependency(dep);
                     }
@@ -257,20 +258,24 @@ public class FeaturePacksDiff {
     private void compareDependencies(final Builder fp1Diff, final Builder fp2Diff) {
         if(!fp1Descr.hasDependencies()) {
             if(fp2Descr.hasDependencies()) {
-                fp2Diff.addAllDependencies(fp2Descr.getDependencies());
+                for(FeaturePackDependencyDescription dep : fp2Descr.getDependencies()) {
+                    fp2Diff.addDependency(dep.getTarget());
+                }
             }
         } else {
             if(!fp2Descr.hasDependencies()) {
-                fp1Diff.addAllDependencies(fp1Descr.getDependencies());
+                for(FeaturePackDependencyDescription dep : fp1Descr.getDependencies()) {
+                    fp1Diff.addDependency(dep.getTarget());
+                }
             } else {
                 final Set<ArtifactCoords.Ga> fp2Deps = new HashSet<>(fp2Descr.getDependencyGaParts());
                 for(ArtifactCoords.Ga gaPart : fp1Descr.getDependencyGaParts()) {
                     if(!fp2Deps.remove(gaPart)) {
-                        fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
+                        fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
                     } else {
-                        final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart);
+                        final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart).getTarget();
                         if(!fp2Dep.getGav().equals(gaPart.toGav())) {
-                            fp1Diff.addDependency(fp1Descr.getDependency(gaPart));
+                            fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
                         } else {
                             fp2Diff.addDependency(fp2Dep);
                         }
@@ -278,7 +283,7 @@ public class FeaturePacksDiff {
                 }
                 if(!fp2Deps.isEmpty()) {
                     for(ArtifactCoords.Ga gaPart : fp2Deps) {
-                        fp2Diff.addDependency(fp2Descr.getDependency(gaPart));
+                        fp2Diff.addDependency(fp2Descr.getDependency(gaPart).getTarget());
                     }
                 }
             }

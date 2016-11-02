@@ -183,7 +183,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         } catch (ProvisioningException e) {
             throw new MojoExecutionException("Failed to load feature-pack config file", e);
         }
-        processFeaturePackDependencies(fpBuilder, build);
+        try {
+            processFeaturePackDependencies(fpBuilder, build);
+        } catch (ProvisioningDescriptionException e) {
+            throw new MojoExecutionException("Failed to process dependencies", e);
+        }
         copyArtifacts(targetResources, build);
 
         final Path srcModulesDir = targetResources.resolve("modules").resolve("system").resolve("layers").resolve("base");
@@ -325,7 +329,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     }
 
     private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
-            throws MojoExecutionException {
+            throws MojoExecutionException, ProvisioningDescriptionException {
         if (!build.getDependencies().isEmpty()) {
             for (ProvisionedFeaturePackDescription dep : build.getDependencies()) {
                 final String depStr = dep.getGav().toString();

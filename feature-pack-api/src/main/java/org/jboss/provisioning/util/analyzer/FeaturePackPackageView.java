@@ -23,10 +23,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.LayoutUtils;
 
@@ -75,16 +75,18 @@ class FeaturePackPackageView {
     private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr,
             Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws ProvisioningDescriptionException {
         if (fpDescr.hasDependencies()) {
-            for (ProvisionedFeaturePackDescription dep : fpDescr.getDependencies()) {
-                final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getGav());
-                resolveFeaturePack(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding), collectedPackages, dep.getExcludedPackages());
+            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+                final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getTarget().getGav());
+                resolveFeaturePack(fpLayoutDir, encoding,
+                        FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding),
+                        collectedPackages, dep.getTarget().getExcludedPackages());
             }
         }
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpDescr.getGav());
         for (String name : fpDescr.getPackageNames()) {
             if (!excludePackages.contains(name)) {
                 //if(Files.exists(LayoutUtils.getPackageContentDir(fpDir, name))) {
-                    collectedPackages.put(name, new ResolvedPackage(name, fpDescr.getGav(), fpDescr.getPackageDescription(name)));
+                    collectedPackages.put(name, new ResolvedPackage(name, fpDescr.getGav(), fpDescr.getPackage(name)));
                 //}
             }
         }

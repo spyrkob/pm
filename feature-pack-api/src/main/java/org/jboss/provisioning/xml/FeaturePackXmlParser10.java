@@ -28,10 +28,10 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -53,6 +53,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         EXCLUDE("exclude"),
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
+        NAME("name"),
         PACKAGES("packages"),
         PACKAGE("package"),
         PROVISIONING_PLUGINS("provisioning-plugins"),
@@ -107,7 +108,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         GROUP_ID("groupId"),
         CLASSIFIER("classifier"),
         EXTENSION("extension"),
-        INCLUDE_DEFAULT("include-default"),
+        INHERIT("inherit"),
         VERSION("version"),
         NAME("name"),
         // default unknown attribute
@@ -159,7 +160,11 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case DEPENDENCIES:
-                            readDependencies(reader, fpBuilder);
+                            try {
+                                readDependencies(reader, fpBuilder);
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse dependencies", e);
+                            }
                             break;
                         case DEFAULT_PACKAGES:
                             readDefaultPackages(reader, fpBuilder);
@@ -209,7 +214,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         return new ArtifactCoords(groupId, artifactId, version, "", extension);
     }
 
-    private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException, ProvisioningDescriptionException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasChildren = false;
         while (reader.hasNext()) {
@@ -240,7 +245,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readDependency(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    private void readDependency(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException, ProvisioningDescriptionException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -266,11 +271,12 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
+        String name = null;
         final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    fpBuilder.addDependency(depBuilder.build());
+                    fpBuilder.addDependency(name, depBuilder.build());
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -278,6 +284,9 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     switch (element) {
                         case PACKAGES:
                             readDependencyPackages(reader, depBuilder);
+                            break;
+                        case NAME:
+                            name = reader.getElementText();
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -291,13 +300,14 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         }
     }
 
-    private void readDependencyPackages(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder) throws XMLStreamException {
+    private void readDependencyPackages(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder)
+            throws XMLStreamException, ProvisioningDescriptionException {
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case INCLUDE_DEFAULT:
-                    builder.setIncludeDefaultPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                case INHERIT:
+                    builder.setInheritPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -313,18 +323,10 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case EXCLUDE:
-                            try {
-                                builder.excludePackage(parseName(reader));
-                            } catch (ProvisioningException e) {
-                                throw new XMLStreamException(e);
-                            }
+                            builder.excludePackage(parseName(reader));
                             break;
                         case INCLUDE:
-                            try {
-                                builder.includePackage(parseName(reader));
-                            } catch (ProvisioningException e) {
-                                throw new XMLStreamException(e);
-                            }
+                            builder.includePackage(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

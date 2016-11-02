@@ -59,17 +59,17 @@ public class FeaturePackInstaller {
         installedPackages = new HashSet<String>();
         provisionedFp = provisionedDescr;
 
-        if(provisionedFp.isIncludeDefault()) {
+        if(provisionedFp.isInheritPackages()) {
             for (String name : featurePack.getDefaultPackageNames()) {
                 if (canBeInstalled(name, true)) {
-                    install(featurePack.getPackageDescription(name));
+                    install(featurePack.getPackage(name));
                 }
             }
         }
         if(provisionedFp.hasIncludedPackages()) {
             for(String name : provisionedDescr.getIncludedPackages()) {
                 if(canBeInstalled(name, false)) {
-                    install(featurePack.getPackageDescription(name));
+                    install(featurePack.getPackage(name));
                 }
             }
         }
@@ -77,10 +77,10 @@ public class FeaturePackInstaller {
 
     private void install(PackageDescription pkg) throws FeaturePackInstallException {
         installedPackages.add(pkg.getName());
-        if(pkg.hasDependencies()) {
-            for(PackageDependencyDescription dep : pkg.getDependencies()) {
+        if(pkg.hasLocalDependencies()) {
+            for(PackageDependencyDescription dep : pkg.getLocalDependencies().getDescriptions()) {
                 if(canBeInstalled(dep.getName(), dep.isOptional())) {
-                    final PackageDescription dependency = featurePack.getPackageDescription(dep.getName());
+                    final PackageDescription dependency = featurePack.getPackage(dep.getName());
                     if(dependency == null) {
                         throw new FeaturePackInstallException(Errors.packageNotFound(dep.getName()));
                     }

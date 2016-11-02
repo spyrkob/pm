@@ -65,7 +65,7 @@ public class ProvisionedFeaturePackWithDependenciesDescription extends Provision
         }
 
         public ProvisionedFeaturePackWithDependenciesDescription build() {
-            return new ProvisionedFeaturePackWithDependenciesDescription(gav, includeDefault,
+            return new ProvisionedFeaturePackWithDependenciesDescription(gav, inheritPackages,
                     Collections.unmodifiableSet(excludedPackages), Collections.unmodifiableSet(includedPackages),
                     Collections.unmodifiableMap(dependencies));
         }

@@ -21,7 +21,7 @@
   attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:wildfly:pm-package:1.0"
   version="2.0">
 
-  <xs:element name="package" type="packageType" />
+  <xs:element name="package-spec" type="packageType" />
 
   <xs:complexType name="packageType">
     <xs:annotation>
@@ -48,11 +48,11 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
-      <xs:element name="dependency" type="dependencyType" />
+      <xs:element name="package" type="packageDependencyType" />
     </xs:choice>
   </xs:complexType>
 
-  <xs:complexType name="dependencyType">
+  <xs:complexType name="packageDependencyType">
     <xs:annotation>
       <xs:documentation>
         Describes a package dependency on another package.
@@ -63,7 +63,7 @@
         excluded package, the provisioning process will terminate with an error.
         If a user installs a package which has an optional dependency on an
         excluded package, the provisioning process will proceed installing
-        the package the user chose to install. 
+        the package the user chose to install.
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="name" type="xs:string" use="required">

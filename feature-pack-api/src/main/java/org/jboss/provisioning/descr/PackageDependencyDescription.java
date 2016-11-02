@@ -18,15 +18,29 @@
 package org.jboss.provisioning.descr;
 
 /**
+ * Describes dependency on a single package.
  *
  * @author Alexey Loubyansky
  */
 public class PackageDependencyDescription implements Comparable<PackageDependencyDescription> {
 
+    /**
+     * Creates a required dependency on the provided package name.
+     *
+     * @param name  target package name
+     * @return  dependency description
+     */
     public static PackageDependencyDescription create(String name) {
         return new PackageDependencyDescription(name, false);
     }
 
+    /**
+     * Creates a dependency on the provided package name.
+     *
+     * @param name  target package name
+     * @param optional  whether the dependency should be optional
+     * @return  dependency description
+     */
     public static PackageDependencyDescription create(String name, boolean optional) {
         return new PackageDependencyDescription(name, optional);
     }
