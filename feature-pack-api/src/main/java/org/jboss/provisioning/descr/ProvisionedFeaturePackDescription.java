@@ -154,7 +154,7 @@ public class ProvisionedFeaturePackDescription {
 
         public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
-
+System.out.println("merge " + build() + " " + other);
             if(inheritPackages == other.inheritPackages) {
                 // this.includes + other.includes
                 // this.excludes - other.includes
@@ -162,7 +162,7 @@ public class ProvisionedFeaturePackDescription {
                 if(other.hasIncludedPackages()) {
                     for(String name : other.includedPackages) {
                         includePackage(name);
-                        removeFromIncluded(name);
+                        removeFromExcluded(name);
                     }
                 }
                 if (!excludedPackages.isEmpty()) {
@@ -191,6 +191,7 @@ public class ProvisionedFeaturePackDescription {
                 if(other.hasIncludedPackages()) {
                     for(String name : other.includedPackages) {
                         removeFromExcluded(name);
+                        includePackage(name);
                     }
                 }
             } else {
@@ -214,54 +215,7 @@ public class ProvisionedFeaturePackDescription {
             this.includedPackages = other.includedPackages;
             this.excludedPackages = other.excludedPackages;
 
-/*  in case the original package set is the one inherited from the dependency
-            if(other.inheritPackages) { // the other inherits packages from this builder
-
-                // this.include - other.exclude
-                // this.include + other.include
-                if(!includedPackages.isEmpty() && other.hasExcludedPackages()) {
-                    for(String name : other.excludedPackages) {
-                        removeFromIncluded(name);
-                    }
-                }
-                if(other.hasIncludedPackages()) {
-                    for(String name : other.includedPackages) {
-                        includePackage(name);
-                    }
-                }
-
-                // this.exclude - other.include
-                // this.exclude + other.exclude
-                if (!excludedPackages.isEmpty() && other.hasIncludedPackages()) {
-                    for (String name : other.includedPackages) {
-                        removeFromExcluded(name);
-                    }
-                }
-                if (other.hasExcludedPackages()) {
-                    for (String name : other.excludedPackages) {
-                        excludePackage(name);
-                    }
-                }
-            } else { // the other ignores this builder selection
-
-                // this.includeDefault = other.includeDefault
-                // this.include = other.include
-                // this.exclude = other.exclude
-                this.inheritPackages = other.inheritPackages;
-                this.includedPackages = Collections.emptySet();
-                if (!other.includedPackages.isEmpty()) {
-                    for (String name : other.includedPackages) {
-                        includePackage(name);
-                    }
-                }
-                this.excludedPackages = Collections.emptySet();
-                if (!other.excludedPackages.isEmpty()) {
-                    for (String name : other.excludedPackages) {
-                        excludePackage(name);
-                    }
-                }
-            }
-*/            return this;
+            return this;
         }
 
         private void assertSameGav(ProvisionedFeaturePackDescription other) {
