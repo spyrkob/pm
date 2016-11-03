@@ -35,7 +35,7 @@
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          The name of a package which must be unique inside the feature-pack.
+          The name of the package which must be unique inside the feature-pack.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -49,6 +49,7 @@
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="package" type="packageDependencyType" />
+      <xs:element name="feature-pack" type="featurePackDependencyType"/>
     </xs:choice>
   </xs:complexType>
 
@@ -77,6 +78,45 @@
       <xs:annotation>
         <xs:documentation>
           Indicates whether the dependency is optional or required.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="featurePackDependencyType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes an external package dependency.
+        I.e a dependency on packages the belong to another feature-pack.
+        External dependencies are assumed to be required dependencies.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="1">
+      <xs:element name="package" type="externalPackageDependencyType" />
+    </xs:choice>
+    <xs:attribute name="dependency" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Name assigned to a dependency on the feature-pack (in
+          the feature-pack.xml of the feature-pack this package belongs to)
+          which will be used as a source for external package dependencies
+          specified as children of the element of this type. 
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="externalPackageDependencyType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes a package dependency on a package from another feature-pack.
+        External dependencies are assumed to be required ones.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Name of a package, the package declaring dependency depends on. 
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

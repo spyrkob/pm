@@ -20,6 +20,10 @@
 <package-spec xmlns="urn:wildfly:pm-package:1.0" name="package1">
   <dependencies>
     <package name="dep1" />
+    <feature-pack dependency="fp-dep">
+      <package name="dep1"/>
+      <package name="dep2"/>
+    </feature-pack>
     <package name="dep2" />
   </dependencies>
 </package-spec>

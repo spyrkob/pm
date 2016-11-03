@@ -26,6 +26,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.descr.PackageDependencyDescription;
+import org.jboss.provisioning.descr.PackageDependencyGroupDescription;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
@@ -57,6 +58,13 @@ public class PackageXmlWriter extends BaseXmlWriter {
             for(PackageDependencyDescription depDescr : pkgDeps) {
                 writePackageDependency(deps, depDescr);
             }
+            if(pkgDescr.hasExternalDependencies()) {
+                final String[] names = pkgDescr.getExternalDependencyNames().toArray(new String[0]);
+                Arrays.sort(names);
+                for(String name : names) {
+                    writeFeaturePackDependency(deps, pkgDescr.getExternalDependencies(name));
+                }
+            }
         }
 
         ensureParentDir(outputFile);
@@ -66,6 +74,16 @@ public class PackageXmlWriter extends BaseXmlWriter {
             writer.writeStartDocument();
             pkg.marshall(writer);
             writer.writeEndDocument();
+        }
+    }
+
+    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupDescription depGroupDescr) {
+        final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK);
+        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupDescr.getGroupName());
+        final PackageDependencyDescription[] pkgDeps = depGroupDescr.getDescriptions().toArray(new PackageDependencyDescription[0]);
+        Arrays.sort(pkgDeps);
+        for(PackageDependencyDescription depDescr : pkgDeps) {
+            writePackageDependency(fpElement, depDescr);
         }
     }
 
