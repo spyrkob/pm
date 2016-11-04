@@ -31,7 +31,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBase {
+public class UserChosenPackagesOverrideDependencyChosenPackagesTestCase extends PmProvisionSpecTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -41,40 +41,20 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
                         .includePackage("b")
                         .build())
-                .newPackage("d", true)
-                    .addDependency("e")
-                    .writeContent("f/p1/d.txt", "d")
-                    .getFeaturePack()
-                .newPackage("e")
-                    .writeContent("f/p1/e.txt", "e")
+                .newPackage("p1", true)
+                    .writeContent("fp1/p1.txt", "p1")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .newPackage("a", true)
-                    .addDependency("b", true)
-                    .addDependency("c")
-                    .writeContent("f/p2/a.txt", "a")
+                .newPackage("p1", true)
+                    .addDependency("p2", true)
+                    .writeContent("fp2/p1.txt", "p1")
                     .getFeaturePack()
-                .newPackage("b")
-                    .addDependency("b1")
-                    .writeContent("f/p2/b.txt", "b")
+                .newPackage("p2")
+                    .writeContent("fp2/p2.txt", "p2")
                     .getFeaturePack()
-                .newPackage("b1")
-                    .writeContent("f/p2/b1.txt", "b1")
-                    .getFeaturePack()
-                .newPackage("c")
-                    .addDependency("c1")
-                    .writeContent("f/p2/c.txt", "c")
-                    .getFeaturePack()
-                .newPackage("c1")
-                    .writeContent("f/p2/c1.txt", "c1")
-                    .getFeaturePack()
-                .newPackage("d", true)
-                    .addDependency("d1")
-                    .writeContent("f/p2/d.txt", "d")
-                    .getFeaturePack()
-                .newPackage("d1")
-                    .writeContent("f/p2/d1.txt", "d1")
+                .newPackage("p3", true)
+                    .writeContent("fp2/p3.txt", "p3")
                     .getFeaturePack()
                 .getInstaller()
             .install();
@@ -86,27 +66,20 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
 
         final Builder builder = ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder(
-                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"), false)
-                                .includePackage("e")
-                                .build());
+                        ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
         if(!includeDependencies) {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("a")
-                                .excludePackage("d")
-                                .includePackage("c")
+                                .excludePackage("p1")
                                 .build());
         } else {
             builder
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("a")
-                                .excludePackage("d")
-                                .includePackage("c")
+                                .excludePackage("p1")
                                 .build());
         }
 
@@ -116,9 +89,8 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("f/p1/e.txt", "e")
-                .addFile("f/p2/c.txt", "c")
-                .addFile("f/p2/c1.txt", "c1")
+                .addFile("fp1/p1.txt", "p1")
+                .addFile("fp2/p3.txt", "p3")
                 .build();
     }
 }

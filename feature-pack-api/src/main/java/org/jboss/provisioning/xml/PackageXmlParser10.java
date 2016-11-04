@@ -43,6 +43,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     public enum Element implements XmlNameProvider {
 
         DEPENDENCIES("dependencies"),
+        FEATURE_PACK("feature-pack"),
         PACKAGE("package"),
         PACKAGE_SPEC("package-spec"),
 
@@ -92,6 +93,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
 
     enum Attribute implements XmlNameProvider {
 
+        DEPENDENCY("dependency"),
         NAME("name"),
         OPTIONAL("optional"),
         // default unknown attribute
@@ -173,7 +175,11 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            readPackageDependency(reader, pkgBuilder);
+                            readLocalDependency(reader, pkgBuilder);
+                            hasChildren = true;
+                            break;
+                        case FEATURE_PACK:
+                            readFeaturePackDependency(reader, pkgBuilder);
                             hasChildren = true;
                             break;
                         default:
@@ -189,7 +195,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackageDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+    private void readLocalDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
         String name = null;
         boolean optional = false;
         final int count = reader.getAttributeCount();
@@ -212,6 +218,72 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
         }
 
         pkgBuilder.addDependency(name, optional);
+    }
+
+    private void readFeaturePackDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+        String name = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case DEPENDENCY:
+                    name = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+        }
+
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            readExternalDependency(reader, pkgBuilder, name);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readExternalDependency(XMLExtendedStreamReader reader, Builder pkgBuilder, String fpDependency) throws XMLStreamException {
+        String name = null;
+        boolean optional = false;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case OPTIONAL:
+                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        ParsingUtils.parseNoContent(reader);
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+
+        pkgBuilder.addDependency(fpDependency, name, optional);
     }
 
     private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
