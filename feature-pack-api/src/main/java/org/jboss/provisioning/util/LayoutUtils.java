@@ -54,7 +54,7 @@ public class LayoutUtils {
         return dir;
     }
 
-    public static Path getPackageContentDir(Path fpDir, String packageName) throws ProvisioningDescriptionException {
+    public static Path getPackageContentDir(Path fpDir, String packageName) {
         return fpDir.resolve(Constants.PACKAGES).resolve(packageName).resolve(Constants.CONTENT);
     }
 }

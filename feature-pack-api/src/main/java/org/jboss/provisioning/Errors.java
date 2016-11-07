@@ -19,6 +19,8 @@ package org.jboss.provisioning;
 import java.nio.file.Path;
 import java.util.Collection;
 
+import org.jboss.provisioning.ArtifactCoords.Gav;
+
 /**
  *
  * @author Alexey Loubyansky
@@ -105,8 +107,8 @@ public interface Errors {
         return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
     }
 
-    static String requiredPackageExcluded(String packageName) {
-        return "Required package " + packageName + " was excluded";
+    static String requiredPackageExcluded(String packageName, ArtifactCoords.Gav fpGav) {
+        return "Required package " + packageName + " was excluded from " + fpGav;
     }
 
     static String packageExcludeInclude(String packageName) {
@@ -115,5 +117,9 @@ public interface Errors {
 
     static String duplicateDependencyName(String name) {
         return "Dependency with name " + name + " already exists";
+    }
+
+    static String unknownDependencyName(Gav gav, String depName) {
+        return "Dependency " + depName + " not found in " + gav + " feature-pack description";
     }
 }

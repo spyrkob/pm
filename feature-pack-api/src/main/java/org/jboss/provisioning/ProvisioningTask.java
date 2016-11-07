@@ -38,12 +38,14 @@ import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
+import org.jboss.provisioning.util.ProvisionedInstallationResolver;
 import org.jboss.provisioning.util.ZipUtils;
 
 /**
@@ -98,7 +100,9 @@ class ProvisioningTask {
             }
             mkdirs(installationHome);
 
-            FeaturePackLayoutInstaller.install(installBuilder.build(), installationDescr, layoutDescr, layoutDir, installationHome);
+            final ProvisionedInstallationDescription installConfig = installBuilder.build();
+            final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(installConfig, layoutDescr, layoutDir);
+            FeaturePackLayoutInstaller.install(installConfig, installationDescr, layoutDescr, layoutDir, installationHome, resolvedInstall);
 
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(installationDescr, layoutDescr);

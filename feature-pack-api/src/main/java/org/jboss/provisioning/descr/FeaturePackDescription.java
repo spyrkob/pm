@@ -43,7 +43,7 @@ public class FeaturePackDescription {
 
         private ArtifactCoords.Gav gav;
         private Map<ArtifactCoords.Ga, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
-        private Set<String> dependencyNames = Collections.emptySet();
+        private Map<String, FeaturePackDependencyDescription> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
         private Map<String, PackageDescription> packages = Collections.emptyMap();
         private List<ArtifactCoords.Gav> provisioningPlugins = Collections.emptyList();
@@ -105,15 +105,15 @@ public class FeaturePackDescription {
 
         public Builder addDependency(FeaturePackDependencyDescription dependency) throws ProvisioningDescriptionException {
             if(dependency.getName() != null) {
-                if(dependencyNames.isEmpty()) {
-                    dependencyNames = Collections.singleton(dependency.getName());
-                } else if(dependencyNames.contains(dependency.getName())){
+                if(dependencyByName.isEmpty()) {
+                    dependencyByName = Collections.singletonMap(dependency.getName(), dependency);
+                } else if(dependencyByName.containsKey(dependency.getName())){
                     throw new ProvisioningDescriptionException(Errors.duplicateDependencyName(dependency.getName()));
                 } else {
-                    if(dependencyNames.size() == 1) {
-                        dependencyNames = new HashSet<>(dependencyNames);
+                    if(dependencyByName.size() == 1) {
+                        dependencyByName = new HashMap<>(dependencyByName);
                     }
-                    dependencyNames.add(dependency.getName());
+                    dependencyByName.put(dependency.getName(), dependency);
                 }
             }
             switch(dependencies.size()) {
@@ -190,6 +190,7 @@ public class FeaturePackDescription {
 
     private final ArtifactCoords.Gav gav;
     private final Map<ArtifactCoords.Ga, FeaturePackDependencyDescription> dependencies;
+    private final Map<String, FeaturePackDependencyDescription> dependencyByName;
     private final Set<String> defPackages;
     private final Map<String, PackageDescription> packages;
     private final List<ArtifactCoords.Gav> provisioningPlugins;
@@ -199,6 +200,7 @@ public class FeaturePackDescription {
         this.defPackages = Collections.unmodifiableSet(builder.defPackages);
         this.packages = Collections.unmodifiableMap(builder.packages);
         this.dependencies = Collections.unmodifiableMap(builder.dependencies);
+        this.dependencyByName = Collections.unmodifiableMap(builder.dependencyByName);
         this.provisioningPlugins = Collections.unmodifiableList(builder.provisioningPlugins);
     }
 
@@ -252,6 +254,10 @@ public class FeaturePackDescription {
 
     public FeaturePackDependencyDescription getDependency(ArtifactCoords.Ga gaPart) {
         return dependencies.get(gaPart);
+    }
+
+    public FeaturePackDependencyDescription getDependency(String name) {
+        return dependencyByName.get(name);
     }
 
     public boolean hasProvisioningPlugins() {

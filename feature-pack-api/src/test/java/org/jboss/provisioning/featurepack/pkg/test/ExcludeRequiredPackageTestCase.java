@@ -26,7 +26,6 @@ import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.junit.Assert;
 
 /**
@@ -72,7 +71,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
         try {
             super.testPmMethod(pm);
             Assert.fail("Required package dependency was ignored");
-        } catch(FeaturePackInstallException e) {
+        } catch(ProvisioningDescriptionException e) {
             // expected
         }
     }
