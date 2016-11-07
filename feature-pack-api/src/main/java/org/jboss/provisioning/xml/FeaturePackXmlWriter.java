@@ -43,7 +43,11 @@ import org.jboss.provisioning.xml.util.TextNode;
  */
 public class FeaturePackXmlWriter extends BaseXmlWriter {
 
-    public static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
+    private static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
+
+    public static FeaturePackXmlWriter getInstance() {
+        return INSTANCE;
+    }
 
     private FeaturePackXmlWriter() {
     }

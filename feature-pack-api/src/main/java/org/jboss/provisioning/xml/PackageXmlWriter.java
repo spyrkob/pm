@@ -41,7 +41,11 @@ public class PackageXmlWriter extends BaseXmlWriter {
 
     private static final String TRUE = "true";
 
-    public static final PackageXmlWriter INSTANCE = new PackageXmlWriter();
+    private static final PackageXmlWriter INSTANCE = new PackageXmlWriter();
+
+    public static PackageXmlWriter getInstance() {
+        return INSTANCE;
+    }
 
     private PackageXmlWriter() {
     }

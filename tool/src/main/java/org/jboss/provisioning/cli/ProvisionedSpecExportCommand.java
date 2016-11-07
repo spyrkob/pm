@@ -50,7 +50,7 @@ public class ProvisionedSpecExportCommand extends ProvisioningCommand {
         final Path targetFile = Paths.get(specResource.getAbsolutePath());
 
         try {
-            getManager(session).exportProvisionedState(targetFile);
+            getManager(session).exportProvisioningConfig(targetFile);
         } catch (ProvisioningException | IOException e) {
             throw new CommandExecutionException("Failed to export provisioned state", e);
         }

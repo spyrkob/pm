@@ -308,7 +308,7 @@ public class FpCommand extends PmSessionCommand {
             try (StringWriter writer = new StringWriter()) {
                 final FeaturePackSpec newChildSpec = FeaturePackDependencyBuilder.describeParentAsDependency(
                         workDir, encodingArg, ArtifactCoords.newGav(gav1), ArtifactCoords.newGav(gav2));
-                FeaturePackXmlWriter.INSTANCE.write(newChildSpec, writer);
+                FeaturePackXmlWriter.getInstance().write(newChildSpec, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to describe parent as a dependency", e);

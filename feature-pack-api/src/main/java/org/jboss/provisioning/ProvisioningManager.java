@@ -148,7 +148,7 @@ public class ProvisioningManager {
         } else if(provisioningConfig.containsFeaturePack(fpConfig.getGav().toGa())) {
             final FeaturePackConfig presentConfig = provisioningConfig.getFeaturePack(fpConfig.getGav().toGa());
             if(presentConfig.getGav().equals(fpConfig.getGav())) {
-                throw new ProvisioningException("Feature-pack " + fpConfig.getGav() + " is already installed");
+                throw new ProvisioningException(Errors.featurePackAlreadyInstalled(fpConfig.getGav()));
             } else {
                 throw new ProvisioningException(Errors.featurePackVersionConflict(fpConfig.getGav(), presentConfig.getGav()));
             }
@@ -206,22 +206,22 @@ public class ProvisioningManager {
     /**
      * Provision the state described in the specified XML file.
      *
-     * @param provisionedStateXml  file describing the desired provisioned state
+     * @param provisioningXml  file describing the desired provisioned state
      * @throws ProvisioningException  in case provisioning fails
      */
-    public void provision(Path provisionedStateXml) throws ProvisioningException {
-        provision(readProvisioningConfig(provisionedStateXml));
+    public void provision(Path provisioningXml) throws ProvisioningException {
+        provision(readProvisioningConfig(provisioningXml));
     }
 
     /**
-     * Exports the current provisioned state of the installation to
+     * Exports the current provisioning configuration of the installation to
      * the specified file.
      *
-     * @param location  file to which the current installation state should be exported
-     * @throws ProvisioningException  in case the provisioning state record is missing
+     * @param location  file to which the current installation configuration should be exported
+     * @throws ProvisioningException  in case the provisioning configuration record is missing
      * @throws IOException  in case writing to the specified file fails
      */
-    public void exportProvisionedState(Path location) throws ProvisioningException, IOException {
+    public void exportProvisioningConfig(Path location) throws ProvisioningException, IOException {
         final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
         if(!Files.exists(userProvisionedXml)) {
             throw new ProvisioningException("Provisioned state record is missing for " + installationHome);

@@ -77,7 +77,7 @@ public class FeaturePackDependencyBuilder {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(featurePackXml));
         }
         try {
-            FeaturePackXmlWriter.INSTANCE.write(newSpec, featurePackXml);
+            FeaturePackXmlWriter.getInstance().write(newSpec, featurePackXml);
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(featurePackXml), e);
         }
@@ -160,7 +160,7 @@ public class FeaturePackDependencyBuilder {
                 }
                 try {
                     IoUtils.recursiveDelete(packageXml);
-                    PackageXmlWriter.INSTANCE.write(pkgSpec, packageXml);
+                    PackageXmlWriter.getInstance().write(pkgSpec, packageXml);
                 } catch (XMLStreamException | IOException e) {
                     throw new ProvisioningDescriptionException(Errors.writeXml(packageXml));
                 }

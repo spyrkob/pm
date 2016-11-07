@@ -108,7 +108,7 @@ public class FeaturePackLayoutInstaller {
     private static void writeState(ProvisioningConfig provisioningConfig, final Path provisionedXml)
             throws FeaturePackInstallException {
         try {
-            ProvisioningXmlWriter.INSTANCE.write(provisioningConfig, provisionedXml);
+            ProvisioningXmlWriter.getInstance().write(provisioningConfig, provisionedXml);
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
         }
@@ -117,7 +117,7 @@ public class FeaturePackLayoutInstaller {
     private static void recordFeaturePack(FeaturePackSpec fpSpec, final Path installDir)
             throws FeaturePackInstallException {
         try {
-            FeaturePackXmlWriter.INSTANCE.write(fpSpec, PathsUtils.getFeaturePackXml(installDir, fpSpec.getGav()));
+            FeaturePackXmlWriter.getInstance().write(fpSpec, PathsUtils.getFeaturePackXml(installDir, fpSpec.getGav()));
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(installDir), e);
         }

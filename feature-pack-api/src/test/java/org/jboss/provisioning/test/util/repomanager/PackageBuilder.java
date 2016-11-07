@@ -109,7 +109,7 @@ public class PackageBuilder {
             if(!tasks.isEmpty()) {
                 tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
             }
-            PackageXmlWriter.INSTANCE.write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.getInstance().write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new IllegalStateException(e);
         }
