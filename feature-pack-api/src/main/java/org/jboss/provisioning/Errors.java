@@ -122,4 +122,8 @@ public interface Errors {
     static String unknownDependencyName(Gav gav, String depName) {
         return "Dependency " + depName + " not found in " + gav + " feature-pack description";
     }
+
+    static String featurePackAlreadyInstalled(Gav gav) {
+        return "Feature-pack " + gav + " is already installed";
+    }
 }

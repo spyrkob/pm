@@ -137,7 +137,7 @@ public class FeaturePackBuilder {
                 }
             }
             fpSpec = fpBuilder.build();
-            final FeaturePackXmlWriter writer = FeaturePackXmlWriter.INSTANCE;
+            final FeaturePackXmlWriter writer = FeaturePackXmlWriter.getInstance();
             writer.write(fpSpec, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
 
             final Path fpZip;

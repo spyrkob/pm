@@ -136,7 +136,7 @@ public class WfFeaturePackLayoutBuilder {
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {
-            FeaturePackXmlWriter.INSTANCE.write(fpBuilder.build(), fpDir.resolve(Constants.FEATURE_PACK_XML));
+            FeaturePackXmlWriter.getInstance().write(fpBuilder.build(), fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML).toAbsolutePath()), e);
         }
@@ -206,7 +206,7 @@ public class WfFeaturePackLayoutBuilder {
             mkdirs(pkgDir);
         }
         try {
-            PackageXmlWriter.INSTANCE.write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.getInstance().write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath()), e);
         }

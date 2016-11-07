@@ -215,7 +215,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final FeaturePackSpec fpSpec;
         try {
             fpSpec = fpBuilder.addDefaultPackage(modulesPkg).build();
-            FeaturePackXmlWriter.INSTANCE.write(fpSpec, fpDir.resolve(Constants.FEATURE_PACK_XML));
+            FeaturePackXmlWriter.getInstance().write(fpSpec, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
@@ -403,7 +403,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
                 final PackageSpec pkgSpec = PackageSpec.builder(packageName).build();
                 try {
-                    PackageXmlWriter.INSTANCE.write(pkgSpec, packageDir.resolve(Constants.PACKAGE_XML));
+                    PackageXmlWriter.getInstance().write(pkgSpec, packageDir.resolve(Constants.PACKAGE_XML));
                 } catch (XMLStreamException e) {
                     throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
                 }
@@ -483,7 +483,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     private static void writeXml(PackageSpec pkgSpec, Path dir) throws MojoExecutionException {
         try {
             Files.createDirectories(dir);
-            PackageXmlWriter.INSTANCE.write(pkgSpec, dir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.getInstance().write(pkgSpec, dir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeXml(dir.resolve(Constants.PACKAGE_XML)), e);
         }

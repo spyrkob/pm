@@ -37,7 +37,11 @@ import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
  */
 public class ProvisioningXmlWriter extends BaseXmlWriter {
 
-    public static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
+    private static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
+
+    public static ProvisioningXmlWriter getInstance() {
+        return INSTANCE;
+    }
 
     private ProvisioningXmlWriter() {
     }

@@ -16,16 +16,21 @@
  */
 package org.jboss.provisioning.config;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
  * The configuration of the installation to be provisioned.
@@ -86,6 +91,15 @@ public class ProvisioningConfig {
 
         public ProvisioningConfig build() {
             return new ProvisioningConfig(Collections.unmodifiableMap(featurePacks));
+        }
+
+        public void exportToXml(Path location) throws IOException {
+            final ProvisioningConfig config = build();
+            try {
+                ProvisioningXmlWriter.getInstance().write(config, location);
+            } catch (XMLStreamException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
