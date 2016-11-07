@@ -64,14 +64,6 @@ public class FeaturePackXmlParserTestCase  {
                 "Message: Missing required attributes  name");
     }
 
-//
-//    @Test
-//    public void readMissingDependencyName() throws Exception {
-//        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-missing-dependency-name.xml",
-//                "cvc-complex-type.4: Attribute 'name' must appear on element 'dependency'.",
-//                "Message: Missing required attributes  name");
-//    }
-//
     @Test
     public void readEmptyDependencies() throws Exception {
         validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-dependencies.xml",
@@ -93,19 +85,30 @@ public class FeaturePackXmlParserTestCase  {
                 "There must be at least one artifact under provisioning-plugins");
     }
 
-    //
-//    @Test
-//    public void readMissingDependencies() throws Exception {
-//        final PackageDescription parsedPkg = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-missing-dependencies.xml", null, null);
-//        final PackageDescription expectedPkg = PackageDescription.builder().setName("feature-pack1").build();
-//        Assert.assertEquals(expectedPkg, parsedPkg);
-//    }
-
     @Test
     public void readEmpty() throws Exception {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0")).build();
+        Assert.assertEquals(expected, found);
+    }
+
+    @Test
+    public void readNamedDependency() throws Exception {
+        FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-named-dependency.xml", null, null);
+        FeaturePackSpec expected = FeaturePackSpec.builder()
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
+                .addDependency("dep1", FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
+                .addDependency("deptwo", FeaturePackConfig
+                        .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2"))
+                        .excludePackage("excluded-package1")
+                        .excludePackage("excluded-package2")
+                        .includePackage("included-package1")
+                        .includePackage("included-package2")
+                        .build())
+                .markAsDefaultPackage("package1")
+                .markAsDefaultPackage("package2")
+                .build();
         Assert.assertEquals(expected, found);
     }
 

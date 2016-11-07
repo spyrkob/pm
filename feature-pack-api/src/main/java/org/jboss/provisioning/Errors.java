@@ -126,4 +126,8 @@ public interface Errors {
     static String featurePackAlreadyInstalled(Gav gav) {
         return "Feature-pack " + gav + " is already installed";
     }
+
+    static String unknownFeaturePackDependencyName(String pkgName, String depName) {
+        return "Package " + pkgName + " references unknown feature-pack dependency " + depName;
+    }
 }

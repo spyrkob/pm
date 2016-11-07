@@ -175,6 +175,13 @@ public class FeaturePackSpec {
                             throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
                         }
                     }
+                    if(pkg.hasExternalDependencies()) {
+                        for(String depName : pkg.getExternalDependencyNames()) {
+                            if(!dependencyByName.containsKey(depName)) {
+                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(pkg.getName(), depName));
+                            }
+                        }
+                    }
                 }
             }
 
