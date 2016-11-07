@@ -18,8 +18,11 @@
 package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -57,7 +60,7 @@ public class IncludeExcludeMixTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
+    protected ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
                 .excludePackage("p1")
@@ -65,6 +68,16 @@ public class IncludeExcludeMixTestCase extends PmInstallFeaturePackTestBase {
                 .includePackage("p21")
                 .includePackage("p3")
                 .excludePackage("p31")
+                .build();
+    }
+
+    @Override
+    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
+        return ResolvedInstallationDescription.builder()
+                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
+                        .addPackage("p21")
+                        .addPackage("p3")
+                        .build())
                 .build();
     }
 

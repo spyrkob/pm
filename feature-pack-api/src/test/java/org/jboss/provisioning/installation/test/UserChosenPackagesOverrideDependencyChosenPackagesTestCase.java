@@ -20,8 +20,9 @@ package org.jboss.provisioning.installation.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -39,7 +40,7 @@ public class UserChosenPackagesOverrideDependencyChosenPackagesTestCase extends 
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .addDependency(ProvisionedFeaturePackDescription
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"), false)
-                        .includePackage("b")
+                        .includePackage("p3")
                         .build())
                 .newPackage("p1", true)
                     .writeContent("fp1/p1.txt", "p1")
@@ -61,29 +62,29 @@ public class UserChosenPackagesOverrideDependencyChosenPackagesTestCase extends 
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies)
+    protected ProvisionedInstallationDescription provisioningConfig()
             throws ProvisioningDescriptionException {
-
-        final Builder builder = ProvisionedInstallationDescription.builder()
+        return ProvisionedInstallationDescription.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
-        if(!includeDependencies) {
-            builder
+                        ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")))
                 .addFeaturePack(
                         ProvisionedFeaturePackDescription
                                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                                 .excludePackage("p1")
-                                .build());
-        } else {
-            builder
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("p1")
-                                .build());
-        }
+                                .build())
+                .build();
+    }
 
-        return builder.build();
+    @Override
+    protected ResolvedInstallationDescription provisionedState() {
+        return ResolvedInstallationDescription.builder()
+                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .addPackage("p3")
+                        .build())
+                .build();
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.util.IoUtils;
@@ -95,11 +96,10 @@ public class FeaturePackRepoTestBase {
 
     protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec)
             throws ProvisioningException {
-        assertSpec(pm, spec, false);
+        Assert.assertEquals(spec, pm.getProvisioningConfig());
     }
 
-    protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec,
-            boolean includeDependencies) throws ProvisioningException {
-        Assert.assertEquals(spec, pm.getCurrentState(includeDependencies));
+    protected void assertSpec(ProvisioningManager pm, ResolvedInstallationDescription spec) throws ProvisioningException {
+        Assert.assertEquals(spec, pm.getProvisionedState());
     }
 }

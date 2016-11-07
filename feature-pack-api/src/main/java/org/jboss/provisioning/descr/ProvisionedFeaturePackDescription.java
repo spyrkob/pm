@@ -154,7 +154,7 @@ public class ProvisionedFeaturePackDescription {
 
         public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
             assertSameGav(other);
-System.out.println("merge " + build() + " " + other);
+
             if(inheritPackages == other.inheritPackages) {
                 // this.includes + other.includes
                 // this.excludes - other.includes

@@ -37,8 +37,8 @@ public class PathsUtils {
         return getProvisionedStateDir(installationDir).resolve(Constants.USER_PROVISIONED_STATE_XML);
     }
 
-    public static Path getLayoutStateXml(Path installationDir) {
-        return getProvisionedStateDir(installationDir).resolve(Constants.LAYOUT_STATE_XML);
+    public static Path getProvisionedStateXml(Path installationDir) {
+        return getProvisionedStateDir(installationDir).resolve(Constants.PROVISIONED_STATE_XML);
     }
 
     public static Path getInstalledFeaturePackXml(Path installationDir, ArtifactCoords.Gav fpGav) {

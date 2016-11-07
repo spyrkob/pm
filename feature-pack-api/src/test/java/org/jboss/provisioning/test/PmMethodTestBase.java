@@ -21,6 +21,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Test;
@@ -33,7 +34,9 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
     protected abstract void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException;
 
-    protected abstract ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningException;
+    protected abstract ProvisionedInstallationDescription provisioningConfig() throws ProvisioningException;
+
+    protected abstract ResolvedInstallationDescription provisionedState() throws ProvisioningException;
 
     protected abstract DirState provisionedHomeDir(DirState.DirBuilder builder);
 
@@ -50,17 +53,17 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
         setupRepo(getRepoManager());
         final ProvisioningManager pm = getPm();
         testPmMethod(pm);
-        testUserSpec(pm);
-        testFullSpec(pm);
+        testInstallationConfig(pm);
+        testProvisionedInstallation(pm);
         testProvisionedContent();
     }
 
-    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
-        assertSpec(pm, provisionedInstallation(true), true);
+    protected void testProvisionedInstallation(final ProvisioningManager pm) throws ProvisioningException {
+        assertSpec(pm, provisionedState());
     }
 
-    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
-        assertSpec(pm, provisionedInstallation(false), false);
+    protected void testInstallationConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertSpec(pm, provisioningConfig());
     }
 
     protected void testProvisionedContent() {

@@ -21,6 +21,8 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 
 /**
  *
@@ -34,17 +36,32 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        final ProvisionedInstallationDescription provisionedState;
-        try {
-            provisionedState = getManager(session).getCurrentState(verbose);
-        } catch (ProvisioningException e) {
-            throw new CommandExecutionException("Failed to read provisioned state", e);
-        }
-        if(provisionedState == null || !provisionedState.hasFeaturePacks()) {
-            return;
-        }
-        for(ProvisionedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
-            session.println(fp.getGav().toString());
+        if(verbose) {
+            final ResolvedInstallationDescription provisionedState;
+            try {
+                provisionedState = getManager(session).getProvisionedState();
+            } catch (ProvisioningException e) {
+                throw new CommandExecutionException("Failed to read provisioned state", e);
+            }
+            if (provisionedState == null || !provisionedState.hasFeaturePacks()) {
+                return;
+            }
+            for (ResolvedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
+                session.println(fp.getGav().toString());
+            }
+        } else {
+            final ProvisionedInstallationDescription provisionedState;
+            try {
+                provisionedState = getManager(session).getProvisioningConfig();
+            } catch (ProvisioningException e) {
+                throw new CommandExecutionException("Failed to read provisioned state", e);
+            }
+            if (provisionedState == null || !provisionedState.hasFeaturePacks()) {
+                return;
+            }
+            for (ProvisionedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
+                session.println(fp.getGav().toString());
+            }
         }
     }
 }

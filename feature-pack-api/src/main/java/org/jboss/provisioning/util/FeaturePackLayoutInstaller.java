@@ -32,6 +32,7 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.ProvisionedInstallationXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
@@ -101,7 +102,12 @@ public class FeaturePackLayoutInstaller {
         }
 
         writeState(userDescr, PathsUtils.getUserProvisionedXml(installDir));
-        writeState(resolvedDescr, PathsUtils.getLayoutStateXml(installDir));
+
+        try {
+            ProvisionedInstallationXmlWriter.getInstance().write(resolvedInstall, PathsUtils.getProvisionedStateXml(installDir));
+        } catch (XMLStreamException | IOException e) {
+            throw new FeaturePackInstallException(Errors.writeXml(PathsUtils.getProvisionedStateXml(installDir)), e);
+        }
     }
 
     private static void writeState(ProvisionedInstallationDescription provisionedDescr, final Path provisionedXml)

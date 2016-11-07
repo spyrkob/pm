@@ -65,6 +65,10 @@ public class ResolvedInstallationDescription {
         this.featurePacks = Collections.unmodifiableMap(builder.featurePacks);
     }
 
+    public boolean hasFeaturePacks() {
+        return !featurePacks.isEmpty();
+    }
+
     public Set<ArtifactCoords.Gav> getFeaturePackGavs() {
         return featurePacks.keySet();
     }

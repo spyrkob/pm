@@ -19,8 +19,6 @@ package org.jboss.provisioning.test;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
  *
@@ -29,10 +27,7 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 public abstract class PmProvisionSpecTestBase extends PmMethodTestBase {
 
     @Override
-    protected abstract ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningDescriptionException;
-
-    @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        pm.provision(provisionedInstallation(false));
+        pm.provision(provisioningConfig());
     }
 }

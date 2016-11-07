@@ -35,6 +35,6 @@ public interface Constants {
     String PROVISIONING_XML = "provisioning.xml";
 
     String PROVISIONED_STATE_DIR = ".pm";
-    String LAYOUT_STATE_XML = "layout-state.xml";
+    String PROVISIONED_STATE_XML = "provisioned.xml";
     String USER_PROVISIONED_STATE_XML = "user-provisioned-state.xml";
 }

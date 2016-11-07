@@ -22,12 +22,15 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
+import org.jboss.provisioning.xml.ProvisionedInstallationXmlParser;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -74,7 +77,6 @@ public class ProvisioningManager {
     private final ArtifactResolver artifactResolver;
 
     private ProvisionedInstallationDescription userProvisionedDescr;
-    private ProvisionedInstallationDescription layoutProvisionedDescr;
 
     private ProvisioningManager(Builder builder) {
         this.encoding = builder.encoding;
@@ -92,35 +94,35 @@ public class ProvisioningManager {
     }
 
     /**
-     * Last recorded provisioned state of the installation or null in case
-     * the installation is not found at the specified installation location.
+     * Last recorded installation provisioning configuration or null in case
+     * the installation is not found at the specified location.
      *
-     * If the user does not request to include the dependencies then the state
-     * returned will reflect the installation specification picked by the user
-     * explicitly without including the feature-packs installed as required
-     * dependencies of the feature-packs the user has chosen explicitly.
-     *
-     * If the user does request to include the dependencies, the state returned
-     * will reflect all the explicitly chosen feature-packs plus the ones
-     * brought in implicitly as dependencies of the explicit ones.
-     *
-     * @param includeDependencies  whether the dependencies of the explicitly
-     *                             selected feature-packs should be included
-     *                             into the result
-     * @return  description of the last recorded provisioned state
+     * @return  the last recorded provisioning installation configuration
      * @throws ProvisioningException  in case any error occurs
      */
-    public ProvisionedInstallationDescription getCurrentState(boolean includeDependencies) throws ProvisioningException {
-        if(includeDependencies) {
-            if(layoutProvisionedDescr == null) {
-                layoutProvisionedDescr = readProvisionedState(PathsUtils.getLayoutStateXml(installationHome));
-            }
-            return layoutProvisionedDescr;
-        }
+    public ProvisionedInstallationDescription getProvisioningConfig() throws ProvisioningException {
         if (userProvisionedDescr == null) {
             userProvisionedDescr = readProvisionedState(PathsUtils.getUserProvisionedXml(installationHome));
         }
         return userProvisionedDescr;
+    }
+
+    /**
+     * Returns the detailed description of the provisioned installation.
+     *
+     * @return  detailed description of the provisioned installation
+     * @throws ProvisioningException  in case there was an error reading the description from the disk
+     */
+    public ResolvedInstallationDescription getProvisionedState() throws ProvisioningException {
+        final Path xml = PathsUtils.getProvisionedStateXml(installationHome);
+        if (!Files.exists(xml)) {
+            return null;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(xml)) {
+            return new ProvisionedInstallationXmlParser().parse(reader);
+        } catch (IOException | XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(xml), e);
+        }
     }
 
     /**
@@ -140,7 +142,7 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the installation fails
      */
     public void install(ProvisionedFeaturePackDescription fpDescr) throws ProvisioningException {
-        final ProvisionedInstallationDescription currentState = this.getCurrentState(false);
+        final ProvisionedInstallationDescription currentState = this.getProvisioningConfig();
         if(currentState == null) {
             provision(ProvisionedInstallationDescription.builder().addFeaturePack(fpDescr).build());
         } else if(currentState.containsFeaturePack(fpDescr.getGav().toGa())) {
@@ -162,7 +164,7 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the uninstallation fails
      */
     public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final ProvisionedInstallationDescription currentState = getCurrentState(false);
+        final ProvisionedInstallationDescription currentState = getProvisioningConfig();
         if(currentState == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else if(!currentState.containsFeaturePack(gav.toGa())) {
@@ -199,7 +201,6 @@ public class ProvisioningManager {
 
         new ProvisioningTask(artifactResolver, installationHome, encoding, installationDescr).execute();
         this.userProvisionedDescr = null;
-        this.layoutProvisionedDescr = null;
     }
 
     /**

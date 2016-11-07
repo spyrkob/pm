@@ -21,7 +21,9 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -59,11 +61,21 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
+    protected ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .excludePackage("b")
                 .build();
+    }
+
+    @Override
+    protected ProvisionedInstallationDescription provisioningConfig() {
+        return null;
+    }
+
+    @Override
+    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
+        return null;
     }
 
     @Override
@@ -79,13 +91,5 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return DirState.rootBuilder().build();
-    }
-
-    @Override
-    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
-    }
-
-    @Override
-    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
     }
 }

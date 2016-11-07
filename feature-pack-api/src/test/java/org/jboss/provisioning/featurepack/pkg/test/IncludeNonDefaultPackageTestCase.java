@@ -18,8 +18,11 @@
 package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
+import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -55,10 +58,22 @@ public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBa
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
+    protected ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException {
         return ProvisionedFeaturePackDescription
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .includePackage("b")
+                .build();
+    }
+
+    @Override
+    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
+        return ResolvedInstallationDescription.builder()
+                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+                        .addPackage("a")
+                        .addPackage("b")
+                        .addPackage("c")
+                        .addPackage("d")
+                        .build())
                 .build();
     }
 
