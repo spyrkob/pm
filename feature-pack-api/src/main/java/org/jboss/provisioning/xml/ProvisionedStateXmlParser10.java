@@ -38,7 +38,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  */
 class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.Builder> {
 
-    public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioned:1.0";
+    public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioned-state:1.0";
 
     enum Element implements XmlNameProvider {
 

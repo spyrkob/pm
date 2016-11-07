@@ -19,6 +19,7 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -109,6 +110,15 @@ public class ProvisionedState {
 
     @Override
     public String toString() {
-        return "[featurePacks=" + featurePacks + "]";
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[state [");
+        if(!featurePacks.isEmpty()) {
+            final Iterator<ProvisionedFeaturePack> i = featurePacks.values().iterator();
+            buf.append(i.next());
+            while(i.hasNext()) {
+                buf.append(", ").append(i.next());
+            }
+        }
+        return buf.append("]]").toString();
     }
 }
