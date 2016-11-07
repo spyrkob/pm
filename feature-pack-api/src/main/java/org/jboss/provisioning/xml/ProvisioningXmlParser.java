@@ -23,14 +23,14 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningXmlParser implements XmlParser<ProvisionedInstallationDescription> {
+public class ProvisioningXmlParser implements XmlParser<ProvisioningConfig> {
 
     private static final QName ROOT_1_0 = new QName(ProvisioningXmlParser10.NAMESPACE_1_0, ProvisioningXmlParser10.Element.INSTALLATION.getLocalName());
 
@@ -56,10 +56,10 @@ public class ProvisioningXmlParser implements XmlParser<ProvisionedInstallationD
     }
 
     @Override
-    public ProvisionedInstallationDescription parse(final Reader input) throws XMLStreamException {
+    public ProvisioningConfig parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final ProvisionedInstallationDescription.Builder builder = ProvisionedInstallationDescription.builder();
+        final ProvisioningConfig.Builder builder = ProvisioningConfig.builder();
         mapper.parseDocument(builder, streamReader);
         return builder.build();
     }

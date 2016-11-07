@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.config;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,14 +24,15 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.descr.FeaturePackDescription;
+import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
- * This class represents user's choice to install a feature-pack
- * with options to exclude undesired packages.
+ * This class represents a feature-pack configuration to be installed.
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedFeaturePackDescription {
+public class FeaturePackConfig {
 
     public static class Builder {
 
@@ -50,29 +51,29 @@ public class ProvisionedFeaturePackDescription {
             this.inheritPackages = includeDefault;
         }
 
-        protected Builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
-            this.gav = provisionedDescr.getGav();
+        protected Builder(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig) {
+            this.gav = fpConfig.getGav();
             this.fpDescr = fpDescr;
-            inheritPackages = provisionedDescr.inheritPackages;
+            inheritPackages = fpConfig.inheritPackages;
 
-            switch(provisionedDescr.excludedPackages.size()) {
+            switch(fpConfig.excludedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    excludedPackages = Collections.singleton(provisionedDescr.excludedPackages.iterator().next());
+                    excludedPackages = Collections.singleton(fpConfig.excludedPackages.iterator().next());
                     break;
                 default:
-                    excludedPackages = new HashSet<String>(provisionedDescr.excludedPackages);
+                    excludedPackages = new HashSet<String>(fpConfig.excludedPackages);
             }
 
-            switch(provisionedDescr.includedPackages.size()) {
+            switch(fpConfig.includedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    includedPackages = Collections.singleton(provisionedDescr.includedPackages.iterator().next());
+                    includedPackages = Collections.singleton(fpConfig.includedPackages.iterator().next());
                     break;
                 default:
-                    includedPackages = new HashSet<String>(provisionedDescr.includedPackages);
+                    includedPackages = new HashSet<String>(fpConfig.includedPackages);
             }
         }
 
@@ -152,7 +153,7 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder merge(FeaturePackConfig other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
             if(inheritPackages == other.inheritPackages) {
@@ -208,7 +209,7 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder enforce(FeaturePackConfig other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
             this.inheritPackages = other.inheritPackages;
@@ -218,13 +219,13 @@ public class ProvisionedFeaturePackDescription {
             return this;
         }
 
-        private void assertSameGav(ProvisionedFeaturePackDescription other) {
+        private void assertSameGav(FeaturePackConfig other) {
             if(!gav.equals(other.gav)) {
                 throw new IllegalArgumentException("Feature pack GAVs don't match " + gav + " vs " + other.gav);
             }
         }
 
-        public ProvisionedFeaturePackDescription build() {
+        public FeaturePackConfig build() {
             if(fpDescr != null) {
                 // remove redundant explicit excludes/includes
                 if(inheritPackages) {
@@ -245,14 +246,14 @@ public class ProvisionedFeaturePackDescription {
                     }
                 }
             }
-            return new ProvisionedFeaturePackDescription(gav, inheritPackages,
+            return new FeaturePackConfig(gav, inheritPackages,
                     Collections.unmodifiableSet(excludedPackages),
                     Collections.unmodifiableSet(includedPackages));
         }
     }
 
-    public static Builder builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
-        return new Builder(fpDescr, provisionedDescr);
+    public static Builder builder(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig) {
+        return new Builder(fpDescr, fpConfig);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav) {
@@ -263,8 +264,8 @@ public class ProvisionedFeaturePackDescription {
         return new Builder(gav, inheritPackageSet);
     }
 
-    public static ProvisionedFeaturePackDescription forGav(ArtifactCoords.Gav gav) {
-        return new ProvisionedFeaturePackDescription(gav, true, Collections.emptySet(), Collections.emptySet());
+    public static FeaturePackConfig forGav(ArtifactCoords.Gav gav) {
+        return new FeaturePackConfig(gav, true, Collections.emptySet(), Collections.emptySet());
     }
 
     private final ArtifactCoords.Gav gav;
@@ -272,7 +273,7 @@ public class ProvisionedFeaturePackDescription {
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, boolean inheritPackages,
+    protected FeaturePackConfig(ArtifactCoords.Gav gav, boolean inheritPackages,
             Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
@@ -332,7 +333,7 @@ public class ProvisionedFeaturePackDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ProvisionedFeaturePackDescription other = (ProvisionedFeaturePackDescription) obj;
+        FeaturePackConfig other = (FeaturePackConfig) obj;
         if (excludedPackages == null) {
             if (other.excludedPackages != null)
                 return false;

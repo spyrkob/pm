@@ -40,9 +40,9 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -165,7 +165,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                             ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString()));
                                 }
                                 collectFeaturePackSubsystemsInput(ctx,
-                                        ctx.getInstallationDescription().getFeaturePack(ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString())),
+                                        ctx.getProvisioningConfig().getFeaturePack(ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString())),
                                         version);
                             }
                         } catch (IOException e) {
@@ -181,7 +181,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, ProvisionedFeaturePackDescription fpDescr, Path fpDir) throws ProvisioningException {
+    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, FeaturePackConfig fpConfig, Path fpDir) throws ProvisioningException {
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         final Path modulesPackageXml = packagesDir.resolve("modules").resolve(Constants.PACKAGE_XML);
         if (!Files.exists(modulesPackageXml)) {
@@ -195,13 +195,13 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             throw new ProvisioningException(Errors.parseXml(modulesPackageXml), e);
         }
 
-        if(fpDescr != null && fpDescr.hasIncludedPackages()) {
-            for (String modulePkg : fpDescr.getIncludedPackages()) {
+        if(fpConfig != null && fpConfig.hasIncludedPackages()) {
+            for (String modulePkg : fpConfig.getIncludedPackages()) {
                 processModule(ctx, packagesDir, modulePkg);
             }
         } else {
             for (PackageDependencyDescription modulePkg : modulesDescr.getLocalDependencies().getDescriptions()) {
-                if (fpDescr != null && fpDescr.isExcluded(modulePkg.getName())) {
+                if (fpConfig != null && fpConfig.isExcluded(modulePkg.getName())) {
                     continue;
                 }
                 processModule(ctx, packagesDir, modulePkg.getName());

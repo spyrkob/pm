@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -40,7 +40,7 @@ public class FeaturePackSpecificDescription {
     static class Builder {
 
         private final ArtifactCoords.Gav gav;
-        private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
+        private Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies = Collections.emptyMap();
         private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
         private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
         private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
@@ -49,18 +49,18 @@ public class FeaturePackSpecificDescription {
             this.gav = gav;
         }
 
-        Builder addAllDependencies(Collection<ProvisionedFeaturePackDescription> deps) {
+        Builder addAllDependencies(Collection<FeaturePackConfig> deps) {
             if(deps.isEmpty()) {
                 return this;
             } else {
-                for(ProvisionedFeaturePackDescription dep: deps) {
+                for(FeaturePackConfig dep: deps) {
                     addDependency(dep);
                 }
             }
             return this;
         }
 
-        Builder addDependency(ProvisionedFeaturePackDescription dep) {
+        Builder addDependency(FeaturePackConfig dep) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonMap(dep.getGav(), dep);
@@ -139,13 +139,13 @@ public class FeaturePackSpecificDescription {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies;
+    private final Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies;
     private final Map<String, PackageDescription> uniquePackages;
     private final Map<String, PackageSpecificDescription> conflictingPackages;
     private final Map<String, PackageDescription> matchedPackages;
 
     FeaturePackSpecificDescription(ArtifactCoords.Gav gav,
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies,
+            Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies,
             Map<String, PackageDescription> uniquePackages,
             Map<String, PackageSpecificDescription> conflictingPackages,
             Map<String, PackageDescription> matchedPackages) {
@@ -168,7 +168,7 @@ public class FeaturePackSpecificDescription {
         return dependencies.keySet();
     }
 
-    public Collection<ProvisionedFeaturePackDescription> getDependencies() {
+    public Collection<FeaturePackConfig> getDependencies() {
         return dependencies.values();
     }
 

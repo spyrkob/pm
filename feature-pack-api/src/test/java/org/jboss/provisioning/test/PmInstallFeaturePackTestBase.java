@@ -19,8 +19,8 @@ package org.jboss.provisioning.test;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
@@ -30,11 +30,11 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
 
     @Override
-    protected ProvisionedInstallationDescription provisioningConfig() throws ProvisioningDescriptionException {
-        return ProvisionedInstallationDescription.builder().addFeaturePack(featurePackConfig()).build();
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
+        return ProvisioningConfig.builder().addFeaturePack(featurePackConfig()).build();
     }
 
-    protected abstract ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException;
+    protected abstract FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException;
 
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {

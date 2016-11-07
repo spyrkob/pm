@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
@@ -38,7 +38,7 @@ public class WildFlyFeaturePackBuild {
 
     public static class Builder {
 
-        private List<ProvisionedFeaturePackDescription> dependencies = Collections.emptyList();
+        private List<FeaturePackConfig> dependencies = Collections.emptyList();
         private ConfigDescription config;
         private List<CopyArtifact> copyArtifacts = Collections.emptyList();
         private List<FilePermission> filePermissions = Collections.emptyList();
@@ -51,13 +51,13 @@ public class WildFlyFeaturePackBuild {
         private Builder() {
         }
 
-        public Builder addDependency(ProvisionedFeaturePackDescription dependency) {
+        public Builder addDependency(FeaturePackConfig dependency) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonList(dependency);
                     break;
                 case 1:
-                    dependencies = new ArrayList<ProvisionedFeaturePackDescription>(dependencies);
+                    dependencies = new ArrayList<FeaturePackConfig>(dependencies);
                 default:
                     dependencies.add(dependency);
             }
@@ -179,7 +179,7 @@ public class WildFlyFeaturePackBuild {
         return new Builder();
     }
 
-    private final List<ProvisionedFeaturePackDescription> dependencies;
+    private final List<FeaturePackConfig> dependencies;
     private final ConfigDescription config;
     private final List<CopyArtifact> copyArtifacts;
     private final List<FilePermission> filePermissions;
@@ -189,7 +189,7 @@ public class WildFlyFeaturePackBuild {
     private final boolean packageSchemas;
     private final Set<String> schemaGroups;
 
-    private WildFlyFeaturePackBuild(List<ProvisionedFeaturePackDescription> dependencies, ConfigDescription config,
+    private WildFlyFeaturePackBuild(List<FeaturePackConfig> dependencies, ConfigDescription config,
             List<CopyArtifact> copyArtifacts, List<FilePermission> filePermissions, List<String> mkDirs,
             List<FileFilter> windowsLineEndFilters, List<FileFilter> unixLineEndFilters,
             boolean packageSchemas, Set<String> schemaGroups) {
@@ -204,7 +204,7 @@ public class WildFlyFeaturePackBuild {
         this.schemaGroups = schemaGroups;
     }
 
-    public List<ProvisionedFeaturePackDescription> getDependencies() {
+    public List<FeaturePackConfig> getDependencies() {
         return dependencies;
     }
 

@@ -20,11 +20,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -41,12 +42,12 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
     private ProvisioningXmlWriter() {
     }
 
-    public void write(ProvisionedInstallationDescription installDescr, Path outputFile) throws XMLStreamException, IOException {
+    public void write(ProvisioningConfig provisioningConfig, Path outputFile) throws XMLStreamException, IOException {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
-        if (installDescr.hasFeaturePacks()) {
-            for(ProvisionedFeaturePackDescription fp : installDescr.getFeaturePacks()) {
+        if (provisioningConfig.hasFeaturePacks()) {
+            for(FeaturePackConfig fp : provisioningConfig.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
             }
@@ -61,7 +62,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private void writeFeaturePack(ElementNode fp, ProvisionedFeaturePackDescription featurePack) {
+    private void writeFeaturePack(ElementNode fp, FeaturePackConfig featurePack) {
         addAttribute(fp, Attribute.GROUP_ID, featurePack.getGav().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {

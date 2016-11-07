@@ -28,9 +28,9 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
@@ -272,7 +272,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
         String name = null;
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
+        final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -300,7 +300,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackDescr
         }
     }
 
-    private void readDependencyPackages(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder)
+    private void readDependencyPackages(XMLExtendedStreamReader reader, FeaturePackConfig.Builder builder)
             throws XMLStreamException, ProvisioningDescriptionException {
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {

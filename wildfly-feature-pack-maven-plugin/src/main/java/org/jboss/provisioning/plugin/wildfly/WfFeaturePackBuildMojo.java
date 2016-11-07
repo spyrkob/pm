@@ -58,8 +58,8 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
 import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
@@ -331,12 +331,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
             throws MojoExecutionException, ProvisioningDescriptionException {
         if (!build.getDependencies().isEmpty()) {
-            for (ProvisionedFeaturePackDescription dep : build.getDependencies()) {
+            for (FeaturePackConfig dep : build.getDependencies()) {
                 final String depStr = dep.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final ArtifactCoords.Gav gav = ArtifactCoords.newGav(gavStr);
-                final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(gav);
+                final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(gav);
                 if (dep.hasExcludedPackages()) {
                     try {
                         depBuilder.excludeAllPackages(dep.getExcludedPackages()).build();

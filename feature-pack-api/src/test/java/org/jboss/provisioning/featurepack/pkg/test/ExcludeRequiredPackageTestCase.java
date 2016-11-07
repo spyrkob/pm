@@ -20,8 +20,8 @@ package org.jboss.provisioning.featurepack.pkg.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -61,15 +61,15 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .excludePackage("b")
                 .build();
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisioningConfig() {
+    protected ProvisioningConfig provisioningConfig() {
         return null;
     }
 

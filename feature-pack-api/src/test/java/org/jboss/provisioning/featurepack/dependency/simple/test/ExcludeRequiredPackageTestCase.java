@@ -20,8 +20,8 @@ package org.jboss.provisioning.featurepack.dependency.simple.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -40,7 +40,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("b")
                         .build())
@@ -65,16 +65,16 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription featurePackConfig()
+    protected FeaturePackConfig featurePackConfig()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
+        return FeaturePackConfig
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .excludePackage("d")
                 .build();
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisioningConfig() {
+    protected ProvisioningConfig provisioningConfig() {
         return null;
     }
 

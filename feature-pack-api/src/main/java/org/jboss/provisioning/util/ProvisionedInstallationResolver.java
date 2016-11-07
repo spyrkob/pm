@@ -24,14 +24,14 @@ import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
 import org.jboss.provisioning.descr.PackageDependencyDescription;
 import org.jboss.provisioning.descr.PackageDependencyGroupDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
@@ -45,11 +45,11 @@ public class ProvisionedInstallationResolver {
     private ResolvedInstallationDescription.Builder installBuilder;
     private Map<ArtifactCoords.Gav, FeaturePackDescription> fpWithExternalDeps = Collections.emptyMap();
 
-    public ResolvedInstallationDescription resolve(ProvisionedInstallationDescription installConfig,
+    public ResolvedInstallationDescription resolve(ProvisioningConfig provisioningConfig,
             FeaturePackLayoutDescription fpLayout, Path layoutDir) throws ProvisioningDescriptionException {
 
         installBuilder = ResolvedInstallationDescription.builder();
-        for(ProvisionedFeaturePackDescription fpConfig : installConfig.getFeaturePacks()) {
+        for(FeaturePackConfig fpConfig : provisioningConfig.getFeaturePacks()) {
             final ArtifactCoords.Gav fpGav = fpConfig.getGav();
             final FeaturePackDescription fpDescr = fpLayout.getFeaturePack(fpGav.toGa());
             if(fpDescr == null) {
@@ -94,7 +94,7 @@ public class ProvisionedInstallationResolver {
         }
     }
 
-    private void resolveFeaturePack(ProvisionedFeaturePackDescription fpConfig, FeaturePackDescription fpDescr, Path fpDir)
+    private void resolveFeaturePack(FeaturePackConfig fpConfig, FeaturePackDescription fpDescr, Path fpDir)
             throws ProvisioningDescriptionException {
 
         final ResolvedFeaturePackDescription.Builder fpBuilder = ResolvedFeaturePackDescription.builder(fpConfig.getGav());
@@ -113,7 +113,7 @@ public class ProvisionedInstallationResolver {
         installBuilder.addFeaturePack(fpBuilder.build());
     }
 
-    private void resolvePackage(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription fpConfig,
+    private void resolvePackage(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig,
             ResolvedFeaturePackDescription.Builder fpBuilder, final String pkgName, boolean optional)
             throws ProvisioningDescriptionException {
         if(fpBuilder.hasPackage(pkgName)) {

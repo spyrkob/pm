@@ -27,10 +27,10 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -103,7 +103,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
     private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {
         final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
-        final ProvisionedFeaturePackDescription target = dependency.getTarget();
+        final FeaturePackConfig target = dependency.getTarget();
         final ArtifactCoords.Gav gav = target.getGav();
         addAttribute(depElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depElement, Attribute.ARTIFACT_ID, gav.getArtifactId());

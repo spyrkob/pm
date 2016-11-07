@@ -27,8 +27,8 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
@@ -38,7 +38,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallationDescription.Builder> {
+class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningConfig.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
 
@@ -150,7 +150,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, ProvisionedInstallationDescription.Builder builder) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, ProvisioningConfig.Builder builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasFp = false;
         while (reader.hasNext()) {
@@ -185,7 +185,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private ProvisionedFeaturePackDescription readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private FeaturePackConfig readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String groupId = null;
         String artifactId = null;
@@ -213,7 +213,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ARTIFACT_ID));
         }
 
-        final ProvisionedFeaturePackDescription.Builder fpBuilder = ProvisionedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
+        final FeaturePackConfig.Builder fpBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -239,7 +239,7 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisionedInstallatio
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackageList(XMLExtendedStreamReader reader, ProvisionedFeaturePackDescription.Builder builder) throws XMLStreamException {
+    private void readPackageList(XMLExtendedStreamReader reader, FeaturePackConfig.Builder builder) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));

@@ -24,10 +24,10 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
@@ -55,20 +55,20 @@ public class FeaturePackLayoutInstaller {
     public static void install(Path fpLayoutDir, Path installDir, String encoding)
             throws ProvisioningDescriptionException, FeaturePackInstallException {
         final FeaturePackLayoutDescription layoutDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding);
-        final ProvisionedInstallationDescription.Builder installationBuilder = ProvisionedInstallationDescription.builder();
+        final ProvisioningConfig.Builder configBuilder = ProvisioningConfig.builder();
         for(FeaturePackDescription fpDescr : layoutDescr.getFeaturePacks()) {
-            installationBuilder.addFeaturePack(ProvisionedFeaturePackDescription.forGav(fpDescr.getGav()));
+            configBuilder.addFeaturePack(FeaturePackConfig.forGav(fpDescr.getGav()));
         }
-        final ProvisionedInstallationDescription installDescr = installationBuilder.build();
-        final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(installDescr, layoutDescr, fpLayoutDir);
-        install(installDescr,
-                installDescr,
+        final ProvisioningConfig installConfig = configBuilder.build();
+        final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(installConfig, layoutDescr, fpLayoutDir);
+        install(installConfig,
+                installConfig,
                 layoutDescr,
                 fpLayoutDir, installDir, resolvedInstall);
     }
 
-    public static void install(ProvisionedInstallationDescription resolvedDescr,
-            ProvisionedInstallationDescription userDescr,
+    public static void install(ProvisioningConfig extendedConfig,
+            ProvisioningConfig userConfig,
             FeaturePackLayoutDescription layoutDescr, Path layoutDir, Path installDir,
             ResolvedInstallationDescription resolvedInstall)
             throws FeaturePackInstallException {
@@ -101,7 +101,7 @@ public class FeaturePackLayoutInstaller {
             recordFeaturePack(fp, installDir);
         }
 
-        writeState(userDescr, PathsUtils.getUserProvisionedXml(installDir));
+        writeState(userConfig, PathsUtils.getUserProvisionedXml(installDir));
 
         try {
             ProvisionedInstallationXmlWriter.getInstance().write(resolvedInstall, PathsUtils.getProvisionedStateXml(installDir));
@@ -110,10 +110,10 @@ public class FeaturePackLayoutInstaller {
         }
     }
 
-    private static void writeState(ProvisionedInstallationDescription provisionedDescr, final Path provisionedXml)
+    private static void writeState(ProvisioningConfig provisioningConfig, final Path provisionedXml)
             throws FeaturePackInstallException {
         try {
-            ProvisioningXmlWriter.INSTANCE.write(provisionedDescr, provisionedXml);
+            ProvisioningXmlWriter.INSTANCE.write(provisioningConfig, provisionedXml);
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
         }

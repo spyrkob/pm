@@ -25,8 +25,8 @@ import java.nio.file.Paths;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -76,7 +76,7 @@ public class ProvisioningManager {
     private final Path installationHome;
     private final ArtifactResolver artifactResolver;
 
-    private ProvisionedInstallationDescription userProvisionedDescr;
+    private ProvisioningConfig provisioningConfig;
 
     private ProvisioningManager(Builder builder) {
         this.encoding = builder.encoding;
@@ -100,11 +100,11 @@ public class ProvisioningManager {
      * @return  the last recorded provisioning installation configuration
      * @throws ProvisioningException  in case any error occurs
      */
-    public ProvisionedInstallationDescription getProvisioningConfig() throws ProvisioningException {
-        if (userProvisionedDescr == null) {
-            userProvisionedDescr = readProvisionedState(PathsUtils.getUserProvisionedXml(installationHome));
+    public ProvisioningConfig getProvisioningConfig() throws ProvisioningException {
+        if (provisioningConfig == null) {
+            provisioningConfig = readProvisioningConfig(PathsUtils.getUserProvisionedXml(installationHome));
         }
-        return userProvisionedDescr;
+        return provisioningConfig;
     }
 
     /**
@@ -132,28 +132,28 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the installation fails
      */
     public void install(ArtifactCoords.Gav fpGav) throws ProvisioningException {
-        install(ProvisionedFeaturePackDescription.forGav(fpGav));
+        install(FeaturePackConfig.forGav(fpGav));
     }
 
     /**
-     * Installs the desired feature-pack specification.
+     * Installs the desired feature-pack configuration.
      *
-     * @param fpDescr  the desired feature-pack specification
+     * @param fpConfig  the desired feature-pack configuration
      * @throws ProvisioningException  in case the installation fails
      */
-    public void install(ProvisionedFeaturePackDescription fpDescr) throws ProvisioningException {
-        final ProvisionedInstallationDescription currentState = this.getProvisioningConfig();
-        if(currentState == null) {
-            provision(ProvisionedInstallationDescription.builder().addFeaturePack(fpDescr).build());
-        } else if(currentState.containsFeaturePack(fpDescr.getGav().toGa())) {
-            final ProvisionedFeaturePackDescription presentDescr = currentState.getFeaturePack(fpDescr.getGav().toGa());
-            if(presentDescr.getGav().equals(fpDescr.getGav())) {
-                throw new ProvisioningException("Feature-pack " + fpDescr.getGav() + " is already installed");
+    public void install(FeaturePackConfig fpConfig) throws ProvisioningException {
+        final ProvisioningConfig provisioningConfig = this.getProvisioningConfig();
+        if(provisioningConfig == null) {
+            provision(ProvisioningConfig.builder().addFeaturePack(fpConfig).build());
+        } else if(provisioningConfig.containsFeaturePack(fpConfig.getGav().toGa())) {
+            final FeaturePackConfig presentConfig = provisioningConfig.getFeaturePack(fpConfig.getGav().toGa());
+            if(presentConfig.getGav().equals(fpConfig.getGav())) {
+                throw new ProvisioningException("Feature-pack " + fpConfig.getGav() + " is already installed");
             } else {
-                throw new ProvisioningException(Errors.featurePackVersionConflict(fpDescr.getGav(), presentDescr.getGav()));
+                throw new ProvisioningException(Errors.featurePackVersionConflict(fpConfig.getGav(), presentConfig.getGav()));
             }
         } else {
-            provision(ProvisionedInstallationDescription.builder(currentState).addFeaturePack(fpDescr).build());
+            provision(ProvisioningConfig.builder(provisioningConfig).addFeaturePack(fpConfig).build());
         }
     }
 
@@ -164,25 +164,25 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the uninstallation fails
      */
     public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final ProvisionedInstallationDescription currentState = getProvisioningConfig();
-        if(currentState == null) {
+        final ProvisioningConfig provisioningConfig = getProvisioningConfig();
+        if(provisioningConfig == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!currentState.containsFeaturePack(gav.toGa())) {
+        } else if(!provisioningConfig.containsFeaturePack(gav.toGa())) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else {
-            provision(ProvisionedInstallationDescription.builder(currentState).removeFeaturePack(gav).build());
+            provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePack(gav).build());
         }
     }
 
     /**
      * (Re-)provisions the current installation to the desired specification.
      *
-     * @param installationDescr  the desired installation specification
+     * @param provisioningConfig  the desired installation specification
      * @throws ProvisioningException  in case the re-provisioning fails
      */
-    public void provision(ProvisionedInstallationDescription installationDescr) throws ProvisioningException {
+    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
 
-        if(!installationDescr.hasFeaturePacks()) {
+        if(!provisioningConfig.hasFeaturePacks()) {
             if(Files.exists(installationHome)) {
                 try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
                     for(Path p : stream) {
@@ -199,8 +199,8 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        new ProvisioningTask(artifactResolver, installationHome, encoding, installationDescr).execute();
-        this.userProvisionedDescr = null;
+        new ProvisioningTask(artifactResolver, installationHome, encoding, provisioningConfig).execute();
+        this.provisioningConfig = null;
     }
 
     /**
@@ -210,7 +210,7 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case provisioning fails
      */
     public void provision(Path provisionedStateXml) throws ProvisioningException {
-        provision(readProvisionedState(provisionedStateXml));
+        provision(readProvisioningConfig(provisionedStateXml));
     }
 
     /**
@@ -229,14 +229,14 @@ public class ProvisioningManager {
         IoUtils.copy(userProvisionedXml, location);
     }
 
-    private ProvisionedInstallationDescription readProvisionedState(Path ps) throws ProvisioningException {
-        if (!Files.exists(ps)) {
+    private ProvisioningConfig readProvisioningConfig(Path path) throws ProvisioningException {
+        if (!Files.exists(path)) {
             return null;
         }
-        try (BufferedReader reader = Files.newBufferedReader(ps)) {
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
             return new ProvisioningXmlParser().parse(reader);
         } catch (IOException | XMLStreamException e) {
-            throw new ProvisioningException(Errors.parseXml(ps), e);
+            throw new ProvisioningException(Errors.parseXml(path), e);
         }
     }
 

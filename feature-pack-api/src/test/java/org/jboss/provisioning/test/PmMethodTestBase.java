@@ -19,7 +19,7 @@ package org.jboss.provisioning.test;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.test.util.fs.state.DirState;
@@ -34,7 +34,7 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
     protected abstract void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException;
 
-    protected abstract ProvisionedInstallationDescription provisioningConfig() throws ProvisioningException;
+    protected abstract ProvisioningConfig provisioningConfig() throws ProvisioningException;
 
     protected abstract ResolvedInstallationDescription provisionedState() throws ProvisioningException;
 
@@ -59,11 +59,11 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
     }
 
     protected void testProvisionedInstallation(final ProvisioningManager pm) throws ProvisioningException {
-        assertSpec(pm, provisionedState());
+        assertConfig(pm, provisionedState());
     }
 
     protected void testInstallationConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertSpec(pm, provisioningConfig());
+        assertConfig(pm, provisioningConfig());
     }
 
     protected void testProvisionedContent() {

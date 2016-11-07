@@ -19,7 +19,7 @@ package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
@@ -38,7 +38,7 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("c")
                         .build())
@@ -70,9 +70,9 @@ public class ExcludeDefaultPackageTestCase extends PmInstallFeaturePackTestBase 
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription featurePackConfig()
+    protected FeaturePackConfig featurePackConfig()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
+        return FeaturePackConfig
                 .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                 .excludePackage("d")
                 .build();

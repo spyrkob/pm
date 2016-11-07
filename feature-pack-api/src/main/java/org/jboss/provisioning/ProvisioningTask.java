@@ -24,19 +24,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.plugin.ProvisioningContext;
@@ -57,19 +55,17 @@ class ProvisioningTask {
     private final ArtifactResolver artifactResolver;
     private final Path installationHome;
     private final String encoding;
-    private final ProvisionedInstallationDescription installationDescr;
+    private final ProvisioningConfig provisioningConfig;
 
     private final Path workDir;
     private final Path layoutDir;
     private Collection<ArtifactCoords.Gav> provisioningPlugins = Collections.emptySet();
 
-    private Set<ArtifactCoords.Gav> layedOutFps = Collections.emptySet();
-
-    ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisionedInstallationDescription installationDescr) {
+    ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisioningConfig provisioningConfig) {
         this.artifactResolver = artifactResolver;
         this.installationHome = installationHome;
         this.encoding = encoding;
-        this.installationDescr = installationDescr;
+        this.provisioningConfig = provisioningConfig;
 
         workDir = IoUtils.createRandomTmpDir();
         layoutDir = workDir.resolve("layout");
@@ -79,20 +75,20 @@ class ProvisioningTask {
         try {
             final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
 
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders = Collections.emptyMap();
-            final Collection<ProvisionedFeaturePackDescription> provisionedFps = installationDescr.getFeaturePacks();
-            for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
-                final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> newBuilders = layoutFeaturePack(provisionedFp, layoutBuilder);
+            Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
+            final Collection<FeaturePackConfig> fpConfigs = provisioningConfig.getFeaturePacks();
+            for (FeaturePackConfig provisionedFp : fpConfigs) {
+                final Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> newBuilders = layoutFeaturePack(provisionedFp, layoutBuilder);
                 fpBuilders = merge(fpBuilders, newBuilders);
             }
-            for (ProvisionedFeaturePackDescription provisionedFp : provisionedFps) {
-                fpBuilders = enforce(layoutBuilder.getFeaturePack(provisionedFp.getGav().toGa()), provisionedFp, fpBuilders);
+            for (FeaturePackConfig fpConfig : fpConfigs) {
+                fpBuilders = enforce(layoutBuilder.getFeaturePack(fpConfig.getGav().toGa()), fpConfig, fpBuilders);
             }
 
             final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
-            final ProvisionedInstallationDescription.Builder installBuilder = ProvisionedInstallationDescription.builder();
-            for(Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> entry : fpBuilders.entrySet()) {
-                installBuilder.addFeaturePack(entry.getValue().build());
+            final ProvisioningConfig.Builder extendedConfigBuilder = ProvisioningConfig.builder();
+            for(Map.Entry<ArtifactCoords.Gav, FeaturePackConfig.Builder> entry : fpBuilders.entrySet()) {
+                extendedConfigBuilder.addFeaturePack(entry.getValue().build());
             }
 
             if (Files.exists(installationHome)) {
@@ -100,23 +96,23 @@ class ProvisioningTask {
             }
             mkdirs(installationHome);
 
-            final ProvisionedInstallationDescription installConfig = installBuilder.build();
-            final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(installConfig, layoutDescr, layoutDir);
-            FeaturePackLayoutInstaller.install(installConfig, installationDescr, layoutDescr, layoutDir, installationHome, resolvedInstall);
+            final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
+            final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(extendedConfig, layoutDescr, layoutDir);
+            FeaturePackLayoutInstaller.install(extendedConfig, provisioningConfig, layoutDescr, layoutDir, installationHome, resolvedInstall);
 
             if(!provisioningPlugins.isEmpty()) {
-                executePlugins(installationDescr, layoutDescr);
+                executePlugins(provisioningConfig, layoutDescr);
             }
         } finally {
             IoUtils.recursiveDelete(workDir);
         }
     }
 
-    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> layoutFeaturePack(
-            ProvisionedFeaturePackDescription provisionedFp,
+    private Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> layoutFeaturePack(
+            FeaturePackConfig fpConfig,
             FeaturePackLayoutDescription.Builder layoutBuilder) throws ProvisioningException {
 
-        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
+        final ArtifactCoords.Gav fpGav = fpConfig.getGav();
         final FeaturePackDescription fpDescr;
         if(!layoutBuilder.hasFeaturePack(fpGav.toGa())) {
             final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
@@ -163,7 +159,7 @@ class ProvisioningTask {
             }
         }
 
-        Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders = Collections.emptyMap();
+        Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
         if(fpDescr.hasDependencies()) {
             for(FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
                 fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder));
@@ -175,34 +171,34 @@ class ProvisioningTask {
         return fpBuilders;
     }
 
-    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> enforce(
+    private Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> enforce(
             FeaturePackDescription fpDescr,
-            ProvisionedFeaturePackDescription provisionedFp,
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> fpBuilders) throws ProvisioningDescriptionException {
-        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
+            FeaturePackConfig fpConfig,
+            Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders) throws ProvisioningDescriptionException {
+        final ArtifactCoords.Gav fpGav = fpConfig.getGav();
         switch(fpBuilders.size()) {
             case 0:
-                fpBuilders = Collections.singletonMap(fpGav, ProvisionedFeaturePackDescription.builder(fpDescr, provisionedFp));
+                fpBuilders = Collections.singletonMap(fpGav, FeaturePackConfig.builder(fpDescr, fpConfig));
                 break;
             case 1:
                 if(fpBuilders.containsKey(fpGav)) {
-                    fpBuilders.get(fpGav).enforce(provisionedFp);
+                    fpBuilders.get(fpGav).enforce(fpConfig);
                     break;
                 }
                 fpBuilders = new LinkedHashMap<>(fpBuilders);
             default:
                 if(fpBuilders.containsKey(fpGav)) {
-                    fpBuilders.get(fpGav).enforce(provisionedFp);
+                    fpBuilders.get(fpGav).enforce(fpConfig);
                 } else {
-                    fpBuilders.put(fpGav, ProvisionedFeaturePackDescription.builder(fpDescr, provisionedFp));
+                    fpBuilders.put(fpGav, FeaturePackConfig.builder(fpDescr, fpConfig));
                 }
         }
         return fpBuilders;
     }
 
-    private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> merge(
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> allBuilders,
-            final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> depBuilders)
+    private Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> merge(
+            Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> allBuilders,
+            final Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> depBuilders)
             throws ProvisioningDescriptionException {
         switch(allBuilders.size()) {
             case 0:
@@ -216,8 +212,8 @@ class ProvisioningTask {
                 }
                 allBuilders = new LinkedHashMap<>(allBuilders);
             default:
-                for(Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePackDescription.Builder> depEntry : depBuilders.entrySet()) {
-                    final ProvisionedFeaturePackDescription.Builder fpBuilder = allBuilders.get(depEntry.getKey());
+                for(Map.Entry<ArtifactCoords.Gav, FeaturePackConfig.Builder> depEntry : depBuilders.entrySet()) {
+                    final FeaturePackConfig.Builder fpBuilder = allBuilders.get(depEntry.getKey());
                     if(fpBuilder == null) {
                         allBuilders.put(depEntry.getKey(), depEntry.getValue());
                     } else {
@@ -228,7 +224,7 @@ class ProvisioningTask {
         return allBuilders;
     }
 
-    private void executePlugins(final ProvisionedInstallationDescription installationDescr,
+    private void executePlugins(final ProvisioningConfig provisioningConfig,
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
         final List<java.net.URL> urls = new ArrayList<java.net.URL>(provisioningPlugins.size());
         for(ArtifactCoords.Gav gavPart : provisioningPlugins) {
@@ -255,8 +251,8 @@ class ProvisioningTask {
                     return workDir.resolve("resources");
                 }
                 @Override
-                public ProvisionedInstallationDescription getInstallationDescription() {
-                    return installationDescr;
+                public ProvisioningConfig getProvisioningConfig() {
+                    return provisioningConfig;
                 }
                 @Override
                 public FeaturePackLayoutDescription getLayoutDescription() {
@@ -297,21 +293,6 @@ class ProvisioningTask {
                 provisioningPlugins = new LinkedHashSet<>(provisioningPlugins);
             default:
                 provisioningPlugins.add(gav);
-        }
-    }
-
-    private boolean addLayedOutFp(ArtifactCoords.Gav gav) {
-        switch(layedOutFps.size()) {
-            case 0:
-                layedOutFps = Collections.singleton(gav);
-                return true;
-            case 1:
-                if(layedOutFps.contains(gav)) {
-                    return false;
-                }
-                layedOutFps = new HashSet<>(layedOutFps);
-            default:
-                return layedOutFps.add(gav);
         }
     }
 

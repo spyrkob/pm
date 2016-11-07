@@ -29,10 +29,10 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
@@ -273,7 +273,7 @@ public class FeaturePacksDiff {
                     if(!fp2Deps.remove(gaPart)) {
                         fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
                     } else {
-                        final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart).getTarget();
+                        final FeaturePackConfig fp2Dep = fp2Descr.getDependency(gaPart).getTarget();
                         if(!fp2Dep.getGav().equals(gaPart.toGav())) {
                             fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
                         } else {

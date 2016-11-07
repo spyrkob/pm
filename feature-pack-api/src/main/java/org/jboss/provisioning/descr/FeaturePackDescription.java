@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -95,11 +96,11 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addDependency(ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
+        public Builder addDependency(FeaturePackConfig dependency) throws ProvisioningDescriptionException {
             return addDependency(null, dependency);
         }
 
-        public Builder addDependency(String name, ProvisionedFeaturePackDescription dependency) throws ProvisioningDescriptionException {
+        public Builder addDependency(String name, FeaturePackConfig dependency) throws ProvisioningDescriptionException {
             return addDependency(FeaturePackDependencyDescription.create(name, dependency));
         }
 
@@ -128,8 +129,8 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addAllDependencies(Collection<ProvisionedFeaturePackDescription> dependencies) throws ProvisioningDescriptionException {
-            for(ProvisionedFeaturePackDescription dependency : dependencies) {
+        public Builder addAllDependencies(Collection<FeaturePackConfig> dependencies) throws ProvisioningDescriptionException {
+            for(FeaturePackConfig dependency : dependencies) {
                 addDependency(dependency);
             }
             return this;

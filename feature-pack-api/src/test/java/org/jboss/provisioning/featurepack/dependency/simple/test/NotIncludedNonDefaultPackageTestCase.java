@@ -19,7 +19,7 @@ package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
@@ -63,9 +63,9 @@ public class NotIncludedNonDefaultPackageTestCase extends PmInstallFeaturePackTe
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription featurePackConfig()
+    protected FeaturePackConfig featurePackConfig()
             throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"));
+        return FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"));
     }
 
     @Override

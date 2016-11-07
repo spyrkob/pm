@@ -19,7 +19,7 @@ package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
@@ -60,8 +60,8 @@ public class IncludeExcludeMixTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription featurePackConfig() throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
                 .excludePackage("p1")
                 .excludePackage("p2")

@@ -25,9 +25,9 @@ import java.util.List;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.descr.FeaturePackDescription;
 import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
 import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.util.IoUtils;
@@ -78,17 +78,17 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public FeaturePackBuilder addDependency(String name, ProvisionedFeaturePackDescription dep) throws ProvisioningDescriptionException {
+    public FeaturePackBuilder addDependency(String name, FeaturePackConfig dep) throws ProvisioningDescriptionException {
         fpBuilder.addDependency(name, dep);
         return this;
     }
 
-    public FeaturePackBuilder addDependency(ProvisionedFeaturePackDescription dep) throws ProvisioningDescriptionException {
+    public FeaturePackBuilder addDependency(FeaturePackConfig dep) throws ProvisioningDescriptionException {
         return addDependency(null, dep);
     }
 
     public FeaturePackBuilder addDependency(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
-        return addDependency(ProvisionedFeaturePackDescription.forGav(gav));
+        return addDependency(FeaturePackConfig.forGav(gav));
     }
 
     public FeaturePackBuilder addPackage(PackageBuilder pkg) {
