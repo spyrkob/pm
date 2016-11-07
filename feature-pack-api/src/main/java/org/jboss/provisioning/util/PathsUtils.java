@@ -33,15 +33,15 @@ public class PathsUtils {
         return installationDir.resolve(Constants.PROVISIONED_STATE_DIR);
     }
 
-    public static Path getUserProvisionedXml(Path installationDir) {
-        return getProvisionedStateDir(installationDir).resolve(Constants.USER_PROVISIONED_STATE_XML);
+    public static Path getProvisioningXml(Path installationDir) {
+        return getProvisionedStateDir(installationDir).resolve(Constants.PROVISIONING_XML);
     }
 
     public static Path getProvisionedStateXml(Path installationDir) {
         return getProvisionedStateDir(installationDir).resolve(Constants.PROVISIONED_STATE_XML);
     }
 
-    public static Path getInstalledFeaturePackXml(Path installationDir, ArtifactCoords.Gav fpGav) {
+    public static Path getFeaturePackXml(Path installationDir, ArtifactCoords.Gav fpGav) {
         return getProvisionedStateDir(installationDir)
                 .resolve(Constants.FEATURE_PACKS)
                 .resolve(fpGav.getGroupId())

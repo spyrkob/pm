@@ -102,7 +102,7 @@ public class ProvisioningManager {
      */
     public ProvisioningConfig getProvisioningConfig() throws ProvisioningException {
         if (provisioningConfig == null) {
-            provisioningConfig = readProvisioningConfig(PathsUtils.getUserProvisionedXml(installationHome));
+            provisioningConfig = readProvisioningConfig(PathsUtils.getProvisioningXml(installationHome));
         }
         return provisioningConfig;
     }
@@ -222,7 +222,7 @@ public class ProvisioningManager {
      * @throws IOException  in case writing to the specified file fails
      */
     public void exportProvisionedState(Path location) throws ProvisioningException, IOException {
-        final Path userProvisionedXml = PathsUtils.getUserProvisionedXml(installationHome);
+        final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
         if(!Files.exists(userProvisionedXml)) {
             throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
         }

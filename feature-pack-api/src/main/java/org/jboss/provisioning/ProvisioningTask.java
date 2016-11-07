@@ -72,33 +72,38 @@ class ProvisioningTask {
 
     void execute() throws ProvisioningException {
         try {
+            // Here the layout description and the extended provisioning configuration are built first.
+            // The extended provisioning config includes all the effective feature-packs configs
+            // (including the ones from the transitive dependencies).
             final FeaturePackLayoutDescription.Builder layoutBuilder = FeaturePackLayoutDescription.builder();
 
-            Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
+            Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpConfigBuilders = Collections.emptyMap();
             final Collection<FeaturePackConfig> fpConfigs = provisioningConfig.getFeaturePacks();
             for (FeaturePackConfig provisionedFp : fpConfigs) {
                 final Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> newBuilders = layoutFeaturePack(provisionedFp, layoutBuilder);
-                fpBuilders = merge(fpBuilders, newBuilders);
+                fpConfigBuilders = merge(fpConfigBuilders, newBuilders);
             }
             for (FeaturePackConfig fpConfig : fpConfigs) {
-                fpBuilders = enforce(layoutBuilder.getFeaturePack(fpConfig.getGav().toGa()), fpConfig, fpBuilders);
+                fpConfigBuilders = enforce(layoutBuilder.getFeaturePack(fpConfig.getGav().toGa()), fpConfig, fpConfigBuilders);
             }
 
             final FeaturePackLayoutDescription layoutDescr = layoutBuilder.build();
             final ProvisioningConfig.Builder extendedConfigBuilder = ProvisioningConfig.builder();
-            for(Map.Entry<ArtifactCoords.Gav, FeaturePackConfig.Builder> entry : fpBuilders.entrySet()) {
+            for(Map.Entry<ArtifactCoords.Gav, FeaturePackConfig.Builder> entry : fpConfigBuilders.entrySet()) {
                 extendedConfigBuilder.addFeaturePack(entry.getValue().build());
             }
+            final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
+
+            // Resolve the target provisioned state
+            final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(extendedConfig, layoutDescr, layoutDir);
 
             if (Files.exists(installationHome)) {
                 IoUtils.recursiveDelete(installationHome);
             }
             mkdirs(installationHome);
 
-            final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
-            final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(extendedConfig, layoutDescr, layoutDir);
-            FeaturePackLayoutInstaller.install(extendedConfig, provisioningConfig, layoutDescr, layoutDir, installationHome, provisionedState);
-
+            // install the software
+            FeaturePackLayoutInstaller.install(layoutDescr, layoutDir, provisioningConfig, provisionedState, installationHome);
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(provisioningConfig, layoutDescr);
             }

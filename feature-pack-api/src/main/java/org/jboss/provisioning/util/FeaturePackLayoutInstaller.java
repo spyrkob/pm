@@ -61,17 +61,12 @@ public class FeaturePackLayoutInstaller {
         }
         final ProvisioningConfig installConfig = configBuilder.build();
         final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(installConfig, layoutDescr, fpLayoutDir);
-        install(installConfig,
-                installConfig,
-                layoutDescr,
-                fpLayoutDir, installDir, provisionedState);
+        install(layoutDescr, fpLayoutDir, installConfig, provisionedState, installDir);
     }
 
-    public static void install(ProvisioningConfig extendedConfig,
-            ProvisioningConfig userConfig,
-            FeaturePackLayoutDescription layoutDescr, Path layoutDir, Path installDir,
-            ProvisionedState provisionedState)
-            throws FeaturePackInstallException {
+    public static void install(FeaturePackLayoutDescription layoutDescr, Path layoutDir,
+            ProvisioningConfig userConfig, ProvisionedState provisionedState,
+            Path installDir) throws FeaturePackInstallException {
 
         for(ProvisionedFeaturePack provisionedFp : provisionedState.getFeaturePacks()) {
             final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
@@ -101,7 +96,7 @@ public class FeaturePackLayoutInstaller {
             recordFeaturePack(fp, installDir);
         }
 
-        writeState(userConfig, PathsUtils.getUserProvisionedXml(installDir));
+        writeState(userConfig, PathsUtils.getProvisioningXml(installDir));
 
         try {
             ProvisionedStateXmlWriter.getInstance().write(provisionedState, PathsUtils.getProvisionedStateXml(installDir));
@@ -122,7 +117,7 @@ public class FeaturePackLayoutInstaller {
     private static void recordFeaturePack(FeaturePackSpec fpSpec, final Path installDir)
             throws FeaturePackInstallException {
         try {
-            FeaturePackXmlWriter.INSTANCE.write(fpSpec, PathsUtils.getInstalledFeaturePackXml(installDir, fpSpec.getGav()));
+            FeaturePackXmlWriter.INSTANCE.write(fpSpec, PathsUtils.getFeaturePackXml(installDir, fpSpec.getGav()));
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(installDir), e);
         }
