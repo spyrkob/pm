@@ -18,9 +18,11 @@
 package org.jboss.provisioning.featurepack.dependency.simple.test;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -33,27 +35,10 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 public class ExcludeOptionalPackageTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack()
-            throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
-                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .excludePackage("d")
-                .build();
-    }
-
-    @Override
-    protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
-        builder.addFeaturePack(ProvisionedFeaturePackDescription
-                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .excludePackage("b")
-                .build());
-    }
-
-    @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("b")
                         .build())
@@ -79,6 +64,27 @@ public class ExcludeOptionalPackageTestCase extends PmInstallFeaturePackTestBase
                     .getFeaturePack()
                 .getInstaller()
             .install();
+    }
+
+    @Override
+    protected FeaturePackConfig featurePackConfig()
+            throws ProvisioningDescriptionException {
+        return FeaturePackConfig
+                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                .excludePackage("d")
+                .build();
+    }
+
+    @Override
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                        .addPackage("main")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .addPackage("main")
+                        .build())
+                .build();
     }
 
     @Override

@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -40,27 +40,27 @@ public class FeaturePackSpecificDescription {
     static class Builder {
 
         private final ArtifactCoords.Gav gav;
-        private Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies = Collections.emptyMap();
-        private Map<String, PackageDescription> uniquePackages = Collections.emptyMap();
+        private Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies = Collections.emptyMap();
+        private Map<String, PackageSpec> uniquePackages = Collections.emptyMap();
         private Map<String, PackageSpecificDescription> conflictingPackages = Collections.emptyMap();
-        private Map<String, PackageDescription> matchedPackages = Collections.emptyMap();
+        private Map<String, PackageSpec> matchedPackages = Collections.emptyMap();
 
         private Builder(ArtifactCoords.Gav gav) {
             this.gav = gav;
         }
 
-        Builder addAllDependencies(Collection<ProvisionedFeaturePackDescription> deps) {
+        Builder addAllDependencies(Collection<FeaturePackConfig> deps) {
             if(deps.isEmpty()) {
                 return this;
             } else {
-                for(ProvisionedFeaturePackDescription dep: deps) {
+                for(FeaturePackConfig dep: deps) {
                     addDependency(dep);
                 }
             }
             return this;
         }
 
-        Builder addDependency(ProvisionedFeaturePackDescription dep) {
+        Builder addDependency(FeaturePackConfig dep) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonMap(dep.getGav(), dep);
@@ -87,39 +87,39 @@ public class FeaturePackSpecificDescription {
             return this;
         }
 
-        Builder addMatchedPackage(PackageDescription pkg) {
+        Builder addMatchedPackage(PackageSpec pkg) {
             assert pkg != null : "pkg is null";
             switch(matchedPackages.size()) {
                 case 0:
                     matchedPackages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    matchedPackages = new HashMap<String, PackageDescription>(matchedPackages);
+                    matchedPackages = new HashMap<String, PackageSpec>(matchedPackages);
                 default:
                     matchedPackages.put(pkg.getName(), pkg);
             }
             return this;
         }
 
-        Builder addUniquePackage(PackageDescription pkg) {
+        Builder addUniquePackage(PackageSpec pkg) {
             assert pkg != null : "pkg is null";
             switch(uniquePackages.size()) {
                 case 0:
                     uniquePackages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    uniquePackages = new HashMap<String, PackageDescription>(uniquePackages);
+                    uniquePackages = new HashMap<String, PackageSpec>(uniquePackages);
                 default:
                     uniquePackages.put(pkg.getName(), pkg);
             }
             return this;
         }
 
-        Builder addAllUniquePackages(Collection<PackageDescription> packages) {
+        Builder addAllUniquePackages(Collection<PackageSpec> packages) {
             if(packages.isEmpty()) {
                 return this;
             }
-            for(PackageDescription pkg : packages) {
+            for(PackageSpec pkg : packages) {
                 addUniquePackage(pkg);
             }
             return this;
@@ -139,16 +139,16 @@ public class FeaturePackSpecificDescription {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies;
-    private final Map<String, PackageDescription> uniquePackages;
+    private final Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies;
+    private final Map<String, PackageSpec> uniquePackages;
     private final Map<String, PackageSpecificDescription> conflictingPackages;
-    private final Map<String, PackageDescription> matchedPackages;
+    private final Map<String, PackageSpec> matchedPackages;
 
     FeaturePackSpecificDescription(ArtifactCoords.Gav gav,
-            Map<ArtifactCoords.Gav, ProvisionedFeaturePackDescription> dependencies,
-            Map<String, PackageDescription> uniquePackages,
+            Map<ArtifactCoords.Gav, FeaturePackConfig> dependencies,
+            Map<String, PackageSpec> uniquePackages,
             Map<String, PackageSpecificDescription> conflictingPackages,
-            Map<String, PackageDescription> matchedPackages) {
+            Map<String, PackageSpec> matchedPackages) {
         this.gav = gav;
         this.dependencies = dependencies;
         this.uniquePackages = uniquePackages;
@@ -168,7 +168,7 @@ public class FeaturePackSpecificDescription {
         return dependencies.keySet();
     }
 
-    public Collection<ProvisionedFeaturePackDescription> getDependencies() {
+    public Collection<FeaturePackConfig> getDependencies() {
         return dependencies.values();
     }
 
@@ -180,11 +180,11 @@ public class FeaturePackSpecificDescription {
         return uniquePackages.keySet();
     }
 
-    public Collection<PackageDescription> getUniquePackages() {
+    public Collection<PackageSpec> getUniquePackages() {
         return uniquePackages.values();
     }
 
-    public PackageDescription getUniquePackage(String name) {
+    public PackageSpec getUniquePackage(String name) {
         return uniquePackages.get(name);
     }
 
@@ -208,7 +208,7 @@ public class FeaturePackSpecificDescription {
         return matchedPackages.keySet();
     }
 
-    public PackageDescription getMatchedPackage(String name) {
+    public PackageSpec getMatchedPackage(String name) {
         return matchedPackages.get(name);
     }
 

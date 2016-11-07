@@ -17,18 +17,22 @@
 package org.jboss.provisioning.util;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
@@ -51,24 +55,20 @@ public class FeaturePackLayoutInstaller {
     public static void install(Path fpLayoutDir, Path installDir, String encoding)
             throws ProvisioningDescriptionException, FeaturePackInstallException {
         final FeaturePackLayoutDescription layoutDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding);
-        final ProvisionedInstallationDescription.Builder installationBuilder = ProvisionedInstallationDescription.builder();
-        for(FeaturePackDescription fpDescr : layoutDescr.getFeaturePacks()) {
-            installationBuilder.addFeaturePack(ProvisionedFeaturePackDescription.forGav(fpDescr.getGav()));
+        final ProvisioningConfig.Builder configBuilder = ProvisioningConfig.builder();
+        for(FeaturePackSpec fpSpec : layoutDescr.getFeaturePacks()) {
+            configBuilder.addFeaturePack(FeaturePackConfig.forGav(fpSpec.getGav()));
         }
-        final ProvisionedInstallationDescription installDescr = installationBuilder.build();
-        install(installDescr,
-                installDescr,
-                layoutDescr,
-                fpLayoutDir, installDir);
+        final ProvisioningConfig installConfig = configBuilder.build();
+        final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(installConfig, layoutDescr, fpLayoutDir);
+        install(layoutDescr, fpLayoutDir, installConfig, provisionedState, installDir);
     }
 
-    public static void install(ProvisionedInstallationDescription resolvedDescr,
-            ProvisionedInstallationDescription userDescr,
-            FeaturePackLayoutDescription layoutDescr, Path layoutDir, Path installDir)
-            throws FeaturePackInstallException {
+    public static void install(FeaturePackLayoutDescription layoutDescr, Path layoutDir,
+            ProvisioningConfig userConfig, ProvisionedState provisionedState,
+            Path installDir) throws FeaturePackInstallException {
 
-        final FeaturePackInstaller fpInstaller = new FeaturePackInstaller();
-        for(ProvisionedFeaturePackDescription provisionedFp : resolvedDescr.getFeaturePacks()) {
+        for(ProvisionedFeaturePack provisionedFp : provisionedState.getFeaturePacks()) {
             final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
             System.out.println("Installing " + fpGav + " to " + installDir);
             Path fpDir;
@@ -77,32 +77,47 @@ public class FeaturePackLayoutInstaller {
             } catch (ProvisioningDescriptionException e) {
                 throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav), e);
             }
-            final FeaturePackDescription fp = layoutDescr.getFeaturePack(fpGav.toGa());
+
+            for(String pkgName : provisionedFp.getPackageNames()) {
+                final Path pkgSrcDir = LayoutUtils.getPackageContentDir(fpDir, pkgName);
+                if (Files.exists(pkgSrcDir)) {
+                    try {
+                        IoUtils.copy(pkgSrcDir, installDir);
+                    } catch (IOException e) {
+                        throw new FeaturePackInstallException(Errors.packageContentCopyFailed(pkgName), e);
+                    }
+                }
+            }
+
+            final FeaturePackSpec fp = layoutDescr.getFeaturePack(fpGav.toGa());
             if(fp == null) {
                 throw new FeaturePackInstallException(Errors.unknownFeaturePack(fpGav));
             }
-            fpInstaller.install(fp, provisionedFp, fpDir, installDir);
-
             recordFeaturePack(fp, installDir);
         }
 
-        writeState(userDescr, PathsUtils.getUserProvisionedXml(installDir));
-        writeState(resolvedDescr, PathsUtils.getLayoutStateXml(installDir));
+        writeState(userConfig, PathsUtils.getProvisioningXml(installDir));
+
+        try {
+            ProvisionedStateXmlWriter.getInstance().write(provisionedState, PathsUtils.getProvisionedStateXml(installDir));
+        } catch (XMLStreamException | IOException e) {
+            throw new FeaturePackInstallException(Errors.writeXml(PathsUtils.getProvisionedStateXml(installDir)), e);
+        }
     }
 
-    private static void writeState(ProvisionedInstallationDescription provisionedDescr, final Path provisionedXml)
+    private static void writeState(ProvisioningConfig provisioningConfig, final Path provisionedXml)
             throws FeaturePackInstallException {
         try {
-            ProvisioningXmlWriter.INSTANCE.write(provisionedDescr, provisionedXml);
+            ProvisioningXmlWriter.INSTANCE.write(provisioningConfig, provisionedXml);
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
         }
     }
 
-    private static void recordFeaturePack(FeaturePackDescription fpDescr, final Path installDir)
+    private static void recordFeaturePack(FeaturePackSpec fpSpec, final Path installDir)
             throws FeaturePackInstallException {
         try {
-            FeaturePackXmlWriter.INSTANCE.write(fpDescr, PathsUtils.getInstalledFeaturePackXml(installDir, fpDescr.getGav()));
+            FeaturePackXmlWriter.INSTANCE.write(fpSpec, PathsUtils.getFeaturePackXml(installDir, fpSpec.getGav()));
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeXml(installDir), e);
         }

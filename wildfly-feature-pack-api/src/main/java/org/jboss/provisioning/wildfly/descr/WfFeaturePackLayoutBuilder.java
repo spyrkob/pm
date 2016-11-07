@@ -33,11 +33,11 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.PackageXmlWriter;
@@ -66,7 +66,7 @@ public class WfFeaturePackLayoutBuilder {
     private Builder fpBuilder;
     private Path fpDir;
 
-    private PackageDescription.Builder pkgBuilder;
+    private PackageSpec.Builder pkgBuilder;
 
     public FeaturePackLayoutDescription build(WfInstallationDescription wfDescr, Path homeDir, Path workDir) throws ProvisioningDescriptionException {
         this.workDir = workDir;
@@ -90,7 +90,7 @@ public class WfFeaturePackLayoutBuilder {
     }
 
     void build(WfFeaturePackDescription wfFPDescr) throws ProvisioningDescriptionException {
-        fpBuilder = FeaturePackDescription.builder();
+        fpBuilder = FeaturePackSpec.builder();
         fpGroupId = wfFPDescr.getGroupId();
         fpArtifactId = wfFPDescr.getArtifactId();
         fpVersion = wfFPDescr.getVersion();
@@ -150,7 +150,7 @@ public class WfFeaturePackLayoutBuilder {
 
     void build(WfPackageDescription wfPkg) throws ProvisioningDescriptionException {
 
-        pkgBuilder = PackageDescription.builder(wfPkg.getName());
+        pkgBuilder = PackageSpec.builder(wfPkg.getName());
         for (WfModulesDescription wfModules : wfPkg.getModules()) {
             build(wfModules);
         }
@@ -194,19 +194,19 @@ public class WfFeaturePackLayoutBuilder {
             pkgBuilder.addDependency(packageRef);
         }
 
-        final PackageDescription pkgDescr = pkgBuilder.build();
-        fpBuilder.addDefaultPackage(pkgDescr);
+        final PackageSpec pkgSpec = pkgBuilder.build();
+        fpBuilder.addDefaultPackage(pkgSpec);
 
-        writePackageXml(pkgDescr, pkgDir);
+        writePackageXml(pkgSpec, pkgDir);
         pkgBuilder = null;
     }
 
-    private void writePackageXml(final PackageDescription pkgDescr, final Path pkgDir) throws ProvisioningDescriptionException {
+    private void writePackageXml(final PackageSpec pkgSpec, final Path pkgDir) throws ProvisioningDescriptionException {
         if(!Files.exists(pkgDir)) {
             mkdirs(pkgDir);
         }
         try {
-            PackageXmlWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.INSTANCE.write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(pkgDir.resolve(Constants.PACKAGE_XML).toAbsolutePath()), e);
         }
@@ -301,13 +301,13 @@ public class WfFeaturePackLayoutBuilder {
 
         final Path pkgDir = fpDir.resolve(Constants.PACKAGES).resolve(moduleName.toString());
         mkdirs(pkgDir);
-        final PackageDescription.Builder moduleBuilder = PackageDescription.builder(moduleName.toString());
+        final PackageSpec.Builder moduleBuilder = PackageSpec.builder(moduleName.toString());
         copy(dir, pkgDir.resolve(CONTENT).resolve(relativePath.toString()));
-        final PackageDescription pkgDescr = moduleBuilder.build();
-        fpBuilder.addPackage(pkgDescr);
+        final PackageSpec pkgSpec = moduleBuilder.build();
+        fpBuilder.addPackage(pkgSpec);
         pkgBuilder.addDependency(moduleName.toString());
 
-        writePackageXml(pkgDescr, pkgDir);
+        writePackageXml(pkgSpec, pkgDir);
     }
 
     private void copy(Path src, Path target) throws ProvisioningDescriptionException {

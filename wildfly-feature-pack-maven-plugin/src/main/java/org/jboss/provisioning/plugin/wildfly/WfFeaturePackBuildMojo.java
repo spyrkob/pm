@@ -57,18 +57,18 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasksWriter20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.WildFlyFeaturePackBuild;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -174,7 +174,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final Builder fpBuilder = FeaturePackDescription.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final Builder fpBuilder = FeaturePackSpec.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
         WildFlyFeaturePackBuild build;
@@ -194,14 +194,14 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if(!Files.exists(srcModulesDir)) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(srcModulesDir));
         }
-        final PackageDescription.Builder modulesBuilder = PackageDescription.builder("modules");
+        final PackageSpec.Builder modulesBuilder = PackageSpec.builder("modules");
         try {
             packageModules(fpBuilder, modulesBuilder, build, targetResources, srcModulesDir, fpPackagesDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
         }
 
-        final PackageDescription modulesPkg = modulesBuilder.build();
+        final PackageSpec modulesPkg = modulesBuilder.build();
         writeXml(modulesPkg, fpDir.resolve(Constants.PACKAGES).resolve(modulesPkg.getName()));
 
         try {
@@ -212,10 +212,10 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
 
-        final FeaturePackDescription fpDescr;
+        final FeaturePackSpec fpSpec;
         try {
-            fpDescr = fpBuilder.addDefaultPackage(modulesPkg).build();
-            FeaturePackXmlWriter.INSTANCE.write(fpDescr, fpDir.resolve(Constants.FEATURE_PACK_XML));
+            fpSpec = fpBuilder.addDefaultPackage(modulesPkg).build();
+            FeaturePackXmlWriter.INSTANCE.write(fpSpec, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
@@ -331,12 +331,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
             throws MojoExecutionException, ProvisioningDescriptionException {
         if (!build.getDependencies().isEmpty()) {
-            for (ProvisionedFeaturePackDescription dep : build.getDependencies()) {
+            for (FeaturePackConfig dep : build.getDependencies()) {
                 final String depStr = dep.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final ArtifactCoords.Gav gav = ArtifactCoords.newGav(gavStr);
-                final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(gav);
+                final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(gav);
                 if (dep.hasExcludedPackages()) {
                     try {
                         depBuilder.excludeAllPackages(dep.getExcludedPackages()).build();
@@ -349,38 +349,38 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void packageContent(FeaturePackDescription.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {
+    private void packageContent(FeaturePackSpec.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(contentDir)) {
             for(Path p : stream) {
                 final String pkgName = p.getFileName().toString();
                 if(pkgName.equals("docs")) {
-                    final PackageDescription.Builder docsBuilder = PackageDescription.builder(pkgName);
+                    final PackageSpec.Builder docsBuilder = PackageSpec.builder(pkgName);
                     try(DirectoryStream<Path> docsStream = Files.newDirectoryStream(p)) {
                         for(Path docPath : docsStream) {
                             final String docName = docPath.getFileName().toString();
                             final Path docDir = packagesDir.resolve(docName);
                             IoUtils.copy(docPath, docDir.resolve(Constants.CONTENT).resolve("docs").resolve(docName));
-                            final PackageDescription docDescr = PackageDescription.builder(docName).build();
-                            fpBuilder.addPackage(docDescr);
-                            writeXml(docDescr, docDir);
+                            final PackageSpec docSpec = PackageSpec.builder(docName).build();
+                            fpBuilder.addPackage(docSpec);
+                            writeXml(docSpec, docDir);
                             docsBuilder.addDependency(docName, true);
                         }
                     }
-                    PackageDescription docsDescr = docsBuilder.build();
-                    writeXml(docsDescr, packagesDir.resolve(pkgName));
-                    fpBuilder.addDefaultPackage(docsDescr);
+                    PackageSpec docsSpec = docsBuilder.build();
+                    writeXml(docsSpec, packagesDir.resolve(pkgName));
+                    fpBuilder.addDefaultPackage(docsSpec);
                 } else {
                     final Path pkgDir = packagesDir.resolve(pkgName);
                     IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(pkgName));
-                    final PackageDescription pkgDescr = PackageDescription.builder(pkgName).build();
-                    writeXml(pkgDescr, pkgDir);
-                    fpBuilder.addDefaultPackage(pkgDescr);
+                    final PackageSpec pkgSpec = PackageSpec.builder(pkgName).build();
+                    writeXml(pkgSpec, pkgDir);
+                    fpBuilder.addDefaultPackage(pkgSpec);
                 }
             }
         }
     }
 
-    private void packageModules(FeaturePackDescription.Builder fpBuilder, PackageDescription.Builder modulesBuilder,
+    private void packageModules(FeaturePackSpec.Builder fpBuilder, PackageSpec.Builder modulesBuilder,
             final WildFlyFeaturePackBuild wfFpConfig, Path resourcesDir, Path modulesDir, Path packagesDir) throws IOException {
         final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(new ModuleArtifactPropertyResolver(artifactVersions));
         Files.walkFileTree(modulesDir, new FileVisitor<Path>() {
@@ -401,14 +401,14 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
                 IoUtils.copy(file.getParent(), targetXml.getParent());
 
-                final PackageDescription pkgDescr = PackageDescription.builder(packageName).build();
+                final PackageSpec pkgSpec = PackageSpec.builder(packageName).build();
                 try {
-                    PackageXmlWriter.INSTANCE.write(pkgDescr, packageDir.resolve(Constants.PACKAGE_XML));
+                    PackageXmlWriter.INSTANCE.write(pkgSpec, packageDir.resolve(Constants.PACKAGE_XML));
                 } catch (XMLStreamException e) {
                     throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
                 }
                 modulesBuilder.addDependency(packageName, true);
-                fpBuilder.addPackage(pkgDescr);
+                fpBuilder.addPackage(pkgSpec);
 
                 final String moduleXmlContents = IoUtils.readFile(file);
                 String targetContent;
@@ -480,10 +480,10 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         return path;
     }
 
-    private static void writeXml(PackageDescription pkgDescr, Path dir) throws MojoExecutionException {
+    private static void writeXml(PackageSpec pkgSpec, Path dir) throws MojoExecutionException {
         try {
             Files.createDirectories(dir);
-            PackageXmlWriter.INSTANCE.write(pkgDescr, dir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.INSTANCE.write(pkgSpec, dir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeXml(dir.resolve(Constants.PACKAGE_XML)), e);
         }

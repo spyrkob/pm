@@ -17,12 +17,11 @@
 
 package org.jboss.provisioning.test;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 
 /**
  *
@@ -31,21 +30,14 @@ import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies) throws ProvisioningDescriptionException {
-        Builder builder = ProvisionedInstallationDescription.builder();
-        if(includeDependencies) {
-            provisionedDependencies(builder);
-        }
-        return builder.addFeaturePack(provisionedFeaturePack()).build();
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
+        return ProvisioningConfig.builder().addFeaturePack(featurePackConfig()).build();
     }
 
-    protected void provisionedDependencies(ProvisionedInstallationDescription.Builder builder) throws ProvisioningDescriptionException {
-    }
-
-    protected abstract ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException;
+    protected abstract FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException;
 
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        pm.install(provisionedFeaturePack());
+        pm.install(featurePackConfig());
     }
 }

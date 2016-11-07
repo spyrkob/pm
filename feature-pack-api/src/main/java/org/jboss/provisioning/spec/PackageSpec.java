@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -25,17 +25,17 @@ import java.util.Map;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
- * This class describes a package as it appears in a feature-pack.
+ * This class describes a package as it appears in a feature-pack specification.
  *
  * @author Alexey Loubyansky
  */
-public class PackageDescription {
+public class PackageSpec {
 
     public static class Builder {
 
         protected String name;
-        protected PackageDependencyGroupDescription.Builder localDeps = PackageDependencyGroupDescription.builder();
-        protected Map<String, PackageDependencyGroupDescription.Builder> externalDeps = Collections.emptyMap();
+        protected PackageDependencyGroupSpec.Builder localDeps = PackageDependencyGroupSpec.builder();
+        protected Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -70,10 +70,10 @@ public class PackageDescription {
             return this;
         }
 
-        private PackageDependencyGroupDescription.Builder getExternalGroupBuilder(String groupName) {
-            PackageDependencyGroupDescription.Builder groupBuilder = externalDeps.get(groupName);
+        private PackageDependencyGroupSpec.Builder getExternalGroupBuilder(String groupName) {
+            PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(groupName);
             if(groupBuilder == null) {
-                groupBuilder = PackageDependencyGroupDescription.builder(groupName);
+                groupBuilder = PackageDependencyGroupSpec.builder(groupName);
                 switch(externalDeps.size()) {
                     case 0:
                         externalDeps = Collections.singletonMap(groupName, groupBuilder);
@@ -87,8 +87,8 @@ public class PackageDescription {
             return groupBuilder;
         }
 
-        public PackageDescription build() {
-            return new PackageDescription(this);
+        public PackageSpec build() {
+            return new PackageSpec(this);
         }
     }
 
@@ -101,10 +101,10 @@ public class PackageDescription {
     }
 
     protected final String name;
-    protected final PackageDependencyGroupDescription localDeps;
-    protected final Map<String, PackageDependencyGroupDescription> externalDeps;
+    protected final PackageDependencyGroupSpec localDeps;
+    protected final Map<String, PackageDependencyGroupSpec> externalDeps;
 
-    protected PackageDescription(Builder builder) {
+    protected PackageSpec(Builder builder) {
         this.name = builder.name;
         this.localDeps = builder.localDeps.build();
         if(builder.externalDeps.isEmpty()) {
@@ -112,11 +112,11 @@ public class PackageDescription {
         } else {
             final int size = builder.externalDeps.size();
             if(size == 1) {
-                final Map.Entry<String, PackageDependencyGroupDescription.Builder> entry = builder.externalDeps.entrySet().iterator().next();
+                final Map.Entry<String, PackageDependencyGroupSpec.Builder> entry = builder.externalDeps.entrySet().iterator().next();
                 externalDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
             } else {
-                final Map<String, PackageDependencyGroupDescription> deps = new LinkedHashMap<>(size);
-                for(Map.Entry<String, PackageDependencyGroupDescription.Builder> entry : builder.externalDeps.entrySet()) {
+                final Map<String, PackageDependencyGroupSpec> deps = new LinkedHashMap<>(size);
+                for(Map.Entry<String, PackageDependencyGroupSpec.Builder> entry : builder.externalDeps.entrySet()) {
                     deps.put(entry.getKey(), entry.getValue().build());
                 }
                 externalDeps = Collections.unmodifiableMap(deps);
@@ -132,7 +132,7 @@ public class PackageDescription {
         return !localDeps.isEmpty();
     }
 
-    public PackageDependencyGroupDescription getLocalDependencies() {
+    public PackageDependencyGroupSpec getLocalDependencies() {
         return localDeps;
     }
 
@@ -144,7 +144,7 @@ public class PackageDescription {
         return externalDeps.keySet();
     }
 
-    public PackageDependencyGroupDescription getExternalDependencies(String groupName) {
+    public PackageDependencyGroupSpec getExternalDependencies(String groupName) {
         return externalDeps.get(groupName);
     }
 
@@ -155,7 +155,7 @@ public class PackageDescription {
             logger.increaseOffset();
             logger.println("Dependencies");
             logger.increaseOffset();
-            for(PackageDependencyDescription dependency : localDeps.getDescriptions()) {
+            for(PackageDependencySpec dependency : localDeps.getDescriptions()) {
                 logger.println(dependency.toString());
             }
             logger.decreaseOffset();
@@ -181,7 +181,7 @@ public class PackageDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        PackageDescription other = (PackageDescription) obj;
+        PackageSpec other = (PackageSpec) obj;
         if (externalDeps == null) {
             if (other.externalDeps != null)
                 return false;

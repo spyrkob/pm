@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 /**
  * Describes dependency on a single package.
  *
  * @author Alexey Loubyansky
  */
-public class PackageDependencyDescription implements Comparable<PackageDependencyDescription> {
+public class PackageDependencySpec implements Comparable<PackageDependencySpec> {
 
     /**
      * Creates a required dependency on the provided package name.
@@ -30,8 +30,8 @@ public class PackageDependencyDescription implements Comparable<PackageDependenc
      * @param name  target package name
      * @return  dependency description
      */
-    public static PackageDependencyDescription create(String name) {
-        return new PackageDependencyDescription(name, false);
+    public static PackageDependencySpec create(String name) {
+        return new PackageDependencySpec(name, false);
     }
 
     /**
@@ -41,14 +41,14 @@ public class PackageDependencyDescription implements Comparable<PackageDependenc
      * @param optional  whether the dependency should be optional
      * @return  dependency description
      */
-    public static PackageDependencyDescription create(String name, boolean optional) {
-        return new PackageDependencyDescription(name, optional);
+    public static PackageDependencySpec create(String name, boolean optional) {
+        return new PackageDependencySpec(name, optional);
     }
 
     private final String name;
     private final boolean optional;
 
-    protected PackageDependencyDescription(String name, boolean optional) {
+    protected PackageDependencySpec(String name, boolean optional) {
         this.name = name;
         this.optional = optional;
     }
@@ -78,7 +78,7 @@ public class PackageDependencyDescription implements Comparable<PackageDependenc
             return false;
         if (getClass() != obj.getClass())
             return false;
-        PackageDependencyDescription other = (PackageDependencyDescription) obj;
+        PackageDependencySpec other = (PackageDependencySpec) obj;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -95,7 +95,7 @@ public class PackageDependencyDescription implements Comparable<PackageDependenc
     }
 
     @Override
-    public int compareTo(PackageDependencyDescription o) {
+    public int compareTo(PackageDependencySpec o) {
         return name.compareTo(o.name);
     }
 }

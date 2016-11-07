@@ -18,9 +18,9 @@
 package org.jboss.provisioning.featurepack.descr.test;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,18 +33,18 @@ public class ConsistencyOfPackageDependenciesTestCase {
     @Test
     public void testInvalidRequiredDependency() throws Exception {
 
-        final FeaturePackDescription.Builder builder = FeaturePackDescription
+        final FeaturePackSpec.Builder builder = FeaturePackSpec
                 .builder(ArtifactCoords.newGav("g", "a", "v"))
                 .addDefaultPackage(
-                        PackageDescription.builder("p1")
+                        PackageSpec.builder("p1")
                         .addDependency("p2")
                         .build())
                 .addPackage(
-                        PackageDescription.builder("p2")
+                        PackageSpec.builder("p2")
                         .addDependency("p3")
                         .build())
                 .addPackage(
-                        PackageDescription.builder("p3")
+                        PackageSpec.builder("p3")
                         .addDependency("p4")
                         .build());
 
@@ -59,18 +59,18 @@ public class ConsistencyOfPackageDependenciesTestCase {
     @Test
     public void testInvalidOptionalDependency() throws Exception {
 
-        final FeaturePackDescription.Builder builder = FeaturePackDescription
+        final FeaturePackSpec.Builder builder = FeaturePackSpec
                 .builder(ArtifactCoords.newGav("g", "a", "v"))
                 .addDefaultPackage(
-                        PackageDescription.builder("p1")
+                        PackageSpec.builder("p1")
                         .addDependency("p2", true)
                         .build())
                 .addPackage(
-                        PackageDescription.builder("p2")
+                        PackageSpec.builder("p2")
                         .addDependency("p3", true)
                         .build())
                 .addPackage(
-                        PackageDescription.builder("p3")
+                        PackageSpec.builder("p3")
                         .addDependency("p4", true)
                         .build());
 

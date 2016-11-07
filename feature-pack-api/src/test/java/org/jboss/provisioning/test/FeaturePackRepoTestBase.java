@@ -21,7 +21,8 @@ import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.util.IoUtils;
@@ -89,17 +90,16 @@ public class FeaturePackRepoTestBase {
         return installHome.resolve(relativePath);
     }
 
-    protected void assertSpec(ProvisionedInstallationDescription spec) throws ProvisioningException {
-        assertSpec(getPm(), spec);
+    protected void assertConfig(ProvisioningConfig config) throws ProvisioningException {
+        assertConfig(getPm(), config);
     }
 
-    protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec)
+    protected static void assertConfig(ProvisioningManager pm, ProvisioningConfig config)
             throws ProvisioningException {
-        assertSpec(pm, spec, false);
+        Assert.assertEquals(config, pm.getProvisioningConfig());
     }
 
-    protected static void assertSpec(ProvisioningManager pm, ProvisionedInstallationDescription spec,
-            boolean includeDependencies) throws ProvisioningException {
-        Assert.assertEquals(spec, pm.getCurrentState(includeDependencies));
+    protected void assertConfig(ProvisioningManager pm, ProvisionedState config) throws ProvisioningException {
+        Assert.assertEquals(config, pm.getProvisionedState());
     }
 }

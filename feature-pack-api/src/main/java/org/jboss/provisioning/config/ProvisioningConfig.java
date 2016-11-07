@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.config;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -24,33 +24,34 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
- * This class describes the state of provisioned installation.
+ * The configuration of the installation to be provisioned.
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedInstallationDescription {
+public class ProvisioningConfig {
 
     public static class Builder {
 
-        private Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
 
-        private Builder(ProvisionedInstallationDescription installDescr) throws ProvisioningDescriptionException {
-            for(ProvisionedFeaturePackDescription fp : installDescr.getFeaturePacks()) {
+        private Builder(ProvisioningConfig provisioningConfig) throws ProvisioningDescriptionException {
+            for(FeaturePackConfig fp : provisioningConfig.getFeaturePacks()) {
                 addFeaturePack(fp);
             }
         }
 
         public Builder addFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningDescriptionException {
-            return addFeaturePack(ProvisionedFeaturePackDescription.forGav(fpGav));
+            return addFeaturePack(FeaturePackConfig.forGav(fpGav));
         }
 
-        public Builder addFeaturePack(ProvisionedFeaturePackDescription fp) throws ProvisioningDescriptionException {
+        public Builder addFeaturePack(FeaturePackConfig fp) throws ProvisioningDescriptionException {
             final ArtifactCoords.Ga gaPart = fp.getGav().toGa();
             if(featurePacks.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
@@ -68,11 +69,11 @@ public class ProvisionedInstallationDescription {
         }
 
         public Builder removeFeaturePack(ArtifactCoords.Gav gav) throws ProvisioningException {
-            final ProvisionedFeaturePackDescription fpDescr = featurePacks.get(gav.toGa());
-            if(fpDescr == null) {
+            final FeaturePackConfig fpConfig = featurePacks.get(gav.toGa());
+            if(fpConfig == null) {
                 throw new ProvisioningException(Errors.unknownFeaturePack(gav));
             }
-            if(!fpDescr.getGav().equals(gav)) {
+            if(!fpConfig.getGav().equals(gav)) {
                 throw new ProvisioningException(Errors.unknownFeaturePack(gav));
             }
             if(featurePacks.size() == 1) {
@@ -83,8 +84,8 @@ public class ProvisionedInstallationDescription {
             return this;
         }
 
-        public ProvisionedInstallationDescription build() {
-            return new ProvisionedInstallationDescription(Collections.unmodifiableMap(featurePacks));
+        public ProvisioningConfig build() {
+            return new ProvisioningConfig(Collections.unmodifiableMap(featurePacks));
         }
     }
 
@@ -93,20 +94,20 @@ public class ProvisionedInstallationDescription {
     }
 
     /**
-     * Allows to build an installation description starting from the passed in
-     * initial state.
+     * Allows to build a provisioning configuration starting from the passed in
+     * initial configuration.
      *
-     * @param installDescr  initial state of the description to be built
+     * @param provisioningConfig  initial state of the configuration to be built
      * @return  this builder instance
      * @throws ProvisioningDescriptionException
      */
-    public static Builder builder(ProvisionedInstallationDescription installDescr) throws ProvisioningDescriptionException {
-        return new Builder(installDescr);
+    public static Builder builder(ProvisioningConfig provisioningConfig) throws ProvisioningDescriptionException {
+        return new Builder(provisioningConfig);
     }
 
-    private Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks;
+    private Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks;
 
-    private ProvisionedInstallationDescription(Map<ArtifactCoords.Ga, ProvisionedFeaturePackDescription> featurePacks) {
+    private ProvisioningConfig(Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks) {
         this.featurePacks = featurePacks;
     }
 
@@ -122,11 +123,11 @@ public class ProvisionedInstallationDescription {
         return featurePacks.keySet();
     }
 
-    public Collection<ProvisionedFeaturePackDescription> getFeaturePacks() {
+    public Collection<FeaturePackConfig> getFeaturePacks() {
         return featurePacks.values();
     }
 
-    public ProvisionedFeaturePackDescription getFeaturePack(ArtifactCoords.Ga gaPart) {
+    public FeaturePackConfig getFeaturePack(ArtifactCoords.Ga gaPart) {
         return featurePacks.get(gaPart);
     }
 
@@ -146,7 +147,7 @@ public class ProvisionedInstallationDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ProvisionedInstallationDescription other = (ProvisionedInstallationDescription) obj;
+        ProvisioningConfig other = (ProvisioningConfig) obj;
         if (featurePacks == null) {
             if (other.featurePacks != null)
                 return false;

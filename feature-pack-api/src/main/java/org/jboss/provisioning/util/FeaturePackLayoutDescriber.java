@@ -27,10 +27,10 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
 
@@ -83,13 +83,13 @@ public class FeaturePackLayoutDescriber {
         }
     }
 
-    public static FeaturePackDescription describeFeaturePack(Path fpDir, String encoding) throws ProvisioningDescriptionException {
+    public static FeaturePackSpec describeFeaturePack(Path fpDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(fpDir);
         final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
         if(!Files.exists(fpXml)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
         }
-        final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
+        final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
         final FeaturePackXmlParser fpXmlParser = new FeaturePackXmlParser();
         try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
             fpXmlParser.parse(is, fpBuilder);
@@ -105,7 +105,7 @@ public class FeaturePackLayoutDescriber {
         return fpBuilder.build();
     }
 
-    private static void processPackages(FeaturePackDescription.Builder fpBuilder, Path packagesDir, String encoding) throws ProvisioningDescriptionException {
+    private static void processPackages(FeaturePackSpec.Builder fpBuilder, Path packagesDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(packagesDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(packagesDir)) {
             for(Path path : stream) {
@@ -116,7 +116,7 @@ public class FeaturePackLayoutDescriber {
         }
     }
 
-    private static PackageDescription processPackage(Path pkgDir, String encoding) throws ProvisioningDescriptionException {
+    private static PackageSpec processPackage(Path pkgDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(pkgDir);
         final Path pkgXml = pkgDir.resolve(Constants.PACKAGE_XML);
         if(!Files.exists(pkgXml)) {

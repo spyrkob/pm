@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -64,7 +65,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -108,9 +109,9 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         }
         final Path installDir = Paths.get(installDirArg);
 
-        ProvisionedInstallationDescription provisionedDescr;
+        ProvisioningConfig provisioningConfig;
         try(Reader r = Files.newBufferedReader(provXml, Charset.forName(encoding))) {
-            provisionedDescr = new ProvisioningXmlParser().parse(r);
+            provisioningConfig = new ProvisioningXmlParser().parse(r);
         } catch (FileNotFoundException e) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(provXml), e);
         } catch (XMLStreamException e) {
@@ -138,7 +139,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                             }
                             return Paths.get(result.getArtifact().getFile().toURI());
                         }
-                    }).build().provision(provisionedDescr);
+                    }).build().provision(provisioningConfig);
         } catch (ProvisioningException e) {
             e.printStackTrace();
             throw new MojoExecutionException("Failed to provision the installation", e);

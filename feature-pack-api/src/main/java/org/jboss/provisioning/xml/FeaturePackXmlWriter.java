@@ -27,10 +27,10 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -48,37 +48,37 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
     private FeaturePackXmlWriter() {
     }
 
-    public void write(FeaturePackDescription fpDescr, Path outputFile) throws XMLStreamException, IOException {
+    public void write(FeaturePackSpec fpSpec, Path outputFile) throws XMLStreamException, IOException {
         ensureParentDir(outputFile);
         try (Writer writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)) {
-            write(fpDescr, writer);
+            write(fpSpec, writer);
         }
     }
 
-    public void write(FeaturePackDescription fpDescr, Writer writer) throws XMLStreamException {
+    public void write(FeaturePackSpec fpSpec, Writer writer) throws XMLStreamException {
         final ElementNode fp = addElement(null, Element.FEATURE_PACK);
-        final ArtifactCoords.Gav fpGav = fpDescr.getGav();
+        final ArtifactCoords.Gav fpGav = fpSpec.getGav();
         addGAV(fp, fpGav);
 
-        if (fpDescr.hasDependencies()) {
+        if (fpSpec.hasDependencies()) {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
-            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+            for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
                 write(deps, dep);
             }
         }
 
-        if (fpDescr.hasDefaultPackages()) {
+        if (fpSpec.hasDefaultPackages()) {
             final ElementNode pkgs = addElement(fp, Element.DEFAULT_PACKAGES);
-            final String[] pkgNames = fpDescr.getDefaultPackageNames().toArray(new String[0]);
+            final String[] pkgNames = fpSpec.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
-                write(pkgs, fpDescr.getPackage(name));
+                write(pkgs, fpSpec.getPackage(name));
             }
         }
 
-        if(fpDescr.hasProvisioningPlugins()) {
+        if(fpSpec.hasProvisioningPlugins()) {
             final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
-            for(ArtifactCoords.Gav gav : fpDescr.getProvisioningPlugins()) {
+            for(ArtifactCoords.Gav gav : fpSpec.getProvisioningPlugins()) {
                 addGAV(addElement(plugins, Element.ARTIFACT), gav);
             }
         }
@@ -97,13 +97,13 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
     }
 
-    private static void write(ElementNode pkgs, PackageDescription pkg) {
+    private static void write(ElementNode pkgs, PackageSpec pkg) {
         addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
     }
 
-    private static void write(ElementNode deps, FeaturePackDependencyDescription dependency) {
+    private static void write(ElementNode deps, FeaturePackDependencySpec dependency) {
         final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
-        final ProvisionedFeaturePackDescription target = dependency.getTarget();
+        final FeaturePackConfig target = dependency.getTarget();
         final ArtifactCoords.Gav gav = target.getGav();
         addAttribute(depElement, Attribute.GROUP_ID, gav.getGroupId());
         addAttribute(depElement, Attribute.ARTIFACT_ID, gav.getArtifactId());

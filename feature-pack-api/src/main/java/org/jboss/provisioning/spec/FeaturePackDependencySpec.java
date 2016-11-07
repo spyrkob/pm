@@ -15,29 +15,31 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
+
+import org.jboss.provisioning.config.FeaturePackConfig;
 
 /**
  * Describes a dependency of one feature-pack on another.
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDependencyDescription {
+public class FeaturePackDependencySpec {
 
-    public static FeaturePackDependencyDescription create(ProvisionedFeaturePackDescription descr) {
-        return create(null, descr);
+    public static FeaturePackDependencySpec create(FeaturePackConfig fpConfig) {
+        return create(null, fpConfig);
     }
 
-    public static FeaturePackDependencyDescription create(String name, ProvisionedFeaturePackDescription descr) {
-        return new FeaturePackDependencyDescription(name, descr);
+    public static FeaturePackDependencySpec create(String name, FeaturePackConfig fpConfig) {
+        return new FeaturePackDependencySpec(name, fpConfig);
     }
 
     private final String name;
-    private final ProvisionedFeaturePackDescription descr;
+    private final FeaturePackConfig fpConfig;
 
-    private FeaturePackDependencyDescription(String name, ProvisionedFeaturePackDescription descr) {
+    private FeaturePackDependencySpec(String name, FeaturePackConfig fpConfig) {
         this.name = name;
-        this.descr = descr;
+        this.fpConfig = fpConfig;
     }
 
     /**
@@ -57,15 +59,15 @@ public class FeaturePackDependencyDescription {
      *
      * @return  dependency description
      */
-    public ProvisionedFeaturePackDescription getTarget() {
-        return descr;
+    public FeaturePackConfig getTarget() {
+        return fpConfig;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((descr == null) ? 0 : descr.hashCode());
+        result = prime * result + ((fpConfig == null) ? 0 : fpConfig.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -78,11 +80,11 @@ public class FeaturePackDependencyDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        FeaturePackDependencyDescription other = (FeaturePackDependencyDescription) obj;
-        if (descr == null) {
-            if (other.descr != null)
+        FeaturePackDependencySpec other = (FeaturePackDependencySpec) obj;
+        if (fpConfig == null) {
+            if (other.fpConfig != null)
                 return false;
-        } else if (!descr.equals(other.descr))
+        } else if (!fpConfig.equals(other.fpConfig))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -99,6 +101,6 @@ public class FeaturePackDependencyDescription {
         if(name != null) {
             buf.append(name).append(' ');
         }
-        return buf.append(descr).append(']').toString();
+        return buf.append(fpConfig).append(']').toString();
     }
 }

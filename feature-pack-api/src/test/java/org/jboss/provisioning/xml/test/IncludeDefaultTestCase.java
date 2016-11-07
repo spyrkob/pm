@@ -19,8 +19,8 @@ package org.jboss.provisioning.xml.test;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 import org.junit.Assert;
@@ -32,21 +32,21 @@ import org.junit.Test;
  */
 public class IncludeDefaultTestCase {
 
-    private static final XmlParserValidator<ProvisionedInstallationDescription> validator = new XmlParserValidator<>(
+    private static final XmlParserValidator<ProvisioningConfig> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-provisioning-1_0.xsd"), new ProvisioningXmlParser());
 
     @Test
     public void testMain() throws Exception {
-        ProvisionedInstallationDescription found = validator
+        ProvisioningConfig found = validator
                 .validateAndParse("xml/provisioning/packages-inherit.xml", null, null);
-        ProvisionedInstallationDescription expected = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(ProvisionedFeaturePackDescription
+        ProvisioningConfig expected = ProvisioningConfig.builder()
+                .addFeaturePack(FeaturePackConfig
                         .forGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")))
-                .addFeaturePack(ProvisionedFeaturePackDescription
+                .addFeaturePack(FeaturePackConfig
                         .forGav(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2")))
-                .addFeaturePack(ProvisionedFeaturePackDescription
+                .addFeaturePack(FeaturePackConfig
                         .forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
-                .addFeaturePack(ProvisionedFeaturePackDescription
+                .addFeaturePack(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group2", "fp4", "0.0.3"), false).build())
                 .build();
         Assert.assertEquals(expected, found);

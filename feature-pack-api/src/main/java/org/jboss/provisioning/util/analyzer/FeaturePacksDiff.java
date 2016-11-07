@@ -29,11 +29,11 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.HashUtils;
 import org.jboss.provisioning.util.LayoutUtils;
@@ -65,26 +65,26 @@ public class FeaturePacksDiff {
 
     private final Path fpLayoutDir;
     private final String encoding;
-    private final FeaturePackDescription fp1Descr;
-    private final FeaturePackDescription fp2Descr;
+    private final FeaturePackSpec fp1Spec;
+    private final FeaturePackSpec fp2Descr;
 
     FeaturePacksDiff(Path fpLayoutDir, String encoding, ArtifactCoords.Gav gav1, ArtifactCoords.Gav gav2) throws ProvisioningDescriptionException {
         this.fpLayoutDir = fpLayoutDir;
         this.encoding = encoding;
-        fp1Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
+        fp1Spec = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav1), encoding);
         fp2Descr = FeaturePackLayoutDescriber.describeFeaturePack(LayoutUtils.getFeaturePackDir(fpLayoutDir, gav2), encoding);
     }
 
-    FeaturePackDescription getFeaturePackDescription1() {
-        return fp1Descr;
+    FeaturePackSpec getFeaturePackDescription1() {
+        return fp1Spec;
     }
 
-    FeaturePackDescription getFeaturePackDescription2() {
+    FeaturePackSpec getFeaturePackDescription2() {
         return fp2Descr;
     }
 
     FeaturePackDescriptionDiffs compare() throws ProvisioningDescriptionException {
-        final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Descr.getGav());
+        final Builder fp1Diff = FeaturePackSpecificDescription.builder(fp1Spec.getGav());
         final Builder fp2Diff = FeaturePackSpecificDescription.builder(fp2Descr.getGav());
         compareDependencies(fp1Diff, fp2Diff);
         comparePackages(fp1Diff, fp2Diff);
@@ -93,19 +93,19 @@ public class FeaturePacksDiff {
 
     private void comparePackages(final Builder fp1Diff, final Builder fp2Diff) throws ProvisioningDescriptionException {
 
-        final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp1Descr);
+        final Map<String, FeaturePackPackageView.ResolvedPackage> fp1Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp1Spec);
         final Map<String, FeaturePackPackageView.ResolvedPackage> fp2Packages = FeaturePackPackageView.resolve(fpLayoutDir, encoding, fp2Descr);
 
         if(fp1Packages.isEmpty()) {
             if(!fp2Packages.isEmpty()) {
                 for(FeaturePackPackageView.ResolvedPackage resolvedPackage : fp2Packages.values()) {
-                    fp2Diff.addUniquePackage(resolvedPackage.getDescription());
+                    fp2Diff.addUniquePackage(resolvedPackage.getSpec());
                 }
             }
         } else {
             if(fp2Packages.isEmpty()) {
                 for(FeaturePackPackageView.ResolvedPackage resolvedPackage : fp1Packages.values()) {
-                    fp1Diff.addUniquePackage(resolvedPackage.getDescription());
+                    fp1Diff.addUniquePackage(resolvedPackage.getSpec());
                 }
             } else {
                 final Set<String> fp2PkgNames = new HashSet<String>(fp2Packages.keySet());
@@ -113,12 +113,12 @@ public class FeaturePacksDiff {
                     if(fp2PkgNames.remove(fp1PkgName)) {
                         comparePackages(fp1Packages.get(fp1PkgName), fp2Packages.get(fp1PkgName), fp1Diff, fp2Diff);
                     } else {
-                        fp1Diff.addUniquePackage(fp1Packages.get(fp1PkgName).getDescription());
+                        fp1Diff.addUniquePackage(fp1Packages.get(fp1PkgName).getSpec());
                     }
                 }
                 if(!fp2PkgNames.isEmpty()) {
                     for(String pkgName : fp2PkgNames) {
-                        fp2Diff.addUniquePackage(fp2Packages.get(pkgName).getDescription());
+                        fp2Diff.addUniquePackage(fp2Packages.get(pkgName).getSpec());
                     }
                 }
             }
@@ -130,7 +130,7 @@ public class FeaturePacksDiff {
         final PackageSpecificDescription.Builder g1Diff = PackageSpecificDescription.builder(fp1Pkg.getName());
         final PackageSpecificDescription.Builder g2Diff = PackageSpecificDescription.builder(fp2Pkg.getName());
 
-        compareDependencies(fp1Pkg.getDescription(), fp2Pkg.getDescription(), g1Diff, g2Diff);
+        compareDependencies(fp1Pkg.getSpec(), fp2Pkg.getSpec(), g1Diff, g2Diff);
 
         final Path g1Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp1Pkg.getGav()), fp1Pkg.getName());
         final Path g2Content = LayoutUtils.getPackageContentDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, fp2Pkg.getGav()), fp2Pkg.getName());
@@ -150,8 +150,8 @@ public class FeaturePacksDiff {
         if(g2Diff.hasRecords()) {
             fp2Diff.addConflictingPackage(g2Diff.build());
         } else if(!g1Diff.hasRecords()) {
-            fp1Diff.addMatchedPackage(fp1Pkg.getDescription());
-            fp2Diff.addMatchedPackage(fp2Pkg.getDescription());
+            fp1Diff.addMatchedPackage(fp1Pkg.getSpec());
+            fp2Diff.addMatchedPackage(fp2Pkg.getSpec());
         }
     }
 
@@ -232,7 +232,7 @@ public class FeaturePacksDiff {
         }
     }
 
-    private void compareDependencies(final PackageDescription fp1Pkg, final PackageDescription fp2Pkg,
+    private void compareDependencies(final PackageSpec fp1Pkg, final PackageSpec fp2Pkg,
             final PackageSpecificDescription.Builder fp1PkgDiff, final PackageSpecificDescription.Builder fp2PkgDiff) {
         if(!fp1Pkg.hasLocalDependencies()) {
             if(fp2Pkg.hasLocalDependencies()) {
@@ -256,26 +256,26 @@ public class FeaturePacksDiff {
     }
 
     private void compareDependencies(final Builder fp1Diff, final Builder fp2Diff) {
-        if(!fp1Descr.hasDependencies()) {
+        if(!fp1Spec.hasDependencies()) {
             if(fp2Descr.hasDependencies()) {
-                for(FeaturePackDependencyDescription dep : fp2Descr.getDependencies()) {
+                for(FeaturePackDependencySpec dep : fp2Descr.getDependencies()) {
                     fp2Diff.addDependency(dep.getTarget());
                 }
             }
         } else {
             if(!fp2Descr.hasDependencies()) {
-                for(FeaturePackDependencyDescription dep : fp1Descr.getDependencies()) {
+                for(FeaturePackDependencySpec dep : fp1Spec.getDependencies()) {
                     fp1Diff.addDependency(dep.getTarget());
                 }
             } else {
                 final Set<ArtifactCoords.Ga> fp2Deps = new HashSet<>(fp2Descr.getDependencyGaParts());
-                for(ArtifactCoords.Ga gaPart : fp1Descr.getDependencyGaParts()) {
+                for(ArtifactCoords.Ga gaPart : fp1Spec.getDependencyGaParts()) {
                     if(!fp2Deps.remove(gaPart)) {
-                        fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
+                        fp1Diff.addDependency(fp1Spec.getDependency(gaPart).getTarget());
                     } else {
-                        final ProvisionedFeaturePackDescription fp2Dep = fp2Descr.getDependency(gaPart).getTarget();
+                        final FeaturePackConfig fp2Dep = fp2Descr.getDependency(gaPart).getTarget();
                         if(!fp2Dep.getGav().equals(gaPart.toGav())) {
-                            fp1Diff.addDependency(fp1Descr.getDependency(gaPart).getTarget());
+                            fp1Diff.addDependency(fp1Spec.getDependency(gaPart).getTarget());
                         } else {
                             fp2Diff.addDependency(fp2Dep);
                         }

@@ -18,15 +18,16 @@
 package org.jboss.provisioning.featurepack.pkg.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.junit.Assert;
 
 /**
@@ -60,11 +61,21 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisionedFeaturePackDescription provisionedFeaturePack() throws ProvisioningDescriptionException {
-        return ProvisionedFeaturePackDescription
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig
                 .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .excludePackage("b")
                 .build();
+    }
+
+    @Override
+    protected ProvisioningConfig provisioningConfig() {
+        return null;
+    }
+
+    @Override
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return null;
     }
 
     @Override
@@ -72,7 +83,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
         try {
             super.testPmMethod(pm);
             Assert.fail("Required package dependency was ignored");
-        } catch(FeaturePackInstallException e) {
+        } catch(ProvisioningDescriptionException e) {
             // expected
         }
     }
@@ -80,13 +91,5 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return DirState.rootBuilder().build();
-    }
-
-    @Override
-    protected void testFullSpec(final ProvisioningManager pm) throws ProvisioningException {
-    }
-
-    @Override
-    protected void testUserSpec(final ProvisioningManager pm) throws ProvisioningException {
     }
 }

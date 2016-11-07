@@ -23,10 +23,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.LayoutUtils;
 
@@ -39,13 +39,13 @@ class FeaturePackPackageView {
     static class ResolvedPackage {
         private final String name;
         private final ArtifactCoords.Gav fpGav;
-        private final PackageDescription descr;
+        private final PackageSpec spec;
 
-        ResolvedPackage(String name, ArtifactCoords.Gav fpGav, PackageDescription descr) {
+        ResolvedPackage(String name, ArtifactCoords.Gav fpGav, PackageSpec spec) {
             super();
             this.name = name;
             this.fpGav = fpGav;
-            this.descr = descr;
+            this.spec = spec;
         }
 
         String getName() {
@@ -56,8 +56,8 @@ class FeaturePackPackageView {
             return fpGav;
         }
 
-        PackageDescription getDescription() {
-            return descr;
+        PackageSpec getSpec() {
+            return spec;
         }
     }
 
@@ -66,27 +66,27 @@ class FeaturePackPackageView {
         return resolve(fpLayoutDir, encoding, FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding));
     }
 
-    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr) throws ProvisioningDescriptionException {
+    static Map<String, ResolvedPackage> resolve(Path fpLayoutDir, String encoding, FeaturePackSpec fpSpec) throws ProvisioningDescriptionException {
         final HashMap<String, ResolvedPackage> packages = new HashMap<String, ResolvedPackage>();
-        resolveFeaturePack(fpLayoutDir, encoding, fpDescr, packages, Collections.emptySet());
+        resolveFeaturePack(fpLayoutDir, encoding, fpSpec, packages, Collections.emptySet());
         return packages;
     }
 
-    private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackDescription fpDescr,
+    private static void resolveFeaturePack(Path fpLayoutDir, String encoding, FeaturePackSpec fpSpec,
             Map<String, ResolvedPackage> collectedPackages, Set<String> excludePackages) throws ProvisioningDescriptionException {
-        if (fpDescr.hasDependencies()) {
-            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+        if (fpSpec.hasDependencies()) {
+            for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
                 final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, dep.getTarget().getGav());
                 resolveFeaturePack(fpLayoutDir, encoding,
                         FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding),
                         collectedPackages, dep.getTarget().getExcludedPackages());
             }
         }
-        final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpDescr.getGav());
-        for (String name : fpDescr.getPackageNames()) {
+        final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, fpSpec.getGav());
+        for (String name : fpSpec.getPackageNames()) {
             if (!excludePackages.contains(name)) {
                 //if(Files.exists(LayoutUtils.getPackageContentDir(fpDir, name))) {
-                    collectedPackages.put(name, new ResolvedPackage(name, fpDescr.getGav(), fpDescr.getPackage(name)));
+                    collectedPackages.put(name, new ResolvedPackage(name, fpSpec.getGav(), fpSpec.getPackage(name)));
                 //}
             }
         }

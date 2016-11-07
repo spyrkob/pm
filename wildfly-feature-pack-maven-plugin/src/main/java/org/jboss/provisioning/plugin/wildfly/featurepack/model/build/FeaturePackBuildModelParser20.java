@@ -18,7 +18,7 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser20;
@@ -294,7 +294,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        final ProvisionedFeaturePackDescription.Builder depBuilder = ProvisionedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
+        final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -319,7 +319,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         }
     }
 
-    private void parseExcludes(XMLStreamReader reader, ProvisionedFeaturePackDescription.Builder depBuilder) throws XMLStreamException {
+    private void parseExcludes(XMLStreamReader reader, FeaturePackConfig.Builder depBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

@@ -18,10 +18,12 @@
 package org.jboss.provisioning.featurepack.dependency.merge.test;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -37,14 +39,14 @@ public class MergedSimpleExcludesTestCase extends PmProvisionSpecTestBase {
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final")))
-                .addDependency(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final")))
+                .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final")))
+                .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final")))
                 .newPackage("p1", true)
                     .writeContent("fp1/p1.txt", "p1")
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
                         .excludePackage("p1")
                         .excludePackage("p2")
@@ -54,7 +56,7 @@ public class MergedSimpleExcludesTestCase extends PmProvisionSpecTestBase {
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
                         .excludePackage("p1")
                         .excludePackage("p3")
@@ -78,24 +80,31 @@ public class MergedSimpleExcludesTestCase extends PmProvisionSpecTestBase {
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies)
-            throws ProvisioningDescriptionException {
-
-        final Builder builder = ProvisionedInstallationDescription.builder()
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
+        return ProvisioningConfig.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription.forGav(
-                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
-        if(includeDependencies) {
-            builder
-                .addFeaturePack(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final")))
-                .addFeaturePack(ProvisionedFeaturePackDescription.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final")))
-                .addFeaturePack(ProvisionedFeaturePackDescription
-                        .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
-                        .excludePackage("p1")
-                        .build());
-        }
+                        FeaturePackConfig.forGav(
+                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")))
+                .build();
+    }
 
-        return builder.build();
+    @Override
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
+                        .addPackage("p2")
+                        .addPackage("p3")
+                        .build())
+                .build();
     }
 
     @Override

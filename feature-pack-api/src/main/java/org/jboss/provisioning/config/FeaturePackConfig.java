@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.config;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,14 +24,15 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
- * This class represents user's choice to install a feature-pack
- * with options to exclude undesired packages.
+ * This class represents a feature-pack configuration to be installed.
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedFeaturePackDescription {
+public class FeaturePackConfig {
 
     public static class Builder {
 
@@ -39,7 +40,7 @@ public class ProvisionedFeaturePackDescription {
         protected boolean inheritPackages;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
-        protected FeaturePackDescription fpDescr;
+        protected FeaturePackSpec fpSpec;
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -50,29 +51,29 @@ public class ProvisionedFeaturePackDescription {
             this.inheritPackages = includeDefault;
         }
 
-        protected Builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
-            this.gav = provisionedDescr.getGav();
-            this.fpDescr = fpDescr;
-            inheritPackages = provisionedDescr.inheritPackages;
+        protected Builder(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
+            this.gav = fpConfig.getGav();
+            this.fpSpec = fpSpec;
+            inheritPackages = fpConfig.inheritPackages;
 
-            switch(provisionedDescr.excludedPackages.size()) {
+            switch(fpConfig.excludedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    excludedPackages = Collections.singleton(provisionedDescr.excludedPackages.iterator().next());
+                    excludedPackages = Collections.singleton(fpConfig.excludedPackages.iterator().next());
                     break;
                 default:
-                    excludedPackages = new HashSet<String>(provisionedDescr.excludedPackages);
+                    excludedPackages = new HashSet<String>(fpConfig.excludedPackages);
             }
 
-            switch(provisionedDescr.includedPackages.size()) {
+            switch(fpConfig.includedPackages.size()) {
                 case 0:
                     break;
                 case 1:
-                    includedPackages = Collections.singleton(provisionedDescr.includedPackages.iterator().next());
+                    includedPackages = Collections.singleton(fpConfig.includedPackages.iterator().next());
                     break;
                 default:
-                    includedPackages = new HashSet<String>(provisionedDescr.includedPackages);
+                    includedPackages = new HashSet<String>(fpConfig.includedPackages);
             }
         }
 
@@ -152,9 +153,9 @@ public class ProvisionedFeaturePackDescription {
             }
         }
 
-        public Builder merge(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder merge(FeaturePackConfig other) throws ProvisioningDescriptionException {
             assertSameGav(other);
-System.out.println("merge " + build() + " " + other);
+
             if(inheritPackages == other.inheritPackages) {
                 // this.includes + other.includes
                 // this.excludes - other.includes
@@ -208,7 +209,7 @@ System.out.println("merge " + build() + " " + other);
             return this;
         }
 
-        public Builder enforce(ProvisionedFeaturePackDescription other) throws ProvisioningDescriptionException {
+        public Builder enforce(FeaturePackConfig other) throws ProvisioningDescriptionException {
             assertSameGav(other);
 
             this.inheritPackages = other.inheritPackages;
@@ -218,26 +219,26 @@ System.out.println("merge " + build() + " " + other);
             return this;
         }
 
-        private void assertSameGav(ProvisionedFeaturePackDescription other) {
+        private void assertSameGav(FeaturePackConfig other) {
             if(!gav.equals(other.gav)) {
                 throw new IllegalArgumentException("Feature pack GAVs don't match " + gav + " vs " + other.gav);
             }
         }
 
-        public ProvisionedFeaturePackDescription build() {
-            if(fpDescr != null) {
+        public FeaturePackConfig build() {
+            if(fpSpec != null) {
                 // remove redundant explicit excludes/includes
                 if(inheritPackages) {
-                    if(!includedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
-                        for(String name : fpDescr.getDefaultPackageNames()) {
+                    if(!includedPackages.isEmpty() && fpSpec.hasDefaultPackages()) {
+                        for(String name : fpSpec.getDefaultPackageNames()) {
                             if(includedPackages.contains(name)) {
                                 removeFromIncluded(name);
                             }
                         }
                     }
                 } else {
-                    if(!excludedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
-                        for(String name : fpDescr.getDefaultPackageNames()) {
+                    if(!excludedPackages.isEmpty() && fpSpec.hasDefaultPackages()) {
+                        for(String name : fpSpec.getDefaultPackageNames()) {
                             if(excludedPackages.contains(name)) {
                                 removeFromExcluded(name);
                             }
@@ -245,14 +246,14 @@ System.out.println("merge " + build() + " " + other);
                     }
                 }
             }
-            return new ProvisionedFeaturePackDescription(gav, inheritPackages,
+            return new FeaturePackConfig(gav, inheritPackages,
                     Collections.unmodifiableSet(excludedPackages),
                     Collections.unmodifiableSet(includedPackages));
         }
     }
 
-    public static Builder builder(FeaturePackDescription fpDescr, ProvisionedFeaturePackDescription provisionedDescr) {
-        return new Builder(fpDescr, provisionedDescr);
+    public static Builder builder(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
+        return new Builder(fpSpec, fpConfig);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav) {
@@ -263,8 +264,8 @@ System.out.println("merge " + build() + " " + other);
         return new Builder(gav, inheritPackageSet);
     }
 
-    public static ProvisionedFeaturePackDescription forGav(ArtifactCoords.Gav gav) {
-        return new ProvisionedFeaturePackDescription(gav, true, Collections.emptySet(), Collections.emptySet());
+    public static FeaturePackConfig forGav(ArtifactCoords.Gav gav) {
+        return new FeaturePackConfig(gav, true, Collections.emptySet(), Collections.emptySet());
     }
 
     private final ArtifactCoords.Gav gav;
@@ -272,7 +273,7 @@ System.out.println("merge " + build() + " " + other);
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected ProvisionedFeaturePackDescription(ArtifactCoords.Gav gav, boolean inheritPackages,
+    protected FeaturePackConfig(ArtifactCoords.Gav gav, boolean inheritPackages,
             Set<String> excludedPackages, Set<String> includedPackages) {
         assert gav != null : "gav is null";
         this.gav = gav;
@@ -332,7 +333,7 @@ System.out.println("merge " + build() + " " + other);
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ProvisionedFeaturePackDescription other = (ProvisionedFeaturePackDescription) obj;
+        FeaturePackConfig other = (FeaturePackConfig) obj;
         if (excludedPackages == null) {
             if (other.excludedPackages != null)
                 return false;

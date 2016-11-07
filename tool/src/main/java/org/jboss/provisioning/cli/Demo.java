@@ -20,8 +20,8 @@ import java.nio.file.Paths;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningManager;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 
 /**
  *
@@ -37,9 +37,9 @@ public class Demo {
                 .build();
 
         // pm.install(ArtifactCoords.getGavPart("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"));
-        pm.provision(ProvisionedInstallationDescription.builder()
+        pm.provision(ProvisioningConfig.builder()
                 .addFeaturePack(
-                        ProvisionedFeaturePackDescription
+                        FeaturePackConfig
                                 .builder(ArtifactCoords.newGav("org.wildfly.core", "wildfly-core-feature-pack-new", "3.0.0.Alpha9-SNAPSHOT"))
                                 .excludePackage("org.jboss.as.deployment-scanner.main")
                                 .excludePackage("docs")

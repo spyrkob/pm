@@ -24,8 +24,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.staxmapper.XMLMapper;
 
 
@@ -33,7 +33,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlParser implements XmlParser<FeaturePackDescription>{
+public class FeaturePackXmlParser implements XmlParser<FeaturePackSpec>{
 
     private static final QName ROOT_1_0 = new QName(FeaturePackXmlParser10.NAMESPACE_1_0, FeaturePackXmlParser10.Element.FEATURE_PACK.getLocalName());
 
@@ -58,14 +58,14 @@ public class FeaturePackXmlParser implements XmlParser<FeaturePackDescription>{
         mapper.registerRootElement(ROOT_1_0, new FeaturePackXmlParser10());
     }
 
-    public void parse(final Reader input, final FeaturePackDescription.Builder fpBuilder) throws XMLStreamException {
+    public void parse(final Reader input, final FeaturePackSpec.Builder fpBuilder) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         mapper.parseDocument(fpBuilder, streamReader);
     }
 
     @Override
-    public FeaturePackDescription parse(Reader input) throws XMLStreamException {
-        FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
+    public FeaturePackSpec parse(Reader input) throws XMLStreamException {
+        FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
         parse(input, fpBuilder);
         try {
             return fpBuilder.build();

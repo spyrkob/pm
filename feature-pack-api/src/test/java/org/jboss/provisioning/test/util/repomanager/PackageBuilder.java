@@ -23,8 +23,8 @@ import java.nio.file.Path;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.fs.FsTaskContext;
 import org.jboss.provisioning.test.util.fs.FsTaskList;
@@ -47,7 +47,7 @@ public class PackageBuilder {
 
     private final FeaturePackBuilder fp;
     private boolean isDefault;
-    private final PackageDescription.Builder pkg = PackageDescription.builder();
+    private final PackageSpec.Builder pkg = PackageSpec.builder();
     private final FsTaskList tasks = FsTaskList.newList();
 
     private PackageBuilder(FeaturePackBuilder fp) {
@@ -96,11 +96,11 @@ public class PackageBuilder {
         return this;
     }
 
-    public PackageDescription build(Path fpDir) {
-        final PackageDescription pkgDescr = pkg.build();
+    public PackageSpec build(Path fpDir) {
+        final PackageSpec pkgSpec = pkg.build();
         final Path pkgDir;
         try {
-            pkgDir = LayoutUtils.getPackageDir(fpDir, pkgDescr.getName(), false);
+            pkgDir = LayoutUtils.getPackageDir(fpDir, pkgSpec.getName(), false);
         } catch (ProvisioningDescriptionException e) {
             throw new IllegalStateException(e);
         }
@@ -109,10 +109,10 @@ public class PackageBuilder {
             if(!tasks.isEmpty()) {
                 tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
             }
-            PackageXmlWriter.INSTANCE.write(pkgDescr, pkgDir.resolve(Constants.PACKAGE_XML));
+            PackageXmlWriter.INSTANCE.write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new IllegalStateException(e);
         }
-        return pkgDescr;
+        return pkgSpec;
     }
 }

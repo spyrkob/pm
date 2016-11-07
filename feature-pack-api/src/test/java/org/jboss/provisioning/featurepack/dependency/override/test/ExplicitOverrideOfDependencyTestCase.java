@@ -18,10 +18,12 @@
 package org.jboss.provisioning.featurepack.dependency.override.test;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.ProvisionedFeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisionedInstallationDescription.Builder;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -37,11 +39,11 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .excludePackage("b")
                         .build())
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
                         .excludePackage("c")
                         .build())
@@ -54,7 +56,7 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
                     .getFeaturePack()
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                .addDependency(ProvisionedFeaturePackDescription
+                .addDependency(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
                         .excludePackage("a")
                         .build())
@@ -101,28 +103,32 @@ public class ExplicitOverrideOfDependencyTestCase extends PmProvisionSpecTestBas
     }
 
     @Override
-    protected ProvisionedInstallationDescription provisionedInstallation(boolean includeDependencies)
-            throws ProvisioningDescriptionException {
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
+        return ProvisioningConfig.builder()
+                .addFeaturePack(
+                        FeaturePackConfig.forGav(
+                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")))
+                .build();
+    }
 
-        final Builder builder = ProvisionedInstallationDescription.builder()
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription.forGav(
-                                ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")));
-        if(includeDependencies) {
-            builder
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
-                                .excludePackage("b")
-                                .build())
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription
-                                .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
-                                .excludePackage("c")
-                                .build());
-        }
-
-        return builder.build();
+    @Override
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+                        .addPackage("d")
+                        .addPackage("e")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                        .addPackage("a")
+                        .addPackage("c")
+                        .addPackage("c1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
+                        .addPackage("a")
+                        .addPackage("b")
+                        .addPackage("b1")
+                        .build())
+                .build();
     }
 
     @Override

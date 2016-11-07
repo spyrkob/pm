@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
  *
@@ -54,7 +54,7 @@ public class LayoutUtils {
         return dir;
     }
 
-    public static Path getPackageContentDir(Path fpDir, String packageName) throws ProvisioningDescriptionException {
+    public static Path getPackageContentDir(Path fpDir, String packageName) {
         return fpDir.resolve(Constants.PACKAGES).resolve(packageName).resolve(Constants.CONTENT);
     }
 }
