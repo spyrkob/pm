@@ -21,8 +21,8 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 
 /**
  *
@@ -37,7 +37,7 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
         if(verbose) {
-            final ResolvedInstallationDescription provisionedState;
+            final ProvisionedState provisionedState;
             try {
                 provisionedState = getManager(session).getProvisionedState();
             } catch (ProvisioningException e) {
@@ -46,7 +46,7 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
             if (provisionedState == null || !provisionedState.hasFeaturePacks()) {
                 return;
             }
-            for (ResolvedFeaturePackDescription fp : provisionedState.getFeaturePacks()) {
+            for (ProvisionedFeaturePack fp : provisionedState.getFeaturePacks()) {
                 session.println(fp.getGav().toString());
             }
         } else {

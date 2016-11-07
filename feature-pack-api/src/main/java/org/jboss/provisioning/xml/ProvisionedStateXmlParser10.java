@@ -26,8 +26,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -36,7 +36,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class ProvisionedInstallationXmlParser10 implements XMLElementReader<ResolvedInstallationDescription.Builder> {
+class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioned:1.0";
 
@@ -146,7 +146,7 @@ class ProvisionedInstallationXmlParser10 implements XMLElementReader<ResolvedIns
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, ResolvedInstallationDescription.Builder builder) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, ProvisionedState.Builder builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasFp = false;
         while (reader.hasNext()) {
@@ -177,7 +177,7 @@ class ProvisionedInstallationXmlParser10 implements XMLElementReader<ResolvedIns
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private ResolvedFeaturePackDescription readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ProvisionedFeaturePack readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String groupId = null;
         String artifactId = null;
@@ -208,7 +208,7 @@ class ProvisionedInstallationXmlParser10 implements XMLElementReader<ResolvedIns
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VERSION));
         }
 
-        final ResolvedFeaturePackDescription.Builder fpBuilder = ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav(groupId, artifactId, version));
+        final ProvisionedFeaturePack.Builder fpBuilder = ProvisionedFeaturePack.builder(ArtifactCoords.newGav(groupId, artifactId, version));
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -234,7 +234,7 @@ class ProvisionedInstallationXmlParser10 implements XMLElementReader<ResolvedIns
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readPackageList(XMLExtendedStreamReader reader, ResolvedFeaturePackDescription.Builder builder) throws XMLStreamException {
+    private void readPackageList(XMLExtendedStreamReader reader, ProvisionedFeaturePack.Builder builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

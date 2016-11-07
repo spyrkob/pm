@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.state;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,10 +24,11 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 
 /**
+ * Describes a feature-pack as it was provisioned.
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedFeaturePackDescription {
+public class ProvisionedFeaturePack {
 
     public static class Builder {
         private ArtifactCoords.Gav gav;
@@ -54,8 +55,8 @@ public class ResolvedFeaturePackDescription {
             return packages.contains(name);
         }
 
-        public ResolvedFeaturePackDescription build() {
-            return new ResolvedFeaturePackDescription(this);
+        public ProvisionedFeaturePack build() {
+            return new ProvisionedFeaturePack(this);
         }
     }
 
@@ -66,7 +67,7 @@ public class ResolvedFeaturePackDescription {
     private final ArtifactCoords.Gav gav;
     private final Set<String> packages;
 
-    private ResolvedFeaturePackDescription(Builder builder) {
+    private ProvisionedFeaturePack(Builder builder) {
         this.gav = builder.gav;
         this.packages = Collections.unmodifiableSet(builder.packages);
     }
@@ -104,7 +105,7 @@ public class ResolvedFeaturePackDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ResolvedFeaturePackDescription other = (ResolvedFeaturePackDescription) obj;
+        ProvisionedFeaturePack other = (ProvisionedFeaturePack) obj;
         if (gav == null) {
             if (other.gav != null)
                 return false;

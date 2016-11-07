@@ -24,10 +24,10 @@ import java.nio.file.StandardOpenOption;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
-import org.jboss.provisioning.xml.ProvisionedInstallationXmlParser10.Attribute;
-import org.jboss.provisioning.xml.ProvisionedInstallationXmlParser10.Element;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
+import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Attribute;
+import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
 import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
@@ -35,23 +35,23 @@ import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedInstallationXmlWriter extends BaseXmlWriter {
+public class ProvisionedStateXmlWriter extends BaseXmlWriter {
 
-    private static final ProvisionedInstallationXmlWriter INSTANCE = new ProvisionedInstallationXmlWriter();
+    private static final ProvisionedStateXmlWriter INSTANCE = new ProvisionedStateXmlWriter();
 
-    public static ProvisionedInstallationXmlWriter getInstance() {
+    public static ProvisionedStateXmlWriter getInstance() {
         return INSTANCE;
     }
 
-    private ProvisionedInstallationXmlWriter() {
+    private ProvisionedStateXmlWriter() {
     }
 
-    public void write(ResolvedInstallationDescription installDescr, Path outputFile) throws XMLStreamException, IOException {
+    public void write(ProvisionedState provisionedState, Path outputFile) throws XMLStreamException, IOException {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
-        if (installDescr.hasFeaturePacks()) {
-            for(ResolvedFeaturePackDescription fp : installDescr.getFeaturePacks()) {
+        if (provisionedState.hasFeaturePacks()) {
+            for(ProvisionedFeaturePack fp : provisionedState.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
             }
@@ -66,7 +66,7 @@ public class ProvisionedInstallationXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private void writeFeaturePack(ElementNode fp, ResolvedFeaturePackDescription featurePack) {
+    private void writeFeaturePack(ElementNode fp, ProvisionedFeaturePack featurePack) {
         addAttribute(fp, Attribute.GROUP_ID, featurePack.getGav().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {

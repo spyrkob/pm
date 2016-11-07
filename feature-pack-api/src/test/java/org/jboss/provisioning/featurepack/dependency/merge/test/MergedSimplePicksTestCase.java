@@ -22,8 +22,8 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -91,18 +91,18 @@ public class MergedSimplePicksTestCase extends PmProvisionSpecTestBase {
     }
 
     @Override
-    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
-        return ResolvedInstallationDescription.builder()
-                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                         .addPackage("p1")
                         .build())
-                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                         .addPackage("p1")
                         .build())
-                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
                         .addPackage("p1")
                         .build())
-                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
                         .addPackage("p2")
                         .addPackage("p3")
                         .addPackage("p4")

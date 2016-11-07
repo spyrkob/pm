@@ -27,10 +27,10 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
-import org.jboss.provisioning.xml.ProvisionedInstallationXmlParser;
+import org.jboss.provisioning.xml.ProvisionedStateXmlParser;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -113,13 +113,13 @@ public class ProvisioningManager {
      * @return  detailed description of the provisioned installation
      * @throws ProvisioningException  in case there was an error reading the description from the disk
      */
-    public ResolvedInstallationDescription getProvisionedState() throws ProvisioningException {
+    public ProvisionedState getProvisionedState() throws ProvisioningException {
         final Path xml = PathsUtils.getProvisionedStateXml(installationHome);
         if (!Files.exists(xml)) {
             return null;
         }
         try (BufferedReader reader = Files.newBufferedReader(xml)) {
-            return new ProvisionedInstallationXmlParser().parse(reader);
+            return new ProvisionedStateXmlParser().parse(reader);
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(xml), e);
         }

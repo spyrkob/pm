@@ -23,7 +23,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -79,7 +79,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return null;
     }
 

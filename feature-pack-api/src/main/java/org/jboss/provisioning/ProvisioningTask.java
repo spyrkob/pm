@@ -32,17 +32,17 @@ import java.util.ServiceLoader;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
 import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
-import org.jboss.provisioning.util.ProvisionedInstallationResolver;
+import org.jboss.provisioning.util.ProvisionedStateResolver;
 import org.jboss.provisioning.util.ZipUtils;
 
 /**
@@ -96,8 +96,8 @@ class ProvisioningTask {
             mkdirs(installationHome);
 
             final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
-            final ResolvedInstallationDescription resolvedInstall = new ProvisionedInstallationResolver().resolve(extendedConfig, layoutDescr, layoutDir);
-            FeaturePackLayoutInstaller.install(extendedConfig, provisioningConfig, layoutDescr, layoutDir, installationHome, resolvedInstall);
+            final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(extendedConfig, layoutDescr, layoutDir);
+            FeaturePackLayoutInstaller.install(extendedConfig, provisioningConfig, layoutDescr, layoutDir, installationHome, provisionedState);
 
             if(!provisioningPlugins.isEmpty()) {
                 executePlugins(provisioningConfig, layoutDescr);

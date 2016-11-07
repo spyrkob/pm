@@ -23,16 +23,16 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedInstallationXmlParser implements XmlParser<ResolvedInstallationDescription> {
+public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState> {
 
-    private static final QName ROOT_1_0 = new QName(ProvisionedInstallationXmlParser10.NAMESPACE_1_0, ProvisionedInstallationXmlParser10.Element.INSTALLATION.getLocalName());
+    private static final QName ROOT_1_0 = new QName(ProvisionedStateXmlParser10.NAMESPACE_1_0, ProvisionedStateXmlParser10.Element.INSTALLATION.getLocalName());
 
     private static final XMLInputFactory inputFactory;
     static {
@@ -50,16 +50,16 @@ public class ProvisionedInstallationXmlParser implements XmlParser<ResolvedInsta
 
     private final XMLMapper mapper;
 
-    public ProvisionedInstallationXmlParser() {
+    public ProvisionedStateXmlParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new ProvisionedInstallationXmlParser10());
+        mapper.registerRootElement(ROOT_1_0, new ProvisionedStateXmlParser10());
     }
 
     @Override
-    public ResolvedInstallationDescription parse(final Reader input) throws XMLStreamException {
+    public ProvisionedState parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final ResolvedInstallationDescription.Builder builder = ResolvedInstallationDescription.builder();
+        final ProvisionedState.Builder builder = ProvisionedState.builder();
         mapper.parseDocument(builder, streamReader);
         return builder.build();
     }

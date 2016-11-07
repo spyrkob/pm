@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.util.IoUtils;
@@ -99,7 +99,7 @@ public class FeaturePackRepoTestBase {
         Assert.assertEquals(config, pm.getProvisioningConfig());
     }
 
-    protected void assertConfig(ProvisioningManager pm, ResolvedInstallationDescription config) throws ProvisioningException {
+    protected void assertConfig(ProvisioningManager pm, ProvisionedState config) throws ProvisioningException {
         Assert.assertEquals(config, pm.getProvisionedState());
     }
 }

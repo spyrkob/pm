@@ -21,8 +21,8 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
-import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
@@ -66,9 +66,9 @@ public class IncludeNonDefaultPackageTestCase extends PmInstallFeaturePackTestBa
     }
 
     @Override
-    protected ResolvedInstallationDescription provisionedState() throws ProvisioningException {
-        return ResolvedInstallationDescription.builder()
-                .addFeaturePack(ResolvedFeaturePackDescription.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                         .addPackage("a")
                         .addPackage("b")
                         .addPackage("c")

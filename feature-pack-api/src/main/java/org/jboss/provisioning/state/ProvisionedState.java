@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,18 +26,19 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 
 /**
+ * Represents provisioned installation.
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedInstallationDescription {
+public class ProvisionedState {
 
     public static class Builder {
-        private Map<ArtifactCoords.Gav, ResolvedFeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
 
-        public Builder addFeaturePack(ResolvedFeaturePackDescription fp) {
+        public Builder addFeaturePack(ProvisionedFeaturePack fp) {
             switch(featurePacks.size()) {
                 case 0:
                     featurePacks = Collections.singletonMap(fp.getGav(), fp);
@@ -50,8 +51,8 @@ public class ResolvedInstallationDescription {
             return this;
         }
 
-        public ResolvedInstallationDescription build() {
-            return new ResolvedInstallationDescription(this);
+        public ProvisionedState build() {
+            return new ProvisionedState(this);
         }
     }
 
@@ -59,9 +60,9 @@ public class ResolvedInstallationDescription {
         return new Builder();
     }
 
-    private final Map<ArtifactCoords.Gav, ResolvedFeaturePackDescription> featurePacks;
+    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
 
-    private ResolvedInstallationDescription(Builder builder) {
+    private ProvisionedState(Builder builder) {
         this.featurePacks = Collections.unmodifiableMap(builder.featurePacks);
     }
 
@@ -73,11 +74,11 @@ public class ResolvedInstallationDescription {
         return featurePacks.keySet();
     }
 
-    public Collection<ResolvedFeaturePackDescription> getFeaturePacks() {
+    public Collection<ProvisionedFeaturePack> getFeaturePacks() {
         return featurePacks.values();
     }
 
-    public ResolvedFeaturePackDescription getFeaturePack(ArtifactCoords.Gav gav) {
+    public ProvisionedFeaturePack getFeaturePack(ArtifactCoords.Gav gav) {
         return featurePacks.get(gav);
     }
 
@@ -97,7 +98,7 @@ public class ResolvedInstallationDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ResolvedInstallationDescription other = (ResolvedInstallationDescription) obj;
+        ProvisionedState other = (ProvisionedState) obj;
         if (featurePacks == null) {
             if (other.featurePacks != null)
                 return false;
