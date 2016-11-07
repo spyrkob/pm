@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.eclipse.aether.RepositorySystem;
@@ -42,9 +43,9 @@ import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.analyzer.FeaturePackDependencyBuilder;
 import org.jboss.provisioning.util.analyzer.FeaturePackDescriptionDiffs;
@@ -305,9 +306,9 @@ public class FpCommand extends PmSessionCommand {
 
         if (xmlOnly) {
             try (StringWriter writer = new StringWriter()) {
-                final FeaturePackDescription newChildDescr = FeaturePackDependencyBuilder.describeParentAsDependency(
+                final FeaturePackSpec newChildSpec = FeaturePackDependencyBuilder.describeParentAsDependency(
                         workDir, encodingArg, ArtifactCoords.newGav(gav1), ArtifactCoords.newGav(gav2));
-                FeaturePackXmlWriter.INSTANCE.write(newChildDescr, writer);
+                FeaturePackXmlWriter.INSTANCE.write(newChildSpec, writer);
                 System.out.println(writer.getBuffer().toString());
             } catch (ProvisioningDescriptionException e) {
                 throw new CommandExecutionException("Failed to describe parent as a dependency", e);

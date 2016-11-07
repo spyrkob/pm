@@ -23,8 +23,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.PackageDescription.Builder;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.PackageSpec.Builder;
 import org.jboss.staxmapper.XMLMapper;
 
 
@@ -32,7 +32,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXmlParser implements XmlParser<PackageDescription> {
+public class PackageXmlParser implements XmlParser<PackageSpec> {
 
     private static final QName ROOT_1_0 = new QName(PackageXmlParser10.NAMESPACE_1_0, PackageXmlParser10.Element.PACKAGE_SPEC.getLocalName());
 
@@ -58,9 +58,9 @@ public class PackageXmlParser implements XmlParser<PackageDescription> {
     }
 
     @Override
-    public PackageDescription parse(final Reader input) throws XMLStreamException {
+    public PackageSpec parse(final Reader input) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final Builder pkgBuilder = PackageDescription.builder();
+        final Builder pkgBuilder = PackageSpec.builder();
         mapper.parseDocument(pkgBuilder, streamReader);
         return pkgBuilder.build();
     }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,12 +30,12 @@ import java.util.Set;
  *
  * @author Alexey Loubyansky
  */
-public class PackageDependencyGroupDescription {
+public class PackageDependencyGroupSpec {
 
     public static class Builder {
 
         private final String groupName;
-        protected Map<String, PackageDependencyDescription> dependencies = Collections.emptyMap();
+        protected Map<String, PackageDependencySpec> dependencies = Collections.emptyMap();
 
         private Builder(String name) {
             this.groupName = name;
@@ -46,24 +46,24 @@ public class PackageDependencyGroupDescription {
         }
 
         public Builder addDependency(String packageName, boolean optional) {
-            return addDependency(PackageDependencyDescription.create(packageName, optional));
+            return addDependency(PackageDependencySpec.create(packageName, optional));
         }
 
-        public Builder addDependency(PackageDependencyDescription depDescr) {
+        public Builder addDependency(PackageDependencySpec depSpec) {
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(depDescr.getName(), depDescr);
+                    dependencies = Collections.singletonMap(depSpec.getName(), depSpec);
                     break;
                 case 1:
                     dependencies = new HashMap<>(dependencies);
                 default:
-                    dependencies.put(depDescr.getName(), depDescr);
+                    dependencies.put(depSpec.getName(), depSpec);
             }
             return this;
         }
 
-        public PackageDependencyGroupDescription build() {
-            return new PackageDependencyGroupDescription(this);
+        public PackageDependencyGroupSpec build() {
+            return new PackageDependencyGroupSpec(this);
         }
     }
 
@@ -76,9 +76,9 @@ public class PackageDependencyGroupDescription {
     }
 
     private final String groupName;
-    private final Map<String, PackageDependencyDescription> dependencies;
+    private final Map<String, PackageDependencySpec> dependencies;
 
-    private PackageDependencyGroupDescription(Builder builder) {
+    private PackageDependencyGroupSpec(Builder builder) {
         this.groupName = builder.groupName;
         this.dependencies = Collections.unmodifiableMap(builder.dependencies);
     }
@@ -99,7 +99,7 @@ public class PackageDependencyGroupDescription {
         return dependencies.keySet();
     }
 
-    public Collection<PackageDependencyDescription> getDescriptions() {
+    public Collection<PackageDependencySpec> getDescriptions() {
         return dependencies.values();
     }
 
@@ -120,7 +120,7 @@ public class PackageDependencyGroupDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        PackageDependencyGroupDescription other = (PackageDependencyGroupDescription) obj;
+        PackageDependencyGroupSpec other = (PackageDependencyGroupSpec) obj;
         if (dependencies == null) {
             if (other.dependencies != null)
                 return false;

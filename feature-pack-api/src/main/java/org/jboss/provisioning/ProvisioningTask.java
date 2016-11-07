@@ -32,13 +32,12 @@ import java.util.ServiceLoader;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.FeaturePackLayoutInstaller;
 import org.jboss.provisioning.util.IoUtils;
@@ -113,7 +112,7 @@ class ProvisioningTask {
             FeaturePackLayoutDescription.Builder layoutBuilder) throws ProvisioningException {
 
         final ArtifactCoords.Gav fpGav = fpConfig.getGav();
-        final FeaturePackDescription fpDescr;
+        final FeaturePackSpec fpSpec;
         if(!layoutBuilder.hasFeaturePack(fpGav.toGa())) {
             final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
             final Path fpWorkDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav, false);
@@ -126,7 +125,7 @@ class ProvisioningTask {
             }
 
             try {
-                fpDescr = FeaturePackLayoutDescriber.describeFeaturePack(fpWorkDir, encoding);
+                fpSpec = FeaturePackLayoutDescriber.describeFeaturePack(fpWorkDir, encoding);
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
             }
@@ -140,31 +139,31 @@ class ProvisioningTask {
                 }
             }
 
-            if(fpDescr.hasProvisioningPlugins()) {
-                for(ArtifactCoords.Gav gav : fpDescr.getProvisioningPlugins()) {
+            if(fpSpec.hasProvisioningPlugins()) {
+                for(ArtifactCoords.Gav gav : fpSpec.getProvisioningPlugins()) {
                     addProvisioningPlugin(gav);
                 }
             }
 
             try {
-                layoutBuilder.addFeaturePack(fpDescr);
+                layoutBuilder.addFeaturePack(fpSpec);
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningException("Failed to layout feature packs", e);
             }
 
         } else {
-            fpDescr = layoutBuilder.getFeaturePack(fpGav.toGa());
-            if(!fpDescr.getGav().equals(fpGav)) {
-                throw new ProvisioningException(Errors.featurePackVersionConflict(fpDescr.getGav(), fpGav));
+            fpSpec = layoutBuilder.getFeaturePack(fpGav.toGa());
+            if(!fpSpec.getGav().equals(fpGav)) {
+                throw new ProvisioningException(Errors.featurePackVersionConflict(fpSpec.getGav(), fpGav));
             }
         }
 
         Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
-        if(fpDescr.hasDependencies()) {
-            for(FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+        if(fpSpec.hasDependencies()) {
+            for(FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
                 fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder));
             }
-            for (FeaturePackDependencyDescription dep : fpDescr.getDependencies()) {
+            for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
                 fpBuilders = enforce(layoutBuilder.getFeaturePack(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
             }
         }
@@ -172,13 +171,13 @@ class ProvisioningTask {
     }
 
     private Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> enforce(
-            FeaturePackDescription fpDescr,
+            FeaturePackSpec fpSpec,
             FeaturePackConfig fpConfig,
             Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders) throws ProvisioningDescriptionException {
         final ArtifactCoords.Gav fpGav = fpConfig.getGav();
         switch(fpBuilders.size()) {
             case 0:
-                fpBuilders = Collections.singletonMap(fpGav, FeaturePackConfig.builder(fpDescr, fpConfig));
+                fpBuilders = Collections.singletonMap(fpGav, FeaturePackConfig.builder(fpSpec, fpConfig));
                 break;
             case 1:
                 if(fpBuilders.containsKey(fpGav)) {
@@ -190,7 +189,7 @@ class ProvisioningTask {
                 if(fpBuilders.containsKey(fpGav)) {
                     fpBuilders.get(fpGav).enforce(fpConfig);
                 } else {
-                    fpBuilders.put(fpGav, FeaturePackConfig.builder(fpDescr, fpConfig));
+                    fpBuilders.put(fpGav, FeaturePackConfig.builder(fpSpec, fpConfig));
                 }
         }
         return fpBuilders;

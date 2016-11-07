@@ -24,8 +24,8 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 
 /**
  * The configuration of the installation to be provisioned.

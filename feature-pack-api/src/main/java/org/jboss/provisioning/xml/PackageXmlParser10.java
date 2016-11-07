@@ -25,8 +25,8 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.PackageDescription.Builder;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.PackageSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -36,7 +36,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXmlParser10 implements XMLElementReader<PackageDescription.Builder> {
+public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
 
@@ -134,7 +134,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageDescription.B
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, PackageDescription.Builder pkgBuilder) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, PackageSpec.Builder pkgBuilder) throws XMLStreamException {
         pkgBuilder.setName(parseName(reader, false));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

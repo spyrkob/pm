@@ -24,8 +24,8 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
  * This class represents a feature-pack configuration to be installed.
@@ -40,7 +40,7 @@ public class FeaturePackConfig {
         protected boolean inheritPackages;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Set<String> includedPackages = Collections.emptySet();
-        protected FeaturePackDescription fpDescr;
+        protected FeaturePackSpec fpSpec;
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -51,9 +51,9 @@ public class FeaturePackConfig {
             this.inheritPackages = includeDefault;
         }
 
-        protected Builder(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig) {
+        protected Builder(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
             this.gav = fpConfig.getGav();
-            this.fpDescr = fpDescr;
+            this.fpSpec = fpSpec;
             inheritPackages = fpConfig.inheritPackages;
 
             switch(fpConfig.excludedPackages.size()) {
@@ -226,19 +226,19 @@ public class FeaturePackConfig {
         }
 
         public FeaturePackConfig build() {
-            if(fpDescr != null) {
+            if(fpSpec != null) {
                 // remove redundant explicit excludes/includes
                 if(inheritPackages) {
-                    if(!includedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
-                        for(String name : fpDescr.getDefaultPackageNames()) {
+                    if(!includedPackages.isEmpty() && fpSpec.hasDefaultPackages()) {
+                        for(String name : fpSpec.getDefaultPackageNames()) {
                             if(includedPackages.contains(name)) {
                                 removeFromIncluded(name);
                             }
                         }
                     }
                 } else {
-                    if(!excludedPackages.isEmpty() && fpDescr.hasDefaultPackages()) {
-                        for(String name : fpDescr.getDefaultPackageNames()) {
+                    if(!excludedPackages.isEmpty() && fpSpec.hasDefaultPackages()) {
+                        for(String name : fpSpec.getDefaultPackageNames()) {
                             if(excludedPackages.contains(name)) {
                                 removeFromExcluded(name);
                             }
@@ -252,8 +252,8 @@ public class FeaturePackConfig {
         }
     }
 
-    public static Builder builder(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig) {
-        return new Builder(fpDescr, fpConfig);
+    public static Builder builder(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
+        return new Builder(fpSpec, fpConfig);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav) {

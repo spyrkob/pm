@@ -41,8 +41,6 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.descr.PackageDependencyDescription;
-import org.jboss.provisioning.descr.PackageDescription;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -54,6 +52,8 @@ import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInpu
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFileDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.xml.PackageXmlParser;
 
@@ -188,9 +188,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             throw new ProvisioningException(Errors.pathDoesNotExist(modulesPackageXml));
         }
 
-        final PackageDescription modulesDescr;
+        final PackageSpec modulesSpec;
         try (Reader reader = Files.newBufferedReader(modulesPackageXml)) {
-            modulesDescr = new PackageXmlParser().parse(reader);
+            modulesSpec = new PackageXmlParser().parse(reader);
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningException(Errors.parseXml(modulesPackageXml), e);
         }
@@ -200,7 +200,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 processModule(ctx, packagesDir, modulePkg);
             }
         } else {
-            for (PackageDependencyDescription modulePkg : modulesDescr.getLocalDependencies().getDescriptions()) {
+            for (PackageDependencySpec modulePkg : modulesSpec.getLocalDependencies().getDescriptions()) {
                 if (fpConfig != null && fpConfig.isExcluded(modulePkg.getName())) {
                     continue;
                 }

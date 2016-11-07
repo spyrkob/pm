@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.util.DescrFormatter;
@@ -37,16 +38,16 @@ public class FeaturePackLayoutDescription {
 
     public static class Builder {
 
-        private Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, FeaturePackSpec> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
 
-        public Builder addFeaturePack(FeaturePackDescription fp) throws ProvisioningDescriptionException {
+        public Builder addFeaturePack(FeaturePackSpec fp) throws ProvisioningDescriptionException {
             return addFeaturePack(fp, true);
         }
 
-        public Builder addFeaturePack(FeaturePackDescription fp, boolean addLast) throws ProvisioningDescriptionException {
+        public Builder addFeaturePack(FeaturePackSpec fp, boolean addLast) throws ProvisioningDescriptionException {
             assert fp != null : "fp is null";
             final ArtifactCoords.Ga fpGa = fp.getGav().toGa();
             if(featurePacks.containsKey(fpGa)) {
@@ -62,7 +63,7 @@ public class FeaturePackLayoutDescription {
                     featurePacks = Collections.singletonMap(fpGa, fp);
                     break;
                 case 1:
-                    featurePacks = new LinkedHashMap<ArtifactCoords.Ga, FeaturePackDescription>(featurePacks);
+                    featurePacks = new LinkedHashMap<ArtifactCoords.Ga, FeaturePackSpec>(featurePacks);
                 default:
                     if(addLast && featurePacks.containsKey(fpGa)) {
                         featurePacks.remove(fpGa);
@@ -76,7 +77,7 @@ public class FeaturePackLayoutDescription {
             return featurePacks.containsKey(fpGa);
         }
 
-        public FeaturePackDescription getFeaturePack(ArtifactCoords.Ga fpGa) {
+        public FeaturePackSpec getFeaturePack(ArtifactCoords.Ga fpGa) {
             return featurePacks.get(fpGa);
         }
 
@@ -89,9 +90,9 @@ public class FeaturePackLayoutDescription {
         return new Builder();
     }
 
-    private final Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks;
+    private final Map<ArtifactCoords.Ga, FeaturePackSpec> featurePacks;
 
-    FeaturePackLayoutDescription(Map<ArtifactCoords.Ga, FeaturePackDescription> featurePacks) {
+    FeaturePackLayoutDescription(Map<ArtifactCoords.Ga, FeaturePackSpec> featurePacks) {
         assert featurePacks != null : "featurePacks is null";
         this.featurePacks = featurePacks;
     }
@@ -105,15 +106,15 @@ public class FeaturePackLayoutDescription {
     }
 
     public ArtifactCoords.Gav getGav(ArtifactCoords.Ga fpGa) {
-        final FeaturePackDescription fpDescr = featurePacks.get(fpGa);
-        return fpDescr == null ? null : fpDescr.getGav();
+        final FeaturePackSpec fpSpec = featurePacks.get(fpGa);
+        return fpSpec == null ? null : fpSpec.getGav();
     }
 
-    public FeaturePackDescription getFeaturePack(ArtifactCoords.Ga fpGa) {
+    public FeaturePackSpec getFeaturePack(ArtifactCoords.Ga fpGa) {
         return featurePacks.get(fpGa);
     }
 
-    public Collection<FeaturePackDescription> getFeaturePacks() {
+    public Collection<FeaturePackSpec> getFeaturePacks() {
         return featurePacks.values();
     }
 
@@ -121,7 +122,7 @@ public class FeaturePackLayoutDescription {
         final DescrFormatter logger = new DescrFormatter();
         logger.println("Feature-pack layout");
         logger.increaseOffset();
-        for(FeaturePackDescription fp : featurePacks.values()) {
+        for(FeaturePackSpec fp : featurePacks.values()) {
             fp.logContent(logger);
         }
         logger.decreaseOffset();

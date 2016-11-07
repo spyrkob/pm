@@ -18,7 +18,7 @@ package org.jboss.provisioning.featurepack.pkg.xml.test;
 
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.PackageXmlParser;
 import org.junit.Assert;
@@ -29,7 +29,7 @@ import org.junit.Test;
  */
 public class PackageXmlParserTestCase  {
 
-    private static final XmlParserValidator<PackageDescription> validator = new XmlParserValidator<>(
+    private static final XmlParserValidator<PackageSpec> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-package-1_0.xsd"), new PackageXmlParser());
 
     @Test
@@ -65,15 +65,15 @@ public class PackageXmlParserTestCase  {
 
     @Test
     public void readMissingDependencies() throws Exception {
-        final PackageDescription parsedPkg = validator.validateAndParse("xml/package/package-1.0-missing-dependencies.xml", null, null);
-        final PackageDescription expectedPkg = PackageDescription.builder().setName("package1").build();
+        final PackageSpec parsedPkg = validator.validateAndParse("xml/package/package-1.0-missing-dependencies.xml", null, null);
+        final PackageSpec expectedPkg = PackageSpec.builder().setName("package1").build();
         Assert.assertEquals(expectedPkg, parsedPkg);
     }
 
     @Test
     public void readValid() throws Exception {
-        PackageDescription found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
-        PackageDescription expected = PackageDescription.builder()
+        PackageSpec found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
+        PackageSpec expected = PackageSpec.builder()
                 .setName("package1")
                 .addDependency("dep1")
                 .addDependency("dep2")
@@ -85,8 +85,8 @@ public class PackageXmlParserTestCase  {
 
     @Test
     public void readOptionalDependencies() throws Exception {
-        PackageDescription found = validator.validateAndParse("xml/package/package-1.0-optional-dependencies.xml", null, null);
-        PackageDescription expected = PackageDescription.builder()
+        PackageSpec found = validator.validateAndParse("xml/package/package-1.0-optional-dependencies.xml", null, null);
+        PackageSpec expected = PackageSpec.builder()
                 .setName("package1")
                 .addDependency("dep1")
                 .addDependency("dep2")

@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
 
 /**
  * Provisioning context available for a provisioning plug-in.

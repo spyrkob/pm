@@ -23,12 +23,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -62,7 +62,7 @@ public class FeaturePackBuilder {
     }
 
     private final FeaturePackRepoManager.Installer installer;
-    private final FeaturePackDescription.Builder fpBuilder = FeaturePackDescription.builder();
+    private final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
     private List<PackageBuilder> pkgs = Collections.emptyList();
 
     protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
@@ -124,27 +124,27 @@ public class FeaturePackBuilder {
         return pkg;
     }
 
-    public FeaturePackDescription build(Path repoHome) {
+    public FeaturePackSpec build(Path repoHome) {
         final Path fpWorkDir = TestUtils.mkRandomTmpDir();
-        final FeaturePackDescription fpDescr;
+        final FeaturePackSpec fpSpec;
         try {
             for (PackageBuilder pkg : pkgs) {
-                final PackageDescription pkgDescr = pkg.build(fpWorkDir);
+                final PackageSpec pkgDescr = pkg.build(fpWorkDir);
                 if(pkg.isDefault()) {
                     fpBuilder.addDefaultPackage(pkgDescr);
                 } else {
                     fpBuilder.addPackage(pkgDescr);
                 }
             }
-            fpDescr = fpBuilder.build();
+            fpSpec = fpBuilder.build();
             final FeaturePackXmlWriter writer = FeaturePackXmlWriter.INSTANCE;
-            writer.write(fpDescr, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
+            writer.write(fpSpec, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
 
             final Path fpZip;
-            fpZip = getFeaturePackArtifactPath(repoHome, fpDescr.getGav());
+            fpZip = getFeaturePackArtifactPath(repoHome, fpSpec.getGav());
             TestUtils.mkdirs(fpZip.getParent());
             ZipUtils.zip(fpWorkDir, fpZip);
-            return fpDescr;
+            return fpSpec;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         } finally {

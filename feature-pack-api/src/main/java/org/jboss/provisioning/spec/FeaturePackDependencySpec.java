@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 
@@ -24,20 +24,20 @@ import org.jboss.provisioning.config.FeaturePackConfig;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDependencyDescription {
+public class FeaturePackDependencySpec {
 
-    public static FeaturePackDependencyDescription create(FeaturePackConfig fpConfig) {
+    public static FeaturePackDependencySpec create(FeaturePackConfig fpConfig) {
         return create(null, fpConfig);
     }
 
-    public static FeaturePackDependencyDescription create(String name, FeaturePackConfig fpConfig) {
-        return new FeaturePackDependencyDescription(name, fpConfig);
+    public static FeaturePackDependencySpec create(String name, FeaturePackConfig fpConfig) {
+        return new FeaturePackDependencySpec(name, fpConfig);
     }
 
     private final String name;
     private final FeaturePackConfig fpConfig;
 
-    private FeaturePackDependencyDescription(String name, FeaturePackConfig fpConfig) {
+    private FeaturePackDependencySpec(String name, FeaturePackConfig fpConfig) {
         this.name = name;
         this.fpConfig = fpConfig;
     }
@@ -80,7 +80,7 @@ public class FeaturePackDependencyDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        FeaturePackDependencyDescription other = (FeaturePackDependencyDescription) obj;
+        FeaturePackDependencySpec other = (FeaturePackDependencySpec) obj;
         if (fpConfig == null) {
             if (other.fpConfig != null)
                 return false;

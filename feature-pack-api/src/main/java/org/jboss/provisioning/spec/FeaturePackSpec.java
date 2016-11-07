@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.descr;
+package org.jboss.provisioning.spec;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.util.DescrFormatter;
 
@@ -38,15 +39,15 @@ import org.jboss.provisioning.util.DescrFormatter;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDescription {
+public class FeaturePackSpec {
 
     public static class Builder {
 
         private ArtifactCoords.Gav gav;
-        private Map<ArtifactCoords.Ga, FeaturePackDependencyDescription> dependencies = Collections.emptyMap();
-        private Map<String, FeaturePackDependencyDescription> dependencyByName = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
+        private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private Map<String, PackageDescription> packages = Collections.emptyMap();
+        private Map<String, PackageSpec> packages = Collections.emptyMap();
         private List<ArtifactCoords.Gav> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
@@ -62,7 +63,7 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addDefaultPackage(PackageDescription pkg) {
+        public Builder addDefaultPackage(PackageSpec pkg) {
             markAsDefaultPackage(pkg.getName());
             addPackage(pkg);
             return this;
@@ -82,14 +83,14 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public Builder addPackage(PackageDescription pkg) {
+        public Builder addPackage(PackageSpec pkg) {
             assert pkg != null : "package is null";
             switch(packages.size()) {
                 case 0:
                     packages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    packages = new HashMap<String, PackageDescription>(packages);
+                    packages = new HashMap<String, PackageSpec>(packages);
                 default:
                     packages.put(pkg.getName(), pkg);
             }
@@ -101,10 +102,10 @@ public class FeaturePackDescription {
         }
 
         public Builder addDependency(String name, FeaturePackConfig dependency) throws ProvisioningDescriptionException {
-            return addDependency(FeaturePackDependencyDescription.create(name, dependency));
+            return addDependency(FeaturePackDependencySpec.create(name, dependency));
         }
 
-        public Builder addDependency(FeaturePackDependencyDescription dependency) throws ProvisioningDescriptionException {
+        public Builder addDependency(FeaturePackDependencySpec dependency) throws ProvisioningDescriptionException {
             if(dependency.getName() != null) {
                 if(dependencyByName.isEmpty()) {
                     dependencyByName = Collections.singletonMap(dependency.getName(), dependency);
@@ -150,14 +151,14 @@ public class FeaturePackDescription {
             return this;
         }
 
-        public FeaturePackDescription build() throws ProvisioningDescriptionException {
+        public FeaturePackSpec build() throws ProvisioningDescriptionException {
             // package dependency consistency check
             if (!packages.isEmpty()) {
                 final Set<String> allPackageNames = packages.keySet();
-                for (PackageDescription pkg : packages.values()) {
+                for (PackageSpec pkg : packages.values()) {
                     if (pkg.hasLocalDependencies()) {
                         List<String> notFound = Collections.emptyList();
-                        for(PackageDependencyDescription pkgDep : pkg.getLocalDependencies().getDescriptions()) {
+                        for(PackageDependencySpec pkgDep : pkg.getLocalDependencies().getDescriptions()) {
                             if(!allPackageNames.contains(pkgDep.getName())) {
                                 switch(notFound.size()) {
                                     case 0:
@@ -177,7 +178,7 @@ public class FeaturePackDescription {
                 }
             }
 
-            return new FeaturePackDescription(this);
+            return new FeaturePackSpec(this);
         }
     }
 
@@ -190,13 +191,13 @@ public class FeaturePackDescription {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final Map<ArtifactCoords.Ga, FeaturePackDependencyDescription> dependencies;
-    private final Map<String, FeaturePackDependencyDescription> dependencyByName;
+    private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
+    private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final Map<String, PackageDescription> packages;
+    private final Map<String, PackageSpec> packages;
     private final List<ArtifactCoords.Gav> provisioningPlugins;
 
-    protected FeaturePackDescription(Builder builder) {
+    protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = Collections.unmodifiableSet(builder.defPackages);
         this.packages = Collections.unmodifiableMap(builder.packages);
@@ -229,7 +230,7 @@ public class FeaturePackDescription {
         return packages.containsKey(name);
     }
 
-    public Collection<PackageDescription> getPackages() {
+    public Collection<PackageSpec> getPackages() {
         return packages.values();
     }
 
@@ -237,7 +238,7 @@ public class FeaturePackDescription {
         return packages.keySet();
     }
 
-    public PackageDescription getPackage(String name) {
+    public PackageSpec getPackage(String name) {
         return packages.get(name);
     }
 
@@ -249,15 +250,15 @@ public class FeaturePackDescription {
         return dependencies.keySet();
     }
 
-    public Collection<FeaturePackDependencyDescription> getDependencies() {
+    public Collection<FeaturePackDependencySpec> getDependencies() {
         return dependencies.values();
     }
 
-    public FeaturePackDependencyDescription getDependency(ArtifactCoords.Ga gaPart) {
+    public FeaturePackDependencySpec getDependency(ArtifactCoords.Ga gaPart) {
         return dependencies.get(gaPart);
     }
 
-    public FeaturePackDependencyDescription getDependency(String name) {
+    public FeaturePackDependencySpec getDependency(String name) {
         return dependencyByName.get(name);
     }
 
@@ -327,7 +328,7 @@ public class FeaturePackDescription {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        FeaturePackDescription other = (FeaturePackDescription) obj;
+        FeaturePackSpec other = (FeaturePackSpec) obj;
         if (dependencies == null) {
             if (other.dependencies != null)
                 return false;

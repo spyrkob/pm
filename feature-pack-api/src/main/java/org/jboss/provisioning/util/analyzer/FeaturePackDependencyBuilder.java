@@ -25,13 +25,13 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription.Builder;
-import org.jboss.provisioning.descr.PackageDependencyDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
-import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
@@ -48,7 +48,7 @@ public class FeaturePackDependencyBuilder {
         new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, true).extractParentAsDependency();
     }
 
-    public static FeaturePackDescription describeParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.Gav childGav, ArtifactCoords.Gav parentGav) throws ProvisioningDescriptionException {
+    public static FeaturePackSpec describeParentAsDependency(Path fpLayoutDir, String encoding, ArtifactCoords.Gav childGav, ArtifactCoords.Gav parentGav) throws ProvisioningDescriptionException {
         return new FeaturePackDependencyBuilder(fpLayoutDir, encoding, childGav, parentGav, false).describeParentAsDependency();
     }
 
@@ -69,32 +69,32 @@ public class FeaturePackDependencyBuilder {
 
     private void extractParentAsDependency() throws ProvisioningDescriptionException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav);
-        final FeaturePackDescription originalDescr = FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding);
-        final FeaturePackDescription newDescr = describeParentAsDependency();
+        final FeaturePackSpec originalSpec = FeaturePackLayoutDescriber.describeFeaturePack(fpDir, encoding);
+        final FeaturePackSpec newSpec = describeParentAsDependency();
 
         final Path featurePackXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
         if(!Files.exists(featurePackXml)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(featurePackXml));
         }
         try {
-            FeaturePackXmlWriter.INSTANCE.write(newDescr, featurePackXml);
+            FeaturePackXmlWriter.INSTANCE.write(newSpec, featurePackXml);
         } catch (XMLStreamException | IOException e) {
             throw new ProvisioningDescriptionException(Errors.writeXml(featurePackXml), e);
         }
-        for(String name : originalDescr.getPackageNames()) {
-            if(!newDescr.hasPackage(name)) {
+        for(String name : originalSpec.getPackageNames()) {
+            if(!newSpec.hasPackage(name)) {
                 IoUtils.recursiveDelete(LayoutUtils.getPackageDir(fpDir, name));
             }
         }
     }
 
-    private FeaturePackDescription describeParentAsDependency() throws ProvisioningDescriptionException {
+    private FeaturePackSpec describeParentAsDependency() throws ProvisioningDescriptionException {
         final FeaturePacksDiff diffTool = FeaturePacksDiff.newInstance(fpLayoutDir, encoding, childGav, parentGav);
         final FeaturePackDescriptionDiffs diff = diffTool.compare();
         final FeaturePackSpecificDescription childDiff = diff.getFeaturePackDiff1();
         final FeaturePackSpecificDescription parentDiff = diff.getFeaturePackDiff2();
 
-        final Builder fpBuilder = FeaturePackDescription.builder(childGav);
+        final Builder fpBuilder = FeaturePackSpec.builder(childGav);
 
         // add dependency on the parent
         {
@@ -117,11 +117,11 @@ public class FeaturePackDependencyBuilder {
 
         // override parent packages
         if(childDiff.hasConflictingPackages()) {
-            final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
+            final FeaturePackSpec childSpec = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getConflictingPackageNames()) {
-                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDescr.getPackage(name));
-                fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isDefaultPackage(name)) {
+                final PackageSpec pkgSpec = updatePackageDependencies(childDiff, childSpec.getPackage(name));
+                fpBuilder.addPackage(pkgSpec);
+                if(childSpec.isDefaultPackage(name)) {
                     fpBuilder.markAsDefaultPackage(name);
                 }
             }
@@ -129,11 +129,11 @@ public class FeaturePackDependencyBuilder {
 
         // add unique packages
         if(childDiff.hasUniquePackages()) {
-            final FeaturePackDescription childDescr = diffTool.getFeaturePackDescription1();
+            final FeaturePackSpec childSpec = diffTool.getFeaturePackDescription1();
             for(String name : childDiff.getUniquePackageNames()) {
-                final PackageDescription pkgDescr = updatePackageDependencies(childDiff, childDiff.getUniquePackage(name));
-                fpBuilder.addPackage(pkgDescr);
-                if(childDescr.isDefaultPackage(name)) {
+                final PackageSpec pkgSpec = updatePackageDependencies(childDiff, childDiff.getUniquePackage(name));
+                fpBuilder.addPackage(pkgSpec);
+                if(childSpec.isDefaultPackage(name)) {
                     fpBuilder.markAsDefaultPackage(name);
                 }
             }
@@ -142,30 +142,30 @@ public class FeaturePackDependencyBuilder {
         return fpBuilder.build();
     }
 
-    private PackageDescription updatePackageDependencies(
+    private PackageSpec updatePackageDependencies(
             final FeaturePackSpecificDescription childDiff,
-            PackageDescription pkgDescr) throws ProvisioningDescriptionException {
-        if(pkgDescr.hasLocalDependencies()) {
-            final PackageDescription.Builder pkgBuilder = PackageDescription.builder(pkgDescr.getName());
-            for(PackageDependencyDescription dep : pkgDescr.getLocalDependencies().getDescriptions()) {
+            PackageSpec pkgSpec) throws ProvisioningDescriptionException {
+        if(pkgSpec.hasLocalDependencies()) {
+            final PackageSpec.Builder pkgBuilder = PackageSpec.builder(pkgSpec.getName());
+            for(PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
                 if(!childDiff.isMatchedPackage(dep.getName())) {
                     pkgBuilder.addDependency(dep.getName(), dep.isOptional());
                 }
             }
-            pkgDescr = pkgBuilder.build();
+            pkgSpec = pkgBuilder.build();
             if(updateXml) {
-                final Path packageXml = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav), pkgDescr.getName()).resolve(Constants.PACKAGE_XML);
+                final Path packageXml = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(fpLayoutDir, childGav), pkgSpec.getName()).resolve(Constants.PACKAGE_XML);
                 if(!Files.exists(packageXml)) {
                     throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(packageXml));
                 }
                 try {
                     IoUtils.recursiveDelete(packageXml);
-                    PackageXmlWriter.INSTANCE.write(pkgDescr, packageXml);
+                    PackageXmlWriter.INSTANCE.write(pkgSpec, packageXml);
                 } catch (XMLStreamException | IOException e) {
                     throw new ProvisioningDescriptionException(Errors.writeXml(packageXml));
                 }
             }
         }
-        return pkgDescr;
+        return pkgSpec;
     }
 }

@@ -24,17 +24,17 @@ import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.descr.FeaturePackDependencyDescription;
-import org.jboss.provisioning.descr.FeaturePackDescription;
-import org.jboss.provisioning.descr.FeaturePackLayoutDescription;
-import org.jboss.provisioning.descr.PackageDependencyDescription;
-import org.jboss.provisioning.descr.PackageDependencyGroupDescription;
-import org.jboss.provisioning.descr.PackageDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageSpec;
 
 /**
  *
@@ -43,7 +43,7 @@ import org.jboss.provisioning.descr.ResolvedInstallationDescription;
 public class ProvisionedInstallationResolver {
 
     private ResolvedInstallationDescription.Builder installBuilder;
-    private Map<ArtifactCoords.Gav, FeaturePackDescription> fpWithExternalDeps = Collections.emptyMap();
+    private Map<ArtifactCoords.Gav, FeaturePackSpec> fpWithExternalDeps = Collections.emptyMap();
 
     public ResolvedInstallationDescription resolve(ProvisioningConfig provisioningConfig,
             FeaturePackLayoutDescription fpLayout, Path layoutDir) throws ProvisioningDescriptionException {
@@ -51,11 +51,11 @@ public class ProvisionedInstallationResolver {
         installBuilder = ResolvedInstallationDescription.builder();
         for(FeaturePackConfig fpConfig : provisioningConfig.getFeaturePacks()) {
             final ArtifactCoords.Gav fpGav = fpConfig.getGav();
-            final FeaturePackDescription fpDescr = fpLayout.getFeaturePack(fpGav.toGa());
-            if(fpDescr == null) {
+            final FeaturePackSpec fpSpec = fpLayout.getFeaturePack(fpGav.toGa());
+            if(fpSpec == null) {
                 throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpGav));
             }
-            resolveFeaturePack(fpConfig, fpDescr, LayoutUtils.getFeaturePackDir(layoutDir, fpGav));
+            resolveFeaturePack(fpConfig, fpSpec, LayoutUtils.getFeaturePackDir(layoutDir, fpGav));
         }
 
         final ResolvedInstallationDescription resolvedInstall = installBuilder.build();
@@ -68,22 +68,22 @@ public class ProvisionedInstallationResolver {
 
     private void assertExternalDependencies(ResolvedInstallationDescription resolvedInstall, FeaturePackLayoutDescription fpLayout)
             throws ProvisioningDescriptionException {
-        for(FeaturePackDescription fpDescr : fpWithExternalDeps.values()) {
-            final ResolvedFeaturePackDescription resolvedFp = resolvedInstall.getFeaturePack(fpDescr.getGav());
+        for(FeaturePackSpec fpSpec : fpWithExternalDeps.values()) {
+            final ResolvedFeaturePackDescription resolvedFp = resolvedInstall.getFeaturePack(fpSpec.getGav());
             for(String pkgName : resolvedFp.getPackageNames()) {
-                final PackageDescription pkgDescr = fpDescr.getPackage(pkgName);
-                if(pkgDescr.hasExternalDependencies()) {
-                    for(String depName : pkgDescr.getExternalDependencyNames()) {
-                        final FeaturePackDependencyDescription fpDep = fpDescr.getDependency(depName);
+                final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
+                if(pkgSpec.hasExternalDependencies()) {
+                    for(String depName : pkgSpec.getExternalDependencyNames()) {
+                        final FeaturePackDependencySpec fpDep = fpSpec.getDependency(depName);
                         if(fpDep == null) {
-                            throw new ProvisioningDescriptionException(Errors.unknownDependencyName(fpDescr.getGav(), depName));
+                            throw new ProvisioningDescriptionException(Errors.unknownDependencyName(fpSpec.getGav(), depName));
                         }
                         final ResolvedFeaturePackDescription resolvedTarget = resolvedInstall.getFeaturePack(fpDep.getTarget().getGav());
                         if(resolvedTarget == null) {
                             throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDep.getTarget().getGav()));
                         }
-                        final PackageDependencyGroupDescription pkgDeps = pkgDescr.getExternalDependencies(depName);
-                        for(PackageDependencyDescription pkgDep : pkgDeps.getDescriptions()) {
+                        final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
+                        for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                             if(!pkgDep.isOptional() && !resolvedTarget.containsPackage(pkgDep.getName())) {
                                 throw new ProvisioningDescriptionException(Errors.requiredPackageExcluded(pkgDep.getName(), fpDep.getTarget().getGav()));
                             }
@@ -94,26 +94,26 @@ public class ProvisionedInstallationResolver {
         }
     }
 
-    private void resolveFeaturePack(FeaturePackConfig fpConfig, FeaturePackDescription fpDescr, Path fpDir)
+    private void resolveFeaturePack(FeaturePackConfig fpConfig, FeaturePackSpec fpSpec, Path fpDir)
             throws ProvisioningDescriptionException {
 
         final ResolvedFeaturePackDescription.Builder fpBuilder = ResolvedFeaturePackDescription.builder(fpConfig.getGav());
 
         if(fpConfig.isInheritPackages()) {
-            for (String name : fpDescr.getDefaultPackageNames()) {
-                resolvePackage(fpDescr, fpConfig, fpBuilder, name, true);
+            for (String name : fpSpec.getDefaultPackageNames()) {
+                resolvePackage(fpSpec, fpConfig, fpBuilder, name, true);
             }
         }
         if(fpConfig.hasIncludedPackages()) {
             for(String name : fpConfig.getIncludedPackages()) {
-                resolvePackage(fpDescr, fpConfig, fpBuilder, name, false);
+                resolvePackage(fpSpec, fpConfig, fpBuilder, name, false);
             }
         }
 
         installBuilder.addFeaturePack(fpBuilder.build());
     }
 
-    private void resolvePackage(FeaturePackDescription fpDescr, FeaturePackConfig fpConfig,
+    private void resolvePackage(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig,
             ResolvedFeaturePackDescription.Builder fpBuilder, final String pkgName, boolean optional)
             throws ProvisioningDescriptionException {
         if(fpBuilder.hasPackage(pkgName)) {
@@ -123,30 +123,30 @@ public class ProvisionedInstallationResolver {
             if(optional) {
                 return;
             } else {
-                throw new ProvisioningDescriptionException(Errors.requiredPackageExcluded(pkgName, fpDescr.getGav()));
+                throw new ProvisioningDescriptionException(Errors.requiredPackageExcluded(pkgName, fpSpec.getGav()));
             }
         }
-        final PackageDescription pkgDescr = fpDescr.getPackage(pkgName);
-        if (pkgDescr == null) {
+        final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
+        if (pkgSpec == null) {
             throw new ProvisioningDescriptionException(Errors.packageNotFound(pkgName));
         }
         fpBuilder.addPackage(pkgName);
-        if (pkgDescr.hasLocalDependencies()) {
-            for (PackageDependencyDescription dep : pkgDescr.getLocalDependencies().getDescriptions()) {
+        if (pkgSpec.hasLocalDependencies()) {
+            for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
                 final String depName = dep.getName();
                 boolean optional1 = dep.isOptional();
-                resolvePackage(fpDescr, fpConfig, fpBuilder, depName, optional1);
+                resolvePackage(fpSpec, fpConfig, fpBuilder, depName, optional1);
             }
         }
-        if(pkgDescr.hasExternalDependencies() && !fpWithExternalDeps.containsKey(fpDescr.getGav())) {
+        if(pkgSpec.hasExternalDependencies() && !fpWithExternalDeps.containsKey(fpSpec.getGav())) {
             switch(fpWithExternalDeps.size()) {
                 case 0:
-                    fpWithExternalDeps = Collections.singletonMap(fpDescr.getGav(), fpDescr);
+                    fpWithExternalDeps = Collections.singletonMap(fpSpec.getGav(), fpSpec);
                     break;
                 case 1:
                     fpWithExternalDeps = new HashMap<>(fpWithExternalDeps);
                 default:
-                    fpWithExternalDeps.put(fpDescr.getGav(), fpDescr);
+                    fpWithExternalDeps.put(fpSpec.getGav(), fpSpec);
             }
         }
     }

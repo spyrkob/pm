@@ -18,12 +18,12 @@
 package org.jboss.provisioning.featurepack.dependency.override.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.descr.ResolvedFeaturePackDescription;
 import org.jboss.provisioning.descr.ResolvedInstallationDescription;
-import org.jboss.provisioning.descr.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.PmProvisionSpecTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;

@@ -25,9 +25,9 @@ import java.util.Arrays;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.descr.PackageDependencyDescription;
-import org.jboss.provisioning.descr.PackageDependencyGroupDescription;
-import org.jboss.provisioning.descr.PackageDescription;
+import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -46,23 +46,23 @@ public class PackageXmlWriter extends BaseXmlWriter {
     private PackageXmlWriter() {
     }
 
-    public void write(PackageDescription pkgDescr, Path outputFile) throws XMLStreamException, IOException {
+    public void write(PackageSpec pkgSpec, Path outputFile) throws XMLStreamException, IOException {
 
         final ElementNode pkg = addElement(null, Element.PACKAGE_SPEC);
-        addAttribute(pkg, Attribute.NAME, pkgDescr.getName());
+        addAttribute(pkg, Attribute.NAME, pkgSpec.getName());
 
-        if(pkgDescr.hasLocalDependencies()) {
+        if(pkgSpec.hasLocalDependencies()) {
             final ElementNode deps = addElement(pkg, Element.DEPENDENCIES);
-            final PackageDependencyDescription[] pkgDeps = pkgDescr.getLocalDependencies().getDescriptions().toArray(new PackageDependencyDescription[0]);
+            final PackageDependencySpec[] pkgDeps = pkgSpec.getLocalDependencies().getDescriptions().toArray(new PackageDependencySpec[0]);
             Arrays.sort(pkgDeps);
-            for(PackageDependencyDescription depDescr : pkgDeps) {
-                writePackageDependency(deps, depDescr);
+            for(PackageDependencySpec depSpec : pkgDeps) {
+                writePackageDependency(deps, depSpec);
             }
-            if(pkgDescr.hasExternalDependencies()) {
-                final String[] names = pkgDescr.getExternalDependencyNames().toArray(new String[0]);
+            if(pkgSpec.hasExternalDependencies()) {
+                final String[] names = pkgSpec.getExternalDependencyNames().toArray(new String[0]);
                 Arrays.sort(names);
                 for(String name : names) {
-                    writeFeaturePackDependency(deps, pkgDescr.getExternalDependencies(name));
+                    writeFeaturePackDependency(deps, pkgSpec.getExternalDependencies(name));
                 }
             }
         }
@@ -77,20 +77,20 @@ public class PackageXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupDescription depGroupDescr) {
+    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec) {
         final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK);
-        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupDescr.getGroupName());
-        final PackageDependencyDescription[] pkgDeps = depGroupDescr.getDescriptions().toArray(new PackageDependencyDescription[0]);
+        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
+        final PackageDependencySpec[] pkgDeps = depGroupSpec.getDescriptions().toArray(new PackageDependencySpec[0]);
         Arrays.sort(pkgDeps);
-        for(PackageDependencyDescription depDescr : pkgDeps) {
-            writePackageDependency(fpElement, depDescr);
+        for(PackageDependencySpec depSpec : pkgDeps) {
+            writePackageDependency(fpElement, depSpec);
         }
     }
 
-    private static void writePackageDependency(ElementNode deps, PackageDependencyDescription depDescr) {
+    private static void writePackageDependency(ElementNode deps, PackageDependencySpec depSpec) {
         final ElementNode depElement = addElement(deps, Element.PACKAGE);
-        addAttribute(depElement, Attribute.NAME, depDescr.getName());
-        if(depDescr.isOptional()) {
+        addAttribute(depElement, Attribute.NAME, depSpec.getName());
+        if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);
         }
     }
