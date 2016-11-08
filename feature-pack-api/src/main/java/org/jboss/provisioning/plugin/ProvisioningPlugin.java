@@ -20,18 +20,28 @@ import org.jboss.provisioning.ProvisioningException;
 
 /**
  * Provisioning plug-in can be referenced from a feature-pack configuration.
- * Plug-ins are executed as post-provisioning tasks to complete
- * the provisioning/installation.
+ *
+ * The corresponding plug-in callback methods are called:
+ * - before an installation takes place;
+ * - after the installation has been performed;
+ * - before a removal of feature-packs;
+ * - after the removal of feature-packs has been performed.
  *
  * Examples of such post-provisioning tasks could be:
  * - adjust the configuration;
  * - set file permissions;
- * - create directory structures;
+ * - create/remove directory structures;
  * - etc.
  *
  * @author Alexey Loubyansky
  */
 public interface ProvisioningPlugin {
 
-    void execute(ProvisioningContext ctx) throws ProvisioningException;
+    default void preInstall(ProvisioningContext ctx) throws ProvisioningException {};
+
+    default void postInstall(ProvisioningContext ctx) throws ProvisioningException {};
+
+    default void preRemove(ProvisioningContext ctx) throws ProvisioningException {};
+
+    default void postRemove(ProvisioningContext ctx) throws ProvisioningException {};
 }
