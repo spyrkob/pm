@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.pkg.test;
+package org.jboss.provisioning.featurepack.pkg.external.test;
+
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.state.ProvisionedState;
-import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -34,43 +36,46 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-            .newPackage("a", true)
-                .addDependency("b")
-                .writeContent("a.txt", "a")
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+            .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                    .build())
+            .newPackage("p1", true)
+                .addDependency("fp2-dep", "p2")
+                .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
-            .newPackage("b")
-                .addDependency("c")
-                .addDependency("d")
-                .writeContent("b/b.txt", "b")
-                .getFeaturePack()
-            .newPackage("c", true)
-                .addDependency("d")
-                .writeContent("c/c/c.txt", "c")
-                .getFeaturePack()
-            .newPackage("d")
-                .writeContent("c/d.txt", "d")
+            .getInstaller()
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+            .newPackage("p1", true)
+                .writeContent("fp2/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
-        return FeaturePackConfig
-                .builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                .excludePackage("b")
-                .build();
+    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+        try {
+            super.testPmMethod(pm);
+        } catch(ProvisioningDescriptionException e) {
+            Assert.assertEquals(Errors.requiredPackageNotIncluded("p2", ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final")), e.getMessage());
+        }
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig() {
-        return null;
+    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisioningConfig(pm, null);
+    }
+
+    @Override
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
+        return ProvisioningConfig.builder()
+                .addFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                .build();
     }
 
     @Override
@@ -79,17 +84,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("Required package dependency was ignored");
-        } catch(ProvisioningDescriptionException e) {
-            // expected
-        }
-    }
-
-    @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
-        return DirState.rootBuilder().build();
+        return builder.clear().build();
     }
 }

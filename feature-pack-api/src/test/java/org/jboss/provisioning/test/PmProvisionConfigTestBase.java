@@ -24,7 +24,7 @@ import org.jboss.provisioning.ProvisioningManager;
  *
  * @author Alexey Loubyansky
  */
-public abstract class PmProvisionSpecTestBase extends PmMethodTestBase {
+public abstract class PmProvisionConfigTestBase extends PmMethodTestBase {
 
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {

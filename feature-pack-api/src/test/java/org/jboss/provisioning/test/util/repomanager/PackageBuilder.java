@@ -37,21 +37,18 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  */
 public class PackageBuilder {
 
-    public static PackageBuilder newInstance() {
-        return newInstance(null);
-    }
-
-    public static PackageBuilder newInstance(FeaturePackBuilder fp) {
-        return new PackageBuilder(fp);
+    public static PackageBuilder newInstance(FeaturePackBuilder fp, String name) {
+        return new PackageBuilder(fp, name);
     }
 
     private final FeaturePackBuilder fp;
     private boolean isDefault;
-    private final PackageSpec.Builder pkg = PackageSpec.builder();
+    private final PackageSpec.Builder pkg;
     private final FsTaskList tasks = FsTaskList.newList();
 
-    private PackageBuilder(FeaturePackBuilder fp) {
+    private PackageBuilder(FeaturePackBuilder fp, String name) {
         this.fp = fp;
+        pkg = PackageSpec.builder(name);
     }
 
     public FeaturePackBuilder getFeaturePack() {
@@ -67,17 +64,17 @@ public class PackageBuilder {
         return isDefault;
     }
 
-    public PackageBuilder setName(String name) {
-        pkg.setName(name);
+    public PackageBuilder addDependency(String pkgName) {
+        return addDependency(pkgName, false);
+    }
+
+    public PackageBuilder addDependency(String pkgName, boolean optional) {
+        this.pkg.addDependency(pkgName, optional);
         return this;
     }
 
-    public PackageBuilder addDependency(String dep) {
-        return addDependency(dep, false);
-    }
-
-    public PackageBuilder addDependency(String dep, boolean optional) {
-        this.pkg.addDependency(dep, optional);
+    public PackageBuilder addDependency(String fpDepName, String pkgName) {
+        this.pkg.addDependency(fpDepName, pkgName);
         return this;
     }
 

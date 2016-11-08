@@ -104,19 +104,12 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public PackageBuilder newPackage() {
-        return newPackage(null);
-    }
-
     public PackageBuilder newPackage(String name) {
         return newPackage(name, false);
     }
 
     public PackageBuilder newPackage(String name, boolean isDefault) {
-        final PackageBuilder pkg = PackageBuilder.newInstance(this);
-        if(name != null) {
-            pkg.setName(name);
-        }
+        final PackageBuilder pkg = PackageBuilder.newInstance(this, name);
         if(isDefault) {
             pkg.setDefault();
         }
@@ -124,7 +117,7 @@ public class FeaturePackBuilder {
         return pkg;
     }
 
-    public FeaturePackSpec build(Path repoHome) {
+    public FeaturePackSpec build(Path repoHome) throws ProvisioningDescriptionException {
         final Path fpWorkDir = TestUtils.mkRandomTmpDir();
         final FeaturePackSpec fpSpec;
         try {
@@ -145,6 +138,8 @@ public class FeaturePackBuilder {
             TestUtils.mkdirs(fpZip.getParent());
             ZipUtils.zip(fpWorkDir, fpZip);
             return fpSpec;
+        } catch(ProvisioningDescriptionException e) {
+            throw e;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         } finally {

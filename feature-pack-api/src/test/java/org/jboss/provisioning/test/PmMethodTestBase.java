@@ -53,17 +53,17 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
         setupRepo(getRepoManager());
         final ProvisioningManager pm = getPm();
         testPmMethod(pm);
-        testInstallationConfig(pm);
-        testProvisionedInstallation(pm);
+        testRecordedProvisioningConfig(pm);
+        testRecordedProvisionedState(pm);
         testProvisionedContent();
     }
 
-    protected void testProvisionedInstallation(final ProvisioningManager pm) throws ProvisioningException {
-        assertConfig(pm, provisionedState());
+    protected void testRecordedProvisionedState(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisionedState(pm, provisionedState());
     }
 
-    protected void testInstallationConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertConfig(pm, provisioningConfig());
+    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisioningConfig(pm, provisioningConfig());
     }
 
     protected void testProvisionedContent() {

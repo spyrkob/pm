@@ -69,7 +69,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
      */
     @Override
-    public void execute(ProvisioningContext ctx) throws ProvisioningException {
+    public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
 
         System.out.println("WildFly configuration assembling plugin for " + ctx.getInstallDir());
 

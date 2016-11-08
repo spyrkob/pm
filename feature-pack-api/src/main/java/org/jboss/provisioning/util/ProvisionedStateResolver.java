@@ -85,7 +85,7 @@ public class ProvisionedStateResolver {
                         final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
                         for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                             if(!pkgDep.isOptional() && !provisionedTarget.containsPackage(pkgDep.getName())) {
-                                throw new ProvisioningDescriptionException(Errors.requiredPackageExcluded(pkgDep.getName(), fpDep.getTarget().getGav()));
+                                throw new ProvisioningDescriptionException(Errors.requiredPackageNotIncluded(pkgDep.getName(), fpDep.getTarget().getGav()));
                             }
                         }
                     }
@@ -123,7 +123,7 @@ public class ProvisionedStateResolver {
             if(optional) {
                 return;
             } else {
-                throw new ProvisioningDescriptionException(Errors.requiredPackageExcluded(pkgName, fpSpec.getGav()));
+                throw new ProvisioningDescriptionException(Errors.requiredPackageNotIncluded(pkgName, fpSpec.getGav()));
             }
         }
         final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);

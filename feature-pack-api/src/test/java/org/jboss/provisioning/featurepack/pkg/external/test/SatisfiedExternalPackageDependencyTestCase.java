@@ -15,15 +15,16 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.pkg.test;
+package org.jboss.provisioning.featurepack.pkg.external.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
-import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -32,45 +33,42 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class PackageDependencyChainTestCase extends PmInstallFeaturePackTestBase {
+public class SatisfiedExternalPackageDependencyTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-            .newPackage("a", true)
-                .addDependency("b")
-                .writeContent("a.txt", "a")
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+            .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                    .build())
+            .newPackage("p1", true)
+                .addDependency("fp2-dep", "p1")
+                .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
-            .newPackage("b")
-                .addDependency("c")
-                .addDependency("d")
-                .writeContent("b/b.txt", "b")
-                .getFeaturePack()
-            .newPackage("c", true)
-                .addDependency("d")
-                .writeContent("c/c/c.txt", "c")
-                .getFeaturePack()
-            .newPackage("d")
-                .writeContent("c/d.txt", "d")
+            .getInstaller()
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+            .newPackage("p1", true)
+                .writeContent("fp2/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"));
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
+        return ProvisioningConfig.builder()
+                .addFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                .build();
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
-                        .addPackage("a")
-                        .addPackage("b")
-                        .addPackage("c")
-                        .addPackage("d")
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                        .addPackage("p1")
                         .build())
                 .build();
     }
@@ -78,10 +76,8 @@ public class PackageDependencyChainTestCase extends PmInstallFeaturePackTestBase
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
-                .addFile("a.txt", "a")
-                .addFile("b/b.txt", "b")
-                .addFile("c/c/c.txt", "c")
-                .addFile("c/d.txt", "d")
+                .addFile("fp1/p1.txt", "p1")
+                .addFile("fp2/p1.txt", "p1")
                 .build();
     }
 }

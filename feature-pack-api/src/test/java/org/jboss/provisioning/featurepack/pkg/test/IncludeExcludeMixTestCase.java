@@ -35,7 +35,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 public class IncludeExcludeMixTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
-    protected void setupRepo(FeaturePackRepoManager repoManager) {
+    protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0"))
             .newPackage("p1", true)
