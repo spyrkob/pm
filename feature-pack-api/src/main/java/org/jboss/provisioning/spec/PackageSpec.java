@@ -31,6 +31,10 @@ import org.jboss.provisioning.util.DescrFormatter;
  */
 public class PackageSpec {
 
+    public static PackageSpec forName(String name) {
+        return new PackageSpec(name);
+    }
+
     public static class Builder {
 
         protected String name;
@@ -103,6 +107,12 @@ public class PackageSpec {
     protected final String name;
     protected final PackageDependencyGroupSpec localDeps;
     protected final Map<String, PackageDependencyGroupSpec> externalDeps;
+
+    protected PackageSpec(String name) {
+        this.name = name;
+        localDeps = PackageDependencyGroupSpec.builder().build();
+        externalDeps = Collections.emptyMap();
+    }
 
     protected PackageSpec(Builder builder) {
         this.name = builder.name;

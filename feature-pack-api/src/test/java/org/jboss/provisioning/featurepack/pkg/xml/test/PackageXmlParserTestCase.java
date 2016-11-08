@@ -66,15 +66,13 @@ public class PackageXmlParserTestCase  {
     @Test
     public void readMissingDependencies() throws Exception {
         final PackageSpec parsedPkg = validator.validateAndParse("xml/package/package-1.0-missing-dependencies.xml", null, null);
-        final PackageSpec expectedPkg = PackageSpec.builder().setName("package1").build();
-        Assert.assertEquals(expectedPkg, parsedPkg);
+        Assert.assertEquals(PackageSpec.forName("package1"), parsedPkg);
     }
 
     @Test
     public void readValid() throws Exception {
         PackageSpec found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
-        PackageSpec expected = PackageSpec.builder()
-                .setName("package1")
+        PackageSpec expected = PackageSpec.builder("package1")
                 .addDependency("dep1")
                 .addDependency("dep2")
                 .addDependency("fp-dep", "dep1")
@@ -86,8 +84,7 @@ public class PackageXmlParserTestCase  {
     @Test
     public void readOptionalDependencies() throws Exception {
         PackageSpec found = validator.validateAndParse("xml/package/package-1.0-optional-dependencies.xml", null, null);
-        PackageSpec expected = PackageSpec.builder()
-                .setName("package1")
+        PackageSpec expected = PackageSpec.builder("package1")
                 .addDependency("dep1")
                 .addDependency("dep2")
                 .addDependency("dep3", true)

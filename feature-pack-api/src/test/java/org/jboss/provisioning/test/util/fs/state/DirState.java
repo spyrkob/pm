@@ -92,6 +92,11 @@ public class DirState extends PathState {
             return this;
         }
 
+        public DirBuilder clear() {
+            childStates = Collections.emptyMap();
+            return this;
+        }
+
         @Override
         public DirState build() {
             final Map<String, PathState> states = new HashMap<>(childStates.size());

@@ -90,16 +90,12 @@ public class FeaturePackRepoTestBase {
         return installHome.resolve(relativePath);
     }
 
-    protected void assertConfig(ProvisioningConfig config) throws ProvisioningException {
-        assertConfig(getPm(), config);
-    }
-
-    protected static void assertConfig(ProvisioningManager pm, ProvisioningConfig config)
+    protected static void assertProvisioningConfig(ProvisioningManager pm, ProvisioningConfig config)
             throws ProvisioningException {
         Assert.assertEquals(config, pm.getProvisioningConfig());
     }
 
-    protected void assertConfig(ProvisioningManager pm, ProvisionedState config) throws ProvisioningException {
+    protected void assertProvisionedState(ProvisioningManager pm, ProvisionedState config) throws ProvisioningException {
         Assert.assertEquals(config, pm.getProvisionedState());
     }
 }

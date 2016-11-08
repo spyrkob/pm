@@ -27,6 +27,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.util.TestUtils;
 
 /**
@@ -72,7 +73,7 @@ public class FeaturePackRepoManager implements ArtifactResolver {
             return this;
         }
 
-        public Path install() {
+        public Path install() throws ProvisioningDescriptionException {
             final Path p;
             if(repoHome == null) {
                 p = TestUtils.mkRandomTmpDir();

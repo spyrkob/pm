@@ -107,8 +107,8 @@ public interface Errors {
         return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
     }
 
-    static String requiredPackageExcluded(String packageName, ArtifactCoords.Gav fpGav) {
-        return "Required package " + packageName + " was excluded from " + fpGav;
+    static String requiredPackageNotIncluded(String packageName, ArtifactCoords.Gav fpGav) {
+        return "Required package " + packageName + " was not included into " + fpGav;
     }
 
     static String packageExcludeInclude(String packageName) {
@@ -127,7 +127,7 @@ public interface Errors {
         return "Feature-pack " + gav + " is already installed";
     }
 
-    static String unknownFeaturePackDependencyName(String pkgName, String depName) {
-        return "Package " + pkgName + " references unknown feature-pack dependency " + depName;
+    static String unknownFeaturePackDependencyName(ArtifactCoords.Gav fpGav, String pkgName, String depName) {
+        return fpGav + " package " + pkgName + " references unknown feature-pack dependency " + depName;
     }
 }
