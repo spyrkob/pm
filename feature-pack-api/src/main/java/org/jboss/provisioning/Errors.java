@@ -107,8 +107,12 @@ public interface Errors {
         return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
     }
 
-    static String requiredPackageNotIncluded(String packageName, ArtifactCoords.Gav fpGav) {
-        return "Required package " + packageName + " was not included into " + fpGav;
+    static String unsatisfiedPackageDependency(ArtifactCoords.Gav fpGav, String srcPackage, String targetPackage) {
+        return "Package " + srcPackage + " from feature-pack " + fpGav + " has unsatisfied dependency on package " + targetPackage;
+    }
+
+    static String unsatisfiedExternalPackageDependency(ArtifactCoords.Gav srcGav, String srcPackage, ArtifactCoords.Gav targetGav, String targetPackage) {
+        return "Package " + srcPackage + " from feature-pack " + srcGav + " has unsatisfied dependency on package " + targetPackage + " from feature-pack " + targetGav;
     }
 
     static String packageExcludeInclude(String packageName) {

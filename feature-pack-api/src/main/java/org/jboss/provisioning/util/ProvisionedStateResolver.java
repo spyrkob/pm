@@ -85,7 +85,8 @@ public class ProvisionedStateResolver {
                         final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
                         for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                             if(!pkgDep.isOptional() && !provisionedTarget.containsPackage(pkgDep.getName())) {
-                                throw new ProvisioningDescriptionException(Errors.requiredPackageNotIncluded(pkgDep.getName(), fpDep.getTarget().getGav()));
+                                throw new ProvisioningDescriptionException(
+                                        Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkgName, fpDep.getTarget().getGav(), pkgDep.getName()));
                             }
                         }
                     }
@@ -101,12 +102,12 @@ public class ProvisionedStateResolver {
 
         if(fpConfig.isInheritPackages()) {
             for (String name : fpSpec.getDefaultPackageNames()) {
-                resolvePackage(fpSpec, fpConfig, fpBuilder, name, true);
+                resolvePackage(fpSpec, fpConfig, fpBuilder, name, true, null);
             }
         }
         if(fpConfig.hasIncludedPackages()) {
             for(String name : fpConfig.getIncludedPackages()) {
-                resolvePackage(fpSpec, fpConfig, fpBuilder, name, false);
+                resolvePackage(fpSpec, fpConfig, fpBuilder, name, false, null);
             }
         }
 
@@ -114,7 +115,7 @@ public class ProvisionedStateResolver {
     }
 
     private void resolvePackage(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig,
-            ProvisionedFeaturePack.Builder fpBuilder, final String pkgName, boolean optional)
+            ProvisionedFeaturePack.Builder fpBuilder, final String pkgName, boolean optional, String dependingPkg)
             throws ProvisioningDescriptionException {
         if(fpBuilder.hasPackage(pkgName)) {
             return;
@@ -123,7 +124,7 @@ public class ProvisionedStateResolver {
             if(optional) {
                 return;
             } else {
-                throw new ProvisioningDescriptionException(Errors.requiredPackageNotIncluded(pkgName, fpSpec.getGav()));
+                throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fpSpec.getGav(), dependingPkg, pkgName));
             }
         }
         final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
@@ -133,9 +134,7 @@ public class ProvisionedStateResolver {
         fpBuilder.addPackage(pkgName);
         if (pkgSpec.hasLocalDependencies()) {
             for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
-                final String depName = dep.getName();
-                boolean optional1 = dep.isOptional();
-                resolvePackage(fpSpec, fpConfig, fpBuilder, depName, optional1);
+                resolvePackage(fpSpec, fpConfig, fpBuilder, dep.getName(), dep.isOptional(), pkgSpec.getName());
             }
         }
         if(pkgSpec.hasExternalDependencies() && !fpWithExternalDeps.containsKey(fpSpec.getGav())) {

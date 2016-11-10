@@ -65,7 +65,9 @@ public class ExternalDependencyOnNotIncludedPackageTestCase extends PmProvisionC
         try {
             super.testPmMethod(pm);
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.requiredPackageNotIncluded("p2", ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final")), e.getMessage());
+            Assert.assertEquals(Errors.unsatisfiedExternalPackageDependency(
+                    ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1", ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"),
+                    e.getMessage());
         }
     }
 
