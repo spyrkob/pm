@@ -31,8 +31,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.stream.XMLStreamException;
@@ -62,13 +65,16 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
+import org.jboss.provisioning.plugin.wildfly.ModuleParseResult.ModuleDependency;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasksWriter20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.build.WildFlyFeaturePackBuild;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
+import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -76,7 +82,7 @@ import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 
 /**
- * This plugin builds a WildFly feature-pack by organizing the content into packages.
+ * This plug-in builds a WildFly feature-pack arranging the content by packages.
  * The artifact versions are resolved here. The configuration pieces are copied into
  * the feature-pack resources directory and will be assembled at the provisioning time.
  *
@@ -84,6 +90,8 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  */
 @Mojo(name = "wf-build", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
 public class WfFeaturePackBuildMojo extends AbstractMojo {
+
+    private static final String MODULE_XML = "module.xml";
 
     private static final boolean OS_WINDOWS = PropertyUtils.isWindows();
 
@@ -132,7 +140,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private MavenProjectArtifactVersions artifactVersions;
 
-    //private final ZipFileSubsystemInputStreamSources subsystemsInput = new ZipFileSubsystemInputStreamSources();
+    private WildFlyFeaturePackBuild wfFpConfig;
+    private Map<String, FeaturePackSpec> fpDependencies = Collections.emptyMap();
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -159,7 +168,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             }
         }
 
-        final Path targetResources = Paths.get(buildName, "resources");
+        final Path targetResources = Paths.get(buildName, Constants.RESOURCES);
         try {
             IoUtils.copy(Paths.get(configDir.getAbsolutePath() + resourcesDir), targetResources);
         } catch (IOException e1) {
@@ -174,21 +183,23 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final Builder fpBuilder = FeaturePackSpec.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
 
         // feature-pack build config
-        WildFlyFeaturePackBuild build;
         try {
-            build = Util.loadFeaturePackBuildConfig(getFPConfigFile(), getFPConfigProperties());
+            wfFpConfig = Util.loadFeaturePackBuildConfig(getFPConfigFile(), getFPConfigProperties());
         } catch (ProvisioningException e) {
             throw new MojoExecutionException("Failed to load feature-pack config file", e);
         }
+
         try {
-            processFeaturePackDependencies(fpBuilder, build);
-        } catch (ProvisioningDescriptionException e) {
+            processFeaturePackDependencies(fpBuilder);
+        } catch (MojoExecutionException e) {
+            throw e;
+        } catch (Exception e) {
             throw new MojoExecutionException("Failed to process dependencies", e);
         }
-        copyArtifacts(targetResources, build);
+        copyArtifacts(targetResources);
 
         final Path srcModulesDir = targetResources.resolve("modules").resolve("system").resolve("layers").resolve("base");
         if(!Files.exists(srcModulesDir)) {
@@ -196,7 +207,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
         final PackageSpec.Builder modulesBuilder = PackageSpec.builder("modules");
         try {
-            packageModules(fpBuilder, modulesBuilder, build, targetResources, srcModulesDir, fpPackagesDir);
+            final Map<String, Path> moduleXmlByPkgName = findModules(srcModulesDir);
+            if(moduleXmlByPkgName.isEmpty()) {
+                throw new MojoExecutionException("Modules not found in " + srcModulesDir);
+            }
+            packageModules(fpBuilder, modulesBuilder, targetResources, moduleXmlByPkgName, fpPackagesDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
         }
@@ -221,7 +236,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
 
         // collect feature-pack resources
-        final Path resourcesWildFly = fpDir.resolve("resources").resolve("wildfly");
+        final Path resourcesWildFly = fpDir.resolve(Constants.RESOURCES).resolve("wildfly");
         try {
             IoUtils.copy(targetResources.resolve("configuration"), resourcesWildFly.resolve("configuration"));
         } catch (IOException e) {
@@ -237,11 +252,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         // post feature-pack tasks config
         final WildFlyPostFeaturePackTasks tasks = WildFlyPostFeaturePackTasks.builder()
-                .setConfig(build.getConfig())
-                .addFilePermissions(build.getFilePermissions())
-                .addMkDirs(build.getMkDirs())
-                .addUnixLineEndFilters(build.getUnixLineEndFilters())
-                .addWindowsLineEndFilters(build.getWindowsLineEndFilters())
+                .setConfig(wfFpConfig.getConfig())
+                .addFilePermissions(wfFpConfig.getFilePermissions())
+                .addMkDirs(wfFpConfig.getMkDirs())
+                .addUnixLineEndFilters(wfFpConfig.getUnixLineEndFilters())
+                .addWindowsLineEndFilters(wfFpConfig.getWindowsLineEndFilters())
                 .build();
         try {
             WildFlyPostFeaturePackTasksWriter20.INSTANCE.write(tasks, resourcesWildFly.resolve("wildfly-tasks.xml"));
@@ -256,8 +271,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void copyArtifacts(final Path targetResources, final WildFlyFeaturePackBuild build) throws MojoExecutionException {
-        for(CopyArtifact copyArtifact : build.getCopyArtifacts()) {
+    private void copyArtifacts(final Path targetResources) throws MojoExecutionException {
+        for(CopyArtifact copyArtifact : wfFpConfig.getCopyArtifacts()) {
             final String gavString = artifactVersions.getVersion(copyArtifact.getArtifact());
             try {
                 final ArtifactCoords coords = ArtifactCoordsUtil.fromJBossModules(gavString, "jar");
@@ -282,7 +297,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     IoUtils.copy(jarSrc, jarTarget);
                 }
 
-                if(build.isPackageSchemas() && build.isSchemaGroup(coords.getGroupId())) {
+                if(wfFpConfig.isPackageSchemas() && wfFpConfig.isSchemaGroup(coords.getGroupId())) {
                     extractSchemas(targetResources, jarSrc);
                 }
             } catch (ProvisioningException | IOException e) {
@@ -328,23 +343,30 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void processFeaturePackDependencies(final Builder fpBuilder, final WildFlyFeaturePackBuild build)
-            throws MojoExecutionException, ProvisioningDescriptionException {
-        if (!build.getDependencies().isEmpty()) {
-            for (FeaturePackConfig dep : build.getDependencies()) {
-                final String depStr = dep.getGav().toString();
+    private void processFeaturePackDependencies(final Builder fpBuilder)
+            throws Exception {
+        if (!wfFpConfig.getDependencies().isEmpty()) {
+            fpDependencies = new HashMap<>(wfFpConfig.getDependencies().size());
+            for (FeaturePackDependencySpec depSpec : wfFpConfig.getDependencies()) {
+                FeaturePackConfig depConfig = depSpec.getTarget();
+                final String depStr = depConfig.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
+                if(gavStr == null) {
+                    throw new MojoExecutionException("Failed resolve artifact version for " + depStr);
+                }
                 gavStr = gavStr.replace(depStr, depStr + "-new");
-                final ArtifactCoords.Gav gav = ArtifactCoords.newGav(gavStr);
-                final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(gav);
-                if (dep.hasExcludedPackages()) {
+                final ArtifactCoords.Gav depGav = ArtifactCoords.newGav(gavStr);
+                final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(depGav);
+                if (depConfig.hasExcludedPackages()) {
                     try {
-                        depBuilder.excludeAllPackages(dep.getExcludedPackages()).build();
+                        depBuilder.excludeAllPackages(depConfig.getExcludedPackages()).build();
                     } catch (ProvisioningException e) {
                         throw new MojoExecutionException("Failed to process dependencies", e);
                     }
                 }
-                fpBuilder.addDependency(depBuilder.build());
+                fpBuilder.addDependency(depSpec.getName(), depBuilder.build());
+                final Path depZip = resolveArtifact(depGav.toArtifactCoords());
+                fpDependencies.put(depSpec.getName(), FeaturePackLayoutDescriber.describeFeaturePackZip(depZip));
             }
         }
     }
@@ -380,9 +402,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void packageModules(FeaturePackSpec.Builder fpBuilder, PackageSpec.Builder modulesBuilder,
-            final WildFlyFeaturePackBuild wfFpConfig, Path resourcesDir, Path modulesDir, Path packagesDir) throws IOException {
-        final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(new ModuleArtifactPropertyResolver(artifactVersions));
+    private Map<String, Path> findModules(Path modulesDir) throws IOException {
+        final Map<String, Path> moduleXmlByPkgName = new HashMap<>();
         Files.walkFileTree(modulesDir, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -391,53 +412,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if(!file.getFileName().toString().equals("module.xml")) {
+                if(!file.getFileName().toString().equals(MODULE_XML)) {
                     return FileVisitResult.CONTINUE;
                 }
                 final String packageName = modulesDir.relativize(file.getParent()).toString().replace(File.separatorChar, '.');
-                final Path packageDir = packagesDir.resolve(packageName);
-                final Path targetXml = packageDir.resolve(Constants.CONTENT).resolve(resourcesDir.relativize(file));
-                Files.createDirectories(targetXml.getParent());
-
-                IoUtils.copy(file.getParent(), targetXml.getParent());
-
-                final PackageSpec pkgSpec = PackageSpec.builder(packageName).build();
-                try {
-                    PackageXmlWriter.getInstance().write(pkgSpec, packageDir.resolve(Constants.PACKAGE_XML));
-                } catch (XMLStreamException e) {
-                    throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
-                }
-                modulesBuilder.addDependency(packageName, true);
-                fpBuilder.addPackage(pkgSpec);
-
-                final String moduleXmlContents = IoUtils.readFile(file);
-                String targetContent;
-                try {
-                    targetContent = buildPropertyReplacer.replaceProperties(moduleXmlContents);
-                } catch(Throwable t) {
-                    throw new IOException("Failed to replace properties for " + file, t);
-                }
-                IoUtils.writeFile(targetXml, targetContent);
-
-                // extract schemas
-                if(wfFpConfig.isPackageSchemas()) {
-                    Util.processModuleArtifacts(targetXml, coords -> {
-                        if (wfFpConfig.isSchemaGroup(coords.getGroupId())) {
-                            final Path artifactFile;
-                            try {
-                                artifactFile = resolveArtifact(coords);
-                            } catch(ProvisioningException e) {
-                                throw new IOException(FpMavenErrors.artifactResolution(coords), e);
-                            }
-                            extractSchemas(resourcesDir, artifactFile);
-                        }
-                    });
-                }
-
-                if (!OS_WINDOWS) {
-                    Files.setPosixFilePermissions(targetXml, Files.getPosixFilePermissions(file));
-                }
-
+                moduleXmlByPkgName.put(packageName, file);
                 return FileVisitResult.CONTINUE;
             }
 
@@ -451,6 +430,101 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 return FileVisitResult.CONTINUE;
             }
         });
+        return moduleXmlByPkgName;
+    }
+
+    private void packageModules(FeaturePackSpec.Builder fpBuilder, PackageSpec.Builder modulesBuilder,
+            Path resourcesDir, Map<String, Path> moduleXmlByPkgName, Path packagesDir)
+            throws IOException, MojoExecutionException {
+        final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(
+                new ModuleArtifactPropertyResolver(artifactVersions));
+
+        for (Map.Entry<String, Path> module : moduleXmlByPkgName.entrySet()) {
+            final String packageName = module.getKey();
+            final Path moduleXml = module.getValue();
+
+            final Path packageDir = packagesDir.resolve(packageName);
+            final Path targetXml = packageDir.resolve(Constants.CONTENT).resolve(resourcesDir.relativize(moduleXml));
+            Files.createDirectories(targetXml.getParent());
+
+            IoUtils.copy(moduleXml.getParent(), targetXml.getParent());
+
+            final PackageSpec.Builder pkgSpecBuilder = PackageSpec.builder(packageName);
+            final ModuleParseResult parsedModule;
+            try {
+                parsedModule = ModuleXmlParser.parse(targetXml, "UTF-8");
+                if (!parsedModule.dependencies.isEmpty()) {
+                    for (ModuleDependency moduleDep : parsedModule.dependencies) {
+                        final StringBuilder buf = new StringBuilder();
+                        buf.append(moduleDep.getModuleId().getName()).append('.').append(moduleDep.getModuleId().getSlot());
+                        final String depName = buf.toString();
+                        if (moduleXmlByPkgName.containsKey(depName)) {
+                            pkgSpecBuilder.addDependency(depName, moduleDep.isOptional());
+                        } else {
+                            Map.Entry<String, FeaturePackSpec> depSrc = null;
+                            if (!fpDependencies.isEmpty()) {
+                                for (Map.Entry<String, FeaturePackSpec> depEntry : fpDependencies.entrySet()) {
+                                    if (depEntry.getValue().getPackageNames().contains(depName)) {
+                                        if (depSrc != null) {
+                                            throw new MojoExecutionException("Package " + depName
+                                                    + " found in more than one feature-pack dependency: " + depSrc.getKey()
+                                                    + " and " + depEntry.getKey());
+                                        }
+                                        depSrc = depEntry;
+                                    }
+                                }
+                            }
+                            if(depSrc != null) {
+                                pkgSpecBuilder.addDependency(depSrc.getKey(), depName, moduleDep.isOptional());
+                            } else if(moduleDep.isOptional()){
+                                //System.out.println("UNSATISFIED EXTERNAL OPTIONAL DEPENDENCY " + packageName + " -> " + depName);
+                            } else {
+                                throw new MojoExecutionException("Package " + packageName + " has unsatisifed external dependency on package " + depName);
+                            }
+                        }
+                    }
+                }
+            } catch (XMLStreamException e) {
+                throw new IOException(Errors.parseXml(targetXml), e);
+            }
+
+            final PackageSpec pkgSpec = pkgSpecBuilder.build();
+            try {
+                PackageXmlWriter.getInstance().write(pkgSpec, packageDir.resolve(Constants.PACKAGE_XML));
+            } catch (XMLStreamException e) {
+                throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
+            }
+            modulesBuilder.addDependency(packageName, true);
+            fpBuilder.addPackage(pkgSpec);
+
+            final String moduleXmlContents = IoUtils.readFile(moduleXml);
+            String targetContent;
+            try {
+                targetContent = buildPropertyReplacer.replaceProperties(moduleXmlContents);
+            } catch (Throwable t) {
+                throw new IOException("Failed to replace properties for " + moduleXml, t);
+            }
+            IoUtils.writeFile(targetXml, targetContent);
+
+            // extract schemas
+            if (wfFpConfig.isPackageSchemas()) {
+                Util.processModuleArtifacts(parsedModule, coords -> {
+                    if (wfFpConfig.isSchemaGroup(coords.getGroupId())) {
+                        final Path artifactFile;
+                        try {
+                            artifactFile = resolveArtifact(coords);
+                        } catch (ProvisioningException e) {
+                            throw new IOException(FpMavenErrors.artifactResolution(coords), e);
+                        }
+                        extractSchemas(resourcesDir, artifactFile);
+                    }
+                });
+            }
+
+            if (!OS_WINDOWS) {
+                Files.setPosixFilePermissions(targetXml, Files.getPosixFilePermissions(moduleXml));
+            }
+        }
     }
 
     private void extractSchemas(Path resourcesDir, final Path artifactFile) throws IOException {

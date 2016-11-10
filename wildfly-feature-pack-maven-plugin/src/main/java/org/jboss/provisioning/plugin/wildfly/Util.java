@@ -65,12 +65,15 @@ class Util {
 
     static void processModuleArtifacts(final Path moduleXml, ArtifactProcessor ap) throws IOException {
         try {
-            final ModuleParseResult parsedModule = ModuleXmlParser.parse(moduleXml, "UTF-8");
-            for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
-                ap.process(ArtifactCoordsUtil.fromJBossModules(artName.getArtifactCoords(), "jar"));
-            }
+            processModuleArtifacts(ModuleXmlParser.parse(moduleXml, "UTF-8"), ap);
         } catch (XMLStreamException e) {
             throw new IOException(Errors.parseXml(moduleXml), e);
+        }
+    }
+
+    static void processModuleArtifacts(final ModuleParseResult parsedModule, ArtifactProcessor ap) throws IOException {
+        for(ModuleParseResult.ArtifactName artName : parsedModule.artifacts) {
+            ap.process(ArtifactCoordsUtil.fromJBossModules(artName.getArtifactCoords(), "jar"));
         }
     }
 
