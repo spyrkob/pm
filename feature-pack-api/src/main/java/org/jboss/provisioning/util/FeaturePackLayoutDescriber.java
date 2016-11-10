@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -81,6 +83,15 @@ public class FeaturePackLayoutDescriber {
         } catch (IOException e) {
             failedToReadDirectory(artifactDir, e);
         }
+    }
+
+    public static FeaturePackSpec describeFeaturePackZip(Path artifactZip) throws IOException, ProvisioningDescriptionException {
+        try (FileSystem zipfs = FileSystems.newFileSystem(artifactZip, null)) {
+            for(Path zipRoot : zipfs.getRootDirectories()) {
+                return describeFeaturePack(zipRoot, "UTF-8");
+            }
+        }
+        return null;
     }
 
     public static FeaturePackSpec describeFeaturePack(Path fpDir, String encoding) throws ProvisioningDescriptionException {

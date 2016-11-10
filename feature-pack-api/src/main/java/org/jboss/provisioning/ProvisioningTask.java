@@ -118,9 +118,9 @@ class ProvisioningTask {
 
         final ArtifactCoords.Gav fpGav = fpConfig.getGav();
         final FeaturePackSpec fpSpec;
+        final Path fpWorkDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav, false);
         if(!layoutBuilder.hasFeaturePack(fpGav.toGa())) {
             final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
-            final Path fpWorkDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav, false);
             mkdirs(fpWorkDir);
             try {
                 System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
@@ -135,15 +135,6 @@ class ProvisioningTask {
                 throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
             }
 
-            final Path fpResources = fpWorkDir.resolve("resources");
-            if(Files.exists(fpResources)) {
-                try {
-                    IoUtils.copy(fpResources, workDir.resolve("resources"));
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve("resources")), e);
-                }
-            }
-
             if(fpSpec.hasProvisioningPlugins()) {
                 for(ArtifactCoords.Gav gav : fpSpec.getProvisioningPlugins()) {
                     addProvisioningPlugin(gav);
@@ -155,7 +146,6 @@ class ProvisioningTask {
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningException("Failed to layout feature packs", e);
             }
-
         } else {
             fpSpec = layoutBuilder.getFeaturePack(fpGav.toGa());
             if(!fpSpec.getGav().equals(fpGav)) {
@@ -170,6 +160,16 @@ class ProvisioningTask {
             }
             for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
                 fpBuilders = enforce(layoutBuilder.getFeaturePack(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
+            }
+        }
+
+        // resources should be copied last overriding the dependency resources
+        final Path fpResources = fpWorkDir.resolve(Constants.RESOURCES);
+        if(Files.exists(fpResources)) {
+            try {
+                IoUtils.copy(fpResources, workDir.resolve(Constants.RESOURCES));
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve(Constants.RESOURCES)), e);
             }
         }
         return fpBuilders;

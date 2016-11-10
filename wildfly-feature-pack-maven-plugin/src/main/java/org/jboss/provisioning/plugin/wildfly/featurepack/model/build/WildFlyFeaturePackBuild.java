@@ -23,10 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 
 /**
  * Representation of the feature pack build config
@@ -38,7 +38,7 @@ public class WildFlyFeaturePackBuild {
 
     public static class Builder {
 
-        private List<FeaturePackConfig> dependencies = Collections.emptyList();
+        private List<FeaturePackDependencySpec> dependencies = Collections.emptyList();
         private ConfigDescription config;
         private List<CopyArtifact> copyArtifacts = Collections.emptyList();
         private List<FilePermission> filePermissions = Collections.emptyList();
@@ -51,13 +51,13 @@ public class WildFlyFeaturePackBuild {
         private Builder() {
         }
 
-        public Builder addDependency(FeaturePackConfig dependency) {
+        public Builder addDependency(FeaturePackDependencySpec dependency) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonList(dependency);
                     break;
                 case 1:
-                    dependencies = new ArrayList<FeaturePackConfig>(dependencies);
+                    dependencies = new ArrayList<FeaturePackDependencySpec>(dependencies);
                 default:
                     dependencies.add(dependency);
             }
@@ -167,11 +167,7 @@ public class WildFlyFeaturePackBuild {
         }
 
         public WildFlyFeaturePackBuild build() {
-            return new WildFlyFeaturePackBuild(Collections.unmodifiableList(dependencies), config,
-                    Collections.unmodifiableList(copyArtifacts), Collections.unmodifiableList(filePermissions),
-                    Collections.unmodifiableList(mkDirs),
-                    Collections.unmodifiableList(windowsLineEndFilters), Collections.unmodifiableList(unixLineEndFilters),
-                    packageSchemas, Collections.unmodifiableSet(schemaGroups));
+            return new WildFlyFeaturePackBuild(this);
         }
     }
 
@@ -179,7 +175,7 @@ public class WildFlyFeaturePackBuild {
         return new Builder();
     }
 
-    private final List<FeaturePackConfig> dependencies;
+    private final List<FeaturePackDependencySpec> dependencies;
     private final ConfigDescription config;
     private final List<CopyArtifact> copyArtifacts;
     private final List<FilePermission> filePermissions;
@@ -189,22 +185,19 @@ public class WildFlyFeaturePackBuild {
     private final boolean packageSchemas;
     private final Set<String> schemaGroups;
 
-    private WildFlyFeaturePackBuild(List<FeaturePackConfig> dependencies, ConfigDescription config,
-            List<CopyArtifact> copyArtifacts, List<FilePermission> filePermissions, List<String> mkDirs,
-            List<FileFilter> windowsLineEndFilters, List<FileFilter> unixLineEndFilters,
-            boolean packageSchemas, Set<String> schemaGroups) {
-        this.dependencies = dependencies;
-        this.config = config;
-        this.copyArtifacts = copyArtifacts;
-        this.filePermissions = filePermissions;
-        this.mkDirs = mkDirs;
-        this.windowsLineEndFilters = windowsLineEndFilters;
-        this.unixLineEndFilters = unixLineEndFilters;
-        this.packageSchemas = packageSchemas;
-        this.schemaGroups = schemaGroups;
+    private WildFlyFeaturePackBuild(Builder builder) {
+        this.dependencies = Collections.unmodifiableList(builder.dependencies);
+        this.config = builder.config;
+        this.copyArtifacts = Collections.unmodifiableList(builder.copyArtifacts);
+        this.filePermissions = Collections.unmodifiableList(builder.filePermissions);
+        this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
+        this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
+        this.unixLineEndFilters = Collections.unmodifiableList(builder.unixLineEndFilters);
+        this.packageSchemas = builder.packageSchemas;
+        this.schemaGroups = Collections.unmodifiableSet(builder.schemaGroups);
     }
 
-    public List<FeaturePackConfig> getDependencies() {
+    public List<FeaturePackDependencySpec> getDependencies() {
         return dependencies;
     }
 

@@ -25,6 +25,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigModelParser
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilter;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FileFilterModelParser20;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermissionsModelParser20;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
@@ -67,6 +68,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         GROUP("group"),
         LINE_ENDINGS("line-endings"),
         MKDIRS("mkdirs"),
+        NAME("name"),
         PACKAGE("package"),
         PACKAGE_SCHEMAS("package-schemas"),
         UNIX("unix"),
@@ -92,6 +94,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             elementsMap.put(new QName(NAMESPACE_2_0, Element.GROUP.getLocalName()), Element.GROUP);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.LINE_ENDINGS.getLocalName()), Element.LINE_ENDINGS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.NAME.getLocalName()), Element.NAME);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE.getLocalName()), Element.PACKAGE);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE_SCHEMAS.getLocalName()), Element.PACKAGE_SCHEMAS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.UNIX.getLocalName()), Element.UNIX);
@@ -294,16 +297,20 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
+        String depName = null;
         final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    builder.addDependency(depBuilder.build());
+                    builder.addDependency(FeaturePackDependencySpec.create(depName, depBuilder.build()));
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
+                        case NAME:
+                            depName = reader.getElementText().trim();
+                            break;
                         case EXCLUDES:
                             parseExcludes(reader, depBuilder);
                             break;
