@@ -24,7 +24,6 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
@@ -70,18 +69,17 @@ public class PluginNotFoundTestCase extends PmProvisionConfigTestBase {
     }
 
     @Override
+    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisioningConfig(pm, null);
+    }
+
+    @Override
     protected ProvisionedState provisionedState() {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
-                        .addPackage("p1")
-                        .build())
-                .build();
+        return null;
     }
 
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("fp1/p1.txt", "p1")
-                .build();
+        return builder.clear().build();
     }
 }
