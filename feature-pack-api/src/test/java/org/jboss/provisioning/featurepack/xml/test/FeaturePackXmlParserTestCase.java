@@ -132,8 +132,8 @@ public class FeaturePackXmlParserTestCase  {
                         .build())
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
-                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group1", "plugin1", "0.1.0"))
-                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group2", "plugin2", "0.2.0"))
+                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:0.1.0"))
+                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:0.2.0"))
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -147,9 +147,8 @@ public class FeaturePackXmlParserTestCase  {
                 .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
                 .markAsDefaultPackage("package1")
                 .markAsDefaultPackage("package2")
-                //.addTopPackage(PackageDescription.builder().setName("package2").build())
-                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group1", "plugin1", null))
-                .addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.plugin.group2", "plugin2", null))
+                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:v1"))
+                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:v2"))
                 .build();
         Assert.assertEquals(expected, found);
     }

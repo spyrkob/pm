@@ -127,7 +127,13 @@
         Artifact coordinates.
       </xs:documentation>
     </xs:annotation>
-    <xs:attributeGroup ref="gavAttributes"/>
+    <xs:attribute name="coords" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Artifact coordinates.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:attributeGroup name="gavAttributes">

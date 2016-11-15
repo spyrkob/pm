@@ -48,7 +48,7 @@ public class FeaturePackSpec {
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
         private Map<String, PackageSpec> packages = Collections.emptyMap();
-        private List<ArtifactCoords.Gav> provisioningPlugins = Collections.emptyList();
+        private List<ArtifactCoords> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
@@ -137,16 +137,16 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addProvisioningPlugin(ArtifactCoords.Gav gav) {
-            assert gav != null : "gav is null";
+        public Builder addProvisioningPlugin(ArtifactCoords coords) {
+            assert coords != null : "gav is null";
             switch(provisioningPlugins.size()) {
                 case 0:
-                    provisioningPlugins = Collections.singletonList(gav);
+                    provisioningPlugins = Collections.singletonList(coords);
                     break;
                 case 1:
-                    provisioningPlugins = new ArrayList<ArtifactCoords.Gav>(provisioningPlugins);
+                    provisioningPlugins = new ArrayList<ArtifactCoords>(provisioningPlugins);
                 default:
-                    provisioningPlugins.add(gav);
+                    provisioningPlugins.add(coords);
             }
             return this;
         }
@@ -202,7 +202,7 @@ public class FeaturePackSpec {
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
     private final Map<String, PackageSpec> packages;
-    private final List<ArtifactCoords.Gav> provisioningPlugins;
+    private final List<ArtifactCoords> provisioningPlugins;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
@@ -273,7 +273,7 @@ public class FeaturePackSpec {
         return !provisioningPlugins.isEmpty();
     }
 
-    public List<ArtifactCoords.Gav> getProvisioningPlugins() {
+    public List<ArtifactCoords> getProvisioningPlugins() {
         return provisioningPlugins;
     }
 
@@ -307,7 +307,7 @@ public class FeaturePackSpec {
 
         if(!provisioningPlugins.isEmpty()) {
             logger.println("Provisioning plugins:").increaseOffset();
-            for(ArtifactCoords.Gav gav : provisioningPlugins) {
+            for(ArtifactCoords gav : provisioningPlugins) {
                 logger.println(gav.toString());
             }
             logger.decreaseOffset();
