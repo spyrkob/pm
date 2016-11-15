@@ -20,11 +20,12 @@ package org.jboss.provisioning.test.util.repomanager;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -40,16 +41,16 @@ import org.jboss.provisioning.xml.FeaturePackXmlWriter;
  */
 public class FeaturePackBuilder {
 
-    static Path getFeaturePackArtifactPath(Path repoHome, final Gav gav) {
+    static Path getArtifactPath(Path repoHome, final ArtifactCoords coords) {
         Path p = repoHome;
-        final String[] groupParts = gav.getGroupId().split("\\.");
+        final String[] groupParts = coords.getGroupId().split("\\.");
         for (String part : groupParts) {
             p = p.resolve(part);
         }
-        p = p.resolve(gav.getArtifactId());
-        p = p.resolve(gav.getVersion());
+        p = p.resolve(coords.getArtifactId());
+        p = p.resolve(coords.getVersion());
         final StringBuilder fileName = new StringBuilder();
-        fileName.append(gav.getArtifactId()).append('-').append(gav.getVersion()).append(".zip");
+        fileName.append(coords.getArtifactId()).append('-').append(coords.getVersion()).append('.').append(coords.getExtension());
         return p.resolve(fileName.toString());
     }
 
@@ -64,6 +65,7 @@ public class FeaturePackBuilder {
     private final FeaturePackRepoManager.Installer installer;
     private final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
     private List<PackageBuilder> pkgs = Collections.emptyList();
+    private Set<ArtifactCoords> plugins = Collections.emptySet();
 
     protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
         this.installer = repo;
@@ -117,6 +119,23 @@ public class FeaturePackBuilder {
         return pkg;
     }
 
+    public FeaturePackBuilder addPlugIn(String coords) {
+        return addPlugIn(ArtifactCoords.fromString(coords));
+    }
+
+    public FeaturePackBuilder addPlugIn(ArtifactCoords coords) {
+        switch (plugins.size()) {
+            case 0:
+                plugins = Collections.singleton(coords);
+                break;
+            case 1:
+                plugins = new LinkedHashSet<>(plugins);
+            default:
+                plugins.add(coords);
+        }
+        return this;
+    }
+
     public FeaturePackSpec build(Path repoHome) throws ProvisioningDescriptionException {
         final Path fpWorkDir = TestUtils.mkRandomTmpDir();
         final FeaturePackSpec fpSpec;
@@ -129,12 +148,17 @@ public class FeaturePackBuilder {
                     fpBuilder.addPackage(pkgDescr);
                 }
             }
+            if(!plugins.isEmpty()) {
+                for(ArtifactCoords coords : plugins) {
+                    fpBuilder.addProvisioningPlugin(coords);
+                }
+            }
             fpSpec = fpBuilder.build();
             final FeaturePackXmlWriter writer = FeaturePackXmlWriter.getInstance();
             writer.write(fpSpec, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
 
             final Path fpZip;
-            fpZip = getFeaturePackArtifactPath(repoHome, fpSpec.getGav());
+            fpZip = getArtifactPath(repoHome, fpSpec.getGav().toArtifactCoords());
             TestUtils.mkdirs(fpZip.getParent());
             ZipUtils.zip(fpWorkDir, fpZip);
             return fpSpec;

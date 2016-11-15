@@ -43,8 +43,8 @@
   </default-packages>
 
   <provisioning-plugins>
-    <artifact groupId="org.jboss.plugin.group1" artifactId="plugin1" version="0.1.0" />
-    <artifact groupId="org.jboss.plugin.group2" artifactId="plugin2" version="0.2.0" />
+    <artifact coords="org.jboss.plugin.group1:plugin1:0.1.0" />
+    <artifact coords="org.jboss.plugin.group2:plugin2:0.2.0" />
   </provisioning-plugins>
 
 </feature-pack>

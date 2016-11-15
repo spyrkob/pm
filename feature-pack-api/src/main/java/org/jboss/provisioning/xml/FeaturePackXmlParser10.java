@@ -107,6 +107,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
         CLASSIFIER("classifier"),
+        COORDS("coords"),
         EXTENSION("extension"),
         INHERIT("inherit"),
         VERSION("version"),
@@ -183,6 +184,20 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private ArtifactCoords readArtifactCoordsAttr(XMLExtendedStreamReader reader) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count;) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case COORDS:
+                    return ArtifactCoords.fromString(reader.getAttributeValue(i));
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        throw new IllegalStateException();
     }
 
     private ArtifactCoords readArtifactCoords(XMLExtendedStreamReader reader, String extension) throws XMLStreamException {
@@ -387,7 +402,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case ARTIFACT:
-                            fpBuilder.addProvisioningPlugin(readArtifactCoords(reader, "jar").toGav());
+                            fpBuilder.addProvisioningPlugin(readArtifactCoordsAttr(reader));
                             ParsingUtils.parseNoContent(reader);
                             hasChildren = true;
                             break;

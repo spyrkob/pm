@@ -82,8 +82,9 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
 
         if(fpSpec.hasProvisioningPlugins()) {
             final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
-            for(ArtifactCoords.Gav gav : fpSpec.getProvisioningPlugins()) {
-                addGAV(addElement(plugins, Element.ARTIFACT), gav);
+            for(ArtifactCoords coords : fpSpec.getProvisioningPlugins()) {
+                final ElementNode artifact = addElement(plugins, Element.ARTIFACT);
+                addAttribute(artifact, Attribute.COORDS, coords.toString());
             }
         }
 

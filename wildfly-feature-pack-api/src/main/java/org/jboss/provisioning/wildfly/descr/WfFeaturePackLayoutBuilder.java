@@ -132,7 +132,7 @@ public class WfFeaturePackLayoutBuilder {
             fpDir = fpTarget;
         }
         fpBuilder.setGav(ArtifactCoords.newGav(fpGroupId, fpArtifactId, fpVersion));
-        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT"));
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
         installBuilder.addFeaturePack(fpBuilder.build());
 
         try {

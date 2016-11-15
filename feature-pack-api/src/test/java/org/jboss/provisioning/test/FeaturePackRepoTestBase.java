@@ -38,7 +38,7 @@ import org.junit.BeforeClass;
  */
 public class FeaturePackRepoTestBase {
 
-    private static Path repoHome;
+    protected static Path repoHome;
 
     @BeforeClass
     public static void beforeClass() throws Exception {

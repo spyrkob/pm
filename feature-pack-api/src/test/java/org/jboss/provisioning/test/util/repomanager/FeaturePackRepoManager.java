@@ -26,7 +26,6 @@ import java.util.List;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.ArtifactResolver;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.test.util.TestUtils;
 
@@ -100,9 +99,9 @@ public class FeaturePackRepoManager implements ArtifactResolver {
 
     @Override
     public Path resolve(ArtifactCoords coords) throws ArtifactResolutionException {
-        final Path path = FeaturePackBuilder.getFeaturePackArtifactPath(repoHome, coords.toGav());
+        final Path path = FeaturePackBuilder.getArtifactPath(repoHome, coords);
         if(!Files.exists(path)) {
-            throw new ArtifactResolutionException(Errors.unknownFeaturePack(coords.toGav()));
+            throw new ArtifactResolutionException("Artifact " + coords + " not found in the repository at " + path);
         }
         return path;
     }

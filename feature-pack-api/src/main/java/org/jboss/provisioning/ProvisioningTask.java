@@ -58,7 +58,7 @@ class ProvisioningTask {
 
     private final Path workDir;
     private final Path layoutDir;
-    private Collection<ArtifactCoords.Gav> provisioningPlugins = Collections.emptySet();
+    private Collection<ArtifactCoords> provisioningPlugins = Collections.emptySet();
 
     ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisioningConfig provisioningConfig) {
         this.artifactResolver = artifactResolver;
@@ -136,8 +136,8 @@ class ProvisioningTask {
             }
 
             if(fpSpec.hasProvisioningPlugins()) {
-                for(ArtifactCoords.Gav gav : fpSpec.getProvisioningPlugins()) {
-                    addProvisioningPlugin(gav);
+                for(ArtifactCoords coords : fpSpec.getProvisioningPlugins()) {
+                    addProvisioningPlugin(coords);
                 }
             }
 
@@ -231,9 +231,9 @@ class ProvisioningTask {
     private void executePlugins(final ProvisioningConfig provisioningConfig,
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
         final List<java.net.URL> urls = new ArrayList<java.net.URL>(provisioningPlugins.size());
-        for(ArtifactCoords.Gav gavPart : provisioningPlugins) {
+        for(ArtifactCoords coords : provisioningPlugins) {
             try {
-                urls.add(artifactResolver.resolve(gavPart.toArtifactCoords()).toUri().toURL());
+                urls.add(artifactResolver.resolve(coords).toUri().toURL());
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -285,18 +285,18 @@ class ProvisioningTask {
         }
     }
 
-    private void addProvisioningPlugin(ArtifactCoords.Gav gav) {
+    private void addProvisioningPlugin(ArtifactCoords coords) {
         switch(provisioningPlugins.size()) {
             case 0:
-                provisioningPlugins = Collections.singleton(gav);
+                provisioningPlugins = Collections.singleton(coords);
                 break;
             case 1:
-                if(provisioningPlugins.contains(gav)) {
+                if(provisioningPlugins.contains(coords)) {
                     return;
                 }
                 provisioningPlugins = new LinkedHashSet<>(provisioningPlugins);
             default:
-                provisioningPlugins.add(gav);
+                provisioningPlugins.add(coords);
         }
     }
 
