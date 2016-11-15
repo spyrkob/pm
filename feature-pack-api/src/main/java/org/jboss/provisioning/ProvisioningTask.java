@@ -19,14 +19,12 @@ package org.jboss.provisioning;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -58,7 +56,7 @@ class ProvisioningTask {
 
     private final Path workDir;
     private final Path layoutDir;
-    private Collection<ArtifactCoords> provisioningPlugins = Collections.emptySet();
+    private Map<ArtifactCoords, URL> provisioningPlugins = Collections.emptyMap();
 
     ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisioningConfig provisioningConfig) {
         this.artifactResolver = artifactResolver;
@@ -230,73 +228,73 @@ class ProvisioningTask {
 
     private void executePlugins(final ProvisioningConfig provisioningConfig,
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
-        final List<java.net.URL> urls = new ArrayList<java.net.URL>(provisioningPlugins.size());
-        for(ArtifactCoords coords : provisioningPlugins) {
-            try {
-                urls.add(artifactResolver.resolve(coords).toUri().toURL());
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+        final ProvisioningContext ctx = new ProvisioningContext() {
+            @Override
+            public Path getLayoutDir() {
+                return layoutDir;
             }
-        }
 
-        if (!urls.isEmpty()) {
-            final ProvisioningContext ctx = new ProvisioningContext() {
-                @Override
-                public Path getLayoutDir() {
-                    return layoutDir;
-                }
-                @Override
-                public Path getInstallDir() {
-                    return installationHome;
-                }
-                @Override
-                public Path getResourcesDir() {
-                    return workDir.resolve("resources");
-                }
-                @Override
-                public ProvisioningConfig getProvisioningConfig() {
-                    return provisioningConfig;
-                }
-                @Override
-                public FeaturePackLayoutDescription getLayoutDescription() {
-                    return layoutDescr;
-                }
-                @Override
-                public Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException {
-                    return artifactResolver.resolve(coords);
-                }
-                @Override
-                public String getEncoding() {
-                    return encoding;
-                }
-            };
-            final java.net.URLClassLoader ucl = new java.net.URLClassLoader(
-                    urls.toArray(new java.net.URL[urls.size()]),
-                    Thread.currentThread().getContextClassLoader());
-            final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-            for (ProvisioningPlugin plugin : plugins) {
-                try {
-                    plugin.postInstall(ctx);
-                } catch (ProvisioningException e) {
-                    throw new ProvisioningException("Provisioning plugin failed", e);
-                }
+            @Override
+            public Path getInstallDir() {
+                return installationHome;
+            }
+
+            @Override
+            public Path getResourcesDir() {
+                return workDir.resolve("resources");
+            }
+
+            @Override
+            public ProvisioningConfig getProvisioningConfig() {
+                return provisioningConfig;
+            }
+
+            @Override
+            public FeaturePackLayoutDescription getLayoutDescription() {
+                return layoutDescr;
+            }
+
+            @Override
+            public Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException {
+                return artifactResolver.resolve(coords);
+            }
+
+            @Override
+            public String getEncoding() {
+                return encoding;
+            }
+        };
+
+        final java.net.URLClassLoader ucl = new java.net.URLClassLoader(provisioningPlugins.values().toArray(
+                new java.net.URL[provisioningPlugins.size()]), Thread.currentThread().getContextClassLoader());
+        final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
+        for (ProvisioningPlugin plugin : plugins) {
+            try {
+                plugin.postInstall(ctx);
+            } catch (ProvisioningException e) {
+                throw new ProvisioningException("Provisioning plugin failed", e);
             }
         }
     }
 
-    private void addProvisioningPlugin(ArtifactCoords coords) {
-        switch(provisioningPlugins.size()) {
-            case 0:
-                provisioningPlugins = Collections.singleton(coords);
-                break;
-            case 1:
-                if(provisioningPlugins.contains(coords)) {
-                    return;
-                }
-                provisioningPlugins = new LinkedHashSet<>(provisioningPlugins);
-            default:
-                provisioningPlugins.add(coords);
+    private void addProvisioningPlugin(ArtifactCoords coords) throws ArtifactResolutionException {
+        if(provisioningPlugins.isEmpty()) {
+            provisioningPlugins = Collections.singletonMap(coords, resolveUrl(coords));
+        } else if(provisioningPlugins.containsKey(coords)) {
+            return;
+        } else {
+            if(provisioningPlugins.size() == 1) {
+                provisioningPlugins = new LinkedHashMap<>(provisioningPlugins);
+            }
+            provisioningPlugins.put(coords, resolveUrl(coords));
+        }
+    }
+
+    private URL resolveUrl(ArtifactCoords coords) throws ArtifactResolutionException {
+        try {
+            return artifactResolver.resolve(coords).toUri().toURL();
+        } catch (MalformedURLException e) {
+            throw new ArtifactResolutionException("Failed to resolve " + coords, e);
         }
     }
 
