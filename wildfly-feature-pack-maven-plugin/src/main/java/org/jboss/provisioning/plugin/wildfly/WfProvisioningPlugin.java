@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ import java.util.zip.ZipEntry;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.cli.CommandLineException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
@@ -55,6 +58,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeatur
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.PropertyUtils;
+import org.jboss.provisioning.wildfly.config.gen.ConfigGenerator;
 import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
@@ -64,6 +68,8 @@ import org.jboss.provisioning.xml.PackageXmlParser;
 public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private final ZipFileSubsystemInputStreamSources subsystemsInput = new ZipFileSubsystemInputStreamSources();
+
+    private List<Path> cliList = Collections.emptyList();
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -92,7 +98,24 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         final WildFlyPostFeaturePackTasks tasks = Util.loadWildFlyTasks(wfTasksXml, props);
 
         collectLayoutSubsystemsInput(ctx);
-        assembleConfigs(resources, tasks, ctx.getInstallDir());
+
+        if(cliList.isEmpty()) {
+            assembleConfigs(resources, tasks, ctx.getInstallDir());
+        } else {
+            final ConfigGenerator configGen = ConfigGenerator.newInstance(ctx.getInstallDir());
+            for(Path p : cliList) {
+                try {
+                    configGen.addCommandLines(p);
+                } catch (IOException e) {
+                    throw new ProvisioningException("Failed to read " + p);
+                }
+            }
+            try {
+                configGen.generate();
+            } catch (CommandLineException e) {
+                throw new ProvisioningException("Failed to generate configuration", e);
+            }
+        }
 
         if (!PropertyUtils.isWindows()) {
             processFeaturePackFilePermissions(tasks, ctx.getInstallDir());
@@ -244,6 +267,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                             artifactFile.toFile(), new ZipEntry(path.toString().substring(1)));
                                 }
                             }
+                        }
+
+                        final Path installCli = jarFS.getPath("provisioning/install.cli");
+                        if (Files.exists(installCli)) {
+                            if(cliList.isEmpty()) {
+                                cliList = new ArrayList<>();
+                            }
+                            cliList.add(installCli);
                         }
                     });
                     return FileVisitResult.CONTINUE;
