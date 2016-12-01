@@ -16,6 +16,7 @@
  */
 package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -79,6 +80,7 @@ import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.PackageXmlParser;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 
 /**
@@ -167,12 +169,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 break;
             }
         }
-
         final Path targetResources = Paths.get(buildName, Constants.RESOURCES);
         try {
             IoUtils.copy(Paths.get(configDir.getAbsolutePath() + resourcesDir), targetResources);
         } catch (IOException e1) {
-            throw new MojoExecutionException(Errors.copyFile(Paths.get(configDir.getAbsolutePath() + resourcesDir), targetResources));
+            throw new MojoExecutionException(Errors.copyFile(Paths.get(configDir.getAbsolutePath()).resolve(resourcesDir), targetResources), e1);
         }
 
         final Path workDir = Paths.get(buildName, "layout");
@@ -227,6 +228,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-maven-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
 
+        addConfigPackages(targetResources.resolve("config").resolve("packages"), fpDir.resolve(Constants.PACKAGES), fpBuilder);
+
         final FeaturePackSpec fpSpec;
         try {
             fpSpec = fpBuilder.addDefaultPackage(modulesPkg).build();
@@ -268,6 +271,42 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
+        }
+    }
+
+    private void addConfigPackages(final Path configDir, final Path packagesDir, final Builder fpBuilder) throws MojoExecutionException {
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(configDir)) {
+            for(Path configPackage : stream) {
+                final Path provisioningCli = configPackage.resolve("pm/wildfly/provisioning.cli");
+                if(!Files.exists(provisioningCli)) {
+                    throw new MojoExecutionException("Config package is missing provisioning.cli: " + provisioningCli);
+                }
+                final Path packageDir = packagesDir.resolve(configPackage.getFileName());
+                if (!Files.exists(packageDir)) {
+                    Files.createDirectories(packageDir);
+                }
+                IoUtils.copy(configPackage, packageDir);
+
+                final Path packageXml = configPackage.resolve(Constants.PACKAGE_XML);
+                if (Files.exists(packageXml)) {
+                    final PackageSpec pkgSpec;
+                    try (BufferedReader reader = Files.newBufferedReader(packageXml)) {
+                        try {
+                            pkgSpec = new PackageXmlParser().parse(reader);
+                        } catch (XMLStreamException e) {
+                            throw new MojoExecutionException("Failed to parse " + packageXml, e);
+                        }
+                    }
+                    IoUtils.copy(packageXml, packageDir.resolve(Constants.PACKAGE_XML));
+                    if (configPackage.getFileName().toString().equals("config.base")) {
+                        fpBuilder.addDefaultPackage(pkgSpec);
+                    } else {
+                        fpBuilder.addPackage(pkgSpec);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to process config packages", e);
         }
     }
 

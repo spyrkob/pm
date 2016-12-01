@@ -57,6 +57,7 @@ import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.wildfly.config.gen.ConfigGenerator;
 import org.jboss.provisioning.xml.PackageXmlParser;
@@ -183,13 +184,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         try(DirectoryStream<Path> versionStream = Files.newDirectoryStream(artifactId)) {
                             int count = 0;
                             for(Path version : versionStream) {
+                                final ArtifactCoords.Gav fpGav = ArtifactCoords.newGav(groupId.getFileName().toString(), artifactId.getFileName().toString(), version.getFileName().toString());
                                 if(++count > 1) {
-                                    throw new ProvisioningException("There is more than one version of feature-pack " +
-                                            ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString()));
+                                    throw new ProvisioningException("There is more than one version of feature-pack " + fpGav.toGa());
                                 }
                                 collectFeaturePackSubsystemsInput(ctx,
-                                        ctx.getProvisioningConfig().getFeaturePack(ArtifactCoords.newGa(groupId.getFileName().toString(), artifactId.getFileName().toString())),
+                                        ctx.getProvisioningConfig().getFeaturePack(fpGav.toGa()),
                                         version);
+                                collectProvisioningCli(ctx.getProvisionedState().getFeaturePack(fpGav), version);
                             }
                         } catch (IOException e) {
                             throw new ProvisioningException(Errors.readDirectory(artifactId), e);
@@ -204,7 +206,25 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
+    private void collectProvisioningCli(final ProvisionedFeaturePack provisionedFp, Path fpLayoutDir) throws ProvisioningException {
+        final Path packagesDir = fpLayoutDir.resolve(Constants.PACKAGES);
+        if(!Files.exists(packagesDir)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
+        }
+        for(String pkgName : provisionedFp.getPackageNames()) {
+            final Path provisioningCli = packagesDir.resolve(pkgName).resolve("pm/wildfly/provisioning.cli");
+            if (Files.exists(provisioningCli)) {
+                System.out.println("added " + packagesDir.relativize(provisioningCli));
+                if(cliList.isEmpty()) {
+                    cliList = new ArrayList<>();
+                }
+                cliList.add(provisioningCli);
+            }
+        }
+    }
+
     private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, FeaturePackConfig fpConfig, Path fpDir) throws ProvisioningException {
+
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         final Path modulesPackageXml = packagesDir.resolve("modules").resolve(Constants.PACKAGE_XML);
         if (!Files.exists(modulesPackageXml)) {
@@ -267,14 +287,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                             artifactFile.toFile(), new ZipEntry(path.toString().substring(1)));
                                 }
                             }
-                        }
-
-                        final Path installCli = jarFS.getPath("provisioning/install.cli");
-                        if (Files.exists(installCli)) {
-                            if(cliList.isEmpty()) {
-                                cliList = new ArrayList<>();
-                            }
-                            cliList.add(installCli);
                         }
                     });
                     return FileVisitResult.CONTINUE;

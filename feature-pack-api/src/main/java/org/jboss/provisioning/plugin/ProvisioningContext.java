@@ -22,6 +22,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.state.ProvisionedState;
 
 /**
  * Provisioning context available for a provisioning plug-in.
@@ -38,11 +39,18 @@ public interface ProvisioningContext {
     String getEncoding();
 
     /**
-     * Description of the installation to be provisioned.
+     * Configuration of the installation to be provisioned.
      *
-     * @return  installation description
+     * @return  installation configuration
      */
     ProvisioningConfig getProvisioningConfig();
+
+    /**
+     * Resolved provisioned state.
+     *
+     * @return  resolved provisioned state
+     */
+    ProvisionedState getProvisionedState();
 
     /**
      * Description of the feature-pack layout out of which the target

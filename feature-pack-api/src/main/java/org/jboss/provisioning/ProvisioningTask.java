@@ -103,7 +103,7 @@ class ProvisioningTask {
             // install the software
             FeaturePackLayoutInstaller.install(layoutDescr, layoutDir, provisioningConfig, provisionedState, installationHome);
             if(!provisioningPlugins.isEmpty()) {
-                executePlugins(provisioningConfig, layoutDescr);
+                executePlugins(provisioningConfig, provisionedState, layoutDescr);
             }
         } finally {
             IoUtils.recursiveDelete(workDir);
@@ -226,7 +226,7 @@ class ProvisioningTask {
         return allBuilders;
     }
 
-    private void executePlugins(final ProvisioningConfig provisioningConfig,
+    private void executePlugins(final ProvisioningConfig provisioningConfig, final ProvisionedState provisionedState,
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
         final ProvisioningContext ctx = new ProvisioningContext() {
             @Override
@@ -247,6 +247,11 @@ class ProvisioningTask {
             @Override
             public ProvisioningConfig getProvisioningConfig() {
                 return provisioningConfig;
+            }
+
+            @Override
+            public ProvisionedState getProvisionedState() {
+                return provisionedState;
             }
 
             @Override
