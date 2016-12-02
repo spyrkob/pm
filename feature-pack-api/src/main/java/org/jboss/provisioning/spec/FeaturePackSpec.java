@@ -97,6 +97,10 @@ public class FeaturePackSpec {
             return this;
         }
 
+        public boolean hasPackage(String packageName) {
+            return packages.containsKey(packageName);
+        }
+
         public Builder addDependency(FeaturePackConfig dependency) throws ProvisioningDescriptionException {
             return addDependency(null, dependency);
         }

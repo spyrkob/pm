@@ -206,19 +206,16 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if(!Files.exists(srcModulesDir)) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(srcModulesDir));
         }
-        final PackageSpec.Builder modulesBuilder = PackageSpec.builder("modules");
+
         try {
             final Map<String, Path> moduleXmlByPkgName = findModules(srcModulesDir);
             if(moduleXmlByPkgName.isEmpty()) {
                 throw new MojoExecutionException("Modules not found in " + srcModulesDir);
             }
-            packageModules(fpBuilder, modulesBuilder, targetResources, moduleXmlByPkgName, fpPackagesDir);
+            packageModules(fpBuilder, targetResources, moduleXmlByPkgName, fpPackagesDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
         }
-
-        final PackageSpec modulesPkg = modulesBuilder.build();
-        writeXml(modulesPkg, fpDir.resolve(Constants.PACKAGES).resolve(modulesPkg.getName()));
 
         try {
             packageContent(fpBuilder, targetResources.resolve(Constants.CONTENT), fpPackagesDir);
@@ -230,9 +227,16 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         addConfigPackages(targetResources.resolve("config").resolve("packages"), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
+        for(String defaultPackage : wfFpConfig.getDefaultPackages()) {
+            if(!fpBuilder.hasPackage(defaultPackage)) {
+                throw new MojoExecutionException(Errors.unknownPackage(defaultPackage));
+            }
+            fpBuilder.markAsDefaultPackage(defaultPackage);
+        }
+
         final FeaturePackSpec fpSpec;
         try {
-            fpSpec = fpBuilder.addDefaultPackage(modulesPkg).build();
+            fpSpec = fpBuilder.build();
             FeaturePackXmlWriter.getInstance().write(fpSpec, fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
             throw new MojoExecutionException(Errors.writeXml(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
@@ -298,11 +302,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         }
                     }
                     IoUtils.copy(packageXml, packageDir.resolve(Constants.PACKAGE_XML));
-                    if (configPackage.getFileName().toString().equals("config.base")) {
-                        fpBuilder.addDefaultPackage(pkgSpec);
-                    } else {
-                        fpBuilder.addPackage(pkgSpec);
-                    }
+                    fpBuilder.addPackage(pkgSpec);
                 }
             }
         } catch (IOException e) {
@@ -429,13 +429,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                     PackageSpec docsSpec = docsBuilder.build();
                     writeXml(docsSpec, packagesDir.resolve(pkgName));
-                    fpBuilder.addDefaultPackage(docsSpec);
+                    fpBuilder.addPackage(docsSpec);
                 } else {
                     final Path pkgDir = packagesDir.resolve(pkgName);
                     IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(pkgName));
                     final PackageSpec pkgSpec = PackageSpec.builder(pkgName).build();
                     writeXml(pkgSpec, pkgDir);
-                    fpBuilder.addDefaultPackage(pkgSpec);
+                    fpBuilder.addPackage(pkgSpec);
                 }
             }
         }
@@ -472,7 +472,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         return moduleXmlByPkgName;
     }
 
-    private void packageModules(FeaturePackSpec.Builder fpBuilder, PackageSpec.Builder modulesBuilder,
+    private void packageModules(FeaturePackSpec.Builder fpBuilder,
             Path resourcesDir, Map<String, Path> moduleXmlByPkgName, Path packagesDir)
             throws IOException, MojoExecutionException {
         final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(
@@ -533,7 +533,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             } catch (XMLStreamException e) {
                 throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
             }
-            modulesBuilder.addDependency(packageName, true);
             fpBuilder.addPackage(pkgSpec);
 
             final String moduleXmlContents = IoUtils.readFile(moduleXml);

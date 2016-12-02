@@ -18,6 +18,7 @@ package org.jboss.provisioning.plugin.wildfly.featurepack.model.build;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -47,8 +48,14 @@ public class WildFlyFeaturePackBuild {
         private List<FileFilter> unixLineEndFilters = Collections.emptyList();
         private boolean packageSchemas;
         private Set<String> schemaGroups = Collections.emptySet();
+        private Set<String> defaultPackages = new HashSet<>();
 
         private Builder() {
+        }
+
+        public Builder addDefaultPackage(String packageName) {
+            defaultPackages.add(packageName);
+            return this;
         }
 
         public Builder addDependency(FeaturePackDependencySpec dependency) {
@@ -184,6 +191,7 @@ public class WildFlyFeaturePackBuild {
     private final List<FileFilter> unixLineEndFilters;
     private final boolean packageSchemas;
     private final Set<String> schemaGroups;
+    private final Set<String> defaultPackages;
 
     private WildFlyFeaturePackBuild(Builder builder) {
         this.dependencies = Collections.unmodifiableList(builder.dependencies);
@@ -195,6 +203,11 @@ public class WildFlyFeaturePackBuild {
         this.unixLineEndFilters = Collections.unmodifiableList(builder.unixLineEndFilters);
         this.packageSchemas = builder.packageSchemas;
         this.schemaGroups = Collections.unmodifiableSet(builder.schemaGroups);
+        this.defaultPackages = Collections.unmodifiableSet(builder.defaultPackages);
+    }
+
+    public Collection<String> getDefaultPackages() {
+        return defaultPackages;
     }
 
     public List<FeaturePackDependencySpec> getDependencies() {

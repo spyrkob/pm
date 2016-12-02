@@ -18,7 +18,6 @@ package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -43,7 +42,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -55,12 +53,9 @@ import org.jboss.provisioning.plugin.wildfly.configassembly.ZipFileSubsystemInpu
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.ConfigFileDescription;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.featurepack.model.WildFlyPostFeaturePackTasks;
-import org.jboss.provisioning.spec.PackageDependencySpec;
-import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.wildfly.config.gen.ConfigGenerator;
-import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
  *
@@ -189,7 +184,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                     throw new ProvisioningException("There is more than one version of feature-pack " + fpGav.toGa());
                                 }
                                 collectFeaturePackSubsystemsInput(ctx,
-                                        ctx.getProvisioningConfig().getFeaturePack(fpGav.toGa()),
+                                        ctx.getProvisionedState().getFeaturePack(fpGav),
                                         version);
                                 collectProvisioningCli(ctx.getProvisionedState().getFeaturePack(fpGav), version);
                             }
@@ -223,43 +218,24 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, FeaturePackConfig fpConfig, Path fpDir) throws ProvisioningException {
-
+    private void collectFeaturePackSubsystemsInput(final ProvisioningContext ctx, ProvisionedFeaturePack provisionedFp, Path fpDir) throws ProvisioningException {
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
-        final Path modulesPackageXml = packagesDir.resolve("modules").resolve(Constants.PACKAGE_XML);
-        if (!Files.exists(modulesPackageXml)) {
-            throw new ProvisioningException(Errors.pathDoesNotExist(modulesPackageXml));
+        if (!Files.exists(packagesDir)) {
+            throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
-
-        final PackageSpec modulesSpec;
-        try (Reader reader = Files.newBufferedReader(modulesPackageXml)) {
-            modulesSpec = new PackageXmlParser().parse(reader);
-        } catch (XMLStreamException | IOException e) {
-            throw new ProvisioningException(Errors.parseXml(modulesPackageXml), e);
-        }
-
-        if(fpConfig != null && fpConfig.hasIncludedPackages()) {
-            for (String modulePkg : fpConfig.getIncludedPackages()) {
-                processModule(ctx, packagesDir, modulePkg);
-            }
-        } else {
-            for (PackageDependencySpec modulePkg : modulesSpec.getLocalDependencies().getDescriptions()) {
-                if (fpConfig != null && fpConfig.isExcluded(modulePkg.getName())) {
-                    continue;
-                }
-                processModule(ctx, packagesDir, modulePkg.getName());
-            }
+        for(String pkgName : provisionedFp.getPackageNames()) {
+            collectFeaturePackSubsystemsInputFromPackage(ctx, packagesDir.resolve(pkgName));
         }
     }
 
-    private void processModule(final ProvisioningContext ctx, final Path packagesDir, String modulePkg)
+    private void collectFeaturePackSubsystemsInputFromPackage(final ProvisioningContext ctx, final Path packageDir)
             throws ProvisioningException {
-        final Path moduleDir = packagesDir.resolve(modulePkg).resolve(Constants.CONTENT);
-        if (!Files.exists(moduleDir)) {
-            throw new ProvisioningException(Errors.pathDoesNotExist(moduleDir));
+        final Path contentDir = packageDir.resolve(Constants.CONTENT);
+        if (!Files.exists(contentDir)) {
+            return;
         }
         try {
-            Files.walkFileTree(moduleDir, new FileVisitor<Path>() {
+            Files.walkFileTree(contentDir, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     return FileVisitResult.CONTINUE;
@@ -303,7 +279,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             });
         } catch (IOException e) {
-            throw new ProvisioningException(Errors.readDirectory(moduleDir), e);
+            throw new ProvisioningException(Errors.readDirectory(contentDir), e);
         }
     }
 

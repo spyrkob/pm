@@ -59,6 +59,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         BUILD("build"),
         CONFIG(ConfigModelParser20.ELEMENT_LOCAL_NAME),
         COPY_ARTIFACTS(CopyArtifactsModelParser20.ELEMENT_LOCAL_NAME),
+        DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
         DIR("dir"),
@@ -85,6 +86,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             elementsMap.put(new QName(NAMESPACE_2_0, Element.BUILD.getLocalName()), Element.BUILD);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG.getLocalName()), Element.CONFIG);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.DEFAULT_PACKAGES.getLocalName()), Element.DEFAULT_PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
@@ -214,6 +216,9 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                         case DEPENDENCIES:
                             parseDependencies(reader, builder);
                             break;
+                        case DEFAULT_PACKAGES:
+                            parseDefaultPackages(reader, builder);
+                            break;
                         case CONFIG:
                             builder.setConfig(configModelParser.parseConfig(reader));
                             break;
@@ -232,6 +237,31 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             break;
                         case LINE_ENDINGS:
                             parseLineEndings(reader, builder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseDefaultPackages(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PACKAGE:
+                            builder.addDefaultPackage(parseName(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
