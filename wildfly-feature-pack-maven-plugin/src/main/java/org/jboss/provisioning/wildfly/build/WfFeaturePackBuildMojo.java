@@ -222,7 +222,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
-        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-feature-pack-api", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
+        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
 
         addConfigPackages(targetResources.resolve("config").resolve("packages"), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 

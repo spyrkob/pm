@@ -46,7 +46,7 @@
     <module>feature-pack-api</module>
     <module>feature-pack-build-maven-plugin</module>
     <module>tool</module>
-    <module>wildfly-feature-pack-api</module>
+    <module>wildfly-provisioning-plugin</module>
     <module>wildfly-feature-pack-maven-plugin</module>
   </modules>
 
@@ -142,7 +142,7 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>wildfly-feature-pack-api</artifactId>
+        <artifactId>wildfly-provisioning-plugin</artifactId>
         <version>${project.version}</version>
       </dependency>
 

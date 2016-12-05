@@ -77,7 +77,7 @@
 
     <dependency>
       <groupId>org.jboss.pm</groupId>
-      <artifactId>wildfly-feature-pack-api</artifactId>
+      <artifactId>wildfly-provisioning-plugin</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jboss.pm</groupId>

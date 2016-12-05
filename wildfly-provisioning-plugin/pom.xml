@@ -27,10 +27,10 @@
     <version>1.0.0.Alpha-SNAPSHOT</version>
   </parent>
 
-  <artifactId>wildfly-feature-pack-api</artifactId>
+  <artifactId>wildfly-provisioning-plugin</artifactId>
   <packaging>jar</packaging>
 
-  <name>WildFly Feature Pack API</name>
+  <name>WildFly Provisioning Plug-in</name>
   <url>http://maven.apache.org</url>
 
   <dependencies>
@@ -65,7 +65,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-              <finalName>wildfly-provisioning-plugin</finalName>
+              <finalName>wildfly-pm-plugin</finalName>
               <appendAssemblyId>false</appendAssemblyId>
               <descriptorRefs>
                 <descriptorRef>jar-with-dependencies</descriptorRef>

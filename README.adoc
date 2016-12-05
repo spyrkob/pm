@@ -23,11 +23,10 @@ installation specification at a specified location, install additional and/or
 uninstall existing feature-packs, export the currently provisioned specification
 to a file with the purpose to reproduce it at a different location.
 
-== Module `wildfly-feature-pack-api`
+== Module `wildfly-provisioning-plugin`
 
-WildFly-specific provisioning and feature-pack API is basically a façade
-over the general provisioning and feature-pack API which makes
-it easier to build WildFly-specific provisioning config.
+WildFly-specific provisioning plug-in which takes care of assembling the
+configuration of the provisioned WildFly-based installation.
 
 == Module `feature-pack-build-maven-plugin`
 
