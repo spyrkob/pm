@@ -274,11 +274,7 @@ class ProvisioningTask {
                 new java.net.URL[provisioningPlugins.size()]), Thread.currentThread().getContextClassLoader());
         final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
         for (ProvisioningPlugin plugin : plugins) {
-            try {
-                plugin.postInstall(ctx);
-            } catch (ProvisioningException e) {
-                throw new ProvisioningException("Provisioning plugin failed", e);
-            }
+            plugin.postInstall(ctx);
         }
     }
 

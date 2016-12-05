@@ -36,5 +36,6 @@ if [[ -n $BUILD ]]; then
 fi
 
 if [[ -n $RUN ]]; then
+#    java "-Dmaven.home=/home/olubyans/maven" -cp "./wildfly-feature-pack-api/target/wildfly-provisioning-plugin.jar" -jar ./tool/target/pm-tool.jar
     java "-Dmaven.home=/home/olubyans/maven" -jar ./tool/target/pm-tool.jar
 fi
