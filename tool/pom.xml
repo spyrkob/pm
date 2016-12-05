@@ -72,15 +72,10 @@
       <groupId>org.jboss.pm</groupId>
       <artifactId>feature-pack-api</artifactId>
     </dependency>
- 
+
     <dependency>
       <groupId>org.jboss.pm</groupId>
       <artifactId>feature-pack-build-maven-plugin</artifactId>
-    </dependency>
- 
-    <dependency>
-      <groupId>org.jboss.pm</groupId>
-      <artifactId>wildfly-feature-pack-api</artifactId>
     </dependency>
   </dependencies>
 

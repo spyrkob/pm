@@ -185,30 +185,6 @@ Arguments:
 <file-path>   - file path to store the provisioned specification to.
 ----
 
-== Command `feature-pack --action install`
-
-NOTE: this command is a work in progress! Don't try to use it w/o supervision!
-
-Builds a feature pack for the specified WildFly-based installation and
-installs the feature pack into the Maven repository.
-  
-Arguments:
-
-[source,shell]
-----
---install-dir - filesystem path to the WildFly-based installation for which 
-                the feature pack should be built.
-
---workdir     - optional, useful for debugging, specifies the work directory
-                used by the tool to layout feature packs before ZIPing
-                and installing into the maven repository. The directory is
-                not automatically removed when the tool has finished
-                the task.
-                If the argument is not specified, a random temporary
-                directory will be created instead and removed after the tool
-                has finished the task.
-----
-
 = Building and launching the tool
  
 The tool can be built by executing the following Maven command:

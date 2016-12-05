@@ -45,7 +45,6 @@ public class CliMain {
 
         final AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(pmSession.getPrompt())
                 // provisioning commands
-                .addCommand(new FpCommand())
                 .addCommand(new InstallCommand())
                 .addCommand(new ProvisionedSpecCommand())
                 .addCommand(new ProvisionSpecCommand())
