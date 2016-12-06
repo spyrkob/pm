@@ -59,6 +59,7 @@ class ConfigGenerator {
     }
 
     public ConfigGenerator addCommandLines(Path p) throws IOException {
+        addCommandLine("echo executing " + p);
         try(BufferedReader reader = Files.newBufferedReader(p)) {
             String line = reader.readLine();
             while(line != null) {

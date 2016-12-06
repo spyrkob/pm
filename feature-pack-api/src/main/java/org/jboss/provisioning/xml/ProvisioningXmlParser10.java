@@ -27,7 +27,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -224,53 +223,9 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningConfig.Bui
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGES:
-                            readPackageList(reader, fpBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readPackageList(XMLExtendedStreamReader reader, FeaturePackConfig.Builder builder) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case INHERIT:
-                    builder.setInheritPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case EXCLUDE:
                             try {
-                                builder.excludePackage(parseName(reader));
-                            } catch (ProvisioningException e) {
-                                throw new XMLStreamException(e);
-                            }
-                            break;
-                        case INCLUDE:
-                            try {
-                                builder.includePackage(parseName(reader));
-                            } catch (ProvisioningException e) {
+                                FeaturePackPackagesConfigParser10.readPackages(reader, fpBuilder);
+                            } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException(e);
                             }
                             break;
@@ -285,27 +240,5 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningConfig.Bui
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private String parseName(final XMLExtendedStreamReader reader) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        String name = null;
-        boolean parsedTarget = false;
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
-                    parsedTarget = true;
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (!parsedTarget) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
-        }
-        ParsingUtils.parseNoContent(reader);
-        return name;
     }
 }

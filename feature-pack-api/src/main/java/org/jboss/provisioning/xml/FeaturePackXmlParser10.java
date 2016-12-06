@@ -298,7 +298,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGES:
-                            readDependencyPackages(reader, depBuilder);
+                            FeaturePackPackagesConfigParser10.readPackages(reader, depBuilder);
                             break;
                         case NAME:
                             name = reader.getElementText();
@@ -313,47 +313,6 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                 }
             }
         }
-    }
-
-    private void readDependencyPackages(XMLExtendedStreamReader reader, FeaturePackConfig.Builder builder)
-            throws XMLStreamException, ProvisioningDescriptionException {
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case INHERIT:
-                    builder.setInheritPackages(Boolean.parseBoolean(reader.getAttributeValue(i)));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case EXCLUDE:
-                            builder.excludePackage(parseName(reader));
-                            break;
-                        case INCLUDE:
-                            builder.includePackage(parseName(reader));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
     private void readDefaultPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {

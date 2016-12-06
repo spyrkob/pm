@@ -17,7 +17,7 @@
 package org.jboss.provisioning.wildfly.build;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
@@ -26,6 +26,7 @@ import org.jboss.provisioning.plugin.wildfly.config.FileFilterModelParser20;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermissionsModelParser20;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -61,7 +62,6 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
         DIR("dir"),
-        EXCLUDES("excludes"),
         FILE_PERMISSIONS(FilePermissionsModelParser20.ELEMENT_LOCAL_NAME),
         FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
         GROUP("group"),
@@ -69,6 +69,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         MKDIRS("mkdirs"),
         NAME("name"),
         PACKAGE("package"),
+        PACKAGES("packages"),
         PACKAGE_SCHEMAS("package-schemas"),
         UNIX("unix"),
         WINDOWS("windows"),
@@ -87,7 +88,6 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.EXCLUDES.getLocalName()), Element.EXCLUDES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILTER.getLocalName()), Element.FILTER);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.GROUP.getLocalName()), Element.GROUP);
@@ -95,6 +95,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             elementsMap.put(new QName(NAMESPACE_2_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.NAME.getLocalName()), Element.NAME);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE.getLocalName()), Element.PACKAGE);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGES.getLocalName()), Element.PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE_SCHEMAS.getLocalName()), Element.PACKAGE_SCHEMAS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.UNIX.getLocalName()), Element.UNIX);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.WINDOWS.getLocalName()), Element.WINDOWS);
@@ -333,36 +334,11 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                         case NAME:
                             depName = reader.getElementText().trim();
                             break;
-                        case EXCLUDES:
-                            parseExcludes(reader, depBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-    }
-
-    private void parseExcludes(XMLStreamReader reader, FeaturePackConfig.Builder depBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGE:
+                        case PACKAGES:
                             try {
-                                depBuilder.excludePackage(parseName(reader));
-                            } catch (ProvisioningException e) {
-                                throw new XMLStreamException("Failed to exclude package", e);
+                                FeaturePackPackagesConfigParser10.readPackages(reader, depBuilder);
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException(e);
                             }
                             break;
                         default:
@@ -375,7 +351,6 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                 }
             }
         }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
     private String parseName(final XMLStreamReader reader) throws XMLStreamException {

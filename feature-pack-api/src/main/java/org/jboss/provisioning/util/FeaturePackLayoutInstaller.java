@@ -70,7 +70,7 @@ public class FeaturePackLayoutInstaller {
 
         for(ProvisionedFeaturePack provisionedFp : provisionedState.getFeaturePacks()) {
             final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
-            System.out.println("Installing " + fpGav + " to " + installDir);
+            System.out.println("Installing " + fpGav /*+ " to " + installDir*/);
             Path fpDir;
             try {
                 fpDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav);

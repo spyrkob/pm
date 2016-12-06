@@ -110,6 +110,13 @@ public class FeaturePackConfig {
             return this;
         }
 
+        public Builder includeAllPackages(Collection<String> packageNames) throws ProvisioningDescriptionException {
+            for(String packageName : packageNames) {
+                includePackage(packageName);
+            }
+            return this;
+        }
+
         public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
             if(excludedPackages.contains(packageName)) {
                 throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));

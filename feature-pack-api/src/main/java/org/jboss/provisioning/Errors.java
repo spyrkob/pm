@@ -87,8 +87,8 @@ public interface Errors {
         return "Failed to copy package " + packageName + " content";
     }
 
-    static String packageNotFound(String packageName) {
-        return "Failed to resolve package " + packageName;
+    static String packageNotFound(ArtifactCoords.Gav fp, String packageName) {
+        return "Failed to resolve package " + packageName + " for " + fp;
     }
 
     static String missingParameter(String string) {

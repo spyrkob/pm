@@ -121,7 +121,7 @@ class ProvisioningTask {
             final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
             mkdirs(fpWorkDir);
             try {
-                System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
+                //System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
                 ZipUtils.unzip(artifactPath, fpWorkDir);
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);

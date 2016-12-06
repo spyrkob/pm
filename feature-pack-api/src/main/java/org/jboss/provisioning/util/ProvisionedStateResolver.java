@@ -129,7 +129,7 @@ public class ProvisionedStateResolver {
         }
         final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
         if (pkgSpec == null) {
-            throw new ProvisioningDescriptionException(Errors.packageNotFound(pkgName));
+            throw new ProvisioningDescriptionException(Errors.packageNotFound(fpSpec.getGav(), pkgName));
         }
         fpBuilder.addPackage(pkgName);
         if (pkgSpec.hasLocalDependencies()) {

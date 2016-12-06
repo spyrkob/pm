@@ -277,6 +277,9 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     }
 
     private void addConfigPackages(final Path configDir, final Path packagesDir, final Builder fpBuilder) throws MojoExecutionException {
+        if(!Files.exists(configDir)) {
+            return;
+        }
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(configDir)) {
             for(Path configPackage : stream) {
                 final Path provisioningCli = configPackage.resolve("pm/wildfly/provisioning.cli");
@@ -385,7 +388,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if (!wfFpConfig.getDependencies().isEmpty()) {
             fpDependencies = new HashMap<>(wfFpConfig.getDependencies().size());
             for (FeaturePackDependencySpec depSpec : wfFpConfig.getDependencies()) {
-                FeaturePackConfig depConfig = depSpec.getTarget();
+                final FeaturePackConfig depConfig = depSpec.getTarget();
                 final String depStr = depConfig.getGav().toString();
                 String gavStr = artifactVersions.getVersion(depStr);
                 if(gavStr == null) {
@@ -394,9 +397,17 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 gavStr = gavStr.replace(depStr, depStr + "-new");
                 final ArtifactCoords.Gav depGav = ArtifactCoords.newGav(gavStr);
                 final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(depGav);
+                depBuilder.setInheritPackages(depConfig.isInheritPackages());
                 if (depConfig.hasExcludedPackages()) {
                     try {
                         depBuilder.excludeAllPackages(depConfig.getExcludedPackages()).build();
+                    } catch (ProvisioningException e) {
+                        throw new MojoExecutionException("Failed to process dependencies", e);
+                    }
+                }
+                if (depConfig.hasIncludedPackages()) {
+                    try {
+                        depBuilder.includeAllPackages(depConfig.getIncludedPackages()).build();
                     } catch (ProvisioningException e) {
                         throw new MojoExecutionException("Failed to process dependencies", e);
                     }

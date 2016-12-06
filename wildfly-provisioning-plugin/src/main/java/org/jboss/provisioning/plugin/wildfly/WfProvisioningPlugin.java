@@ -55,7 +55,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     @Override
     public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
 
-        System.out.println("WildFly configuration assembling plugin for " + ctx.getInstallDir());
+        System.out.println("WildFly-based configuration assembling plug-in");
 
         final Path resources = ctx.getResourcesDir().resolve("wildfly");
         if(!Files.exists(resources)) {
@@ -183,10 +183,15 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(!Files.exists(packagesDir)) {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
+        boolean foundScript = false;
         for(String pkgName : provisionedFp.getPackageNames()) {
             final Path provisioningCli = packagesDir.resolve(pkgName).resolve("pm/wildfly/provisioning.cli");
             if (Files.exists(provisioningCli)) {
-                System.out.println("added cli script for " + pkgName + " from " + provisionedFp.getGav());
+                if(!foundScript) {
+                    System.out.println("Collected CLI scripts from " + provisionedFp.getGav() + ":");
+                    foundScript = true;
+                }
+                System.out.println(" - " + pkgName);
                 if(cliList.isEmpty()) {
                     cliList = new ArrayList<>();
                 }
