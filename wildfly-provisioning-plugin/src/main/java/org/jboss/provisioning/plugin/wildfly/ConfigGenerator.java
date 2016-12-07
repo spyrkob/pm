@@ -18,16 +18,20 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.jboss.as.cli.CommandLineException;
+import org.jboss.provisioning.ArtifactCoords;
 import org.wildfly.core.launcher.CliCommandBuilder;
 
 /**
@@ -88,12 +92,47 @@ class ConfigGenerator {
                 if(cliOutput == null) {
                     System.out.println("CLI output is not available");
                 } else {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(cliOutput))) {
+                    String echoLine = null;
+                    int opIndex = 0;
+                    final StringWriter errorWriter = new StringWriter();
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(cliOutput));
+                            BufferedWriter writer = new BufferedWriter(errorWriter)) {
                         String line = reader.readLine();
                         while (line != null) {
-                            System.out.println("cli> " + line);
+                            if(line.startsWith("executing ")) {
+                                echoLine = line;
+                                opIndex = 0;
+                            } else {
+                                if(line.equals("{")) {
+                                    ++opIndex;
+                                    writer.flush();
+                                    errorWriter.getBuffer().setLength(0);
+                                }
+                                writer.write(line);
+                                writer.newLine();
+                            }
                             line = reader.readLine();
                         }
+                    }
+
+                    if(echoLine != null) {
+                        Path p = Paths.get(echoLine.substring("executing ".length()));
+                        p = p.getParent();
+                        p = p.getParent();
+                        p = p.getParent();
+                        final String pkgName = p.getFileName().toString();
+                        p = p.getParent();
+                        p = p.getParent();
+                        final String fpVersion = p.getFileName().toString();
+                        p = p.getParent();
+                        final String fpArtifact = p.getFileName().toString();
+                        p = p.getParent();
+                        final String fpGroup = p.getFileName().toString();
+                        System.out.println("Failed to execute CLI script from " + ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion) +
+                                " package " + pkgName + " operation #" + opIndex);
+                        System.out.println(errorWriter.getBuffer());
+                    } else {
+                        System.out.println("Could not the cause of the error in the CLI output.");
                     }
                 }
                 throw new CommandLineException("Embeedded CLI scripts failed.");
