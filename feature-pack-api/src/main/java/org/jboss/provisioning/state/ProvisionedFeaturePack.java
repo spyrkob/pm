@@ -18,7 +18,7 @@
 package org.jboss.provisioning.state;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
@@ -44,7 +44,7 @@ public class ProvisionedFeaturePack {
                     packages = Collections.singleton(name);
                     break;
                 case 1:
-                    packages = new HashSet<>(packages);
+                    packages = new LinkedHashSet<>(packages);
                 default:
                     packages.add(name);
             }

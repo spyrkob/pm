@@ -20,7 +20,9 @@ package org.jboss.provisioning.util;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
@@ -44,6 +46,8 @@ public class ProvisionedStateResolver {
 
     private ProvisionedState.Builder stateBuilder;
     private Map<ArtifactCoords.Gav, FeaturePackSpec> fpWithExternalDeps = Collections.emptyMap();
+
+    private Set<String> beingResolved = null;
 
     public ProvisionedState resolve(ProvisioningConfig provisioningConfig,
             FeaturePackLayoutDescription fpLayout, Path layoutDir) throws ProvisioningDescriptionException {
@@ -120,6 +124,9 @@ public class ProvisionedStateResolver {
         if(fpBuilder.hasPackage(pkgName)) {
             return;
         }
+        if(beingResolved != null && beingResolved.contains(pkgName)) {
+            return;
+        }
         if(fpConfig.isExcluded(pkgName)) {
             if(optional) {
                 return;
@@ -131,12 +138,17 @@ public class ProvisionedStateResolver {
         if (pkgSpec == null) {
             throw new ProvisioningDescriptionException(Errors.packageNotFound(fpSpec.getGav(), pkgName));
         }
-        fpBuilder.addPackage(pkgName);
         if (pkgSpec.hasLocalDependencies()) {
+            if(beingResolved == null) {
+                beingResolved = new HashSet<>();
+            }
+            beingResolved.add(pkgName);
             for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
                 resolvePackage(fpSpec, fpConfig, fpBuilder, dep.getName(), dep.isOptional(), pkgSpec.getName());
             }
+            beingResolved.remove(pkgName);
         }
+        fpBuilder.addPackage(pkgName);
         if(pkgSpec.hasExternalDependencies() && !fpWithExternalDeps.containsKey(fpSpec.getGav())) {
             switch(fpWithExternalDeps.size()) {
                 case 0:
