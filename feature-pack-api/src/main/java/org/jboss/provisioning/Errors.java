@@ -138,4 +138,8 @@ public interface Errors {
     static String unknownFeaturePackDependencyName(ArtifactCoords.Gav fpGav, String pkgName, String depName) {
         return fpGav + " package " + pkgName + " references unknown feature-pack dependency " + depName;
     }
+
+    static String packageAlreadyExists(Gav gav, String name) {
+        return "Package " + name + " already exists in feature-pack " + gav;
+    }
 }

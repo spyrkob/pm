@@ -282,10 +282,10 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(configDir)) {
             for(Path configPackage : stream) {
-                final Path provisioningCli = configPackage.resolve("pm/wildfly/provisioning.cli");
-                if(!Files.exists(provisioningCli)) {
-                    throw new MojoExecutionException("Config package is missing provisioning.cli: " + provisioningCli);
-                }
+//                final Path provisioningCli = configPackage.resolve("pm/wildfly/provisioning.cli");
+//                if(!Files.exists(provisioningCli)) {
+//                    throw new MojoExecutionException("Config package is missing provisioning.cli: " + provisioningCli);
+//                }
                 final Path packageDir = packagesDir.resolve(configPackage.getFileName());
                 if (!Files.exists(packageDir)) {
                     Files.createDirectories(packageDir);
@@ -306,6 +306,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     fpBuilder.addPackage(pkgSpec);
                 }
             }
+        } catch (ProvisioningDescriptionException e) {
+            throw new MojoExecutionException("Failed to add package", e);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process config packages", e);
         }
@@ -447,6 +449,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     fpBuilder.addPackage(pkgSpec);
                 }
             }
+        } catch (ProvisioningDescriptionException e) {
+            throw new MojoExecutionException("Failed to add package", e);
         }
     }
 
@@ -542,7 +546,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             } catch (XMLStreamException e) {
                 throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
             }
-            fpBuilder.addPackage(pkgSpec);
+            try {
+                fpBuilder.addPackage(pkgSpec);
+            } catch (ProvisioningDescriptionException e) {
+                throw new MojoExecutionException("Failed to add package", e);
+            }
 
             final String moduleXmlContents = IoUtils.readFile(moduleXml);
             String targetContent;

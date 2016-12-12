@@ -63,7 +63,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addDefaultPackage(PackageSpec pkg) {
+        public Builder addDefaultPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
             markAsDefaultPackage(pkg.getName());
             addPackage(pkg);
             return this;
@@ -83,8 +83,11 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addPackage(PackageSpec pkg) {
+        public Builder addPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
             assert pkg != null : "package is null";
+            if(packages.containsKey(pkg.getName())) {
+                throw new ProvisioningDescriptionException(Errors.packageAlreadyExists(gav, pkg.getName()));
+            }
             switch(packages.size()) {
                 case 0:
                     packages = Collections.singletonMap(pkg.getName(), pkg);
