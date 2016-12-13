@@ -206,14 +206,22 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.pathDoesNotExist(srcModulesDir));
         }
 
+        final PackageSpec.Builder modulesAll = PackageSpec.builder("modules.all");
         try {
             final Map<String, Path> moduleXmlByPkgName = findModules(srcModulesDir);
             if(moduleXmlByPkgName.isEmpty()) {
                 throw new MojoExecutionException("Modules not found in " + srcModulesDir);
             }
-            packageModules(fpBuilder, targetResources, moduleXmlByPkgName, fpPackagesDir);
+            packageModules(fpBuilder, targetResources, moduleXmlByPkgName, fpPackagesDir, modulesAll);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
+        }
+        try {
+            final PackageSpec modulesAllPkg = modulesAll.build();
+            PackageXmlWriter.getInstance().write(modulesAllPkg, fpPackagesDir.resolve(modulesAllPkg.getName()).resolve(Constants.PACKAGE_XML));
+            fpBuilder.addPackage(modulesAllPkg);
+        } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
+            throw new MojoExecutionException("Failed to add package", e);
         }
 
         try {
@@ -224,7 +232,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
 
-        addConfigPackages(targetResources.resolve("config").resolve("packages"), fpDir.resolve(Constants.PACKAGES), fpBuilder);
+        addConfigPackages(targetResources.resolve("config").resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
         for(String defaultPackage : wfFpConfig.getDefaultPackages()) {
             if(!fpBuilder.hasPackage(defaultPackage)) {
@@ -486,7 +494,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     }
 
     private void packageModules(FeaturePackSpec.Builder fpBuilder,
-            Path resourcesDir, Map<String, Path> moduleXmlByPkgName, Path packagesDir)
+            Path resourcesDir, Map<String, Path> moduleXmlByPkgName, Path packagesDir, PackageSpec.Builder modulesAll)
             throws IOException, MojoExecutionException {
         final BuildPropertyReplacer buildPropertyReplacer = new BuildPropertyReplacer(
                 new ModuleArtifactPropertyResolver(artifactVersions));
@@ -546,6 +554,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             } catch (XMLStreamException e) {
                 throw new IOException(Errors.writeXml(packageDir.resolve(Constants.PACKAGE_XML)), e);
             }
+            modulesAll.addDependency(packageName, true);
             try {
                 fpBuilder.addPackage(pkgSpec);
             } catch (ProvisioningDescriptionException e) {
