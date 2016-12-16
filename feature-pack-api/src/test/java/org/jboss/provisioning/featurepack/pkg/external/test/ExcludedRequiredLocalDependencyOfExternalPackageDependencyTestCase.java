@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.featurepack.pkg.external.test;
 
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -36,22 +35,27 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionConfigTestBase {
+public class ExcludedRequiredLocalDependencyOfExternalPackageDependencyTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
             .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                    .excludePackage("p2")
                     .build())
             .newPackage("p1", true)
-                .addDependency("fp2-dep", "p2")
+                .addDependency("fp2-dep", "p1")
                 .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
             .newPackage("p1", true)
+                .addDependency("p2")
                 .writeContent("fp2/p1.txt", "p1")
+                .getFeaturePack()
+            .newPackage("p2")
+                .writeContent("fp2/p2.txt", "p2")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -63,7 +67,7 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
             super.testPmMethod(pm);
             Assert.fail();
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.packageNotFound(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"),
+            Assert.assertEquals(Errors.unsatisfiedPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p1", "p2"),
                     e.getMessage());
         }
     }

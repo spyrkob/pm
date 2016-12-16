@@ -78,6 +78,11 @@ public class PackageBuilder {
         return this;
     }
 
+    public PackageBuilder addDependency(String fpDepName, String pkgName, boolean optional) {
+        this.pkg.addDependency(fpDepName, pkgName, optional);
+        return this;
+    }
+
     public PackageBuilder addPath(String relativeTarget, Path src) {
         tasks.copy(src, relativeTarget);
         return this;

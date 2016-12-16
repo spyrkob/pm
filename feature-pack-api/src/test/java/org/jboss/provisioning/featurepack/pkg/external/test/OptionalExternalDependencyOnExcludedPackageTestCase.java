@@ -17,35 +17,35 @@
 
 package org.jboss.provisioning.featurepack.pkg.external.test;
 
-
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionConfigTestBase {
+public class OptionalExternalDependencyOnExcludedPackageTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
             .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                    .setInheritPackages(false)
+                    .excludePackage("p2")
+                    .includePackage("p3")
                     .build())
             .newPackage("p1", true)
-                .addDependency("fp2-dep", "p2")
+                .addDependency("fp2-dep", "p2", true)
                 .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
@@ -53,24 +53,14 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
             .newPackage("p1", true)
                 .writeContent("fp2/p1.txt", "p1")
                 .getFeaturePack()
+            .newPackage("p2")
+                .writeContent("fp2/p2.txt", "p2")
+                .getFeaturePack()
+            .newPackage("p3")
+                .writeContent("fp2/p3.txt", "p3")
+                .getFeaturePack()
             .getInstaller()
         .install();
-    }
-
-    @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail();
-        } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.packageNotFound(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"),
-                    e.getMessage());
-        }
-    }
-
-    @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
     }
 
     @Override
@@ -82,11 +72,21 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                        .addPackage("p1")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                        .addPackage("p3")
+                        .build())
+                .build();
     }
 
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
+        return builder
+                .addFile("fp1/p1.txt", "p1")
+                .addFile("fp2/p3.txt", "p3")
+                .build();
     }
 }
