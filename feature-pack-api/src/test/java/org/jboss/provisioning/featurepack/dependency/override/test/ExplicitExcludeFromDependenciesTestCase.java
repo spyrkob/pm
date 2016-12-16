@@ -33,7 +33,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExplicitOverrideOfDependencyTestCase extends PmProvisionConfigTestBase {
+public class ExplicitExcludeFromDependenciesTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
