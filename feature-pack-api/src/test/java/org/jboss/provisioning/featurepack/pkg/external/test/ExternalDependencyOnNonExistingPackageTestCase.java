@@ -62,8 +62,7 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
         try {
             super.testPmMethod(pm);
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.unsatisfiedExternalPackageDependency(
-                    ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1", ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"),
+            Assert.assertEquals(Errors.packageNotFound(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"),
                     e.getMessage());
         }
     }

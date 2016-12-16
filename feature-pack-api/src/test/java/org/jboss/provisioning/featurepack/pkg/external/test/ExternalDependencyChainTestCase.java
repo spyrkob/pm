@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.featurepack.pkg.external.test;
 
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -34,29 +33,62 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExternalDependencyOnNotIncludedPackageTestCase extends PmProvisionConfigTestBase {
+public class ExternalDependencyChainTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
             .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+                    .setInheritPackages(false)
                     .build())
             .newPackage("p1", true)
                 .addDependency("fp2-dep", "p2")
                 .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
+            .newPackage("p2")
+                .addDependency("p3")
+                .writeContent("fp1/p2.txt", "p2")
+                .getFeaturePack()
+            .newPackage("p3")
+                .addDependency("fp2-dep", "p2")
+                .addDependency("fp2-dep", "p4")
+                .writeContent("fp1/p3.txt", "p3")
+                .getFeaturePack()
             .getInstaller()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
+            .addDependency("fp1-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                    .build())
+            .addDependency("fp3-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp3", "1.0.0.Final"))
+                    .setInheritPackages(false)
+                    .build())
             .newPackage("p1", true)
                 .writeContent("fp2/p1.txt", "p1")
                 .getFeaturePack()
             .newPackage("p2")
+                .addDependency("p3")
                 .writeContent("fp2/p2.txt", "p2")
                 .getFeaturePack()
             .newPackage("p3")
+                .addDependency("fp1-dep", "p2")
                 .writeContent("fp2/p3.txt", "p3")
                 .getFeaturePack()
+            .newPackage("p4")
+                .addDependency("fp3-dep", "p2")
+                .writeContent("fp2/p4.txt", "p4")
+                .getFeaturePack()
+            .getInstaller()
+        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp3", "1.0.0.Final"))
+            .addDependency("fp1-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                    .setInheritPackages(false)
+                    .build())
+             .newPackage("p1", true)
+                 .writeContent("fp3/p1.txt", "p1")
+                 .getFeaturePack()
+             .newPackage("p2")
+                 .addDependency("fp1-dep", "p1")
+                 .writeContent("fp3/p2.txt", "p2")
+                 .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -73,9 +105,15 @@ public class ExternalDependencyOnNotIncludedPackageTestCase extends PmProvisionC
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")
+                        .addPackage("p2")
+                        .addPackage("p3")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
-                        .addPackage("p1")
+                        .addPackage("p2")
+                        .addPackage("p3")
+                        .addPackage("p4")
+                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp3", "1.0.0.Final"))
                         .addPackage("p2")
                         .build())
                 .build();
@@ -85,8 +123,12 @@ public class ExternalDependencyOnNotIncludedPackageTestCase extends PmProvisionC
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
                 .addFile("fp1/p1.txt", "p1")
-                .addFile("fp2/p1.txt", "p1")
+                .addFile("fp1/p2.txt", "p2")
+                .addFile("fp1/p3.txt", "p3")
                 .addFile("fp2/p2.txt", "p2")
+                .addFile("fp2/p3.txt", "p3")
+                .addFile("fp2/p4.txt", "p4")
+                .addFile("fp3/p2.txt", "p2")
                 .build();
     }
 }

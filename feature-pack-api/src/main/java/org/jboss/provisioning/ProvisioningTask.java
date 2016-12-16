@@ -24,9 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
@@ -57,6 +59,8 @@ class ProvisioningTask {
     private final Path workDir;
     private final Path layoutDir;
     private Map<ArtifactCoords, URL> provisioningPlugins = Collections.emptyMap();
+
+    private Set<ArtifactCoords.Gav> dependencyResolution;
 
     ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisioningConfig provisioningConfig) {
         this.artifactResolver = artifactResolver;
@@ -153,11 +157,21 @@ class ProvisioningTask {
 
         Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
         if(fpSpec.hasDependencies()) {
-            for(FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
-                fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder));
+            if(dependencyResolution == null) {
+                dependencyResolution = new HashSet<>();
             }
-            for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
-                fpBuilders = enforce(layoutBuilder.getFeaturePack(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
+            if(dependencyResolution.contains(fpGav)) {
+                return fpBuilders;
+            } else {
+                dependencyResolution.add(fpGav);
+                for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
+                    fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget(), layoutBuilder));
+                }
+                for (FeaturePackDependencySpec dep : fpSpec.getDependencies()) {
+                    fpBuilders = enforce(layoutBuilder.getFeaturePack(
+                            dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
+                }
+                dependencyResolution.remove(fpGav);
             }
         }
 

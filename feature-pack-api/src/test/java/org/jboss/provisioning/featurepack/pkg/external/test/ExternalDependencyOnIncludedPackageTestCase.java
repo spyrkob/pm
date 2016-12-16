@@ -33,7 +33,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SatisfiedExternalPackageDependencyTestCase extends PmProvisionConfigTestBase {
+public class ExternalDependencyOnIncludedPackageTestCase extends PmProvisionConfigTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {

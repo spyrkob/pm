@@ -45,120 +45,146 @@ import org.jboss.provisioning.state.ProvisionedState;
 public class ProvisionedStateResolver {
 
     private ProvisionedState.Builder stateBuilder;
-    private Map<ArtifactCoords.Gav, FeaturePackSpec> fpWithExternalDeps = Collections.emptyMap();
+    private FeaturePackLayoutDescription fpLayout;
+    private ProvisioningConfig extendedConfig;
 
-    private Set<String> beingResolved = null;
+    private Map<ArtifactCoords.Ga, Fp> fps;
 
     public ProvisionedState resolve(ProvisioningConfig provisioningConfig,
             FeaturePackLayoutDescription fpLayout, Path layoutDir) throws ProvisioningDescriptionException {
 
         stateBuilder = ProvisionedState.builder();
-        for(FeaturePackConfig fpConfig : provisioningConfig.getFeaturePacks()) {
-            final ArtifactCoords.Gav fpGav = fpConfig.getGav();
-            final FeaturePackSpec fpSpec = fpLayout.getFeaturePack(fpGav.toGa());
-            if(fpSpec == null) {
-                throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpGav));
-            }
-            resolveFeaturePack(fpConfig, fpSpec, LayoutUtils.getFeaturePackDir(layoutDir, fpGav));
+        this.fpLayout = fpLayout;
+        this.extendedConfig = provisioningConfig;
+
+        final int fpTotal = extendedConfig.getFeaturePacks().size();
+        if(fpTotal == 1) {
+            final ArtifactCoords.Ga fpGa = extendedConfig.getFeaturePackGaParts().iterator().next();
+            fps = Collections.singletonMap(fpGa, new Fp(fpLayout.getFeaturePack(fpGa), extendedConfig.getFeaturePack(fpGa)));
+        } else {
+            fps = new HashMap<>(fpTotal);
         }
 
-        final ProvisionedState provisionedState = stateBuilder.build();
-        if(!fpWithExternalDeps.isEmpty()) {
-            assertExternalDependencies(provisionedState, fpLayout);
-            fpWithExternalDeps = Collections.emptyMap();
+        for(ArtifactCoords.Ga ga: extendedConfig.getFeaturePackGaParts()) {
+            resolveFeaturePack(ga);
         }
-        return provisionedState;
+
+        for(ArtifactCoords.Ga fpGa : extendedConfig.getFeaturePackGaParts()) {
+            stateBuilder.addFeaturePack(fps.get(fpGa).builder.build());
+        }
+
+        return stateBuilder.build();
     }
 
-    private void assertExternalDependencies(ProvisionedState provisionedState, FeaturePackLayoutDescription fpLayout)
+    private void resolveFeaturePack(ArtifactCoords.Ga ga)
             throws ProvisioningDescriptionException {
-        for(FeaturePackSpec fpSpec : fpWithExternalDeps.values()) {
-            final ProvisionedFeaturePack provisionedFp = provisionedState.getFeaturePack(fpSpec.getGav());
-            for(String pkgName : provisionedFp.getPackageNames()) {
-                final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
-                if(pkgSpec.hasExternalDependencies()) {
-                    for(String depName : pkgSpec.getExternalDependencyNames()) {
-                        final FeaturePackDependencySpec fpDep = fpSpec.getDependency(depName);
-                        if(fpDep == null) {
-                            throw new ProvisioningDescriptionException(Errors.unknownDependencyName(fpSpec.getGav(), depName));
-                        }
-                        final ProvisionedFeaturePack provisionedTarget = provisionedState.getFeaturePack(fpDep.getTarget().getGav());
-                        if(provisionedTarget == null) {
-                            throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDep.getTarget().getGav()));
-                        }
-                        final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
-                        for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
-                            if(!pkgDep.isOptional() && !provisionedTarget.containsPackage(pkgDep.getName())) {
-                                throw new ProvisioningDescriptionException(
-                                        Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkgName, fpDep.getTarget().getGav(), pkgDep.getName()));
-                            }
-                        }
-                    }
-                }
+
+        final Fp fp = getFp(ga);
+
+        if(fp.config.isInheritPackages()) {
+            for (String name : fp.spec.getDefaultPackageNames()) {
+                resolvePackage(fp, name, true, null, null);
+            }
+        }
+        if(fp.config.hasIncludedPackages()) {
+            for(String name : fp.config.getIncludedPackages()) {
+                resolvePackage(fp, name, false, null, null);
             }
         }
     }
 
-    private void resolveFeaturePack(FeaturePackConfig fpConfig, FeaturePackSpec fpSpec, Path fpDir)
+    private void resolvePackage(Fp fp, final String pkgName, boolean optional, ArtifactCoords.Gav dependingFp, String dependingPackage)
             throws ProvisioningDescriptionException {
 
-        final ProvisionedFeaturePack.Builder fpBuilder = ProvisionedFeaturePack.builder(fpConfig.getGav());
-
-        if(fpConfig.isInheritPackages()) {
-            for (String name : fpSpec.getDefaultPackageNames()) {
-                resolvePackage(fpSpec, fpConfig, fpBuilder, name, true, null);
-            }
-        }
-        if(fpConfig.hasIncludedPackages()) {
-            for(String name : fpConfig.getIncludedPackages()) {
-                resolvePackage(fpSpec, fpConfig, fpBuilder, name, false, null);
-            }
-        }
-
-        stateBuilder.addFeaturePack(fpBuilder.build());
-    }
-
-    private void resolvePackage(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig,
-            ProvisionedFeaturePack.Builder fpBuilder, final String pkgName, boolean optional, String dependingPkg)
-            throws ProvisioningDescriptionException {
-        if(fpBuilder.hasPackage(pkgName)) {
+        if(fp.isSkipResolution(pkgName)) {
             return;
         }
-        if(beingResolved != null && beingResolved.contains(pkgName)) {
-            return;
-        }
-        if(fpConfig.isExcluded(pkgName)) {
+
+        if(fp.config.isExcluded(pkgName)) {
             if(optional) {
                 return;
             } else {
-                throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fpSpec.getGav(), dependingPkg, pkgName));
+                if(dependingFp == null) {
+                    throw new ProvisioningDescriptionException(
+                            Errors.unsatisfiedPackageDependency(fp.gav, dependingPackage, pkgName));
+                } else {
+                    throw new ProvisioningDescriptionException(
+                            Errors.unsatisfiedExternalPackageDependency(dependingFp, dependingPackage, fp.gav, pkgName));
+                }
             }
         }
-        final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
+
+        final PackageSpec pkgSpec = fp.spec.getPackage(pkgName);
         if (pkgSpec == null) {
-            throw new ProvisioningDescriptionException(Errors.packageNotFound(fpSpec.getGav(), pkgName));
+            throw new ProvisioningDescriptionException(Errors.packageNotFound(fp.gav, pkgName));
         }
+
+        boolean hasDependencies = false;
         if (pkgSpec.hasLocalDependencies()) {
+            hasDependencies = true;
+            fp.setBeingResolved(pkgName);
+            for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
+                resolvePackage(fp, dep.getName(), dep.isOptional(), null, pkgSpec.getName());
+            }
+        }
+        fp.builder.addPackage(pkgName);
+        if(pkgSpec.hasExternalDependencies()) {
+            if(!hasDependencies) {
+                hasDependencies = true;
+                fp.setBeingResolved(pkgName);
+            }
+            for(String depName : pkgSpec.getExternalDependencyNames()) {
+                final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
+                final Fp targetFp = getFp(depSpec.getTarget().getGav().toGa());
+
+                final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
+                for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
+                    resolvePackage(targetFp, pkgDep.getName(), pkgDep.isOptional(), fp.gav, pkgName);
+                }
+            }
+        }
+
+        if(hasDependencies) {
+            fp.setResolved(pkgName);
+        }
+    }
+
+    private Fp getFp(ArtifactCoords.Ga ga) {
+        Fp fp = fps.get(ga);
+        if(fp == null) {
+            fp = new Fp(fpLayout.getFeaturePack(ga), extendedConfig.getFeaturePack(ga));
+            fps.put(ga, fp);
+        }
+        return fp;
+    }
+
+    private static class Fp {
+        final ArtifactCoords.Gav gav;
+        final FeaturePackSpec spec;
+        final FeaturePackConfig config;
+        final ProvisionedFeaturePack.Builder builder;
+        private Set<String> beingResolved = null;
+
+        Fp(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
+            gav = fpSpec.getGav();
+            spec = fpSpec;
+            config = fpConfig;
+            builder = ProvisionedFeaturePack.builder(gav);
+        }
+
+        boolean isSkipResolution(String pkgName) throws ProvisioningDescriptionException {
+            return builder.hasPackage(pkgName) || beingResolved != null && beingResolved.contains(pkgName);
+        }
+
+        void setBeingResolved(String pkgName) {
             if(beingResolved == null) {
                 beingResolved = new HashSet<>();
             }
             beingResolved.add(pkgName);
-            for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
-                resolvePackage(fpSpec, fpConfig, fpBuilder, dep.getName(), dep.isOptional(), pkgSpec.getName());
-            }
-            beingResolved.remove(pkgName);
         }
-        fpBuilder.addPackage(pkgName);
-        if(pkgSpec.hasExternalDependencies() && !fpWithExternalDeps.containsKey(fpSpec.getGav())) {
-            switch(fpWithExternalDeps.size()) {
-                case 0:
-                    fpWithExternalDeps = Collections.singletonMap(fpSpec.getGav(), fpSpec);
-                    break;
-                case 1:
-                    fpWithExternalDeps = new HashMap<>(fpWithExternalDeps);
-                default:
-                    fpWithExternalDeps.put(fpSpec.getGav(), fpSpec);
-            }
+
+        void setResolved(String pkgName) {
+            beingResolved.remove(pkgName);
         }
     }
 }
