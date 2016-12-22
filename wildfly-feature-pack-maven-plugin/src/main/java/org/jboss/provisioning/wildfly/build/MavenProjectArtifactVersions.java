@@ -16,6 +16,11 @@
  */
 package org.jboss.provisioning.wildfly.build;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,5 +58,16 @@ class MavenProjectArtifactVersions {
 
     String getVersion(String gac) {
         return versions.get(gac);
+    }
+
+    void store(Path target) throws IOException {
+        try(BufferedWriter writer = Files.newBufferedWriter(target, StandardOpenOption.CREATE)) {
+            for(Map.Entry<String, String> entry : versions.entrySet()) {
+                writer.write(entry.getKey());
+                writer.write('=');
+                writer.write(entry.getValue());
+                writer.newLine();
+            }
+        }
     }
 }

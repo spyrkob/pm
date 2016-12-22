@@ -132,7 +132,7 @@ class ConfigGenerator {
                                 " package " + pkgName + " operation #" + opIndex);
                         System.out.println(errorWriter.getBuffer());
                     } else {
-                        System.out.println("Could not the cause of the error in the CLI output.");
+                        System.out.println("Could not locate the cause of the error in the CLI output.");
                     }
                 }
                 throw new CommandLineException("Embeedded CLI scripts failed.");
