@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,29 @@ import java.io.File;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author John Bailey
  */
-public class BuildPropertyReplacer {
+public class BuildPropertyHandler {
+
+    public interface ContentHandler {
+        void codePoint(int c);
+
+        void character(char c);
+
+        void string(String str);
+    }
+
+    private static ContentHandler NOOP = new ContentHandler() {
+        @Override
+        public void codePoint(int c) {
+        }
+
+        @Override
+        public void character(char c) {
+        }
+
+        @Override
+        public void string(String str) {
+        }
+    };
 
     private static final int INITIAL = 0;
     private static final int GOT_DOLLAR = 1;
@@ -38,12 +60,37 @@ public class BuildPropertyReplacer {
 
     private final PropertyResolver properties;
 
-    public BuildPropertyReplacer(PropertyResolver properties) {
+    public BuildPropertyHandler(PropertyResolver properties) {
         this.properties = properties;
     }
 
     public String replaceProperties(final String value) {
-        final StringBuilder builder = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
+        final ContentHandler handler = new ContentHandler() {
+            @Override
+            public void codePoint(int c) {
+                sb.appendCodePoint(c);
+            }
+
+            @Override
+            public void character(char c) {
+                sb.append(c);
+            }
+
+            @Override
+            public void string(String str) {
+                sb.append(str);
+            }
+        };
+        handleProperties(value, handler, properties);
+        return sb.toString();
+    }
+
+    public void handlePoperties(final String value, final PropertyResolver properties) {
+        handleProperties(value, NOOP, properties);
+    }
+
+    private void handleProperties(final String value, ContentHandler handler, final PropertyResolver properties) {
         final int len = value.length();
         int state = INITIAL;
         int start = -1;
@@ -60,7 +107,7 @@ public class BuildPropertyReplacer {
                             continue;
                         }
                         default: {
-                            builder.appendCodePoint(ch);
+                            handler.codePoint(ch);
                             continue;
                         }
                     }
@@ -69,7 +116,7 @@ public class BuildPropertyReplacer {
                 case GOT_DOLLAR: {
                     switch (ch) {
                         case '$': {
-                            builder.appendCodePoint(ch);
+                            handler.codePoint(ch);
                             state = INITIAL;
                             continue;
                         }
@@ -81,7 +128,8 @@ public class BuildPropertyReplacer {
                         }
                         default: {
                             // invalid; emit and resume
-                            builder.append('$').appendCodePoint(ch);
+                            handler.character('$');
+                            handler.codePoint(ch);
                             state = INITIAL;
                             continue;
                         }
@@ -94,13 +142,13 @@ public class BuildPropertyReplacer {
                         case ',': {
                             final String name = value.substring(nameStart, i).trim();
                             if ("/".equals(name)) {
-                                builder.append(File.separator);
+                                handler.character(File.separatorChar);
                                 state = ch == '}' ? INITIAL : RESOLVED;
                                 continue;
                             }
                             final String val = properties.resolveProperty(name);
                             if (val != null) {
-                                builder.append(val);
+                                handler.string(val);
                                 resolvedValue = val;
                                 state = ch == '}' ? INITIAL : RESOLVED;
                                 continue;
@@ -114,7 +162,7 @@ public class BuildPropertyReplacer {
                                     final String name2 = name.substring(0, q);
                                     final String val2 = properties.resolveProperty(name2);
                                     if (val2 != null) {
-                                        builder.append(val2);
+                                        handler.string(val2);
                                         resolvedValue = val2;
                                         state = ch == '}' ? INITIAL : RESOLVED;
                                         continue;
@@ -144,9 +192,9 @@ public class BuildPropertyReplacer {
                         // JBMETA-371 check in case the whole expression was meant to be resolved
                         final String val = properties.resolveProperty(value.substring(expressionStart, i));
                         if (val != null) {
-                            builder.append(val);
+                            handler.string(val);
                         } else {
-                            builder.append(value.substring(start, i));
+                            handler.string(value.substring(start, i));
                         }
                     }
                     continue;
@@ -157,20 +205,19 @@ public class BuildPropertyReplacer {
         }
         switch (state) {
             case GOT_DOLLAR: {
-                builder.append('$');
+                handler.character('$');
                 break;
             }
             case DEFAULT: {
-                builder.append(value.substring(start - 2));
+                handler.string(value.substring(start - 2));
                 break;
             }
             case GOT_OPEN_BRACE: {
                 // We had a reference that was not resolved, throw ISE
                 if (resolvedValue == null)
-                    throw new IllegalStateException("Incomplete expression: " + builder.toString());
+                    throw new IllegalStateException("Incomplete expression: " + handler.toString());
                 break;
             }
         }
-        return builder.toString();
     }
 }
