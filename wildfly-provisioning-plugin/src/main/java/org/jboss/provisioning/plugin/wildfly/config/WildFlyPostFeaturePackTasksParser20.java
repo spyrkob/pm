@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
  */
 package org.jboss.provisioning.plugin.wildfly.config;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
+import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
@@ -143,12 +143,12 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
         }
     }
 
-    private final BuildPropertyReplacer propertyReplacer;
+    private final BuildPropertyHandler propertyReplacer;
     private final FileFilterModelParser20 fileFilterModelParser;
     private final FilePermissionsModelParser20 filePermissionsModelParser;
 
     WildFlyPostFeaturePackTasksParser20(PropertyResolver resolver) {
-        this.propertyReplacer = new BuildPropertyReplacer(resolver);
+        this.propertyReplacer = new BuildPropertyHandler(resolver);
         this.fileFilterModelParser = new FileFilterModelParser20(this.propertyReplacer);
         this.filePermissionsModelParser = new FilePermissionsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
     }

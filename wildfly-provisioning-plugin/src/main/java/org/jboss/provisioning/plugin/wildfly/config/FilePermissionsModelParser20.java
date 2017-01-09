@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyReplacer;
+import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 
@@ -122,14 +122,14 @@ public class FilePermissionsModelParser20 {
         }
     }
 
-    private final BuildPropertyReplacer propertyReplacer;
+    private final BuildPropertyHandler propertyReplacer;
     private final FileFilterModelParser20 fileFilterModelParser;
 
-    public FilePermissionsModelParser20(BuildPropertyReplacer propertyReplacer) {
+    public FilePermissionsModelParser20(BuildPropertyHandler propertyReplacer) {
         this(propertyReplacer, new FileFilterModelParser20(propertyReplacer));
     }
 
-    public FilePermissionsModelParser20(BuildPropertyReplacer propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
+    public FilePermissionsModelParser20(BuildPropertyHandler propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
         this.propertyReplacer = propertyReplacer;
         this.fileFilterModelParser = fileFilterModelParser;
     }

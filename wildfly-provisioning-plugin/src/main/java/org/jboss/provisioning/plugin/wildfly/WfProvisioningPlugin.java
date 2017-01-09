@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,10 +33,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
@@ -55,8 +57,12 @@ import org.jboss.provisioning.util.PropertyUtils;
  */
 public class WfProvisioningPlugin implements ProvisioningPlugin {
 
-    private BuildPropertyReplacer versionResolver;
+    private ProvisioningContext ctx;
+    private PropertyResolver versionResolver;
+    private BuildPropertyHandler propertyHandler;
     private List<Path> cliList = Collections.emptyList();
+
+    private boolean thinServer;
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -66,6 +72,16 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         System.out.println("WildFly-based configuration assembling plug-in");
 
+        final String thinServerProp = System.getProperty("wfThinServer");
+        if(thinServerProp != null) {
+            if(thinServerProp.isEmpty()) {
+                thinServer = true;
+            } else {
+                thinServer = Boolean.parseBoolean(thinServerProp);
+            }
+        }
+
+        this.ctx = ctx;
         Properties tasksProps = null;
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
@@ -101,9 +117,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
         }
-        versionResolver = new BuildPropertyReplacer(new MapPropertyResolver(artifactVersions));
+        versionResolver = new MapPropertyResolver(artifactVersions);
+        propertyHandler = new BuildPropertyHandler(versionResolver);
 
-        processPackages(ctx);
+        processPackages();
 
         if(!cliList.isEmpty()) {
             final ConfigGenerator configGen = ConfigGenerator.newInstance(ctx.getInstallDir());
@@ -184,7 +201,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processPackages(ProvisioningContext ctx) throws ProvisioningException {
+    private void processPackages() throws ProvisioningException {
         try(DirectoryStream<Path> groupDtream = Files.newDirectoryStream(ctx.getLayoutDir())) {
             for(Path groupId : groupDtream) {
                 try(DirectoryStream<Path> artifactStream = Files.newDirectoryStream(groupId)) {
@@ -196,7 +213,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                 if(++count > 1) {
                                     throw new ProvisioningException("There is more than one version of feature-pack " + fpGav.toGa());
                                 }
-                                processPackages(ctx.getProvisionedState().getFeaturePack(fpGav), version, ctx.getInstallDir());
+                                processPackages(ctx.getProvisionedState().getFeaturePack(fpGav), version);
                             }
                         } catch (IOException e) {
                             throw new ProvisioningException(Errors.readDirectory(artifactId), e);
@@ -211,7 +228,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processPackages(final ProvisionedFeaturePack provisionedFp, Path fpDir, Path installDir) throws ProvisioningException {
+    private void processPackages(final ProvisionedFeaturePack provisionedFp, Path fpDir) throws ProvisioningException {
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         if(!Files.exists(packagesDir)) {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
@@ -222,7 +239,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             final Path moduleDir = pmWfDir.resolve(WfConstants.MODULE);
             if(Files.exists(moduleDir)) {
                 // look for and process modules
-                processModules(provisionedFp.getGav(), pkgName, moduleDir, installDir);
+                processModules(provisionedFp.getGav(), pkgName, moduleDir);
             }
             // collect cli scripts
             final Path provisioningCli = pmWfDir.resolve("provisioning.cli");
@@ -240,8 +257,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir, Path installDir) throws ProvisioningException {
+    private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {
         try {
+            final Path installDir = ctx.getInstallDir();
             Files.walkFileTree(fpModuleDir, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
@@ -261,11 +279,61 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     throws IOException {
                     if(file.getFileName().toString().equals(WfConstants.MODULE_XML)) {
                         final String originalContent = IoUtils.readFile(file);
-                        String resolvedContent;
-                        try {
-                            resolvedContent = versionResolver.replaceProperties(originalContent);
-                        } catch (Throwable t) {
-                            throw new IOException("Failed to replace properties for " + file, t);
+
+                        final String resolvedContent;
+                        if(thinServer) {
+                            try {
+                                resolvedContent = propertyHandler.replaceProperties(originalContent);
+                            } catch (Throwable t) {
+                                throw new IOException("Failed to replace properties for " + file, t);
+                            }
+                        } else {
+                            final String[] finalContent = new String[]{originalContent};
+                            propertyHandler.handlePoperties(originalContent, new PropertyResolver() {
+                                @Override
+                                public String resolveProperty(final String property) {
+                                    final int optionsIndex = property.indexOf('?');
+                                    final String artifactName;
+                                    final String expr;
+                                    if(optionsIndex > 0) {
+                                        // TODO handle options
+                                        artifactName = property.substring(0, optionsIndex);
+                                        expr = artifactName + '\\' + property.substring(optionsIndex);
+                                    } else {
+                                        artifactName = property;
+                                        expr = property;
+                                    }
+                                    final String resolved = versionResolver.resolveProperty(artifactName);
+                                    if(resolved == null) {
+                                        return null;
+                                    }
+                                    final Path moduleArtifact;
+                                    try {
+                                        moduleArtifact = ctx.resolveArtifact(fromJBossModules(resolved, "jar"));
+                                    } catch (ArtifactResolutionException e) {
+                                        throw new IllegalStateException(e);
+                                    }
+                                    final String artifactFileName = moduleArtifact.getFileName().toString();
+                                    try {
+                                        IoUtils.copy(moduleArtifact, installDir.resolve(fpModuleDir.relativize(file.getParent())).resolve(artifactFileName));
+                                    } catch (IOException e) {
+                                        throw new IllegalStateException(e);
+                                    }
+//                                  // update module xml content
+                                    finalContent[0] = finalContent[0].replaceFirst("<artifact\\s+name=\"\\$\\{" + expr
+                                          + "\\}\"\\s*/>", "<resource-root path=\"" + artifactFileName + "\"/>");
+//                                  // it's also possible that this is an element with nested content
+//                                  // this regex involves a good deal of backtracking but it seems to work
+                                    finalContent[0] = Pattern.compile(
+                                            "<artifact\\s+name=\"\\$\\{" + expr + "\\}\"\\s*>(.*)</artifact>",
+                                            Pattern.DOTALL)
+                                            .matcher(finalContent[0])
+                                            .replaceFirst("<resource-root path=\"" + artifactFileName + "\">$1</resource-root>");
+
+                                    return resolved;
+                                }
+                            });
+                            resolvedContent = finalContent[0];
                         }
                         IoUtils.writeFile(installDir.resolve(fpModuleDir.relativize(file)), resolvedContent);
                     } else {
@@ -277,5 +345,28 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         } catch (IOException e) {
             throw new ProvisioningException("Failed to process modules from package " + pkgName + " from feature-pack " + fp, e);
         }
+    }
+
+    private static ArtifactCoords fromJBossModules(String str, String extension) {
+        final String[] parts = str.split(":");
+        if(parts.length < 2) {
+            throw new IllegalArgumentException("Unexpected artifact coordinates format: " + str);
+        }
+        final String groupId = parts[0];
+        final String artifactId = parts[1];
+        String version = null;
+        String classifier = null;
+        if(parts.length > 2) {
+            if(!parts[2].isEmpty()) {
+                version = parts[2];
+            }
+            if(parts.length > 3 && !parts[3].isEmpty()) {
+                classifier = parts[3];
+                if(parts.length > 4) {
+                    throw new IllegalArgumentException("Unexpected artifact coordinates format: " + str);
+                }
+            }
+        }
+        return new ArtifactCoords(groupId, artifactId, version, classifier, extension);
     }
 }
