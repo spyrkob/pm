@@ -1,0 +1,35 @@
+### Feature-pack metadata (feature-pack.xml)
+
+Feature-pack metadata contains the following information:
+
+* *GAV* - feature-pack groupId, artifactId and version;
+
+* *default packages* - the names of the packages that are installed by default;
+
+* _(optional)_ *dependencies* -  dependencies on other feature-packs;
+
+* _(optional)_ *provisioning plug-ins* - provisioning plug-in implementations the tool should call during provisioning to properly install/integrate the feature-pack's content into the target installation.
+
+Here is an illustration of how it may look like in a feature-pack.xml file:
+
+[options="nowrap"]
+ <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.my-group"
+                artifactId="my-artifact"
+                version="1.0.0.Alpha1">
+    <dependencies>
+        <dependency groupId="org.another-group"
+                    artifactId="another-artifact"
+                    version="3.0.0.Final"/>
+    </dependencies>
+    <default-packages>
+        <package name="package1"/>
+        <package name="package2"/>
+    </default-packages>
+    <provisioning-plugins>
+        <artifact coords="org.my-group:my-provisioning-plugin:2.0.0.Beta2"/>
+    </provisioning-plugins>
+ </feature-pack>
+
+Here feature-pack *org.my-group:my-artifact:1.0.0.Alpha1* depends on feature-pack *org.another-group:another-artifact:3.0.0.Final* and has packages *package1* and *package2* that are installed by default.
+It also references a provisioning plug-in which is available as a Maven artifact which will be resolved, downloaded and called by the provisioning tool to give it a chance to do some final content manipulations before the provisioning is complete.
