@@ -1,0 +1,7 @@
+## Overview
+
+PM is Java provisioning tool designed to address provisioning and patching requirements of Java projects.
+
+Provisioning and patching tasks can be performed using either the tool's command-line interface or its public API from a user application.
+
+
