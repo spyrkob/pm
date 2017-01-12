@@ -446,7 +446,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_provisioned_package_set">4. Provisioned package set</a>
 <ul class="sectlevel2">
-<li><a href="#_feature_pack_effective_package_set">4.1. Feature-pack effective package set</a></li>
+<li><a href="#_feature_pack_without_dependencies">4.1. Feature-pack without dependencies</a></li>
+<li><a href="#_feature_pack_with_dependencies">4.2. Feature-pack with dependencies</a></li>
 </ul>
 </li>
 </ul>
@@ -464,7 +465,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_overview">1. Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>PM is Java provisioning tool designed to address provisioning and patching requirements of Java projects.</p>
+<p>PM is a Java provisioning tool designed to address provisioning and patching requirements of Java projects.</p>
 </div>
 <div class="paragraph">
 <p>Provisioning and patching tasks can be performed using either the tool&#8217;s command-line interface or its public API from a user application.</p>
@@ -786,7 +787,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p>This chapter is dedicated to the effective (resolved) package set of the installation&#8217;s provisioning specification.</p>
 </div>
 <div class="sect2">
-<h3 id="_feature_pack_effective_package_set">4.1. Feature-pack effective package set</h3>
+<h3 id="_feature_pack_without_dependencies">4.1. Feature-pack without dependencies</h3>
 <div class="paragraph">
 <p>This chapter focuses on a single feature-pack without dependencies. Effective package set of feature packs with dependencies will be covered in a separate chapter.</p>
 </div>
@@ -828,6 +829,464 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </ul>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_feature_pack_original_effective_package_set">4.1.3. Feature-pack original effective package set</h4>
+<div class="paragraph">
+<p><em>Original</em> in the title means not explicitly modified. I.e. a package set which is going to be installed when a feature-pack is installed as-is without any user customization.</p>
+</div>
+<div class="paragraph">
+<p>The feature-pack original effective package set consists of all the default packages of the feature-pack plus all the packages from the package dependency trees starting from the default packages.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_explicit_package_exclusion">4.1.4. Explicit package exclusion</h4>
+<div class="paragraph">
+<p>A package may be explicitly excluded from the feature-pack effective package set. For example, given the following feature-pack definition:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1" /&gt;
+       &lt;package name="p2" /&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let’s also assume:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>package <strong>p1</strong> has an optional dependency on non-default package <strong>p11</strong></p>
+</li>
+<li>
+<p>package <strong>p2</strong> has an optional dependency on non-default package <strong>p22</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The original effective package set of <strong>fp1</strong> includes <strong>p1</strong>, <strong>p11</strong>, <strong>p2</strong> and <strong>p22</strong>.</p>
+</div>
+<div class="paragraph">
+<p>If a user is interested in a subset of the effective package set, in fact, only in package <strong>p1</strong>, for example, it can be expressed in the provisioning XML configuration file as</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+   &lt;packages&gt;
+       &lt;exclude name="p11"/&gt;
+       &lt;exclude name="p2"/&gt;
+   &lt;/packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Packages <strong>p11</strong> and <strong>p2</strong> are explicitly excluded and package <strong>p21</strong> is a non-default package which is not on the dependency path from the packages to be installed, i.e. <strong>p1</strong>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_explicit_package_inclusion">4.1.5. Explicit package inclusion</h4>
+<div class="paragraph">
+<p>A package may be explicitly included into the feature-pack effective package set. For example, given the following feature-pack definition:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1" /&gt;
+       &lt;package name="p2" /&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let’s also assume:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>p2</strong> has an optional dependency on non-default package <strong>p21</strong></p>
+</li>
+<li>
+<p><strong>fp1</strong> also contains non-default package <strong>p3</strong></p>
+</li>
+<li>
+<p><strong>p3</strong> has an optional dependency on non-default package <strong>p31</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The effective package set of <strong>fp1</strong> includes <strong>p1</strong>, <strong>p2</strong> and <strong>p21</strong>.</p>
+</div>
+<div class="paragraph">
+<p>A user may explicitly add package <strong>p3</strong>, exclude <strong>p2</strong> and still leave <strong>p21</strong> in the effective package set using the following configuration:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+   &lt;packages&gt;
+       &lt;include name="p3"/&gt;
+       &lt;exclude name="p2"/&gt;
+       &lt;include name="p21"/&gt;
+   &lt;/packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The effective package set now will consist of <strong>p1</strong> (default package), <strong>p21</strong> (explicitly included non-default), <strong>p3</strong> (explicitly included non-default) and <strong>p31</strong> (brought in as a dependency of <strong>p3</strong>).</p>
+</div>
+<div class="paragraph">
+<p>If, for example, the user wanted to further cut down the effective set to <strong>p21</strong> and <strong>p3</strong>, the configuration would change to</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+   &lt;packages&gt;
+       &lt;exclude name="p1"/&gt;
+       &lt;exclude name="p2"/&gt;
+       &lt;include name="p21"/&gt;
+       &lt;include name="p3"/&gt;
+       &lt;exclude name="p31"/&gt;
+   &lt;/packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_feature_pack_with_dependencies">4.2. Feature-pack with dependencies</h3>
+<div class="paragraph">
+<p>Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack&#8217;s metadata, i.e. <strong>feature-pack.xml</strong> file. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.dep.group1" artifactId="fp2" version="0.0.1"/&gt;
+       &lt;dependency groupId="org.jboss.dep.group2" artifactId="fp3" version="0.0.2"/&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="package1"/&gt;
+       &lt;package name="package2"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case feature-pack <strong>fp1</strong> depends on feature-packs <strong>fp2</strong> and <strong>fp3</strong>. Let&#8217;s also assume that <strong>fp3</strong> depends on feature-pack <strong>fp4</strong> and <strong>fp2</strong> and <strong>fp4</strong> don’t have any further dependencies. The effective package set of feature-pack <strong>fp1</strong> will consist of:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the original effective package set of <strong>fp1</strong>;</p>
+</li>
+<li>
+<p>the original effective package set of <strong>fp2</strong>;</p>
+</li>
+<li>
+<p>the original effective package set of <strong>fp3</strong>;</p>
+</li>
+<li>
+<p>the original effective package set of <strong>fp4</strong>.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_customizing_the_inherited_package_set_from_a_dependency">4.2.1. Customizing the inherited package set from a dependency</h4>
+<div class="paragraph">
+<p>As shown in the example above, the effective package set of the dependency contributes to the effective package set of the feature-pack declaring the dependency. The feature-pack declaring the dependency, though, is allowed to customize the package set inherited from the dependency using the already seen before <strong>include</strong> and <strong>exclude</strong> XML elements in its <strong>feature-pack.xml</strong>. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
+           &lt;packages&gt;
+               &lt;exclude name="p1"/&gt;
+               &lt;exclude name="p2"/&gt;
+               &lt;include name="p3"/&gt;
+               &lt;include name="p4"/&gt;
+           &lt;/packages&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+       &lt;package name="p2"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Package inclusion and exclusion under dependency element in <strong>feature-pack.xml</strong> file follows the same principle (in addition to the syntax) as it was described for the provisioning XML configuration file.</p>
+</div>
+<div class="paragraph">
+<p>Now the original effective package set of <strong>fp1</strong> becomes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>fp1</strong> packages <strong>p1</strong> and <strong>p2</strong>;</p>
+<div class="ulist">
+<ul>
+<li>
+<p>plus their dependencies on non-default packages (if any);</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>the original effective package set of <strong>fp2</strong>;</p>
+<div class="ulist">
+<ul>
+<li>
+<p>minus packages <strong>p1</strong> and <strong>p2</strong> from <strong>fp2</strong> and their dependencies on other packages;</p>
+</li>
+<li>
+<p>plus packages <strong>p3</strong> and <strong>p4</strong> from <strong>fp2</strong> and their dependencies on other packages.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<strong>Note</strong>: in case <strong>fp2</strong> in its turn depended on other feature-packs then <strong>fp1</strong> would inherit effective package sets of those feature-packs (possibly customized using include/exclude in the corresponding dependency declaration in the <strong>feature-pack.xml</strong> of <strong>fp2</strong>).
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_disabling_inheritance_of_a_dependency_package_set">4.2.2. Disabling inheritance of a dependency package set</h4>
+<div class="paragraph">
+<p>By default, the effective package set of a dependency is inherited by the feature-pack declaring the dependency. However, it is possible to declare the dependency without inheriting its effective package set and simply pick the packages manually under the dependency element (in other words to manually define the effective package set of the dependency).</p>
+</div>
+<div class="paragraph">
+<p>Optional boolean attribute <strong>inherit</strong> on the <strong>packages</strong> element controls whether the inheritance is enabled or disabled. In case the attribute is not explicitly specified, its value assumed to be true. Here is an example of a dependency with the inheritance disabled:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
+           &lt;packages inherit=”false”&gt;
+               &lt;exclude name="p1"/&gt;
+               &lt;exclude name="p2"/&gt;
+               &lt;include name="p3"/&gt;
+               &lt;include name="p4"/&gt;
+           &lt;/packages&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+       &lt;package name="p2"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now the original effective package set of <strong>fp1</strong> becomes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>fp1</strong> packages <strong>p1</strong> and <strong>p2</strong>;</p>
+<div class="ulist">
+<ul>
+<li>
+<p>plus their dependencies on non-default packages (if any);</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>fp2</strong> packages <strong>p3</strong> and <strong>p4</strong>;</p>
+<div class="ulist">
+<ul>
+<li>
+<p>plus their dependencies on non-default packages minus packages <strong>p1</strong> and <strong>p2</strong> from <strong>fp2</strong> and their dependencies on other packages.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_explicit_vs_transitive_dependency_on_a_feature_pack">4.2.3. Explicit vs transitive dependency on a feature-pack</h4>
+<div class="paragraph">
+<p>Consider a case when feature-pack <strong>fp1</strong> depends on feature-packs <strong>fp2</strong> and <strong>fp3</strong>. And <strong>fp2</strong> in its turn also depends on <strong>fp3</strong>. In this case <strong>fp3</strong> is both transitive and explicit dependency of <strong>fp1</strong>.</p>
+</div>
+<div class="paragraph">
+<p>The rule is that the package set of an explicit dependency overrides the package sets of a transitive dependency. In our case it means that installing <strong>fp1</strong>, the <strong>fp3</strong> package set <strong>fp1</strong> explicitly depends on will become the effective package set of <strong>fp3</strong> ignoring the package set of <strong>fp3</strong> inherited by <strong>fp2</strong> (whether it is a dependency on the original <strong>fp3</strong> or a custom set of its packages).</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"&gt;
+           &lt;packages&gt;
+               &lt;exclude name="p1"/&gt;
+               &lt;exclude name="p3"/&gt;
+           &lt;/packages&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+       &lt;package name="p2"/&gt;
+       &lt;package name="p3"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Installing <strong>fp1</strong> without further customizations the following packages will be installed:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>fp1:p1</strong> and its dependencies;</p>
+</li>
+<li>
+<p><strong>fp2:p1</strong> and its dependencies;</p>
+</li>
+<li>
+<p><strong>p1</strong>, <strong>p2</strong> and <strong>p3</strong> from <strong>fp3</strong> and their dependencies.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_merging_package_sets_from_dependency_branches">4.2.4. Merging package sets from dependency branches</h4>
+<div class="paragraph">
+<p>Suppose feature-pack <strong>fp1</strong> depends on feature-packs <strong>fp2</strong> and <strong>fp3</strong>. Both <strong>fp2</strong> and <strong>fp3</strong> depend on their own custom package sets of feature-pack <strong>fp4</strong>. When <strong>fp1</strong> is installed, the effective package set of <strong>fp4</strong> will be a merge of custom package sets of <strong>fp4</strong> specified as dependencies of <strong>fp2</strong> and <strong>fp3</strong>.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
+           &lt;packages&gt;
+               &lt;exclude name="p1"/&gt;
+               &lt;exclude name="p3"/&gt;
+           &lt;/packages&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
+           &lt;packages inherit=”false”&gt;
+               &lt;!-- assume fp4 also contains non-default package p4 --&gt;
+               &lt;include name="p4"/&gt;
+           &lt;/packages&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp4" version="1.0.0" &gt;
+   &lt;default-packages&gt;
+       &lt;package name="p1"/&gt;
+       &lt;package name="p2"/&gt;
+       &lt;package name="p3"/&gt;
+   &lt;/default-packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If a user installs <strong>fp1</strong> without further customizations, the following packages will be installed:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>fp1:p1</strong> and its dependencies;</p>
+</li>
+<li>
+<p><strong>fp2:p1</strong> and its dependencies;</p>
+</li>
+<li>
+<p><strong>fp3:p1</strong> and its dependencies;</p>
+</li>
+<li>
+<p><strong>fp4:p2</strong>, <strong>fp4:p4</strong> and their dependencies.</p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -835,7 +1294,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-01-12 14:13:47 CET
+Last updated 2017-01-12 14:18:11 CET
 </div>
 </div>
 </body>
