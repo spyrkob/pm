@@ -6,7 +6,7 @@ Package dependency may be required or optional.
 
 *Optional dependency* means that the dependency does not have to be satisfied for the package to be installed. For example if package *p1* declares an optional dependency on package *p2* and *p2* is explicitly excluded by the user, *p1* will still be installed. An example of an optional dependency could be a package called *documentation* which declares an optional dependency on package *examples*. If a user is not interested in the *examples*, the rest of the *documentation* could still be installed.
 
-Package dependencies are also used to determine the <<fp-effective-package-set,effective package set of a feature-pack>> to be installed described later.
+Package dependencies are also used to determine the <<_feature_pack_without_dependencies,effective package set of a feature-pack>> to be installed described later.
 
 #### Local package dependencies
 
@@ -33,7 +33,8 @@ Feature-pack containing a package with an external dependency must declare an ex
 For example, suppose feature-pack *fp1* depends on feature-pack *fp2* and package *fp1:p1* depends on packages *fp2:p1* and *fp2:p10*. The *feature-pack.xml* of *fp1* might look like this:
 
 [options="nowrap"]
- <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
+ <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
     <dependencies>
         <dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0">
             <name>fp2-dep</name>

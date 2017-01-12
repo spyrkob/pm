@@ -10,7 +10,7 @@ Feature-pack metadata contains the following information:
 
 * _(optional)_ *provisioning plug-ins* - provisioning plug-in implementations the tool should call during provisioning to properly install/integrate the feature-pack's content into the target installation.
 
-Here is an illustration of how it may look like in a feature-pack.xml file:
+Here is an illustration of how it may look like in a *feature-pack.xml* file:
 
 [options="nowrap"]
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
