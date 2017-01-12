@@ -1,0 +1,7 @@
+### Feature-pack effective package set
+
+This chapter focuses on a single feature-pack without dependencies. Effective package set of feature packs with dependencies will be covered in a separate chapter.
+
+include::default-packages.adoc[]
+
+include::non-default-packages.adoc[]
