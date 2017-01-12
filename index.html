@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 <div class="paragraph">
-<p>Here is an illustration of how it may look like in a feature-pack.xml file:</p>
+<p>Here is an illustration of how it may look like in a <strong>feature-pack.xml</strong> file:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -710,7 +710,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p><strong>Optional dependency</strong> means that the dependency does not have to be satisfied for the package to be installed. For example if package <strong>p1</strong> declares an optional dependency on package <strong>p2</strong> and <strong>p2</strong> is explicitly excluded by the user, <strong>p1</strong> will still be installed. An example of an optional dependency could be a package called <strong>documentation</strong> which declares an optional dependency on package <strong>examples</strong>. If a user is not interested in the <strong>examples</strong>, the rest of the <strong>documentation</strong> could still be installed.</p>
 </div>
 <div class="paragraph">
-<p>Package dependencies are also used to determine the <a href="#fp-effective-package-set">effective package set of a feature-pack</a> to be installed described later.</p>
+<p>Package dependencies are also used to determine the <a href="#_feature_pack_without_dependencies">effective package set of a feature-pack</a> to be installed described later.</p>
 </div>
 <div class="sect3">
 <h4 id="_local_package_dependencies">3.3.1. Local package dependencies</h4>
@@ -747,7 +747,8 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </div>
 <div class="literalblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
    &lt;dependencies&gt;
        &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
            &lt;name&gt;fp2-dep&lt;/name&gt;
@@ -1294,7 +1295,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-01-12 14:18:11 CET
+Last updated 2017-01-12 17:14:41 CET
 </div>
 </div>
 </body>
