@@ -2,4 +2,6 @@
 
 This chapter is dedicated to the effective (resolved) package set of the installation's provisioning specification.
 
-include::feature-pack-effective-package-set.adoc[]
+include::feature-pack-wo-deps/index.adoc[]
+
+include::feature-pack-with-deps/index.adoc[]
