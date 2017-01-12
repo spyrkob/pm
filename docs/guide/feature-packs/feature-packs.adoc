@@ -8,7 +8,7 @@ Feature-pack contains:
 
 * a set of packages;
 
-* _(optionally)_ various resources required to properly assemble and setup the installation.
+* _(optional)_ various resources required to properly assemble and setup the installation.
 
 Feature-pack may declare dependencies on other feature-packs. Before a feature-pack is installed the tool will make sure its dependencies are satisifed (installing the missing ones).
 

@@ -19,3 +19,5 @@ include::overview/index.adoc[]
 include::feature-packs/index.adoc[]
 
 include::packages/index.adoc[]
+
+include::provisioned-package-set/index.adoc[]
