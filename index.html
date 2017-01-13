@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-01-12</span>
+<span id="revdate">2017-01-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -448,6 +448,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_feature_pack_without_dependencies">4.1. Feature-pack without dependencies</a></li>
 <li><a href="#_feature_pack_with_dependencies">4.2. Feature-pack with dependencies</a></li>
+</ul>
+</li>
+<li><a href="#_wildfly_provisioning">5. WildFly provisioning</a>
+<ul class="sectlevel2">
+<li><a href="#_wildfly_pm_provisioning_plug_in">5.1. WildFly PM Provisioning Plug-in</a></li>
+<li><a href="#_wildfly_feature_pack_building_maven_plug_in">5.2. WildFly Feature-pack Building Maven Plug-in</a></li>
 </ul>
 </li>
 </ul>
@@ -552,7 +558,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 <div class="paragraph">
-<p>Here is an illustration of how it may look like in a <strong>feature-pack.xml</strong> file:</p>
+<p>Here is an illustration of how it may look like in a feature-pack.xml file:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -710,7 +716,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p><strong>Optional dependency</strong> means that the dependency does not have to be satisfied for the package to be installed. For example if package <strong>p1</strong> declares an optional dependency on package <strong>p2</strong> and <strong>p2</strong> is explicitly excluded by the user, <strong>p1</strong> will still be installed. An example of an optional dependency could be a package called <strong>documentation</strong> which declares an optional dependency on package <strong>examples</strong>. If a user is not interested in the <strong>examples</strong>, the rest of the <strong>documentation</strong> could still be installed.</p>
 </div>
 <div class="paragraph">
-<p>Package dependencies are also used to determine the <a href="#_feature_pack_without_dependencies">effective package set of a feature-pack</a> to be installed described later.</p>
+<p>Package dependencies are also used to determine the <a href="#fp-effective-package-set">effective package set of a feature-pack</a> to be installed described later.</p>
 </div>
 <div class="sect3">
 <h4 id="_local_package_dependencies">3.3.1. Local package dependencies</h4>
@@ -747,8 +753,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </div>
 <div class="literalblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
    &lt;dependencies&gt;
        &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
            &lt;name&gt;fp2-dep&lt;/name&gt;
@@ -802,7 +807,8 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </div>
 <div class="literalblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
    &lt;default-packages&gt;
        &lt;package name="package1" /&gt;
        &lt;package name="package2" /&gt;
@@ -1291,11 +1297,144 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_wildfly_provisioning">5. WildFly provisioning</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_wildfly_pm_provisioning_plug_in">5.1. WildFly PM Provisioning Plug-in</h3>
+<div class="paragraph">
+<p>This chapter describes the WildFly provisioning plug-in which feature-packs of WildFly-based distributions reference from their <strong>feature-pack.xml</strong> files.</p>
+</div>
+<div class="paragraph">
+<p>The plug-in is called by the PM tool after the feature-pack and package dependencies have been resolved and the content from packages has been copied to the target installation directory.</p>
+</div>
+<div class="paragraph">
+<p>WildFly provisioning plug-in is then responsible for:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#config-gen">generating the configuration file(s) based on the installed package set (possibly customized by the user)</a>;</p>
+</li>
+<li>
+<p><a href="#module-jars">building "thin" servers (i.e. servers with module.xml files reference module JARs as Maven artifacts) or copying module JARs into the target installation</a>;</p>
+</li>
+<li>
+<p><a href="#wildfly-tasks-xml">performing other tasks configured in wildlfy-tasks.xml</a>.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="config-gen">5.1.1. Configuration generation</h4>
+<div class="paragraph">
+<p>The configuration of the target installation is generated by executing WildFly CLI scripts collected from the packages making up the installation.</p>
+</div>
+<div class="paragraph">
+<p>Based on the feature-pack and package dependencies, the PM tool determines the order in which the packages making up the installation should be installed. The WildFly provisioning plug-in then iterates through the packages in that order collecting CLI scripts that represent package-specific configuration snippets.</p>
+</div>
+<div class="paragraph">
+<p>Once all the CLI scripts are collected, the plug-in launches a CLI session, embeds the server with an empty configuration and runs the collected scripts.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Note: <strong>the scripts are not executed in a batch</strong> (i.e. as a composite operation). In case some operations have to be combined in a batch, it is the responsibility of the package developer to start and run the batch from the script attached to the package.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In case any of the CLI command and/or operation fails, the whole provisioning process will be aborted by the PM tool.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="module-jars">5.1.2. Thin servers vs local module JARs</h4>
+<div class="paragraph">
+<p>By default, the plug-in will resolve Maven module artifacts and copy the JARs to the target installation.</p>
+</div>
+<div class="paragraph">
+<p>However, the plug-in checks system property <strong>wfThinServer</strong> and if it is present and its value is empty or true, the resulting installation will not include the module JARs but will reference the corresponding Maven artifacts instead from the modules' <strong>module.xml</strong> files.</p>
+</div>
+<div class="paragraph">
+<p>The system property has to be set either on the command line launching the PM tool, e.g.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">pm -DwfThinServer &lt;other arguments&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or from a Java client using the PM public API.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="wildfly-tasks-xml">5.1.3. wildfly-tasks.xml</h4>
+<div class="paragraph">
+<p>WildFly feature-packs may include <strong>wildfly-tasks.xml</strong> file into their <strong>resources/wildfly</strong> directory. The currently supported tasks include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>set filesystem permissions on the specified paths;</p>
+</li>
+<li>
+<p>create empty directories;</p>
+</li>
+<li>
+<p>correct line endings for the target operating system for the specified files.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Here is an example of <strong>wildfly-tasks.xml</strong>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;tasks xmlns="urn:wildfly:wildfly-feature-pack-tasks:2.0"&gt;
+   &lt;mkdirs&gt;
+       &lt;dir name="domain/data/content"/&gt;
+       &lt;dir name="standalone/lib/ext"/&gt;
+       &lt;dir name="domain/tmp/auth"/&gt;
+       &lt;dir name="standalone/tmp/auth"/&gt;
+       &lt;dir name=".installation"/&gt;
+   &lt;/mkdirs&gt;
+   &lt;file-permissions&gt;
+       &lt;permission value="755"&gt;
+           &lt;filter pattern="*.sh" include="true"/&gt;
+           &lt;filter pattern="*" include="false"/&gt;
+       &lt;/permission&gt;
+       &lt;permission value="700"&gt;
+           &lt;filter pattern="*/tmp/auth" include="true"/&gt;
+           &lt;filter pattern="*" include="false"/&gt;
+       &lt;/permission&gt;
+       &lt;permission value="600"&gt;
+           &lt;filter pattern="*-users.properties" include="true"/&gt;
+           &lt;filter pattern="*/.installation" include="true"/&gt;
+           &lt;filter pattern="*" include="false"/&gt;
+       &lt;/permission&gt;
+   &lt;/file-permissions&gt;
+&lt;/tasks&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wildfly_feature_pack_building_maven_plug_in">5.2. WildFly Feature-pack Building Maven Plug-in</h3>
+<div class="paragraph">
+<p>TODO</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-01-12 17:14:41 CET
+Last updated 2017-01-13 15:15:21 CET
 </div>
 </div>
 </body>
