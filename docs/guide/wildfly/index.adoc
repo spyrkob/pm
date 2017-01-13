@@ -1,0 +1,5 @@
+## WildFly provisioning
+
+include::provisioning/index.adoc[]
+
+include::feature-pack-build/index.adoc[]
