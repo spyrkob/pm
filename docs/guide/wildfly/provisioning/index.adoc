@@ -8,7 +8,7 @@ WildFly provisioning plug-in is then responsible for:
 
 ** <<config-gen,generating the configuration file(s) based on the installed package set (possibly customized by the user)>>;
 
-** <<module-jars,building "thin" servers (i.e. servers with module.xml files reference module JARs as Maven artifacts) or copying module JARs into the target installation>>;
+** <<module-jars,building "thin" servers (i.e. servers with module.xml files referencing module JARs as Maven artifacts) or copying module JARs into the target installation>>;
 
 ** <<wildfly-tasks-xml,performing other tasks configured in wildlfy-tasks.xml>>.
 
