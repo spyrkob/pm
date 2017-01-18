@@ -33,7 +33,8 @@ Feature-pack containing a package with an external dependency must declare an ex
 For example, suppose feature-pack *fp1* depends on feature-pack *fp2* and package *fp1:p1* depends on packages *fp2:p1* and *fp2:p10*. The *feature-pack.xml* of *fp1* might look like this:
 
 [options="nowrap"]
- <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
+ <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
     <dependencies>
         <dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0">
             <name>fp2-dep</name>
