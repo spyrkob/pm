@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,8 +91,6 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
  */
 @Mojo(name = "wf-build", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
 public class WfFeaturePackBuildMojo extends AbstractMojo {
-
-    private static final String MODULE_XML = "module.xml";
 
     private static final boolean OS_WINDOWS = PropertyUtils.isWindows();
 

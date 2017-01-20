@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,16 +40,29 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 class ConfigGenerator {
 
-    public static ConfigGenerator newInstance(Path installDir) {
-        return new ConfigGenerator(installDir);
+    public static ConfigGenerator newStandaloneGenerator(Path installDir) {
+        return newInstance(installDir, true);
+    }
+
+    public static ConfigGenerator newDomainGenerator(Path installDir) {
+        return newInstance(installDir, false);
+    }
+
+    public static ConfigGenerator newInstance(Path installDir, boolean standalone) {
+        return new ConfigGenerator(installDir, standalone);
     }
 
     private final Path installDir;
     private final List<String> commands = new ArrayList<>();
 
-    private ConfigGenerator(Path installDir) {
+    private ConfigGenerator(Path installDir, boolean standalone) {
         this.installDir = installDir;
-        commands.add("embed-server --empty-config --remove-existing");
+        if(standalone) {
+            commands.add("embed-server --empty-config --remove-existing");
+        } else {
+            //commands.add("embed-host-controller --empty-host-config --empty-domain-config --host-config=myhost.xml");
+            commands.add("embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config");
+        }
     }
 
     public ConfigGenerator addCommandLine(String cmdLine) {
@@ -117,6 +130,7 @@ class ConfigGenerator {
 
                     if(echoLine != null) {
                         Path p = Paths.get(echoLine.substring("executing ".length()));
+                        final String scriptName = p.getFileName().toString();
                         p = p.getParent();
                         p = p.getParent();
                         p = p.getParent();
@@ -128,11 +142,15 @@ class ConfigGenerator {
                         final String fpArtifact = p.getFileName().toString();
                         p = p.getParent();
                         final String fpGroup = p.getFileName().toString();
-                        System.out.println("Failed to execute CLI script from " + ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion) +
+                        System.out.println("Failed to execute script " + scriptName +
+                                " from " +  ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion) +
                                 " package " + pkgName + " operation #" + opIndex);
                         System.out.println(errorWriter.getBuffer());
                     } else {
                         System.out.println("Could not locate the cause of the error in the CLI output.");
+                        for(String line : commands) {
+                            System.out.println(line);
+                        }
                     }
                 }
                 throw new CommandLineException("Embeedded CLI scripts failed.");

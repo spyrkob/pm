@@ -60,7 +60,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private ProvisioningContext ctx;
     private PropertyResolver versionResolver;
     private BuildPropertyHandler propertyHandler;
-    private List<Path> cliList = Collections.emptyList();
+    private List<Path> standaloneCliList = Collections.emptyList();
+    private List<Path> domainCliList = Collections.emptyList();
+    private List<Path> hostCliList = Collections.emptyList();
 
     private boolean thinServer;
 
@@ -122,9 +124,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         processPackages();
 
-        if(!cliList.isEmpty()) {
-            final ConfigGenerator configGen = ConfigGenerator.newInstance(ctx.getInstallDir());
-            for(Path p : cliList) {
+        if(!standaloneCliList.isEmpty()) {
+            final ConfigGenerator configGen = ConfigGenerator.newStandaloneGenerator(ctx.getInstallDir());
+            for(Path p : standaloneCliList) {
                 try {
                     configGen.addCommandLines(p);
                 } catch (IOException e) {
@@ -132,6 +134,31 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
             try {
+                System.out.println("Generating standalone configuration.");
+                configGen.generate();
+            } catch (CommandLineException e) {
+                throw new ProvisioningException("Failed to generate configuration", e);
+            }
+        }
+
+        if(!domainCliList.isEmpty() || !hostCliList.isEmpty()) {
+            final ConfigGenerator configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
+            for(Path p : domainCliList) {
+                try {
+                    configGen.addCommandLines(p);
+                } catch (IOException e) {
+                    throw new ProvisioningException("Failed to read " + p);
+                }
+            }
+            for(Path p : hostCliList) {
+                try {
+                    configGen.addCommandLines(p);
+                } catch (IOException e) {
+                    throw new ProvisioningException("Failed to read " + p);
+                }
+            }
+            try {
+                System.out.println("Generating domain configuration.");
                 configGen.generate();
             } catch (CommandLineException e) {
                 throw new ProvisioningException("Failed to generate configuration", e);
@@ -233,28 +260,52 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(!Files.exists(packagesDir)) {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
-        boolean foundScript = false;
+        noScriptsLogged = true;
         for(String pkgName : provisionedFp.getPackageNames()) {
             final Path pmWfDir = packagesDir.resolve(pkgName).resolve("pm/wildfly");
+            if(!Files.exists(pmWfDir)) {
+                continue;
+            }
             final Path moduleDir = pmWfDir.resolve(WfConstants.MODULE);
             if(Files.exists(moduleDir)) {
-                // look for and process modules
                 processModules(provisionedFp.getGav(), pkgName, moduleDir);
             }
+
             // collect cli scripts
-            final Path provisioningCli = pmWfDir.resolve("provisioning.cli");
+            Path provisioningCli = pmWfDir.resolve("provisioning.cli");
             if (Files.exists(provisioningCli)) {
-                if(!foundScript) {
-                    System.out.println("Collected CLI scripts from " + provisionedFp.getGav() + ":");
-                    foundScript = true;
+                logPackageScript(provisionedFp, pkgName, provisioningCli);
+                if(standaloneCliList.isEmpty()) {
+                    standaloneCliList = new ArrayList<>();
                 }
-                System.out.println(" - " + pkgName);
-                if(cliList.isEmpty()) {
-                    cliList = new ArrayList<>();
+                standaloneCliList.add(provisioningCli);
+            }
+            provisioningCli = pmWfDir.resolve("domain.cli");
+            if (Files.exists(provisioningCli)) {
+                logPackageScript(provisionedFp, pkgName, provisioningCli);
+                if (domainCliList.isEmpty()) {
+                    domainCliList = new ArrayList<>();
                 }
-                cliList.add(provisioningCli);
+                domainCliList.add(provisioningCli);
+            }
+            provisioningCli = pmWfDir.resolve("host.cli");
+            if (Files.exists(provisioningCli)) {
+                logPackageScript(provisionedFp, pkgName, provisioningCli);
+                if (domainCliList.isEmpty()) {
+                    domainCliList = new ArrayList<>();
+                }
+                domainCliList.add(provisioningCli);
             }
         }
+    }
+
+    private boolean noScriptsLogged;
+    private void logPackageScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
+        if(noScriptsLogged) {
+            System.out.println("Collected CLI scripts from " + provisionedFp.getGav() + ":");
+            noScriptsLogged = false;
+        }
+        System.out.println(" - " + pkgName + '/' + script.getFileName());
     }
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {
