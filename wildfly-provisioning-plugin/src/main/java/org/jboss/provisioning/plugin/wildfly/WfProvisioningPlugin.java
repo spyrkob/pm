@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -57,12 +58,39 @@ import org.jboss.provisioning.util.PropertyUtils;
  */
 public class WfProvisioningPlugin implements ProvisioningPlugin {
 
+    private static class Scripts {
+
+        private List<Path> scripts = Collections.emptyList();
+        private LinkedHashMap<ArtifactCoords.Gav, List<String>> info = new LinkedHashMap<>();
+
+        public void addScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
+            if (scripts.isEmpty()) {
+                scripts = new ArrayList<>();
+            }
+            scripts.add(script);
+
+            List<String> list = info.get(provisionedFp.getGav());
+            if(list == null) {
+                list = Collections.singletonList(pkgName);
+                info.put(provisionedFp.getGav(), list);
+            } else if (list.size() == 1) {
+                list = new ArrayList<>(list);
+                list.add(pkgName);
+                info.put(provisionedFp.getGav(), list);
+            } else {
+                list.add(pkgName);
+            }
+        }
+    }
+
     private ProvisioningContext ctx;
     private PropertyResolver versionResolver;
     private BuildPropertyHandler propertyHandler;
-    private List<Path> standaloneCliList = Collections.emptyList();
-    private List<Path> domainCliList = Collections.emptyList();
-    private List<Path> hostCliList = Collections.emptyList();
+
+    private Scripts standalone = null;
+    private Scripts domain = null;
+    private Scripts host = null;
+
 
     private boolean thinServer;
 
@@ -124,41 +152,68 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         processPackages();
 
-        if(!standaloneCliList.isEmpty()) {
+        if(standalone != null) {
             final ConfigGenerator configGen = ConfigGenerator.newStandaloneGenerator(ctx.getInstallDir());
-            for(Path p : standaloneCliList) {
+            for(Path p : standalone.scripts) {
                 try {
                     configGen.addCommandLines(p);
                 } catch (IOException e) {
                     throw new ProvisioningException("Failed to read " + p);
                 }
             }
+            System.out.println("Collected standalone.xml scripts:");
+            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : standalone.info.entrySet()) {
+                System.out.println(" " + entry.getKey());
+                for(String pkgName : entry.getValue()) {
+                    System.out.println("  - " + pkgName);
+                }
+            }
             try {
-                System.out.println("Generating standalone configuration.");
                 configGen.generate();
             } catch (CommandLineException e) {
                 throw new ProvisioningException("Failed to generate configuration", e);
             }
         }
 
-        if(!domainCliList.isEmpty() || !hostCliList.isEmpty()) {
-            final ConfigGenerator configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
-            for(Path p : domainCliList) {
+        ConfigGenerator configGen = null;
+        if(domain != null) {
+            System.out.println("Collected domain.xml scripts:");
+            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : domain.info.entrySet()) {
+                System.out.println(" " + entry.getKey());
+                for(String pkgName : entry.getValue()) {
+                    System.out.println("  - " + pkgName);
+                }
+            }
+            configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
+            for(Path p : domain.scripts) {
                 try {
                     configGen.addCommandLines(p);
                 } catch (IOException e) {
                     throw new ProvisioningException("Failed to read " + p);
                 }
             }
-            for(Path p : hostCliList) {
+        }
+        if(host != null) {
+            System.out.println("Collected host.xml scripts:");
+            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : host.info.entrySet()) {
+                System.out.println(" " + entry.getKey());
+                for(String pkgName : entry.getValue()) {
+                    System.out.println("  - " + pkgName);
+                }
+            }
+            if(configGen == null) {
+                configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
+            }
+            for(Path p : host.scripts) {
                 try {
                     configGen.addCommandLines(p);
                 } catch (IOException e) {
                     throw new ProvisioningException("Failed to read " + p);
                 }
             }
+        }
+        if(configGen != null) {
             try {
-                System.out.println("Generating domain configuration.");
                 configGen.generate();
             } catch (CommandLineException e) {
                 throw new ProvisioningException("Failed to generate configuration", e);
@@ -260,7 +315,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(!Files.exists(packagesDir)) {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
-        noScriptsLogged = true;
         for(String pkgName : provisionedFp.getPackageNames()) {
             final Path pmWfDir = packagesDir.resolve(pkgName).resolve("pm/wildfly");
             if(!Files.exists(pmWfDir)) {
@@ -274,38 +328,26 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             // collect cli scripts
             Path provisioningCli = pmWfDir.resolve("provisioning.cli");
             if (Files.exists(provisioningCli)) {
-                logPackageScript(provisionedFp, pkgName, provisioningCli);
-                if(standaloneCliList.isEmpty()) {
-                    standaloneCliList = new ArrayList<>();
+                if(standalone == null) {
+                    standalone = new Scripts();
                 }
-                standaloneCliList.add(provisioningCli);
+                standalone.addScript(provisionedFp, pkgName, provisioningCli);
             }
             provisioningCli = pmWfDir.resolve("domain.cli");
             if (Files.exists(provisioningCli)) {
-                logPackageScript(provisionedFp, pkgName, provisioningCli);
-                if (domainCliList.isEmpty()) {
-                    domainCliList = new ArrayList<>();
+                if (domain == null) {
+                    domain = new Scripts();
                 }
-                domainCliList.add(provisioningCli);
+                domain.addScript(provisionedFp, pkgName, provisioningCli);
             }
             provisioningCli = pmWfDir.resolve("host.cli");
             if (Files.exists(provisioningCli)) {
-                logPackageScript(provisionedFp, pkgName, provisioningCli);
-                if (domainCliList.isEmpty()) {
-                    domainCliList = new ArrayList<>();
+                if (host == null) {
+                    host = new Scripts();
                 }
-                domainCliList.add(provisioningCli);
+                host.addScript(provisionedFp, pkgName, provisioningCli);
             }
         }
-    }
-
-    private boolean noScriptsLogged;
-    private void logPackageScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
-        if(noScriptsLogged) {
-            System.out.println("Collected CLI scripts from " + provisionedFp.getGav() + ":");
-            noScriptsLogged = false;
-        }
-        System.out.println(" - " + pkgName + '/' + script.getFileName());
     }
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {

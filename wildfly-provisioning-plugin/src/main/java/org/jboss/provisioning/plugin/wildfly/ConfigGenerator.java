@@ -91,6 +91,7 @@ class ConfigGenerator {
         commands.add("exit");
         CliCommandBuilder builder = CliCommandBuilder
                 .of(installDir)
+                .addCliArgument("--no-op-validation")
                 .setCommands(commands);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
