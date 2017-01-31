@@ -26,11 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,7 +43,8 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
-import org.jboss.provisioning.plugin.wildfly.config.WildFlyPostFeaturePackTasks;
+import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
+import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
@@ -58,41 +56,16 @@ import org.jboss.provisioning.util.PropertyUtils;
  */
 public class WfProvisioningPlugin implements ProvisioningPlugin {
 
-    private static class Scripts {
-
-        private List<Path> scripts = Collections.emptyList();
-        private LinkedHashMap<ArtifactCoords.Gav, List<String>> info = new LinkedHashMap<>();
-
-        public void addScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
-            if (scripts.isEmpty()) {
-                scripts = new ArrayList<>();
-            }
-            scripts.add(script);
-
-            List<String> list = info.get(provisionedFp.getGav());
-            if(list == null) {
-                list = Collections.singletonList(pkgName);
-                info.put(provisionedFp.getGav(), list);
-            } else if (list.size() == 1) {
-                list = new ArrayList<>(list);
-                list.add(pkgName);
-                info.put(provisionedFp.getGav(), list);
-            } else {
-                list.add(pkgName);
-            }
-        }
-    }
 
     private ProvisioningContext ctx;
     private PropertyResolver versionResolver;
     private BuildPropertyHandler propertyHandler;
 
-    private Scripts standalone = null;
-    private Scripts domain = null;
-    private Scripts host = null;
-
+    private Properties tasksProps;
 
     private boolean thinServer;
+
+    private CliScriptCollector scriptCollector;
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -100,7 +73,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     @Override
     public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
 
-        System.out.println("WildFly-based configuration assembling plug-in");
+        System.out.println("WildFly provisioning plug-in");
 
         final String thinServerProp = System.getProperty("wfThinServer");
         if(thinServerProp != null) {
@@ -112,7 +85,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
 
         this.ctx = ctx;
-        Properties tasksProps = null;
+        scriptCollector = new CliScriptCollector(ctx);
+
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
             final Path wfRes = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.RESOURCES).resolve(WfConstants.WILDFLY);
@@ -145,142 +119,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 } catch (IOException e) {
                     throw new ProvisioningException(Errors.readFile(tasksPropsPath), e);
                 }
+            } else {
+                tasksProps = new Properties();
             }
         }
         versionResolver = new MapPropertyResolver(artifactVersions);
         propertyHandler = new BuildPropertyHandler(versionResolver);
 
         processPackages();
-
-        if(standalone != null) {
-            final ConfigGenerator configGen = ConfigGenerator.newStandaloneGenerator(ctx.getInstallDir());
-            for(Path p : standalone.scripts) {
-                try {
-                    configGen.addCommandLines(p);
-                } catch (IOException e) {
-                    throw new ProvisioningException("Failed to read " + p);
-                }
-            }
-            System.out.println("Collected standalone.xml scripts:");
-            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : standalone.info.entrySet()) {
-                System.out.println(" " + entry.getKey());
-                for(String pkgName : entry.getValue()) {
-                    System.out.println("  - " + pkgName);
-                }
-            }
-            try {
-                configGen.generate();
-            } catch (CommandLineException e) {
-                throw new ProvisioningException("Failed to generate configuration", e);
-            }
-        }
-
-        ConfigGenerator configGen = null;
-        if(domain != null) {
-            System.out.println("Collected domain.xml scripts:");
-            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : domain.info.entrySet()) {
-                System.out.println(" " + entry.getKey());
-                for(String pkgName : entry.getValue()) {
-                    System.out.println("  - " + pkgName);
-                }
-            }
-            configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
-            for(Path p : domain.scripts) {
-                try {
-                    configGen.addCommandLines(p);
-                } catch (IOException e) {
-                    throw new ProvisioningException("Failed to read " + p);
-                }
-            }
-        }
-        if(host != null) {
-            System.out.println("Collected host.xml scripts:");
-            for(Map.Entry<ArtifactCoords.Gav, List<String>> entry : host.info.entrySet()) {
-                System.out.println(" " + entry.getKey());
-                for(String pkgName : entry.getValue()) {
-                    System.out.println("  - " + pkgName);
-                }
-            }
-            if(configGen == null) {
-                configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
-            }
-            for(Path p : host.scripts) {
-                try {
-                    configGen.addCommandLines(p);
-                } catch (IOException e) {
-                    throw new ProvisioningException("Failed to read " + p);
-                }
-            }
-        }
-        if(configGen != null) {
-            try {
-                configGen.generate();
-            } catch (CommandLineException e) {
-                throw new ProvisioningException("Failed to generate configuration", e);
-            }
-        }
-
-        final Path resources = ctx.getResourcesDir().resolve(WfConstants.WILDFLY);
-        if(!Files.exists(resources)) {
-            return;
-        }
-
-        // TODO merge the tasks
-        final Path wfTasksXml = resources.resolve(WfConstants.WILDFLY_TASKS_XML);
-        if(!Files.exists(wfTasksXml)) {
-            throw new ProvisioningException(Errors.pathDoesNotExist(wfTasksXml));
-        }
-        final WildFlyPostFeaturePackTasks tasks = WildFlyPostFeaturePackTasks.load(wfTasksXml, tasksProps);
-        if (!PropertyUtils.isWindows()) {
-            processFeaturePackFilePermissions(tasks, ctx.getInstallDir());
-        }
-        mkdirs(tasks, ctx.getInstallDir());
-    }
-
-    private static void mkdirs(final WildFlyPostFeaturePackTasks tasks, Path installDir) throws ProvisioningException {
-        // make dirs
-        for (String dirName : tasks.getMkDirs()) {
-            final Path dir = installDir.resolve(dirName);
-            if(!Files.exists(dir)) {
-                try {
-                    Files.createDirectories(dir);
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.mkdirs(dir));
-                }
-            }
-        }
-    }
-
-    private void processFeaturePackFilePermissions(WildFlyPostFeaturePackTasks tasks, Path installDir) throws ProvisioningException {
-        final List<FilePermission> filePermissions = tasks.getFilePermissions();
-        try {
-            Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    final String relative = installDir.relativize(dir).toString();
-                    for (FilePermission perm : filePermissions) {
-                        if (perm.includeFile(relative)) {
-                            Files.setPosixFilePermissions(dir, perm.getPermission());
-                            continue;
-                        }
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    final String relative = installDir.relativize(file).toString();
-                    for (FilePermission perm : filePermissions) {
-                        if (perm.includeFile(relative)) {
-                            Files.setPosixFilePermissions(file, perm.getPermission());
-                            continue;
-                        }
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException e) {
-            throw new ProvisioningException("Failed to set file permissions", e);
-        }
     }
 
     private void processPackages() throws ProvisioningException {
@@ -316,7 +162,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
         for(String pkgName : provisionedFp.getPackageNames()) {
-            final Path pmWfDir = packagesDir.resolve(pkgName).resolve("pm/wildfly");
+            final Path pmWfDir = packagesDir.resolve(pkgName).resolve(WfConstants.PM).resolve(WfConstants.WILDFLY);
             if(!Files.exists(pmWfDir)) {
                 continue;
             }
@@ -324,30 +170,58 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             if(Files.exists(moduleDir)) {
                 processModules(provisionedFp.getGav(), pkgName, moduleDir);
             }
-
-            // collect cli scripts
-            Path provisioningCli = pmWfDir.resolve("provisioning.cli");
-            if (Files.exists(provisioningCli)) {
-                if(standalone == null) {
-                    standalone = new Scripts();
+            final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
+            if(Files.exists(tasksXml)) {
+                final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml, tasksProps);
+                if (!PropertyUtils.isWindows()) {
+                    processFeaturePackFilePermissions(pkgTasks, ctx.getInstallDir());
                 }
-                standalone.addScript(provisionedFp, pkgName, provisioningCli);
-            }
-            provisioningCli = pmWfDir.resolve("domain.cli");
-            if (Files.exists(provisioningCli)) {
-                if (domain == null) {
-                    domain = new Scripts();
+                mkdirs(pkgTasks, ctx.getInstallDir());
+                final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
+                if(genConfig != null) {
+                    configure(provisionedFp, pkgName, genConfig);
                 }
-                domain.addScript(provisionedFp, pkgName, provisioningCli);
-            }
-            provisioningCli = pmWfDir.resolve("host.cli");
-            if (Files.exists(provisioningCli)) {
-                if (host == null) {
-                    host = new Scripts();
-                }
-                host.addScript(provisionedFp, pkgName, provisioningCli);
             }
         }
+    }
+
+    private void configure(final ProvisionedFeaturePack provisionedFp, String pkgName, final GeneratorConfig genConfig)
+            throws ProvisioningException {
+        scriptCollector.collectScripts(genConfig, provisionedFp, pkgName);
+        if (!scriptCollector.standaloneScripts.isEmpty()) {
+            final ConfigGenerator configGen = ConfigGenerator.newStandaloneGenerator(ctx.getInstallDir());
+            for (Path p : scriptCollector.standaloneScripts) {
+                try {
+                    configGen.addCommandLines(p);
+                } catch (IOException e) {
+                    throw new ProvisioningException("Failed to read " + p);
+                }
+            }
+            System.out.println("Generating " + genConfig.getStandaloneConfig().getServerConfig());
+            try {
+                configGen.generate();
+            } catch (CommandLineException e) {
+                throw new ProvisioningException("Failed to generate configuration", e);
+            }
+        }
+
+        if (!scriptCollector.hcScripts.isEmpty()) {
+            final ConfigGenerator configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
+            for (Path p : scriptCollector.hcScripts) {
+                try {
+                    configGen.addCommandLines(p);
+                } catch (IOException e) {
+                    throw new ProvisioningException("Failed to read " + p);
+                }
+            }
+            System.out.println("Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
+            try {
+                configGen.generate();
+            } catch (CommandLineException e) {
+                throw new ProvisioningException("Failed to generate configuration", e);
+            }
+        }
+        scriptCollector.reset();
     }
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {
@@ -437,6 +311,52 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             });
         } catch (IOException e) {
             throw new ProvisioningException("Failed to process modules from package " + pkgName + " from feature-pack " + fp, e);
+        }
+    }
+
+    private static void mkdirs(final WildFlyPackageTasks tasks, Path installDir) throws ProvisioningException {
+        // make dirs
+        for (String dirName : tasks.getMkDirs()) {
+            final Path dir = installDir.resolve(dirName);
+            if(!Files.exists(dir)) {
+                try {
+                    Files.createDirectories(dir);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.mkdirs(dir));
+                }
+            }
+        }
+    }
+
+    private void processFeaturePackFilePermissions(WildFlyPackageTasks tasks, Path installDir) throws ProvisioningException {
+        final List<FilePermission> filePermissions = tasks.getFilePermissions();
+        try {
+            Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    final String relative = installDir.relativize(dir).toString();
+                    for (FilePermission perm : filePermissions) {
+                        if (perm.includeFile(relative)) {
+                            Files.setPosixFilePermissions(dir, perm.getPermission());
+                            continue;
+                        }
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    final String relative = installDir.relativize(file).toString();
+                    for (FilePermission perm : filePermissions) {
+                        if (perm.includeFile(relative)) {
+                            Files.setPosixFilePermissions(file, perm.getPermission());
+                            continue;
+                        }
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to set file permissions", e);
         }
     }
 

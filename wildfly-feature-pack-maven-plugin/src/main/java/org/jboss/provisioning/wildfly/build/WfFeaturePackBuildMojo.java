@@ -67,8 +67,6 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.WfConstants;
-import org.jboss.provisioning.plugin.wildfly.config.WildFlyPostFeaturePackTasks;
-import org.jboss.provisioning.plugin.wildfly.config.WildFlyPostFeaturePackTasksWriter20;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -269,19 +267,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to store artifact versions", e);
         }
 
-        // post-provisioning tasks config
-        final WildFlyPostFeaturePackTasks tasks = WildFlyPostFeaturePackTasks.builder()
-                .addFilePermissions(wfFpConfig.getFilePermissions())
-                .addMkDirs(wfFpConfig.getMkDirs())
-                .addUnixLineEndFilters(wfFpConfig.getUnixLineEndFilters())
-                .addWindowsLineEndFilters(wfFpConfig.getWindowsLineEndFilters())
-                .build();
-        try {
-            WildFlyPostFeaturePackTasksWriter20.INSTANCE.write(tasks, resourcesWildFly.resolve(WfConstants.WILDFLY_TASKS_XML));
-        } catch (XMLStreamException | IOException e) {
-            throw new MojoExecutionException(Errors.writeXml(resourcesWildFly.resolve(WfConstants.WILDFLY_TASKS_XML)), e);
-        }
-
         try {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
@@ -450,6 +435,37 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     PackageSpec docsSpec = docsBuilder.build();
                     writeXml(docsSpec, packagesDir.resolve(pkgName));
                     fpBuilder.addPackage(docsSpec);
+                } else if(pkgName.equals("bin")) {
+                    final PackageSpec.Builder binBuilder = PackageSpec.builder(pkgName);
+                    final Path binPkgDir = packagesDir.resolve(pkgName).resolve(Constants.CONTENT).resolve(pkgName);
+                    final PackageSpec.Builder standaloneBinBuilder = PackageSpec.builder("bin.standalone");
+                    final Path binStandalonePkgDir = packagesDir.resolve("bin.standalone").resolve(Constants.CONTENT).resolve(pkgName);
+                    final PackageSpec.Builder domainBinBuilder = PackageSpec.builder("bin.domain");
+                    final Path binDomainPkgDir = packagesDir.resolve("bin.domain").resolve(Constants.CONTENT).resolve(pkgName);
+                    try (DirectoryStream<Path> binStream = Files.newDirectoryStream(p)) {
+                        for (Path binPath : binStream) {
+                            final String fileName = binPath.getFileName().toString();
+                            if(fileName.startsWith(WfConstants.STANDALONE)) {
+                                IoUtils.copy(binPath, binStandalonePkgDir.resolve(fileName));
+                            } else if(fileName.startsWith(WfConstants.DOMAIN)) {
+                                IoUtils.copy(binPath, binDomainPkgDir.resolve(fileName));
+                            } else {
+                                IoUtils.copy(binPath, binPkgDir.resolve(fileName));
+                            }
+                        }
+                    }
+
+                    PackageSpec binSpec = binBuilder.build();
+                    fpBuilder.addPackage(binSpec);
+                    writeXml(binSpec, packagesDir.resolve(pkgName));
+
+                    binSpec = standaloneBinBuilder.addDependency(pkgName).build();
+                    fpBuilder.addPackage(binSpec);
+                    writeXml(binSpec, packagesDir.resolve(binSpec.getName()));
+
+                    binSpec = domainBinBuilder.addDependency(pkgName).build();
+                    fpBuilder.addPackage(binSpec);
+                    writeXml(binSpec, packagesDir.resolve(binSpec.getName()));
                 } else {
                     final Path pkgDir = packagesDir.resolve(pkgName);
                     IoUtils.copy(p, pkgDir.resolve(Constants.CONTENT).resolve(pkgName));

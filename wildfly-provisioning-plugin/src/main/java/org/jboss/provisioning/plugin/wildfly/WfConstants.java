@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,14 +28,18 @@ public interface WfConstants {
     String CONFIG = "config";
     String CONTENT = "content";
     String DOCS = "docs";
+    String DOMAIN = "domain";
     String LAYOUT = "layout";
     String LAYERS = "layers";
     String MODULE = "module";
     String MODULE_XML = "module.xml";
     String MODULES = "modules";
     String MODULES_ALL = "modules.all";
+    String PM = "pm";
     String SCHEMA = "schema";
+    String STANDALONE = "standalone";
     String SYSTEM = "system";
+    String TASKS_XML = "tasks.xml";
     String UTF8 = "UTF-8";
     String WILDFLY = "wildfly";
     String WILDFLY_TASKS_PROPS = "wildfly-tasks.properties";
