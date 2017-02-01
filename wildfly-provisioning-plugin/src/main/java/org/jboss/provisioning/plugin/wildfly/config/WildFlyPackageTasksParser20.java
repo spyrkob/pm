@@ -41,12 +41,13 @@ import java.util.Set;
  * @author Eduardo Martins
  * @author Alexey Loubyansky
  */
-class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPostFeaturePackTasks.Builder> {
+class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTasks.Builder> {
 
     public static final String NAMESPACE_2_0 = "urn:wildfly:wildfly-feature-pack-tasks:2.0";
 
     enum Element {
 
+        CONFIG_GENERATOR(GeneratorConfigParser20.ELEMENT_LOCAL_NAME),
         DIR("dir"),
         FILE_PERMISSIONS(FilePermissionsModelParser20.ELEMENT_LOCAL_NAME),
         FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
@@ -63,12 +64,13 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.TASKS.getLocalName()), Element.TASKS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG_GENERATOR.getLocalName()), Element.CONFIG_GENERATOR);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILTER.getLocalName()), Element.FILTER);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.LINE_ENDINGS.getLocalName()), Element.LINE_ENDINGS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.TASKS.getLocalName()), Element.TASKS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.UNIX.getLocalName()), Element.UNIX);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.WINDOWS.getLocalName()), Element.WINDOWS);
             elements = elementsMap;
@@ -144,17 +146,19 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
     }
 
     private final BuildPropertyHandler propertyReplacer;
+    private final GeneratorConfigParser20 configGenParser;
     private final FileFilterModelParser20 fileFilterModelParser;
     private final FilePermissionsModelParser20 filePermissionsModelParser;
 
-    WildFlyPostFeaturePackTasksParser20(PropertyResolver resolver) {
+    WildFlyPackageTasksParser20(PropertyResolver resolver) {
         this.propertyReplacer = new BuildPropertyHandler(resolver);
+        this.configGenParser = new GeneratorConfigParser20(this.propertyReplacer);
         this.fileFilterModelParser = new FileFilterModelParser20(this.propertyReplacer);
         this.filePermissionsModelParser = new FilePermissionsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
     }
 
     @Override
-    public void readElement(final XMLExtendedStreamReader reader, final WildFlyPostFeaturePackTasks.Builder builder) throws XMLStreamException {
+    public void readElement(final XMLExtendedStreamReader reader, final WildFlyPackageTasks.Builder builder) throws XMLStreamException {
 
         final Set<Attribute> required = EnumSet.noneOf(Attribute.class);
         final int count = reader.getAttributeCount();
@@ -173,6 +177,9 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
                     final Element element = Element.of(reader.getName());
 
                     switch (element) {
+                        case CONFIG_GENERATOR:
+                            builder.setGeneratorConfig(configGenParser.parseGeneratorConfig(reader));
+                            break;
                         case FILE_PERMISSIONS:
                             builder.addFilePermissions(filePermissionsModelParser.parseFilePermissions(reader));
                             break;
@@ -217,7 +224,7 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
         return propertyReplacer.replaceProperties(name);
     }
 
-    private void parseMkdirs(final XMLStreamReader reader, final WildFlyPostFeaturePackTasks.Builder builder) throws XMLStreamException {
+    private void parseMkdirs(final XMLStreamReader reader, final WildFlyPackageTasks.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -242,7 +249,7 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseLineEndings(final XMLStreamReader reader, final WildFlyPostFeaturePackTasks.Builder builder) throws XMLStreamException {
+    private void parseLineEndings(final XMLStreamReader reader, final WildFlyPackageTasks.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -270,7 +277,7 @@ class WildFlyPostFeaturePackTasksParser20 implements XMLElementReader<WildFlyPos
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseLineEnding(XMLStreamReader reader, final WildFlyPostFeaturePackTasks.Builder builder, boolean windows) throws XMLStreamException {
+    private void parseLineEnding(XMLStreamReader reader, final WildFlyPackageTasks.Builder builder, boolean windows) throws XMLStreamException {
         if(reader.getAttributeCount() != 0) {
             throw ParsingUtils.unexpectedContent(reader);
         }

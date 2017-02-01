@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ import org.jboss.provisioning.plugin.wildfly.MapPropertyResolver;
  *
  * @author Alexey Loubyansky
  */
-public class WildFlyPostFeaturePackTasks {
+public class WildFlyPackageTasks {
 
     public static class Builder {
 
@@ -44,8 +44,14 @@ public class WildFlyPostFeaturePackTasks {
         private List<String> mkDirs = Collections.emptyList();
         private List<FileFilter> windowsLineEndFilters = Collections.emptyList();
         private List<FileFilter> unixLineEndFilters = Collections.emptyList();
+        private GeneratorConfig generatorConfig;
 
         private Builder() {
+        }
+
+        public Builder setGeneratorConfig(GeneratorConfig genConfig) {
+            this.generatorConfig = genConfig;
+            return this;
         }
 
         public Builder addFilePermissions(FilePermission filePermission) {
@@ -128,10 +134,8 @@ public class WildFlyPostFeaturePackTasks {
             return this;
         }
 
-        public WildFlyPostFeaturePackTasks build() {
-            return new WildFlyPostFeaturePackTasks(Collections.unmodifiableList(filePermissions),
-                    Collections.unmodifiableList(mkDirs), Collections.unmodifiableList(windowsLineEndFilters),
-                    Collections.unmodifiableList(unixLineEndFilters));
+        public WildFlyPackageTasks build() {
+            return new WildFlyPackageTasks(this);
         }
     }
 
@@ -139,10 +143,10 @@ public class WildFlyPostFeaturePackTasks {
         return new Builder();
     }
 
-    public static WildFlyPostFeaturePackTasks load(Path configFile, Properties props) throws ProvisioningException {
+    public static WildFlyPackageTasks load(Path configFile, Properties props) throws ProvisioningException {
         try (InputStream configStream = Files.newInputStream(configFile)) {
             props.putAll(System.getProperties());
-            return new WildFlyPostFeaturePackTasksParser(new MapPropertyResolver(props)).parse(configStream);
+            return new WildFlyPackageTasksParser(new MapPropertyResolver(props)).parse(configStream);
         } catch (XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(configFile), e);
         } catch (IOException e) {
@@ -154,14 +158,16 @@ public class WildFlyPostFeaturePackTasks {
     private final List<String> mkDirs;
     private final List<FileFilter> windowsLineEndFilters;
     private final List<FileFilter> unixLineEndFilters;
+    private final GeneratorConfig generatorConfig;
 
-    private WildFlyPostFeaturePackTasks(List<FilePermission> filePermissions,
-            List<String> mkdirs, List<FileFilter> windowsLineEndFilters, List<FileFilter> unixLineEndFilters) {
-        this.filePermissions = filePermissions;
-        this.mkDirs = mkdirs;
-        this.windowsLineEndFilters = windowsLineEndFilters;
-        this.unixLineEndFilters = unixLineEndFilters;
+    private WildFlyPackageTasks(Builder builder) {
+        this.filePermissions = Collections.unmodifiableList(builder.filePermissions);
+        this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
+        this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
+        this.unixLineEndFilters = Collections.unmodifiableList(builder.unixLineEndFilters);
+        this.generatorConfig = builder.generatorConfig;
     }
+
 
     public List<FilePermission> getFilePermissions() {
         return filePermissions;
@@ -177,5 +183,9 @@ public class WildFlyPostFeaturePackTasks {
 
     public List<FileFilter> getUnixLineEndFilters() {
         return unixLineEndFilters;
+    }
+
+    public GeneratorConfig getGeneratorConfig() {
+        return generatorConfig;
     }
 }

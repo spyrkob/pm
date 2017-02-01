@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,26 +30,26 @@ import org.jboss.staxmapper.XMLMapper;
 /**
  * @author Alexey Loubyansky
  */
-public class WildFlyPostFeaturePackTasksParser {
+public class WildFlyPackageTasksParser {
 
-    private static final QName ROOT_2_0 = new QName(WildFlyPostFeaturePackTasksParser20.NAMESPACE_2_0, WildFlyPostFeaturePackTasksParser20.Element.TASKS.getLocalName());
+    private static final QName ROOT_2_0 = new QName(WildFlyPackageTasksParser20.NAMESPACE_2_0, WildFlyPackageTasksParser20.Element.TASKS.getLocalName());
 
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
 
     private final XMLMapper mapper;
 
-    public WildFlyPostFeaturePackTasksParser(PropertyResolver properties) {
+    public WildFlyPackageTasksParser(PropertyResolver properties) {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_2_0, new WildFlyPostFeaturePackTasksParser20(properties));
+        mapper.registerRootElement(ROOT_2_0, new WildFlyPackageTasksParser20(properties));
     }
 
-    public WildFlyPostFeaturePackTasks parse(final InputStream input) throws XMLStreamException {
+    public WildFlyPackageTasks parse(final InputStream input) throws XMLStreamException {
 
         final XMLInputFactory inputFactory = INPUT_FACTORY;
         setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
         setIfSupported(inputFactory, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final WildFlyPostFeaturePackTasks.Builder builder = WildFlyPostFeaturePackTasks.builder();
+        final WildFlyPackageTasks.Builder builder = WildFlyPackageTasks.builder();
         mapper.parseDocument(builder, streamReader);
         return builder.build();
     }
