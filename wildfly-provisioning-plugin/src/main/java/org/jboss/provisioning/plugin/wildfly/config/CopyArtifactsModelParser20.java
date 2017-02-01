@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.wildfly.build;
+package org.jboss.provisioning.plugin.wildfly.config;
 
 
 import javax.xml.namespace.QName;
@@ -23,8 +23,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
-import org.jboss.provisioning.plugin.wildfly.config.FileFilter;
-import org.jboss.provisioning.plugin.wildfly.config.FileFilterModelParser20;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 

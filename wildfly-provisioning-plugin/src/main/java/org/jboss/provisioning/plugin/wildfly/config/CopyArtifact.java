@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.wildfly.build;
+package org.jboss.provisioning.plugin.wildfly.config;
 
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.jboss.provisioning.plugin.wildfly.config.FileFilter;
 
 /**
  * Represents an artifact that is copies into a specific location in the final

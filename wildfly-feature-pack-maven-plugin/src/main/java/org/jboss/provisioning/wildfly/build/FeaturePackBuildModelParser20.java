@@ -21,9 +21,6 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
-import org.jboss.provisioning.plugin.wildfly.config.FileFilter;
-import org.jboss.provisioning.plugin.wildfly.config.FileFilterModelParser20;
-import org.jboss.provisioning.plugin.wildfly.config.FilePermissionsModelParser20;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;
@@ -57,22 +54,14 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
 
         ARTIFACT("artifact"),
         BUILD("build"),
-        COPY_ARTIFACTS(CopyArtifactsModelParser20.ELEMENT_LOCAL_NAME),
         DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
-        DIR("dir"),
-        FILE_PERMISSIONS(FilePermissionsModelParser20.ELEMENT_LOCAL_NAME),
-        FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
         GROUP("group"),
-        LINE_ENDINGS("line-endings"),
-        MKDIRS("mkdirs"),
         NAME("name"),
         PACKAGE("package"),
         PACKAGES("packages"),
         PACKAGE_SCHEMAS("package-schemas"),
-        UNIX("unix"),
-        WINDOWS("windows"),
 
         // default unknown element
         UNKNOWN(null);
@@ -83,22 +72,14 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
             elementsMap.put(new QName(NAMESPACE_2_0, Element.ARTIFACT.getLocalName()), Element.ARTIFACT);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.BUILD.getLocalName()), Element.BUILD);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEFAULT_PACKAGES.getLocalName()), Element.DEFAULT_PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.FILTER.getLocalName()), Element.FILTER);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.GROUP.getLocalName()), Element.GROUP);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.LINE_ENDINGS.getLocalName()), Element.LINE_ENDINGS);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.MKDIRS.getLocalName()), Element.MKDIRS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.NAME.getLocalName()), Element.NAME);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE.getLocalName()), Element.PACKAGE);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGES.getLocalName()), Element.PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.PACKAGE_SCHEMAS.getLocalName()), Element.PACKAGE_SCHEMAS);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.UNIX.getLocalName()), Element.UNIX);
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.WINDOWS.getLocalName()), Element.WINDOWS);
             elements = elementsMap;
         }
 
@@ -178,15 +159,9 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
     }
 
     private final BuildPropertyHandler propertyReplacer;
-    private final CopyArtifactsModelParser20 copyArtifactsModelParser;
-    private final FileFilterModelParser20 fileFilterModelParser;
-    private final FilePermissionsModelParser20 filePermissionsModelParser;
 
     FeaturePackBuildModelParser20(PropertyResolver resolver) {
         this.propertyReplacer = new BuildPropertyHandler(resolver);
-        this.fileFilterModelParser = new FileFilterModelParser20(this.propertyReplacer);
-        this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
-        this.filePermissionsModelParser = new FilePermissionsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
     }
 
     @Override
@@ -218,18 +193,6 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                         case PACKAGE_SCHEMAS:
                             builder.setPackageSchemas();
                             parsePackageSchemas(reader, builder);
-                            break;
-                        case COPY_ARTIFACTS:
-                            builder.addCopyArtifacts(copyArtifactsModelParser.parseCopyArtifacts(reader));
-                            break;
-                        case FILE_PERMISSIONS:
-                            builder.addFilePermissions(filePermissionsModelParser.parseFilePermissions(reader));
-                            break;
-                        case MKDIRS:
-                            parseMkdirs(reader, builder);
-                            break;
-                        case LINE_ENDINGS:
-                            parseLineEndings(reader, builder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -400,93 +363,4 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
-
-    private void parseMkdirs(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case DIR:
-                            builder.addMkdirs(parseName(reader));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void parseLineEndings(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case WINDOWS:
-                            parseLineEnding(reader, builder, true);
-                            break;
-                        case UNIX:
-                            parseLineEnding(reader, builder, true);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void parseLineEnding(XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder, boolean windows) throws XMLStreamException {
-        if(reader.getAttributeCount() != 0) {
-            throw ParsingUtils.unexpectedContent(reader);
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case FILTER:
-                            final FileFilter.Builder filterBuilder = FileFilter.builder();
-                            fileFilterModelParser.parseFilter(reader, filterBuilder);
-                            if(windows) {
-                                builder.addWindowsLineEndFilter(filterBuilder.build());
-                            } else {
-                                builder.addUnixLineEndFilter(filterBuilder.build());
-                            }
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
 }

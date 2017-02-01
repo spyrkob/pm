@@ -21,19 +21,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -195,7 +191,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to process dependencies", e);
         }
-        copyArtifacts(targetResources);
 
         final Path srcModulesDir = targetResources.resolve(WfConstants.MODULES).resolve(WfConstants.SYSTEM).resolve(WfConstants.LAYERS).resolve(WfConstants.BASE);
         if(!Files.exists(srcModulesDir)) {
@@ -304,78 +299,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to add package", e);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process config packages", e);
-        }
-    }
-
-    private void copyArtifacts(final Path targetResources) throws MojoExecutionException {
-        for(CopyArtifact copyArtifact : wfFpConfig.getCopyArtifacts()) {
-            final String gavString = artifactVersions.getVersion(copyArtifact.getArtifact());
-            try {
-                final ArtifactCoords coords = ArtifactCoordsUtil.fromJBossModules(gavString, "jar");
-                final Path jarSrc = resolveArtifact(coords);
-                String location = copyArtifact.getToLocation();
-                if (!location.isEmpty() && location.charAt(location.length() - 1) == '/') {
-                    // if the to location ends with a / then it is a directory
-                    // so we need to append the artifact name
-                    location += jarSrc.getFileName();
-                }
-
-                Path jarTarget = targetResources;
-                if(!(location.length() > 7 && location.startsWith(WfConstants.MODULES) && location.charAt(7) == '/')) {
-                    jarTarget = jarTarget.resolve(WfConstants.CONTENT);
-                }
-                jarTarget = jarTarget.resolve(location);
-
-                Files.createDirectories(jarTarget.getParent());
-                if (copyArtifact.isExtract()) {
-                    extractArtifact(jarSrc, jarTarget, copyArtifact);
-                } else {
-                    IoUtils.copy(jarSrc, jarTarget);
-                }
-
-                if(wfFpConfig.isPackageSchemas() && wfFpConfig.isSchemaGroup(coords.getGroupId())) {
-                    extractSchemas(targetResources, jarSrc);
-                }
-            } catch (ProvisioningException | IOException e) {
-                throw new MojoExecutionException("Failed to copy artifact " + gavString, e);
-            }
-        }
-    }
-
-    private void extractArtifact(Path artifact, Path target, CopyArtifact copy) throws IOException {
-        try (FileSystem zipFS = FileSystems.newFileSystem(artifact, null)) {
-            for(Path zipRoot : zipFS.getRootDirectories()) {
-                Files.walkFileTree(zipRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
-                        new SimpleFileVisitor<Path>() {
-                            @Override
-                            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                                throws IOException {
-                                final String entry = dir.toString().substring(1);
-                                if(entry.isEmpty()) {
-                                    return FileVisitResult.CONTINUE;
-                                }
-                                if(!copy.includeFile(entry)) {
-                                    return FileVisitResult.SKIP_SUBTREE;
-                                }
-                                final Path targetDir = target.resolve(zipRoot.relativize(dir).toString());
-                                try {
-                                    Files.copy(dir, targetDir);
-                                } catch (FileAlreadyExistsException e) {
-                                     if (!Files.isDirectory(targetDir))
-                                         throw e;
-                                }
-                                return FileVisitResult.CONTINUE;
-                            }
-                            @Override
-                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                                throws IOException {
-                                if(copy.includeFile(file.toString().substring(1))) {
-                                    Files.copy(file, target.resolve(zipRoot.relativize(file).toString()));
-                                }
-                                return FileVisitResult.CONTINUE;
-                            }
-                        });
-            }
         }
     }
 

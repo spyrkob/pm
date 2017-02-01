@@ -20,12 +20,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +45,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
@@ -172,10 +177,15 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
             if(Files.exists(tasksXml)) {
                 final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml, tasksProps);
-                if (!PropertyUtils.isWindows()) {
+                if(pkgTasks.hasCopyArtifacts()) {
+                    copyArtifacts(pkgTasks);
+                }
+                if(pkgTasks.hasMkDirs()) {
+                    mkdirs(pkgTasks, ctx.getInstallDir());
+                }
+                if (pkgTasks.hasFilePermissions() && !PropertyUtils.isWindows()) {
                     processFeaturePackFilePermissions(pkgTasks, ctx.getInstallDir());
                 }
-                mkdirs(pkgTasks, ctx.getInstallDir());
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
                     configurator.configure(provisionedFp, pkgName, genConfig);
@@ -246,11 +256,11 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                     } catch (IOException e) {
                                         throw new IllegalStateException(e);
                                     }
-//                                  // update module xml content
+                                    // update module xml content
                                     finalContent[0] = finalContent[0].replaceFirst("<artifact\\s+name=\"\\$\\{" + expr
                                           + "\\}\"\\s*/>", "<resource-root path=\"" + artifactFileName + "\"/>");
-//                                  // it's also possible that this is an element with nested content
-//                                  // this regex involves a good deal of backtracking but it seems to work
+                                    // it's also possible that this is an element with nested content
+                                    // this regex involves a good deal of backtracking but it seems to work
                                     finalContent[0] = Pattern.compile(
                                             "<artifact\\s+name=\"\\$\\{" + expr + "\\}\"\\s*>(.*)</artifact>",
                                             Pattern.DOTALL)
@@ -274,6 +284,72 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
+    private void copyArtifacts(final WildFlyPackageTasks tasks) throws ProvisioningException {
+        for(CopyArtifact copyArtifact : tasks.getCopyArtifacts()) {
+            final String gavString = versionResolver.resolveProperty(copyArtifact.getArtifact());
+            try {
+                final Path jarSrc = ctx.resolveArtifact(fromJBossModules(gavString, "jar"));
+                String location = copyArtifact.getToLocation();
+                if (!location.isEmpty() && location.charAt(location.length() - 1) == '/') {
+                    // if the to location ends with a / then it is a directory
+                    // so we need to append the artifact name
+                    location += jarSrc.getFileName();
+                }
+
+                final Path jarTarget = ctx.getInstallDir().resolve(location);
+
+                Files.createDirectories(jarTarget.getParent());
+                if (copyArtifact.isExtract()) {
+                    extractArtifact(jarSrc, jarTarget, copyArtifact);
+                } else {
+                    IoUtils.copy(jarSrc, jarTarget);
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException("Failed to copy artifact " + gavString, e);
+            }
+        }
+    }
+
+    private static void extractArtifact(Path artifact, Path target, CopyArtifact copy) throws IOException {
+        if(!Files.exists(target)) {
+            Files.createDirectories(target);
+        }
+        try (FileSystem zipFS = FileSystems.newFileSystem(artifact, null)) {
+            for(Path zipRoot : zipFS.getRootDirectories()) {
+                Files.walkFileTree(zipRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                        new SimpleFileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                                throws IOException {
+                                final String entry = dir.toString().substring(1);
+                                if(entry.isEmpty()) {
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                if(!copy.includeFile(entry)) {
+                                    return FileVisitResult.SKIP_SUBTREE;
+                                }
+                                final Path targetDir = target.resolve(zipRoot.relativize(dir).toString());
+                                try {
+                                    Files.copy(dir, targetDir);
+                                } catch (FileAlreadyExistsException e) {
+                                     if (!Files.isDirectory(targetDir))
+                                         throw e;
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+                            @Override
+                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                                if(copy.includeFile(file.toString().substring(1))) {
+                                    Files.copy(file, target.resolve(zipRoot.relativize(file).toString()));
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+                        });
+            }
+        }
+    }
+
     private static void mkdirs(final WildFlyPackageTasks tasks, Path installDir) throws ProvisioningException {
         // make dirs
         for (String dirName : tasks.getMkDirs()) {
@@ -288,7 +364,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processFeaturePackFilePermissions(WildFlyPackageTasks tasks, Path installDir) throws ProvisioningException {
+    private static void processFeaturePackFilePermissions(WildFlyPackageTasks tasks, Path installDir) throws ProvisioningException {
         final List<FilePermission> filePermissions = tasks.getFilePermissions();
         try {
             Files.walkFileTree(installDir, new SimpleFileVisitor<Path>() {
