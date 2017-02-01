@@ -85,12 +85,15 @@ class ConfigGenerator {
                 LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.PACKAGES));
 
         if (!standaloneScripts.isEmpty()) {
-            System.out.println("Generating " + genConfig.getStandaloneConfig().getServerConfig());
-            runScripts("embed-server --empty-config --remove-existing", standaloneScripts);
+            System.out.println(" Generating " + genConfig.getStandaloneConfig().getServerConfig());
+            runScripts("embed-server --empty-config --remove-existing --server-config=" + genConfig.getStandaloneConfig().getServerConfig(), standaloneScripts);
         }
         if (!hcScripts.isEmpty()) {
-            System.out.println("Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
-            runScripts("embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config",
+            System.out.println(" Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
+            runScripts(
+                    "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config --domain-config=" +
+                    genConfig.getHostControllerConfig().getDomainConfig() +
+                    " --host-config=" + genConfig.getHostControllerConfig().getHostConfig(),
                     hcScripts);
         }
         reset();

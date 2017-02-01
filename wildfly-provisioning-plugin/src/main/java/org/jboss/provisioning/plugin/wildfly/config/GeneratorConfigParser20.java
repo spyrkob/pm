@@ -26,6 +26,7 @@ import javax.xml.stream.XMLStreamReader;
 import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
+import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -138,7 +139,7 @@ public class GeneratorConfigParser20 {
         this.propertyReplacer = propertyReplacer;
     }
 
-    public GeneratorConfig parseGeneratorConfig(final XMLStreamReader reader) throws XMLStreamException {
+    public GeneratorConfig parseGeneratorConfig(final XMLExtendedStreamReader reader) throws XMLStreamException {
         final GeneratorConfig.Builder builder = GeneratorConfig.builder();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -205,7 +206,7 @@ public class GeneratorConfigParser20 {
         return null;
     }
 
-    public HostControllerConfig parseHostControllerConfig(XMLStreamReader reader) throws XMLStreamException {
+    public HostControllerConfig parseHostControllerConfig(XMLExtendedStreamReader reader) throws XMLStreamException {
         final HostControllerConfig.Builder hcBuilder = HostControllerConfig.builder();
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -218,7 +219,7 @@ public class GeneratorConfigParser20 {
                     hcBuilder.setHostConfig(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         while (reader.hasNext()) {
