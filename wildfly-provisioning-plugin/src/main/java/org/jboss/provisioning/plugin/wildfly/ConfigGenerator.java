@@ -27,75 +27,184 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.jboss.as.cli.CommandLineException;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.plugin.ProvisioningContext;
+import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
+import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.util.LayoutUtils;
 import org.wildfly.core.launcher.CliCommandBuilder;
 
 /**
+ * Collects the CLI scripts from the packages and runs them to produce the configuration.
  *
  * @author Alexey Loubyansky
  */
 class ConfigGenerator {
 
-    public static ConfigGenerator newStandaloneGenerator(Path installDir) {
-        return newInstance(installDir, true);
+    private final ProvisioningContext ctx;
+
+    private GeneratorConfig genConfig;
+    private List<Path> standaloneScripts = new ArrayList<>();
+    private List<Path> hcScripts = new ArrayList<>();
+    private Map<ArtifactCoords.Gav, Set<String>> processedPackages = new HashMap<>();
+    private ArtifactCoords.Gav lastLoggedGav;
+    private String lastLoggedPackage;
+
+    ConfigGenerator(ProvisioningContext ctx) {
+        this.ctx = ctx;
     }
 
-    public static ConfigGenerator newDomainGenerator(Path installDir) {
-        return newInstance(installDir, false);
+    private void reset() {
+        standaloneScripts.clear();
+        hcScripts.clear();
+        processedPackages.clear();
+        genConfig = null;
+        lastLoggedGav = null;
+        lastLoggedPackage = null;
     }
 
-    public static ConfigGenerator newInstance(Path installDir, boolean standalone) {
-        return new ConfigGenerator(installDir, standalone);
-    }
+    void configure(final ProvisionedFeaturePack provisionedFp, String pkgName, final GeneratorConfig genConfig)
+            throws ProvisioningException {
 
-    private final Path installDir;
-    private final List<String> commands = new ArrayList<>();
+        this.genConfig = genConfig;
+        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
+        System.out.println("Collecting configuration scripts for feature-pack " + provisionedFp.getGav() + " package " + pkgName);
+        collectScripts(ctx.getLayoutDescription().getFeaturePack(fpGav.toGa()), pkgName, provisionedFp,
+                getProcessedPackages(fpGav),
+                LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.PACKAGES));
 
-    private ConfigGenerator(Path installDir, boolean standalone) {
-        this.installDir = installDir;
-        if(standalone) {
-            commands.add("embed-server --empty-config --remove-existing");
-        } else {
-            //commands.add("embed-host-controller --empty-host-config --empty-domain-config --host-config=myhost.xml");
-            commands.add("embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config");
+        if (!standaloneScripts.isEmpty()) {
+            System.out.println("Generating " + genConfig.getStandaloneConfig().getServerConfig());
+            runScripts("embed-server --empty-config --remove-existing", standaloneScripts);
         }
+        if (!hcScripts.isEmpty()) {
+            System.out.println("Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
+            runScripts("embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config",
+                    hcScripts);
+        }
+        reset();
     }
 
-    public ConfigGenerator addCommandLine(String cmdLine) {
-        commands.add(cmdLine);
-        return this;
-    }
+    private void collectScripts(FeaturePackSpec fpSpec, String pkgName, ProvisionedFeaturePack provisionedFp,
+            Set<String> processedPackages, Path packagesDir) throws ProvisioningException {
 
-    public ConfigGenerator addCommandLines(Collection<String> cmdLines) {
-        commands.addAll(cmdLines);
-        return this;
-    }
-
-    public ConfigGenerator addCommandLines(Path p) throws IOException {
-        addCommandLine("echo executing " + p);
-        try(BufferedReader reader = Files.newBufferedReader(p)) {
-            String line = reader.readLine();
-            while(line != null) {
-                addCommandLine(line);
-                line = reader.readLine();
+        final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
+        if(pkgSpec.hasExternalDependencies()) {
+            for(String fpDep : pkgSpec.getExternalDependencyNames()) {
+                final PackageDependencyGroupSpec externalDeps = pkgSpec.getExternalDependencies(fpDep);
+                final ArtifactCoords.Gav externalGav = fpSpec.getDependency(externalDeps.getGroupName()).getTarget().getGav();
+                final ProvisionedFeaturePack provisionedExternalFp = ctx.getProvisionedState().getFeaturePack(externalGav);
+                final Set<String> externalProcessed = getProcessedPackages(externalGav);
+                FeaturePackSpec externalFpSpec = null;
+                Path externalPackagesDir = null;
+                for(String depPkgName : externalDeps.getPackageNames()) {
+                    if(provisionedExternalFp.containsPackage(depPkgName) && externalProcessed.add(depPkgName)) {
+                        if(externalFpSpec == null) {
+                            externalFpSpec = ctx.getLayoutDescription().getFeaturePack(externalGav.toGa());
+                            externalPackagesDir = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), externalGav).resolve(Constants.PACKAGES);
+                        }
+                        collectScripts(externalFpSpec, depPkgName, provisionedExternalFp, externalProcessed, externalPackagesDir);
+                    }
+                }
             }
         }
-        return this;
+
+        if(pkgSpec.hasLocalDependencies()) {
+            for(String depPkgName : pkgSpec.getLocalDependencies().getPackageNames()) {
+                if(provisionedFp.containsPackage(depPkgName) && processedPackages.add(depPkgName)) {
+                    collectScripts(fpSpec, depPkgName, provisionedFp, processedPackages, packagesDir);
+                }
+            }
+        }
+
+        final Path wfDir = packagesDir.resolve(pkgSpec.getName()).resolve(WfConstants.PM).resolve(WfConstants.WILDFLY);
+        if(!Files.exists(wfDir)) {
+            return;
+        }
+
+        // collect cli scripts
+        if(genConfig.hasStandaloneConfig()) {
+            for(String script : genConfig.getStandaloneConfig().getScripts()) {
+                final Path scriptPath = wfDir.resolve(script);
+                if(Files.exists(scriptPath)) {
+                    standaloneScripts.add(scriptPath);
+                    logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+                }
+            }
+        }
+        if(genConfig.hasHostControllerConfig()) {
+            for(String script : genConfig.getHostControllerConfig().getScripts()) {
+                final Path scriptPath = wfDir.resolve(script);
+                if(Files.exists(scriptPath)) {
+                    hcScripts.add(scriptPath);
+                    logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+                }
+            }
+        }
     }
 
-    public void generate() throws CommandLineException {
+    private Set<String> getProcessedPackages(ArtifactCoords.Gav fpGav) {
+        Set<String> fpProcessed = processedPackages.get(fpGav);
+        if(fpProcessed == null) {
+            fpProcessed = new HashSet<>();
+            processedPackages.put(fpGav, fpProcessed);
+        }
+        return fpProcessed;
+    }
+
+    private void logScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
+        if(!provisionedFp.getGav().equals(lastLoggedGav)) {
+            System.out.println("  " + provisionedFp.getGav());
+            lastLoggedGav = provisionedFp.getGav();
+            lastLoggedPackage = null;
+        }
+        if(!pkgName.equals(lastLoggedPackage)) {
+            System.out.println("    " + pkgName);
+            lastLoggedPackage = pkgName;
+        }
+        System.out.println("      - " + script.getFileName());
+    }
+
+    private void runScripts(final String embedCommand, List<Path> scripts) throws ProvisioningException {
+        final List<String> commands = new ArrayList<>();
+        commands.add(embedCommand);
+        for (Path p : scripts) {
+            commands.add("echo executing " + p);
+            try {
+                try(BufferedReader reader = Files.newBufferedReader(p)) {
+                    String line = reader.readLine();
+                    while(line != null) {
+                        commands.add(line);
+                        line = reader.readLine();
+                    }
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException("Failed to read " + p);
+            }
+        }
         commands.add("exit");
+
+        run(commands);
+    }
+
+    private void run(List<String> commands) throws ProvisioningException {
         CliCommandBuilder builder = CliCommandBuilder
-                .of(installDir)
-                .addCliArgument("--no-op-validation")
+                .of(ctx.getInstallDir())
                 .setCommands(commands);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
-        processBuilder.environment().put("JBOSS_HOME", installDir.toString());
+        processBuilder.environment().put("JBOSS_HOME", ctx.getInstallDir().toString());
 
         Process cliProcess;
         try {
@@ -154,20 +263,10 @@ class ConfigGenerator {
                         }
                     }
                 }
-                throw new CommandLineException("Embeedded CLI scripts failed.");
+                throw new ProvisioningException("Embeedded CLI scripts failed.");
             }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (IOException | InterruptedException e) {
+            throw new ProvisioningException("Embedded CLI process failed", e);
         }
-        //final CommandContext cliCtx = CommandContextFactory.getInstance().newCommandContext();
-        //cliCtx.handle("embed-server --empty-config --remove-existing --jboss-home=" + installDir);
-/*        for(String cmdLine : commands) {
-            cliCtx.handle(cmdLine);
-        }
-        cliCtx.handle("exit");
-*/    }
+    }
 }

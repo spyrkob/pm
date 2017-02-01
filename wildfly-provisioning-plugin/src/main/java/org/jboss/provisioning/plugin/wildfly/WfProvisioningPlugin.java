@@ -34,7 +34,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.jboss.as.cli.CommandLineException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.Constants;
@@ -65,7 +64,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private boolean thinServer;
 
-    private CliScriptCollector scriptCollector;
+    private ConfigGenerator configurator;
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -85,7 +84,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
 
         this.ctx = ctx;
-        scriptCollector = new CliScriptCollector(ctx);
+        configurator = new ConfigGenerator(ctx);
 
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
@@ -179,49 +178,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 mkdirs(pkgTasks, ctx.getInstallDir());
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
-                    configure(provisionedFp, pkgName, genConfig);
+                    configurator.configure(provisionedFp, pkgName, genConfig);
                 }
             }
         }
-    }
-
-    private void configure(final ProvisionedFeaturePack provisionedFp, String pkgName, final GeneratorConfig genConfig)
-            throws ProvisioningException {
-        scriptCollector.collectScripts(genConfig, provisionedFp, pkgName);
-        if (!scriptCollector.standaloneScripts.isEmpty()) {
-            final ConfigGenerator configGen = ConfigGenerator.newStandaloneGenerator(ctx.getInstallDir());
-            for (Path p : scriptCollector.standaloneScripts) {
-                try {
-                    configGen.addCommandLines(p);
-                } catch (IOException e) {
-                    throw new ProvisioningException("Failed to read " + p);
-                }
-            }
-            System.out.println("Generating " + genConfig.getStandaloneConfig().getServerConfig());
-            try {
-                configGen.generate();
-            } catch (CommandLineException e) {
-                throw new ProvisioningException("Failed to generate configuration", e);
-            }
-        }
-
-        if (!scriptCollector.hcScripts.isEmpty()) {
-            final ConfigGenerator configGen = ConfigGenerator.newDomainGenerator(ctx.getInstallDir());
-            for (Path p : scriptCollector.hcScripts) {
-                try {
-                    configGen.addCommandLines(p);
-                } catch (IOException e) {
-                    throw new ProvisioningException("Failed to read " + p);
-                }
-            }
-            System.out.println("Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
-            try {
-                configGen.generate();
-            } catch (CommandLineException e) {
-                throw new ProvisioningException("Failed to generate configuration", e);
-            }
-        }
-        scriptCollector.reset();
     }
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {

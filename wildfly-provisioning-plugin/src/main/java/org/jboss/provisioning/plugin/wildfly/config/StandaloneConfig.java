@@ -30,7 +30,7 @@ import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfigParser20.Scri
 public class StandaloneConfig {
 
     private static final String DEFAULT_CONFIG = "standalone.xml";
-    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("provisioning.cli", "standalone.cli");
+    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("main.cli", "standalone.cli");
 
     public static Builder builder() {
         return new Builder();

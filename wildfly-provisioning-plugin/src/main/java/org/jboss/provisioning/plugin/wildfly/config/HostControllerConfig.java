@@ -31,7 +31,7 @@ public class HostControllerConfig {
 
     private static final String DEFAULT_DOMAIN_CONFIG = "domain.xml";
     private static final String DEFAULT_HOST_CONFIG = "host.xml";
-    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("provisioning.cli", "domain.cli", "host.cli");
+    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("main.cli", "domain.cli", "host.cli");
 
     public static Builder builder() {
         return new Builder();
