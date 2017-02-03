@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -112,11 +112,11 @@ public interface Errors {
     }
 
     static String unsatisfiedPackageDependency(ArtifactCoords.Gav fpGav, String srcPackage, String targetPackage) {
-        return "Package " + srcPackage + " from feature-pack " + fpGav + " has unsatisfied dependency on package " + targetPackage;
+        return "Feature-pack " + fpGav + " package " + srcPackage + " has unsatisfied dependency on package " + targetPackage;
     }
 
     static String unsatisfiedExternalPackageDependency(ArtifactCoords.Gav srcGav, String srcPackage, ArtifactCoords.Gav targetGav, String targetPackage) {
-        return "Package " + srcPackage + " from feature-pack " + srcGav + " has unsatisfied dependency on package " + targetPackage + " from feature-pack " + targetGav;
+        return "Feature-pack " + srcGav + " package " + srcPackage + " has unsatisfied dependency on feature-pack " + targetGav + " package " + targetPackage;
     }
 
     static String packageExcludeInclude(String packageName) {
