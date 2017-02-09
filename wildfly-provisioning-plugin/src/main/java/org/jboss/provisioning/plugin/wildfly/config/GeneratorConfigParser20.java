@@ -46,12 +46,13 @@ public class GeneratorConfigParser20 {
 
     enum Attribute implements XmlNameProvider {
 
-        // default unknown attribute
-        UNKNOWN(null),
         DOMAIN_CONFIG("domain-config"),
         HOST_CONFIG("host-config"),
         NAME("name"),
-        SERVER_CONFIG("server-config");
+        PROFILE("profile"),
+        SERVER_CONFIG("server-config"),
+        // default unknown attribute
+        UNKNOWN(null);
 
         private static final Map<String, Attribute> attributes;
 
@@ -60,6 +61,7 @@ public class GeneratorConfigParser20 {
             attributesMap.put(DOMAIN_CONFIG.getLocalName(), DOMAIN_CONFIG);
             attributesMap.put(HOST_CONFIG.getLocalName(), HOST_CONFIG);
             attributesMap.put(NAME.getLocalName(), NAME);
+            attributesMap.put(PROFILE.getLocalName(), PROFILE);
             attributesMap.put(SERVER_CONFIG.getLocalName(), SERVER_CONFIG);
             attributes = attributesMap;
         }
@@ -93,18 +95,19 @@ public class GeneratorConfigParser20 {
 
     enum Element {
 
-        // default unknown element
-        UNKNOWN(null),
+        DOMAIN("domain"),
         HOST_CONTROLLER("host-controller"),
         STANDALONE("standalone"),
         SCRIPTS("scripts"),
-        SCRIPT("script")
-        ;
+        SCRIPT("script"),
+        // default unknown element
+        UNKNOWN(null);
 
         private static final Map<String, Element> elements;
 
         static {
             Map<String, Element> elementsMap = new HashMap<>();
+            elementsMap.put(Element.DOMAIN.getLocalName(), Element.DOMAIN);
             elementsMap.put(Element.HOST_CONTROLLER.getLocalName(), Element.HOST_CONTROLLER);
             elementsMap.put(Element.STANDALONE.getLocalName(), Element.STANDALONE);
             elementsMap.put(Element.SCRIPTS.getLocalName(), Element.SCRIPTS);
@@ -154,6 +157,9 @@ public class GeneratorConfigParser20 {
                             break;
                         case HOST_CONTROLLER:
                             builder.setHostController(parseHostControllerConfig(reader));
+                            break;
+                        case DOMAIN:
+                            builder.setDomainProfile(new DomainProfileConfig(parseSingleAttribute(reader, Attribute.PROFILE)));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -257,7 +263,7 @@ public class GeneratorConfigParser20 {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case SCRIPT:
-                            builder.addScript(parseScript(reader));
+                            builder.addScript(parseSingleAttribute(reader, Attribute.NAME));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -272,23 +278,21 @@ public class GeneratorConfigParser20 {
         ParsingUtils.parseNoContent(reader);
     }
 
-    protected String parseScript(XMLStreamReader reader) throws XMLStreamException {
+    private String parseSingleAttribute(XMLStreamReader reader, Attribute attr) throws XMLStreamException {
         final int count = reader.getAttributeCount();
-        String name = null;
+        String value = null;
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
+            if(attribute.equals(attr)) {
+                value = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+            } else {
+                throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        if (value == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(attr));
         }
         ParsingUtils.parseNoContent(reader);
-        return name;
+        return value;
     }
 }

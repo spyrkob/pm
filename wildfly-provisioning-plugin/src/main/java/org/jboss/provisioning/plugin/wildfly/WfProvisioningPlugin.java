@@ -70,6 +70,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private boolean thinServer;
 
     private ConfigGenerator configurator;
+    private DomainScriptCollector domainScriptCollector;
+
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -131,6 +133,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         propertyHandler = new BuildPropertyHandler(versionResolver);
 
         processPackages();
+
+        if(domainScriptCollector != null) {
+            domainScriptCollector.run();
+        }
     }
 
     private void processPackages() throws ProvisioningException {
@@ -188,7 +194,15 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
-                    configurator.configure(provisionedFp, pkgName, genConfig);
+                    if(genConfig.hasStandaloneConfig() || genConfig.hasHostControllerConfig()) {
+                        configurator.configure(provisionedFp, pkgName, genConfig);
+                    }
+                    if(genConfig.hasDomainProfile()) {
+                        if(domainScriptCollector == null) {
+                            domainScriptCollector = new DomainScriptCollector(ctx);
+                        }
+                        domainScriptCollector.collectScripts(provisionedFp, pkgName, genConfig.getDomainProfileConfig().getProfile());
+                    }
                 }
             }
         }
