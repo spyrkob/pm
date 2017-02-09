@@ -73,7 +73,7 @@ public interface Errors {
         return "Failed to parse " + p.toAbsolutePath();
     }
 
-    static String writeXml(Path p) {
+    static String writeFile(Path p) {
         return "Failed to write to " + p.toAbsolutePath();
     }
 
@@ -88,7 +88,7 @@ public interface Errors {
     }
 
     static String packageNotFound(ArtifactCoords.Gav fp, String packageName) {
-        return "Failed to resolve package " + packageName + " for " + fp;
+        return "Failed to resolve package " + packageName + " in " + fp;
     }
 
     static String missingParameter(String string) {

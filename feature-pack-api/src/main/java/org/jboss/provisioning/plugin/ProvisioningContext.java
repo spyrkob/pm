@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,4 +91,12 @@ public interface ProvisioningContext {
      * resolved for any reason
      */
     Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException;
+
+    /**
+     * Returns this provisioning temporary directory.
+     * This is mainly for the provisioning plug-ins to provide a common tmp dir.
+     *
+     * @return  temporary directory
+     */
+    Path getTmpDir();
 }

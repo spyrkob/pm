@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -242,6 +242,7 @@ class ProvisioningTask {
 
     private void executePlugins(final ProvisioningConfig provisioningConfig, final ProvisionedState provisionedState,
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
+        final Path[] tmpDir = new Path[1];
         final ProvisioningContext ctx = new ProvisioningContext() {
             @Override
             public Path getLayoutDir() {
@@ -282,13 +283,27 @@ class ProvisioningTask {
             public String getEncoding() {
                 return encoding;
             }
+
+            @Override
+            public Path getTmpDir() {
+                if(tmpDir[0] == null) {
+                    tmpDir[0] = IoUtils.createRandomTmpDir();
+                }
+                return tmpDir[0];
+            }
         };
 
-        final java.net.URLClassLoader ucl = new java.net.URLClassLoader(provisioningPlugins.values().toArray(
-                new java.net.URL[provisioningPlugins.size()]), Thread.currentThread().getContextClassLoader());
-        final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-        for (ProvisioningPlugin plugin : plugins) {
-            plugin.postInstall(ctx);
+        try {
+            final java.net.URLClassLoader ucl = new java.net.URLClassLoader(provisioningPlugins.values().toArray(
+                    new java.net.URL[provisioningPlugins.size()]), Thread.currentThread().getContextClassLoader());
+            final ServiceLoader<ProvisioningPlugin> plugins = ServiceLoader.load(ProvisioningPlugin.class, ucl);
+            for (ProvisioningPlugin plugin : plugins) {
+                plugin.postInstall(ctx);
+            }
+        } finally {
+            if (tmpDir[0] != null) {
+                IoUtils.recursiveDelete(tmpDir[0]);
+            }
         }
     }
 
