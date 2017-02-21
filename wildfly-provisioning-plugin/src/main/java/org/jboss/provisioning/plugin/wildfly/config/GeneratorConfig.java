@@ -29,7 +29,6 @@ public class GeneratorConfig {
     public static class Builder {
 
         private StandaloneConfig standalone;
-        private HostControllerConfig hostController;
         private DomainProfileConfig domainProfile;
 
         private Builder() {
@@ -37,11 +36,6 @@ public class GeneratorConfig {
 
         public Builder setStandalone(StandaloneConfig standalone) {
             this.standalone = standalone;
-            return this;
-        }
-
-        public Builder setHostController(HostControllerConfig hostController) {
-            this.hostController = hostController;
             return this;
         }
 
@@ -56,12 +50,10 @@ public class GeneratorConfig {
     }
 
     private final StandaloneConfig standalone;
-    private final HostControllerConfig hostController;
     private final DomainProfileConfig domainProfile;
 
     private GeneratorConfig(Builder builder) {
         this.standalone = builder.standalone;
-        this.hostController = builder.hostController;
         this.domainProfile = builder.domainProfile;
     }
 
@@ -71,14 +63,6 @@ public class GeneratorConfig {
 
     public StandaloneConfig getStandaloneConfig() {
         return standalone;
-    }
-
-    public boolean hasHostControllerConfig() {
-        return hostController != null;
-    }
-
-    public HostControllerConfig getHostControllerConfig() {
-        return hostController;
     }
 
     public boolean hasDomainProfile() {

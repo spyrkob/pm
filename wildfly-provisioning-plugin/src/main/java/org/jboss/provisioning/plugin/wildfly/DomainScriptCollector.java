@@ -90,6 +90,10 @@ class DomainScriptCollector {
             scriptWriter.write(line);
             scriptWriter.newLine();
         } catch(IOException e) {
+            try {
+                scriptWriter.close();
+            } catch (IOException eClose) {
+            }
             throw new ProvisioningException(Errors.writeFile(script), e);
         }
     }
@@ -259,6 +263,7 @@ class DomainScriptCollector {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(cliProcess.getInputStream()));
                     BufferedWriter writer = new BufferedWriter(errorWriter)) {
                 String line = reader.readLine();
+                boolean flush = false;
                 while (line != null) {
                     if (line.startsWith("executing ")) {
                         echoLine = line;
@@ -268,8 +273,11 @@ class DomainScriptCollector {
                     } else {
                         if (line.equals("}")) {
                             ++opIndex;
+                            flush = true;
+                        } else if (flush){
                             writer.flush();
                             errorWriter.getBuffer().setLength(0);
+                            flush = false;
                         }
                         writer.write(line);
                         writer.newLine();

@@ -16,12 +16,6 @@
  */
 package org.jboss.provisioning.plugin.wildfly.config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfigParser20.ScriptsBuilder;
 
 /**
  *
@@ -30,16 +24,14 @@ import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfigParser20.Scri
 public class StandaloneConfig {
 
     private static final String DEFAULT_CONFIG = "standalone.xml";
-    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("main.cli", "standalone.cli");
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static class Builder implements ScriptsBuilder {
+    public static class Builder {
 
         private String serverConfig = DEFAULT_CONFIG;
-        private List<String> scripts = Collections.emptyList();
 
         private Builder() {
         }
@@ -49,37 +41,18 @@ public class StandaloneConfig {
             return this;
         }
 
-        @Override
-        public void addScript(String script) {
-            switch(scripts.size()) {
-                case 0:
-                    scripts = Collections.singletonList(script);
-                    break;
-                case 1:
-                    scripts = new ArrayList<>(scripts);
-                default:
-                    scripts.add(script);
-            }
-        }
-
         public StandaloneConfig build() {
             return new StandaloneConfig(this);
         }
     }
 
     private final String serverConfig;
-    private final List<String> scripts;
 
     private StandaloneConfig(Builder builder) {
         this.serverConfig = builder.serverConfig;
-        this.scripts = Collections.unmodifiableList(builder.scripts.isEmpty() ? DEFAULT_SCRIPTS : builder.scripts);
     }
 
     public String getServerConfig() {
         return serverConfig;
-    }
-
-    public List<String> getScripts() {
-        return scripts;
     }
 }

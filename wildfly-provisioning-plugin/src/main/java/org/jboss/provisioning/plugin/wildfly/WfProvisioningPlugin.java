@@ -194,7 +194,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
-                    if(genConfig.hasStandaloneConfig() || genConfig.hasHostControllerConfig()) {
+                    if(genConfig.hasStandaloneConfig()) {
                         configurator.configure(provisionedFp, pkgName, genConfig);
                     }
                     if(genConfig.hasDomainProfile()) {

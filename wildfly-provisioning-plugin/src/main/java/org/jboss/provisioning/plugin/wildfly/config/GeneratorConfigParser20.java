@@ -40,14 +40,8 @@ public class GeneratorConfigParser20 {
 
     public static final String ELEMENT_LOCAL_NAME = "config-generator";
 
-    interface ScriptsBuilder {
-        void addScript(String script);
-    }
-
     enum Attribute implements XmlNameProvider {
 
-        DOMAIN_CONFIG("domain-config"),
-        HOST_CONFIG("host-config"),
         NAME("name"),
         PROFILE("profile"),
         SERVER_CONFIG("server-config"),
@@ -58,8 +52,6 @@ public class GeneratorConfigParser20 {
 
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
-            attributesMap.put(DOMAIN_CONFIG.getLocalName(), DOMAIN_CONFIG);
-            attributesMap.put(HOST_CONFIG.getLocalName(), HOST_CONFIG);
             attributesMap.put(NAME.getLocalName(), NAME);
             attributesMap.put(PROFILE.getLocalName(), PROFILE);
             attributesMap.put(SERVER_CONFIG.getLocalName(), SERVER_CONFIG);
@@ -96,10 +88,7 @@ public class GeneratorConfigParser20 {
     enum Element {
 
         DOMAIN("domain"),
-        HOST_CONTROLLER("host-controller"),
         STANDALONE("standalone"),
-        SCRIPTS("scripts"),
-        SCRIPT("script"),
         // default unknown element
         UNKNOWN(null);
 
@@ -108,10 +97,7 @@ public class GeneratorConfigParser20 {
         static {
             Map<String, Element> elementsMap = new HashMap<>();
             elementsMap.put(Element.DOMAIN.getLocalName(), Element.DOMAIN);
-            elementsMap.put(Element.HOST_CONTROLLER.getLocalName(), Element.HOST_CONTROLLER);
             elementsMap.put(Element.STANDALONE.getLocalName(), Element.STANDALONE);
-            elementsMap.put(Element.SCRIPTS.getLocalName(), Element.SCRIPTS);
-            elementsMap.put(Element.SCRIPT.getLocalName(), Element.SCRIPT);
             elements = elementsMap;
         }
 
@@ -155,9 +141,6 @@ public class GeneratorConfigParser20 {
                         case STANDALONE:
                             builder.setStandalone(parseStandaloneConfig(reader));
                             break;
-                        case HOST_CONTROLLER:
-                            builder.setHostController(parseHostControllerConfig(reader));
-                            break;
                         case DOMAIN:
                             builder.setDomainProfile(new DomainProfileConfig(parseSingleAttribute(reader, Attribute.PROFILE)));
                             break;
@@ -187,95 +170,8 @@ public class GeneratorConfigParser20 {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return stdBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case SCRIPTS:
-                            parseScripts(stdBuilder, reader);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
         ParsingUtils.parseNoContent(reader);
-        return null;
-    }
-
-    public HostControllerConfig parseHostControllerConfig(XMLExtendedStreamReader reader) throws XMLStreamException {
-        final HostControllerConfig.Builder hcBuilder = HostControllerConfig.builder();
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case DOMAIN_CONFIG:
-                    hcBuilder.setDomainConfig(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
-                    break;
-                case HOST_CONFIG:
-                    hcBuilder.setHostConfig(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedAttribute(reader, i);
-            }
-        }
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return hcBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case SCRIPTS:
-                            parseScripts(hcBuilder, reader);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        ParsingUtils.parseNoContent(reader);
-        return null;
-    }
-
-    public void parseScripts(ScriptsBuilder builder, XMLStreamReader reader) throws XMLStreamException {
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case SCRIPT:
-                            builder.addScript(parseSingleAttribute(reader, Attribute.NAME));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        ParsingUtils.parseNoContent(reader);
+        return stdBuilder.build();
     }
 
     private String parseSingleAttribute(XMLStreamReader reader, Attribute attr) throws XMLStreamException {
