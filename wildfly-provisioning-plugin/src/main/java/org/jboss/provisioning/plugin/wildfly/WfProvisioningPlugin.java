@@ -69,7 +69,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private boolean thinServer;
 
-    private ConfigGenerator configurator;
+    //private ConfigGenerator configurator;
+    private StandaloneConfigGenerator standaloneGenerator;
     private DomainScriptCollector domainScriptCollector;
 
 
@@ -91,7 +92,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
 
         this.ctx = ctx;
-        configurator = new ConfigGenerator(ctx);
 
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
@@ -195,7 +195,13 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
                     if(genConfig.hasStandaloneConfig()) {
-                        configurator.configure(provisionedFp, pkgName, genConfig);
+                        if(standaloneGenerator == null) {
+                            standaloneGenerator = new StandaloneConfigGenerator(ctx);
+                        }
+                        standaloneGenerator.init(genConfig.getStandaloneConfig().getServerConfig());
+                        standaloneGenerator.collectScripts(provisionedFp, pkgName, null);
+                        standaloneGenerator.run();
+                        //configurator.configure(provisionedFp, pkgName, genConfig);
                     }
                     if(genConfig.hasDomainProfile()) {
                         if(domainScriptCollector == null) {

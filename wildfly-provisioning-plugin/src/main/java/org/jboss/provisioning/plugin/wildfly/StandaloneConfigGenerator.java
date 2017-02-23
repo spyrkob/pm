@@ -18,6 +18,7 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.nio.file.Path;
+
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
@@ -29,20 +30,19 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
  *
  * @author Alexey Loubyansky
  */
-class DomainScriptCollector extends ScriptCollector {
+class StandaloneConfigGenerator extends ScriptCollector {
 
-    DomainScriptCollector(ProvisioningContext ctx) throws ProvisioningException {
+    StandaloneConfigGenerator(ProvisioningContext ctx) throws ProvisioningException {
         super(ctx);
-        init("domain", "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config");
+    }
+
+    void init(String configName) throws ProvisioningException {
+        super.init(configName, "embed-server --empty-config --remove-existing --server-config=" + configName);
     }
 
     @Override
-    protected void collect(final PackageScripts scripts,
-            final ProvisionedFeaturePack provisionedFp,
-            final PackageSpec pkgSpec,
-            final Path wfDir,
-            final boolean includeStatic) throws ProvisioningException {
-        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getDomain());
-        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getHost());
+    protected void collect(PackageScripts scripts, ProvisionedFeaturePack provisionedFp, final PackageSpec pkgSpec, final Path wfDir, final boolean includeStatic)
+            throws ProvisioningException {
+        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getStandalone());
     }
 }
