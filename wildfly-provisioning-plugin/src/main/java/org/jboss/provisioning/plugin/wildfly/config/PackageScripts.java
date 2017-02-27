@@ -128,12 +128,12 @@ public class PackageScripts {
     public static final PackageScripts DEFAULT = builder()
             .addStandalone(Script.newScript("main.cli"))
             .addStandalone(Script.newScript("standalone.cli"))
-            .addStandalone(Script.newScript("profile.cli"))
             .addStandalone(Script.newScript("variable.cli", true))
+            .addStandalone(Script.newScript("profile.cli"))
             .addDomain(Script.newScript("main.cli"))
             .addDomain(Script.newScript("domain.cli"))
-            .addDomain(Script.newScript("profile.cli", "/profile=$profile"))
             .addDomain(Script.newScript("variable.cli", true))
+            .addDomain(Script.newScript("profile.cli", "/profile=$profile"))
             .addHost(Script.newScript("script.cli", "/host=${host:master}"))
             .build();
 

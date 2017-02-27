@@ -108,8 +108,19 @@ abstract class ScriptCollector {
 
     private void addCommand(String line, String prefix) throws ProvisioningException {
         try {
-            if(prefix != null) {
-                scriptWriter.write(prefix);
+            if(line.isEmpty()) {
+                scriptWriter.newLine();
+                return;
+            }
+            switch(line.charAt(0)) {
+                case '#':
+                    scriptWriter.write('#');
+                case '/':
+                case ':':
+                    if(prefix != null) {
+                        scriptWriter.write(prefix);
+                    }
+                default:
             }
         } catch(IOException e) {
             try {
@@ -283,7 +294,7 @@ abstract class ScriptCollector {
         try {
             scriptWriter.flush();
             scriptWriter.close();
-            //IoUtils.copy(script, ctx.getInstallDir().resolve("script.cli"));
+            //IoUtils.copy(script, ctx.getInstallDir().resolve(script.getFileName().toString() + ".cli"));
         } catch(IOException e) {
             throw new ProvisioningException(Errors.writeFile(script), e);
         }
