@@ -16,43 +16,19 @@
  */
 package org.jboss.provisioning.plugin.wildfly.config;
 
-
 /**
  *
  * @author Alexey Loubyansky
  */
-public class StandaloneConfig {
+public class DomainProfileConfig {
 
-    private static final String DEFAULT_CONFIG = "standalone.xml";
+    private final String profile;
 
-    public static Builder builder() {
-        return new Builder();
+    DomainProfileConfig(String profile) {
+        this.profile = profile;
     }
 
-    public static class Builder {
-
-        private String serverConfig = DEFAULT_CONFIG;
-
-        private Builder() {
-        }
-
-        public Builder setServerConfig(String serverConfig) {
-            this.serverConfig = serverConfig;
-            return this;
-        }
-
-        public StandaloneConfig build() {
-            return new StandaloneConfig(this);
-        }
-    }
-
-    private final String serverConfig;
-
-    private StandaloneConfig(Builder builder) {
-        this.serverConfig = builder.serverConfig;
-    }
-
-    public String getServerConfig() {
-        return serverConfig;
+    public String getProfile() {
+        return profile;
     }
 }

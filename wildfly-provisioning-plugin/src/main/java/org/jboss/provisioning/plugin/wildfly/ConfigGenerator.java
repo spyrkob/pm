@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,11 +53,11 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 class ConfigGenerator {
 
+    private static final List<String> DEFAULT_SCRIPTS = Arrays.asList("main.cli", "standalone.cli");
+
     private final ProvisioningContext ctx;
 
-    private GeneratorConfig genConfig;
-    private List<Path> standaloneScripts = new ArrayList<>();
-    private List<Path> hcScripts = new ArrayList<>();
+    private List<Path> scripts = new ArrayList<>();
     private Map<ArtifactCoords.Gav, Set<String>> processedPackages = new HashMap<>();
     private ArtifactCoords.Gav lastLoggedGav;
     private String lastLoggedPackage;
@@ -66,10 +67,8 @@ class ConfigGenerator {
     }
 
     private void reset() {
-        standaloneScripts.clear();
-        hcScripts.clear();
+        scripts.clear();
         processedPackages.clear();
-        genConfig = null;
         lastLoggedGav = null;
         lastLoggedPackage = null;
     }
@@ -77,24 +76,15 @@ class ConfigGenerator {
     void configure(final ProvisionedFeaturePack provisionedFp, String pkgName, final GeneratorConfig genConfig)
             throws ProvisioningException {
 
-        this.genConfig = genConfig;
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         System.out.println("Collecting configuration scripts for feature-pack " + provisionedFp.getGav() + " package " + pkgName);
         collectScripts(ctx.getLayoutDescription().getFeaturePack(fpGav.toGa()), pkgName, provisionedFp,
                 getProcessedPackages(fpGav),
                 LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.PACKAGES));
 
-        if (!standaloneScripts.isEmpty()) {
+        if (!scripts.isEmpty()) {
             System.out.println(" Generating " + genConfig.getStandaloneConfig().getServerConfig());
-            runScripts("embed-server --empty-config --remove-existing --server-config=" + genConfig.getStandaloneConfig().getServerConfig(), standaloneScripts);
-        }
-        if (!hcScripts.isEmpty()) {
-            System.out.println(" Generating " + genConfig.getHostControllerConfig().getDomainConfig() + " and " + genConfig.getHostControllerConfig().getHostConfig());
-            runScripts(
-                    "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config --domain-config=" +
-                    genConfig.getHostControllerConfig().getDomainConfig() +
-                    " --host-config=" + genConfig.getHostControllerConfig().getHostConfig(),
-                    hcScripts);
+            runScripts("embed-server --empty-config --remove-existing --server-config=" + genConfig.getStandaloneConfig().getServerConfig(), scripts);
         }
         reset();
     }
@@ -137,22 +127,11 @@ class ConfigGenerator {
         }
 
         // collect cli scripts
-        if(genConfig.hasStandaloneConfig()) {
-            for(String script : genConfig.getStandaloneConfig().getScripts()) {
-                final Path scriptPath = wfDir.resolve(script);
-                if(Files.exists(scriptPath)) {
-                    standaloneScripts.add(scriptPath);
-                    logScript(provisionedFp, pkgSpec.getName(), scriptPath);
-                }
-            }
-        }
-        if(genConfig.hasHostControllerConfig()) {
-            for(String script : genConfig.getHostControllerConfig().getScripts()) {
-                final Path scriptPath = wfDir.resolve(script);
-                if(Files.exists(scriptPath)) {
-                    hcScripts.add(scriptPath);
-                    logScript(provisionedFp, pkgSpec.getName(), scriptPath);
-                }
+        for (String script : DEFAULT_SCRIPTS) {
+            final Path scriptPath = wfDir.resolve(script);
+            if (Files.exists(scriptPath)) {
+                scripts.add(scriptPath);
+                logScript(provisionedFp, pkgSpec.getName(), scriptPath);
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,7 +101,7 @@ public class FeaturePackLayoutInstaller {
         try {
             ProvisionedStateXmlWriter.getInstance().write(provisionedState, PathsUtils.getProvisionedStateXml(installDir));
         } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeXml(PathsUtils.getProvisionedStateXml(installDir)), e);
+            throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisionedStateXml(installDir)), e);
         }
     }
 
@@ -110,7 +110,7 @@ public class FeaturePackLayoutInstaller {
         try {
             ProvisioningXmlWriter.getInstance().write(provisioningConfig, provisionedXml);
         } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeXml(provisionedXml), e);
+            throw new FeaturePackInstallException(Errors.writeFile(provisionedXml), e);
         }
     }
 
@@ -119,7 +119,7 @@ public class FeaturePackLayoutInstaller {
         try {
             FeaturePackXmlWriter.getInstance().write(fpSpec, PathsUtils.getFeaturePackXml(installDir, fpSpec.getGav()));
         } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeXml(installDir), e);
+            throw new FeaturePackInstallException(Errors.writeFile(installDir), e);
         }
     }
 }

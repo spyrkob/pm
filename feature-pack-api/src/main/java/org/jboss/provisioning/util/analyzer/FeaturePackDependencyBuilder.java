@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +79,7 @@ public class FeaturePackDependencyBuilder {
         try {
             FeaturePackXmlWriter.getInstance().write(newSpec, featurePackXml);
         } catch (XMLStreamException | IOException e) {
-            throw new ProvisioningDescriptionException(Errors.writeXml(featurePackXml), e);
+            throw new ProvisioningDescriptionException(Errors.writeFile(featurePackXml), e);
         }
         for(String name : originalSpec.getPackageNames()) {
             if(!newSpec.hasPackage(name)) {
@@ -162,7 +162,7 @@ public class FeaturePackDependencyBuilder {
                     IoUtils.recursiveDelete(packageXml);
                     PackageXmlWriter.getInstance().write(pkgSpec, packageXml);
                 } catch (XMLStreamException | IOException e) {
-                    throw new ProvisioningDescriptionException(Errors.writeXml(packageXml));
+                    throw new ProvisioningDescriptionException(Errors.writeFile(packageXml));
                 }
             }
         }
