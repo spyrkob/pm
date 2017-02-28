@@ -69,9 +69,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private boolean thinServer;
 
-    //private ConfigGenerator configurator;
     private StandaloneConfigGenerator standaloneGenerator;
-    private DomainScriptCollector domainScriptCollector;
+    private DomainConfigGenerator domainScriptCollector;
 
 
     /* (non-Javadoc)
@@ -201,11 +200,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         standaloneGenerator.init(genConfig.getStandaloneConfig().getServerConfig());
                         standaloneGenerator.collectScripts(provisionedFp, pkgName, null);
                         standaloneGenerator.run();
-                        //configurator.configure(provisionedFp, pkgName, genConfig);
                     }
                     if(genConfig.hasDomainProfile()) {
                         if(domainScriptCollector == null) {
-                            domainScriptCollector = new DomainScriptCollector(ctx);
+                            domainScriptCollector = new DomainConfigGenerator(ctx);
                         }
                         domainScriptCollector.collectScripts(provisionedFp, pkgName, genConfig.getDomainProfileConfig().getProfile());
                     }
