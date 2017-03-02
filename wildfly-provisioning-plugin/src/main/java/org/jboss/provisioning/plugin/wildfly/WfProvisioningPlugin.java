@@ -132,7 +132,32 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             } else {
                 tasksProps = new Properties();
             }
+
+            if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage("docs.schemas")) {
+                final Path schemaGroupsTxt = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav), "docs.schemas")
+                        .resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
+                try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
+                    String line = reader.readLine();
+                    while(line != null) {
+                        if(!schemaGroups.contains(line)) {
+                            switch(schemaGroups.size()) {
+                                case 0:
+                                    schemaGroups = Collections.singleton(line);
+                                    break;
+                                case 1:
+                                    schemaGroups = new HashSet<>(schemaGroups);
+                                default:
+                                    schemaGroups.add(line);
+                            }
+                        }
+                        line = reader.readLine();
+                    }
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.readFile(schemaGroupsTxt), e);
+                }
+            }
         }
+
         versionResolver = new MapPropertyResolver(artifactVersions);
         propertyHandler = new BuildPropertyHandler(versionResolver);
 
@@ -174,26 +199,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         if(!Files.exists(packagesDir)) {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
-        }
-        if(provisionedFp.containsPackage("docs.schemas")) {
-            final Path schemaGroupsTxt = LayoutUtils.getPackageDir(fpDir, "docs.schemas", true)
-                    .resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
-            if(Files.exists(schemaGroupsTxt)) {
-                try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
-                    final String line = reader.readLine();
-                    switch(schemaGroups.size()) {
-                        case 0:
-                            schemaGroups = Collections.singleton(line);
-                            break;
-                        case 1:
-                            schemaGroups = new HashSet<>(schemaGroups);
-                        default:
-                            schemaGroups.add(line);
-                    }
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.readFile(schemaGroupsTxt), e);
-                }
-            }
         }
 
         for(String pkgName : provisionedFp.getPackageNames()) {
@@ -380,7 +385,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         for(CopyArtifact copyArtifact : tasks.getCopyArtifacts()) {
             final String gavString = versionResolver.resolveProperty(copyArtifact.getArtifact());
             try {
-                final Path jarSrc = ctx.resolveArtifact(fromJBossModules(gavString, "jar"));
+                final ArtifactCoords coords = fromJBossModules(gavString, "jar");
+                final Path jarSrc = ctx.resolveArtifact(coords);
                 String location = copyArtifact.getToLocation();
                 if (!location.isEmpty() && location.charAt(location.length() - 1) == '/') {
                     // if the to location ends with a / then it is a directory
@@ -395,6 +401,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     extractArtifact(jarSrc, jarTarget, copyArtifact);
                 } else {
                     IoUtils.copy(jarSrc, jarTarget);
+                }
+                if(schemaGroups.contains(coords.getGroupId())) {
+                    extractSchemas(jarSrc);
                 }
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to copy artifact " + gavString, e);
