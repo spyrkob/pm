@@ -41,6 +41,10 @@ public class PackageScripts {
             return new Script(name, prefix, prefix != null);
         }
 
+        public static Script newScript(String name, String prefix, boolean variable) {
+            return new Script(name, prefix, variable);
+        }
+
         private final String name;
         private final String prefix;
         private final boolean variable;
@@ -134,7 +138,7 @@ public class PackageScripts {
             .addDomain(Script.newScript("domain.cli"))
             .addDomain(Script.newScript("variable.cli", true))
             .addDomain(Script.newScript("profile.cli", "/profile=$profile"))
-            .addHost(Script.newScript("host.cli", "/host=${host:master}"))
+            .addHost(Script.newScript("host.cli", "/host=${host:master}", false))
             .build();
 
     private final List<Script> standalone;

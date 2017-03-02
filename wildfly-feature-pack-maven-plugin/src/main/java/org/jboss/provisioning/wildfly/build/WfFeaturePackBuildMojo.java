@@ -133,6 +133,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private WildFlyFeaturePackBuild wfFpConfig;
     private Map<String, FeaturePackSpec> fpDependencies = Collections.emptyMap();
+    private final PackageSpec.Builder docsBuilder = PackageSpec.builder(WfConstants.DOCS);
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -219,6 +220,20 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to process content", e);
         }
 
+        if(wfFpConfig.hasSchemaGroups()) {
+            addDocsSchemas(fpPackagesDir, fpBuilder);
+        }
+
+        if(docsBuilder.hasDependencies()) {
+            final PackageSpec docsSpec = docsBuilder.build();
+            writeXml(docsSpec, fpPackagesDir.resolve(WfConstants.DOCS));
+            try {
+                fpBuilder.addDefaultPackage(docsSpec);
+            } catch (ProvisioningDescriptionException e) {
+                erroAddingPackage(e);
+            }
+        }
+
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
 
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
@@ -267,6 +282,43 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
+    private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackSpec.Builder fpBuilder)
+            throws MojoExecutionException {
+        docsBuilder.addDependency("docs.schemas", true);
+        final Path schemasPackageDir = fpPackagesDir.resolve("docs.schemas");
+        final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
+        BufferedWriter writer = null;
+        try {
+            Files.createDirectories(schemasPackageDir);
+            final PackageSpec docsSchemasSpec = PackageSpec.forName("docs.schemas");
+            fpBuilder.addPackage(docsSchemasSpec);
+            PackageXmlWriter.getInstance().write(docsSchemasSpec, schemasPackageDir.resolve(Constants.PACKAGE_XML));
+            Files.createDirectories(schemaGroupsTxt.getParent());
+            writer = Files.newBufferedWriter(schemaGroupsTxt);
+            for (String group : wfFpConfig.getSchemaGroups()) {
+                writer.write(group);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException(Errors.mkdirs(schemaGroupsTxt.getParent()), e);
+        } catch (XMLStreamException e) {
+            throw new MojoExecutionException(Errors.writeFile(schemaGroupsTxt), e);
+        } catch (ProvisioningDescriptionException e) {
+            erroAddingPackage(e);
+        } finally {
+            if(writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    private void erroAddingPackage(ProvisioningDescriptionException e) throws MojoExecutionException {
+        throw new MojoExecutionException("Failed to add package", e);
+    }
+
     private void addConfigPackages(final Path configDir, final Path packagesDir, final Builder fpBuilder) throws MojoExecutionException {
         if(!Files.exists(configDir)) {
             return;
@@ -294,7 +346,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
             }
         } catch (ProvisioningDescriptionException e) {
-            throw new MojoExecutionException("Failed to add package", e);
+            erroAddingPackage(e);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process config packages", e);
         }
@@ -341,52 +393,18 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             for(Path p : stream) {
                 final String pkgName = p.getFileName().toString();
                 if(pkgName.equals(WfConstants.DOCS)) {
-                    final PackageSpec.Builder docsBuilder = PackageSpec.builder(pkgName);
                     try(DirectoryStream<Path> docsStream = Files.newDirectoryStream(p)) {
                         for(Path docPath : docsStream) {
                             final String docName = docPath.getFileName().toString();
                             final Path docDir = packagesDir.resolve(docName);
                             IoUtils.copy(docPath, docDir.resolve(Constants.CONTENT).resolve(WfConstants.DOCS).resolve(docName));
-                            final PackageSpec docSpec = PackageSpec.builder(docName).build();
+                            final PackageSpec.Builder builder = PackageSpec.builder(docName);
+                            final PackageSpec docSpec = builder.build();
                             fpBuilder.addPackage(docSpec);
                             writeXml(docSpec, docDir);
                             docsBuilder.addDependency(docName, true);
                         }
                     }
-
-                    if(wfFpConfig.hasSchemaGroups()) {
-                        docsBuilder.addDependency("docs.schemas", true);
-                        final Path schemasPackageDir = packagesDir.resolve("docs.schemas");
-                        final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
-                        BufferedWriter writer = null;
-                        try {
-                            Files.createDirectories(schemasPackageDir);
-                            final PackageSpec docsSchemasSpec = PackageSpec.forName("docs.schemas");
-                            fpBuilder.addPackage(docsSchemasSpec);
-                            PackageXmlWriter.getInstance().write(docsSchemasSpec, schemasPackageDir.resolve(Constants.PACKAGE_XML));
-                            Files.createDirectories(schemaGroupsTxt.getParent());
-                            writer = Files.newBufferedWriter(schemaGroupsTxt);
-                            for (String group : wfFpConfig.getSchemaGroups()) {
-                                writer.write(group);
-                                writer.newLine();
-                            }
-                        } catch (IOException e) {
-                            throw new MojoExecutionException(Errors.mkdirs(schemaGroupsTxt.getParent()), e);
-                        } catch (XMLStreamException e) {
-                            throw new MojoExecutionException(Errors.writeFile(schemaGroupsTxt), e);
-                        } finally {
-                            if(writer != null) {
-                                try {
-                                    writer.close();
-                                } catch (IOException e) {
-                                }
-                            }
-                        }
-                    }
-
-                    PackageSpec docsSpec = docsBuilder.build();
-                    writeXml(docsSpec, packagesDir.resolve(pkgName));
-                    fpBuilder.addPackage(docsSpec);
                 } else if(pkgName.equals("bin")) {
                     final PackageSpec.Builder binBuilder = PackageSpec.builder(pkgName);
                     final Path binPkgDir = packagesDir.resolve(pkgName).resolve(Constants.CONTENT).resolve(pkgName);
@@ -427,7 +445,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
             }
         } catch (ProvisioningDescriptionException e) {
-            throw new MojoExecutionException("Failed to add package", e);
+            erroAddingPackage(e);
         }
     }
 
@@ -472,7 +490,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             final Path moduleXml = module.getValue();
 
             final Path packageDir = packagesDir.resolve(packageName);
-            final Path targetXml = packageDir.resolve("pm/wildfly").resolve(WfConstants.MODULE).resolve(resourcesDir.relativize(moduleXml));
+            final Path targetXml = packageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.MODULE).resolve(resourcesDir.relativize(moduleXml));
             Files.createDirectories(targetXml.getParent());
             IoUtils.copy(moduleXml.getParent(), targetXml.getParent());
 
@@ -525,7 +543,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             try {
                 fpBuilder.addPackage(pkgSpec);
             } catch (ProvisioningDescriptionException e) {
-                throw new MojoExecutionException("Failed to add package", e);
+                erroAddingPackage(e);
             }
 
             if (!OS_WINDOWS) {
