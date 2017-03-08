@@ -178,7 +178,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         // feature-pack build config
         try {
-            wfFpConfig = Util.loadFeaturePackBuildConfig(getFPConfigFile(), getFPConfigProperties());
+            wfFpConfig = Util.loadFeaturePackBuildConfig(getFPConfigFile());
         } catch (ProvisioningException e) {
             throw new MojoExecutionException("Failed to load feature-pack config file", e);
         }
@@ -555,7 +555,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     private Properties getFPConfigProperties() {
         final Properties properties = new Properties();
         properties.putAll(project.getProperties());
-        properties.put("project.version", project.getVersion()); //TODO: figure out the correct way to do this
+        properties.put("project.version", project.getVersion());
         return properties;
     }
 

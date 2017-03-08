@@ -22,7 +22,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 
@@ -122,15 +121,13 @@ public class FilePermissionsModelParser20 {
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
     private final FileFilterModelParser20 fileFilterModelParser;
 
-    public FilePermissionsModelParser20(BuildPropertyHandler propertyReplacer) {
-        this(propertyReplacer, new FileFilterModelParser20(propertyReplacer));
+    public FilePermissionsModelParser20() {
+        this(new FileFilterModelParser20());
     }
 
-    public FilePermissionsModelParser20(BuildPropertyHandler propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
-        this.propertyReplacer = propertyReplacer;
+    public FilePermissionsModelParser20(FileFilterModelParser20 fileFilterModelParser) {
         this.fileFilterModelParser = fileFilterModelParser;
     }
 
@@ -169,7 +166,7 @@ public class FilePermissionsModelParser20 {
             required.remove(attribute);
             switch (attribute) {
                 case VALUE:
-                    permissionBuilder.setValue(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    permissionBuilder.setValue(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);

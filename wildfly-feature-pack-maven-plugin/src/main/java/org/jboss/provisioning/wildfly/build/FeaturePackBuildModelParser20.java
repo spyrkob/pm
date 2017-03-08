@@ -19,8 +19,6 @@ package org.jboss.provisioning.wildfly.build;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
-import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;
@@ -158,10 +156,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
-
-    FeaturePackBuildModelParser20(PropertyResolver resolver) {
-        this.propertyReplacer = new BuildPropertyHandler(resolver);
+    FeaturePackBuildModelParser20() {
     }
 
     @Override
@@ -334,7 +329,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
         ParsingUtils.parseNoContent(reader);
-        return propertyReplacer.replaceProperties(name);
+        return name;
     }
 
     private void parsePackageSchemas(XMLStreamReader reader, WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {

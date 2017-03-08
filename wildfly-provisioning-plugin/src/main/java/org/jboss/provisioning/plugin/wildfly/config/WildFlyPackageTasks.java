@@ -23,13 +23,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.wildfly.MapPropertyResolver;
 
 
 /**
@@ -164,10 +161,9 @@ public class WildFlyPackageTasks {
         return new Builder();
     }
 
-    public static WildFlyPackageTasks load(Path configFile, Properties props) throws ProvisioningException {
+    public static WildFlyPackageTasks load(Path configFile) throws ProvisioningException {
         try (InputStream configStream = Files.newInputStream(configFile)) {
-            props.putAll(System.getProperties());
-            return new WildFlyPackageTasksParser(new MapPropertyResolver(props)).parse(configStream);
+            return new WildFlyPackageTasksParser().parse(configStream);
         } catch (XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(configFile), e);
         } catch (IOException e) {

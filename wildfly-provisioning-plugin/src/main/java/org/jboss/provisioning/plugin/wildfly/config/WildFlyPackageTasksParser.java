@@ -24,7 +24,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
@@ -38,9 +37,9 @@ public class WildFlyPackageTasksParser {
 
     private final XMLMapper mapper;
 
-    public WildFlyPackageTasksParser(PropertyResolver properties) {
+    public WildFlyPackageTasksParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_2_0, new WildFlyPackageTasksParser20(properties));
+        mapper.registerRootElement(ROOT_2_0, new WildFlyPackageTasksParser20());
     }
 
     public WildFlyPackageTasks parse(final InputStream input) throws XMLStreamException {

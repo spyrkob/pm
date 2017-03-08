@@ -16,8 +16,6 @@
  */
 package org.jboss.provisioning.plugin.wildfly.config;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
-import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
@@ -147,18 +145,16 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
     private final GeneratorConfigParser20 configGenParser;
     private final CopyArtifactsModelParser20 copyArtifactsModelParser;
     private final FileFilterModelParser20 fileFilterModelParser;
     private final FilePermissionsModelParser20 filePermissionsModelParser;
 
-    WildFlyPackageTasksParser20(PropertyResolver resolver) {
-        this.propertyReplacer = new BuildPropertyHandler(resolver);
-        this.configGenParser = new GeneratorConfigParser20(this.propertyReplacer);
-        this.fileFilterModelParser = new FileFilterModelParser20(this.propertyReplacer);
-        this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
-        this.filePermissionsModelParser = new FilePermissionsModelParser20(this.propertyReplacer, this.fileFilterModelParser);
+    WildFlyPackageTasksParser20() {
+        this.configGenParser = new GeneratorConfigParser20();
+        this.fileFilterModelParser = new FileFilterModelParser20();
+        this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.fileFilterModelParser);
+        this.filePermissionsModelParser = new FilePermissionsModelParser20(this.fileFilterModelParser);
     }
 
     @Override
@@ -228,7 +224,7 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
         ParsingUtils.parseNoContent(reader);
-        return propertyReplacer.replaceProperties(name);
+        return name;
     }
 
     private void parseMkdirs(final XMLStreamReader reader, final WildFlyPackageTasks.Builder builder) throws XMLStreamException {

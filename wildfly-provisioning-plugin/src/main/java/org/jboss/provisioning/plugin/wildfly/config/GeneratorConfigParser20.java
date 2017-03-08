@@ -23,7 +23,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -122,10 +121,7 @@ public class GeneratorConfigParser20 {
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
-
-    public GeneratorConfigParser20(BuildPropertyHandler propertyReplacer) {
-        this.propertyReplacer = propertyReplacer;
+    public GeneratorConfigParser20() {
     }
 
     public GeneratorConfig parseGeneratorConfig(final XMLExtendedStreamReader reader) throws XMLStreamException {
@@ -164,7 +160,7 @@ public class GeneratorConfigParser20 {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case SERVER_CONFIG:
-                    stdBuilder.setServerConfig(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    stdBuilder.setServerConfig(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -180,7 +176,7 @@ public class GeneratorConfigParser20 {
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             if(attribute.equals(attr)) {
-                value = propertyReplacer.replaceProperties(reader.getAttributeValue(i));
+                value = reader.getAttributeValue(i);
             } else {
                 throw ParsingUtils.unexpectedContent(reader);
             }

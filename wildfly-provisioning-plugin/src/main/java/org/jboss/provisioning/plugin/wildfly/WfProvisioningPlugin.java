@@ -73,7 +73,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private PropertyResolver versionResolver;
     private final Pattern moduleArtifactPattern = Pattern.compile("(\\s*)((<artifact)(\\s+name=\")(\\$\\{)(.*)(\\})(\".*>)|(</artifact>))");
 
-    private Properties tasksProps;
+    private PropertyResolver tasksProps;
 
     private boolean thinServer;
     private Set<String> schemaGroups = Collections.emptySet();
@@ -101,6 +101,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         this.ctx = ctx;
 
+        Properties provisioningProps = new Properties();
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
             final Path wfRes = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.RESOURCES).resolve(WfConstants.WILDFLY);
@@ -127,14 +128,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
             final Path tasksPropsPath = wfRes.resolve(WfConstants.WILDFLY_TASKS_PROPS);
             if(Files.exists(tasksPropsPath)) {
-                tasksProps = tasksProps == null ? new Properties() : new Properties(tasksProps);
+                if(!provisioningProps.isEmpty()) {
+                    provisioningProps = new Properties(provisioningProps);
+                }
                 try(InputStream in = Files.newInputStream(tasksPropsPath)) {
-                    tasksProps.load(in);
+                    provisioningProps.load(in);
                 } catch (IOException e) {
                     throw new ProvisioningException(Errors.readFile(tasksPropsPath), e);
                 }
-            } else {
-                tasksProps = new Properties();
             }
 
             if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage("docs.schemas")) {
@@ -161,6 +162,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
         }
+        tasksProps = new MapPropertyResolver(provisioningProps);
 
         versionResolver = new MapPropertyResolver(artifactVersions);
 
@@ -215,7 +217,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
             final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
             if(Files.exists(tasksXml)) {
-                final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml, tasksProps);
+                final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml);
                 if(pkgTasks.hasCopyArtifacts()) {
                     copyArtifacts(pkgTasks);
                 }
@@ -241,6 +243,37 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         }
                         domainScriptCollector.collectScripts(provisionedFp, pkgName, genConfig.getDomainProfileConfig().getProfile());
                     }
+                }
+            }
+
+            final Path resources = pmWfDir.resolve("resources");
+            if(Files.exists(resources)) {
+                try {
+                    final Path installDir = ctx.getInstallDir();
+                    Files.walkFileTree(resources, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                            new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                    final Path targetDir = installDir.resolve(resources.relativize(dir));
+                                    try {
+                                        Files.copy(dir, targetDir);
+                                    } catch (FileAlreadyExistsException e) {
+                                        if (!Files.isDirectory(targetDir)) {
+                                            throw e;
+                                        }
+                                    }
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    PropertyReplacer.copy(file, installDir.resolve(resources.relativize(file)), tasksProps);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
             }
         }
