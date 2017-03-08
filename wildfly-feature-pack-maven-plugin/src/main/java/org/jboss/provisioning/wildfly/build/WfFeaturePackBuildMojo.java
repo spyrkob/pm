@@ -129,6 +129,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.build.directory}", property = "wildfly.feature.pack.buildName")
     private String buildName;
 
+    /**
+     * The release name
+     */
+    @Parameter(alias="release-name", defaultValue = "${product.release.name}", required=true)
+    private String releaseName;
+
     private MavenProjectArtifactVersions artifactVersions;
 
     private WildFlyFeaturePackBuild wfFpConfig;
@@ -554,8 +560,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private Properties getFPConfigProperties() {
         final Properties properties = new Properties();
-        properties.putAll(project.getProperties());
         properties.put("project.version", project.getVersion());
+        properties.put("product.release.name", releaseName);
         return properties;
     }
 

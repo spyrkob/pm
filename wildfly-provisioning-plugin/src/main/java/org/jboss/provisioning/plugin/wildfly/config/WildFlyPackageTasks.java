@@ -38,6 +38,7 @@ public class WildFlyPackageTasks {
     public static class Builder {
 
         private List<CopyArtifact> copyArtifacts = Collections.emptyList();
+        private List<CopyPath> copyPaths = Collections.emptyList();
         private List<FilePermission> filePermissions = Collections.emptyList();
         private List<String> mkDirs = Collections.emptyList();
         private List<FileFilter> windowsLineEndFilters = Collections.emptyList();
@@ -65,9 +66,29 @@ public class WildFlyPackageTasks {
             return this;
         }
 
+        public Builder addCopyPath(CopyPath copy) {
+            switch(copyPaths.size()) {
+                case 0:
+                    copyPaths = Collections.singletonList(copy);
+                    break;
+                case 1:
+                    copyPaths = new ArrayList<CopyPath>(copyPaths);
+                default:
+                    copyPaths.add(copy);
+            }
+            return this;
+        }
+
         public Builder addCopyArtifacts(List<CopyArtifact> copyArtifacts) {
             for(CopyArtifact ca : copyArtifacts) {
                 addCopyArtifact(ca);
+            }
+            return this;
+        }
+
+        public Builder addCopyPaths(List<CopyPath> copyPaths) {
+            for(CopyPath ca : copyPaths) {
+                addCopyPath(ca);
             }
             return this;
         }
@@ -172,6 +193,7 @@ public class WildFlyPackageTasks {
     }
 
     private final List<CopyArtifact> copyArtifacts;
+    private final List<CopyPath> copyPaths;
     private final List<FilePermission> filePermissions;
     private final List<String> mkDirs;
     private final List<FileFilter> windowsLineEndFilters;
@@ -180,6 +202,7 @@ public class WildFlyPackageTasks {
 
     private WildFlyPackageTasks(Builder builder) {
         this.copyArtifacts = Collections.unmodifiableList(builder.copyArtifacts);
+        this.copyPaths = Collections.unmodifiableList(builder.copyPaths);
         this.filePermissions = Collections.unmodifiableList(builder.filePermissions);
         this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
         this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
@@ -193,6 +216,14 @@ public class WildFlyPackageTasks {
 
     public List<CopyArtifact> getCopyArtifacts() {
         return copyArtifacts;
+    }
+
+    public boolean hasCopyPaths() {
+        return !copyPaths.isEmpty();
+    }
+
+    public List<CopyPath> getCopyPaths() {
+        return copyPaths;
     }
 
     public boolean hasFilePermissions() {

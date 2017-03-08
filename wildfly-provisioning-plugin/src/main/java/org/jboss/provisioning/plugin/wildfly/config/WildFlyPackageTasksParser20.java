@@ -47,6 +47,7 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
 
         CONFIG_GENERATOR(GeneratorConfigParser20.ELEMENT_LOCAL_NAME),
         COPY_ARTIFACTS(CopyArtifactsModelParser20.ELEMENT_LOCAL_NAME),
+        COPY_PATHS(CopyPathsModelParser20.ELEMENT_LOCAL_NAME),
         DIR("dir"),
         FILE_PERMISSIONS(FilePermissionsModelParser20.ELEMENT_LOCAL_NAME),
         FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
@@ -65,6 +66,7 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
             elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG_GENERATOR.getLocalName()), Element.CONFIG_GENERATOR);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_PATHS.getLocalName()), Element.COPY_PATHS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DIR.getLocalName()), Element.DIR);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILE_PERMISSIONS.getLocalName()), Element.FILE_PERMISSIONS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.FILTER.getLocalName()), Element.FILTER);
@@ -147,6 +149,7 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
 
     private final GeneratorConfigParser20 configGenParser;
     private final CopyArtifactsModelParser20 copyArtifactsModelParser;
+    private final CopyPathsModelParser20 copyPathsModelParser;
     private final FileFilterModelParser20 fileFilterModelParser;
     private final FilePermissionsModelParser20 filePermissionsModelParser;
 
@@ -154,6 +157,7 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
         this.configGenParser = new GeneratorConfigParser20();
         this.fileFilterModelParser = new FileFilterModelParser20();
         this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.fileFilterModelParser);
+        this.copyPathsModelParser = new CopyPathsModelParser20();
         this.filePermissionsModelParser = new FilePermissionsModelParser20(this.fileFilterModelParser);
     }
 
@@ -182,6 +186,9 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
                             break;
                         case COPY_ARTIFACTS:
                             builder.addCopyArtifacts(copyArtifactsModelParser.parseCopyArtifacts(reader));
+                            break;
+                        case COPY_PATHS:
+                            builder.addCopyPaths(copyPathsModelParser.parseCopyPaths(reader));
                             break;
                         case FILE_PERMISSIONS:
                             builder.addFilePermissions(filePermissionsModelParser.parseFilePermissions(reader));

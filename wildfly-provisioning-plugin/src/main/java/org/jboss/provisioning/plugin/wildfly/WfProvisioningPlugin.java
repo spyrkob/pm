@@ -53,6 +53,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
+import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
@@ -221,6 +222,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 if(pkgTasks.hasCopyArtifacts()) {
                     copyArtifacts(pkgTasks);
                 }
+                if(pkgTasks.hasCopyPaths()) {
+                    copyPaths(pkgTasks, pmWfDir);
+                }
                 if(pkgTasks.hasMkDirs()) {
                     mkdirs(pkgTasks, ctx.getInstallDir());
                 }
@@ -243,37 +247,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         }
                         domainScriptCollector.collectScripts(provisionedFp, pkgName, genConfig.getDomainProfileConfig().getProfile());
                     }
-                }
-            }
-
-            final Path resources = pmWfDir.resolve("resources");
-            if(Files.exists(resources)) {
-                try {
-                    final Path installDir = ctx.getInstallDir();
-                    Files.walkFileTree(resources, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
-                            new SimpleFileVisitor<Path>() {
-                                @Override
-                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                                    final Path targetDir = installDir.resolve(resources.relativize(dir));
-                                    try {
-                                        Files.copy(dir, targetDir);
-                                    } catch (FileAlreadyExistsException e) {
-                                        if (!Files.isDirectory(targetDir)) {
-                                            throw e;
-                                        }
-                                    }
-                                    return FileVisitResult.CONTINUE;
-                                }
-
-                                @Override
-                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                    PropertyReplacer.copy(file, installDir.resolve(resources.relativize(file)), tasksProps);
-                                    return FileVisitResult.CONTINUE;
-                                }
-                            });
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
             }
         }
@@ -452,6 +425,56 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to copy artifact " + gavString, e);
+            }
+        }
+    }
+
+    private void copyPaths(final WildFlyPackageTasks tasks, final Path pmWfDir) throws ProvisioningException {
+        for(CopyPath copyPath : tasks.getCopyPaths()) {
+            final Path src = pmWfDir.resolve(copyPath.getSrc());
+            if (!Files.exists(src)) {
+                throw new ProvisioningException(Errors.pathDoesNotExist(src));
+            }
+            final Path target = copyPath.getTarget() == null ? ctx.getInstallDir() : ctx.getInstallDir().resolve(copyPath.getTarget());
+            if (copyPath.isReplaceProperties()) {
+                if (!Files.exists(target.getParent())) {
+                    try {
+                        Files.createDirectories(target.getParent());
+                    } catch (IOException e) {
+                        throw new ProvisioningException(Errors.mkdirs(target.getParent()), e);
+                    }
+                }
+                try {
+                    Files.walkFileTree(src, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                            new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                    final Path targetDir = target.resolve(src.relativize(dir));
+                                    try {
+                                        Files.copy(dir, targetDir);
+                                    } catch (FileAlreadyExistsException e) {
+                                        if (!Files.isDirectory(targetDir)) {
+                                            throw e;
+                                        }
+                                    }
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    PropertyReplacer.copy(file, target.resolve(src.relativize(file)), tasksProps);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.copyFile(src, target), e);
+                }
+            } else {
+                try {
+                    IoUtils.copy(src, target);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.copyFile(src, target));
+                }
             }
         }
     }

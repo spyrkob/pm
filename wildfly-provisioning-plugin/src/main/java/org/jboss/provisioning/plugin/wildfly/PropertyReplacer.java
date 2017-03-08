@@ -22,11 +22,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Utility that copies content from reader to writer replacing the properties.
@@ -104,12 +102,11 @@ public class PropertyReplacer {
                                 final String val = properties.resolveProperty(name);
                                 if (val != null) {
                                     writer.write(val);
-                                    // resolvedValue = val;
                                     state = ch == '}' ? INITIAL : RESOLVED;
                                 } else if (ch == ',') {
                                     state = DEFAULT;
                                 } else {
-                                    throw new IllegalStateException("Failed to resolve expression: " + buf + ch);
+                                    throw new IllegalStateException("Failed to resolve property: " + buf);
                                 }
                             }
                             buf.setLength(0);
@@ -156,33 +153,8 @@ public class PropertyReplacer {
                 break;
             }
             case GOT_OPEN_BRACE: {
-                // We had a reference that was not resolved, throw ISE
-//                if (resolvedValue == null)
                     throw new IllegalStateException("Incomplete expression: " + buf.toString());
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        final StringWriter writer = new StringWriter();
-
-        //final StringReader reader = new StringReader(" f g $$ $ { ${a} d ${d,default} f");
-
-        try(BufferedReader reader = Files.newBufferedReader(Paths.get(
-                "/home/olubyans/git/wildfly/dist/src/distribution/resources/modules/system/layers/base/org/jboss/as/product/wildfly-full/dir/META-INF/MANIFEST.MF"))) {
-            copy(reader, writer, new PropertyResolver(){
-                @Override
-                public String resolveProperty(String property) {
-                    if("product.release.name".equals(property)) {
-                        return "RELEASE";
-                    } else if("project.version".equals(property)) {
-                        return "VERSION";
-                    }
-                    return null;
-                }});
-        }
-
-        System.out.println("'" + writer.getBuffer().toString() + "'");
     }
 }
