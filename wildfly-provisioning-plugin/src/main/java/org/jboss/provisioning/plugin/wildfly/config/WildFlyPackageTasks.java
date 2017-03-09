@@ -23,13 +23,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.wildfly.MapPropertyResolver;
 
 
 /**
@@ -41,6 +38,7 @@ public class WildFlyPackageTasks {
     public static class Builder {
 
         private List<CopyArtifact> copyArtifacts = Collections.emptyList();
+        private List<CopyPath> copyPaths = Collections.emptyList();
         private List<FilePermission> filePermissions = Collections.emptyList();
         private List<String> mkDirs = Collections.emptyList();
         private List<FileFilter> windowsLineEndFilters = Collections.emptyList();
@@ -68,9 +66,29 @@ public class WildFlyPackageTasks {
             return this;
         }
 
+        public Builder addCopyPath(CopyPath copy) {
+            switch(copyPaths.size()) {
+                case 0:
+                    copyPaths = Collections.singletonList(copy);
+                    break;
+                case 1:
+                    copyPaths = new ArrayList<CopyPath>(copyPaths);
+                default:
+                    copyPaths.add(copy);
+            }
+            return this;
+        }
+
         public Builder addCopyArtifacts(List<CopyArtifact> copyArtifacts) {
             for(CopyArtifact ca : copyArtifacts) {
                 addCopyArtifact(ca);
+            }
+            return this;
+        }
+
+        public Builder addCopyPaths(List<CopyPath> copyPaths) {
+            for(CopyPath ca : copyPaths) {
+                addCopyPath(ca);
             }
             return this;
         }
@@ -164,10 +182,9 @@ public class WildFlyPackageTasks {
         return new Builder();
     }
 
-    public static WildFlyPackageTasks load(Path configFile, Properties props) throws ProvisioningException {
+    public static WildFlyPackageTasks load(Path configFile) throws ProvisioningException {
         try (InputStream configStream = Files.newInputStream(configFile)) {
-            props.putAll(System.getProperties());
-            return new WildFlyPackageTasksParser(new MapPropertyResolver(props)).parse(configStream);
+            return new WildFlyPackageTasksParser().parse(configStream);
         } catch (XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(configFile), e);
         } catch (IOException e) {
@@ -176,6 +193,7 @@ public class WildFlyPackageTasks {
     }
 
     private final List<CopyArtifact> copyArtifacts;
+    private final List<CopyPath> copyPaths;
     private final List<FilePermission> filePermissions;
     private final List<String> mkDirs;
     private final List<FileFilter> windowsLineEndFilters;
@@ -184,6 +202,7 @@ public class WildFlyPackageTasks {
 
     private WildFlyPackageTasks(Builder builder) {
         this.copyArtifacts = Collections.unmodifiableList(builder.copyArtifacts);
+        this.copyPaths = Collections.unmodifiableList(builder.copyPaths);
         this.filePermissions = Collections.unmodifiableList(builder.filePermissions);
         this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
         this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
@@ -197,6 +216,14 @@ public class WildFlyPackageTasks {
 
     public List<CopyArtifact> getCopyArtifacts() {
         return copyArtifacts;
+    }
+
+    public boolean hasCopyPaths() {
+        return !copyPaths.isEmpty();
+    }
+
+    public List<CopyPath> getCopyPaths() {
+        return copyPaths;
     }
 
     public boolean hasFilePermissions() {

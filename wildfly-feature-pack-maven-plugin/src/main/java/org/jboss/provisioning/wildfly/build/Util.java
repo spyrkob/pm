@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,14 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.wildfly.MapPropertyResolver;
 
 /**
  *
@@ -39,10 +36,9 @@ class Util {
         void process(ArtifactCoords coords) throws IOException;
     }
 
-    static WildFlyFeaturePackBuild loadFeaturePackBuildConfig(Path configFile, Properties props) throws ProvisioningException {
+    static WildFlyFeaturePackBuild loadFeaturePackBuildConfig(Path configFile) throws ProvisioningException {
         try (InputStream configStream = Files.newInputStream(configFile)) {
-            props.putAll(System.getProperties());
-            return new FeaturePackBuildModelParser(new MapPropertyResolver(props)).parse(configStream);
+            return new FeaturePackBuildModelParser().parse(configStream);
         } catch (XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(configFile), e);
         } catch (IOException e) {

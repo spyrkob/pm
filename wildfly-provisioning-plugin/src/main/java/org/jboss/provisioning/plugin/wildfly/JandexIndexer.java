@@ -35,7 +35,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Stuart Douglas
  */
-public class JandexIndexer {
+class JandexIndexer {
 
     private static final Logger log = Logger.getLogger(JandexIndexer.class);
 

@@ -26,35 +26,31 @@ import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
- * @author Eduardo Martins
  * @author Alexey Loubyansky
  */
-public class FilePermissionsModelParser20 {
+public class CopyPathsModelParser20 {
 
-    public static final String ELEMENT_LOCAL_NAME = "file-permissions";
+    public static final String ELEMENT_LOCAL_NAME = "copy-paths";
 
     enum Element {
 
+        PATH("path"),
+
         // default unknown element
-        UNKNOWN(null),
-        PERMISSION("permission"),
-        FILTER(FileFilterModelParser20.ELEMENT_LOCAL_NAME),
-        ;
+        UNKNOWN(null);
 
         private static final Map<String, Element> elements;
 
         static {
             Map<String, Element> elementsMap = new HashMap<>();
-            elementsMap.put(Element.PERMISSION.getLocalName(), Element.PERMISSION);
-            elementsMap.put(Element.FILTER.getLocalName(), Element.FILTER);
+            elementsMap.put(Element.PATH.getLocalName(), Element.PATH);
             elements = elementsMap;
         }
 
@@ -81,16 +77,20 @@ public class FilePermissionsModelParser20 {
 
     enum Attribute implements XmlNameProvider {
 
+        SRC("src"),
+        TARGET("target"),
+        REPLACE_PROPERTIES("replace-props"),
+
         // default unknown attribute
-        UNKNOWN(null),
-        VALUE("value"),
-        ;
+        UNKNOWN(null);
 
         private static final Map<String, Attribute> attributes;
 
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
-            attributesMap.put(VALUE.getLocalName(), VALUE);
+            attributesMap.put(SRC.getLocalName(), SRC);
+            attributesMap.put(TARGET.getLocalName(), TARGET);
+            attributesMap.put(REPLACE_PROPERTIES.getLocalName(), REPLACE_PROPERTIES);
             attributes = attributesMap;
         }
 
@@ -121,18 +121,11 @@ public class FilePermissionsModelParser20 {
         }
     }
 
-    private final FileFilterModelParser20 fileFilterModelParser;
-
-    public FilePermissionsModelParser20() {
-        this(new FileFilterModelParser20());
+    public CopyPathsModelParser20() {
     }
 
-    public FilePermissionsModelParser20(FileFilterModelParser20 fileFilterModelParser) {
-        this.fileFilterModelParser = fileFilterModelParser;
-    }
-
-    public List<FilePermission> parseFilePermissions(final XMLStreamReader reader) throws XMLStreamException {
-        List<FilePermission> list = new ArrayList<FilePermission>();
+    public List<CopyPath> parseCopyPaths(final XMLStreamReader reader) throws XMLStreamException {
+        final List<CopyPath> list = new ArrayList<>();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -141,8 +134,8 @@ public class FilePermissionsModelParser20 {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case PERMISSION:
-                            list.add(parsePermission(reader));
+                        case PATH:
+                            parseCopyPath(reader, list);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -157,48 +150,31 @@ public class FilePermissionsModelParser20 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    protected FilePermission parsePermission(XMLStreamReader reader) throws XMLStreamException {
-        final FilePermission.Builder permissionBuilder = FilePermission.builder();
-        final Set<Attribute> required = EnumSet.of(Attribute.VALUE);
+    private void parseCopyPath(XMLStreamReader reader, final List<CopyPath> list) throws XMLStreamException {
+        final CopyPath.Builder builder = CopyPath.builder();
+        boolean src = false;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            required.remove(attribute);
             switch (attribute) {
-                case VALUE:
-                    permissionBuilder.setValue(reader.getAttributeValue(i));
+                case SRC:
+                    builder.setSrc(reader.getAttributeValue(i));
+                    src = true;
+                    break;
+                case TARGET:
+                    builder.setTarget(reader.getAttributeValue(i));
+                    break;
+                case REPLACE_PROPERTIES:
+                    builder.setReplaceProperties(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (!required.isEmpty()) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
+        if (!src) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SRC));
         }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return permissionBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case FILTER:
-                            final FileFilter.Builder filterBuilder = FileFilter.builder();
-                            fileFilterModelParser.parseFilter(reader, filterBuilder);
-                            permissionBuilder.addFilter(filterBuilder.build());
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
+        ParsingUtils.parseNoContent(reader);
+        list.add(builder.build());
     }
 }

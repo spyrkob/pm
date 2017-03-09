@@ -22,7 +22,6 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 
@@ -83,10 +82,7 @@ public class FileFilterModelParser20 {
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
-
-    public FileFilterModelParser20(BuildPropertyHandler propertyReplacer) {
-        this.propertyReplacer = propertyReplacer;
+    public FileFilterModelParser20() {
     }
 
     public void parseFilter(XMLStreamReader reader, FileFilter.Builder builder) throws XMLStreamException {
@@ -97,10 +93,10 @@ public class FileFilterModelParser20 {
             required.remove(attribute);
             switch (attribute) {
                 case PATTERN:
-                    builder.setPatternString(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    builder.setPatternString(reader.getAttributeValue(i));
                     break;
                 case INCLUDE:
-                    if(Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)))) {
+                    if(Boolean.parseBoolean(reader.getAttributeValue(i))) {
                         builder.setInclude();
                     }
                     break;

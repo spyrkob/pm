@@ -22,7 +22,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.BuildPropertyHandler;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 
@@ -126,15 +125,13 @@ public class CopyArtifactsModelParser20 {
         }
     }
 
-    private final BuildPropertyHandler propertyReplacer;
     private final FileFilterModelParser20 fileFilterModelParser;
 
-    public CopyArtifactsModelParser20(BuildPropertyHandler propertyReplacer) {
-        this(propertyReplacer, new FileFilterModelParser20(propertyReplacer));
+    public CopyArtifactsModelParser20() {
+        this(new FileFilterModelParser20());
     }
 
-    public CopyArtifactsModelParser20(BuildPropertyHandler propertyReplacer, FileFilterModelParser20 fileFilterModelParser) {
-        this.propertyReplacer = propertyReplacer;
+    public CopyArtifactsModelParser20(FileFilterModelParser20 fileFilterModelParser) {
         this.fileFilterModelParser = fileFilterModelParser;
     }
 
@@ -174,13 +171,13 @@ public class CopyArtifactsModelParser20 {
             required.remove(attribute);
             switch (attribute) {
                 case ARTIFACT:
-                    builder.setArtifact(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    builder.setArtifact(reader.getAttributeValue(i));
                     break;
                 case TO_LOCATION:
-                    builder.setToLocation(propertyReplacer.replaceProperties(reader.getAttributeValue(i)));
+                    builder.setToLocation(reader.getAttributeValue(i));
                     break;
                 case EXTRACT:
-                    if(Boolean.parseBoolean(propertyReplacer.replaceProperties(reader.getAttributeValue(i)))) {
+                    if(Boolean.parseBoolean(reader.getAttributeValue(i))) {
                         builder.setExtract();
                     }
                     break;

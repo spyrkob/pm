@@ -53,6 +53,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
+import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
@@ -73,7 +74,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private PropertyResolver versionResolver;
     private final Pattern moduleArtifactPattern = Pattern.compile("(\\s*)((<artifact)(\\s+name=\")(\\$\\{)(.*)(\\})(\".*>)|(</artifact>))");
 
-    private Properties tasksProps;
+    private PropertyResolver tasksProps;
 
     private boolean thinServer;
     private Set<String> schemaGroups = Collections.emptySet();
@@ -101,6 +102,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         this.ctx = ctx;
 
+        Properties provisioningProps = new Properties();
         final Map<String, String> artifactVersions = new HashMap<>();
         for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
             final Path wfRes = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.RESOURCES).resolve(WfConstants.WILDFLY);
@@ -127,14 +129,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
             final Path tasksPropsPath = wfRes.resolve(WfConstants.WILDFLY_TASKS_PROPS);
             if(Files.exists(tasksPropsPath)) {
-                tasksProps = tasksProps == null ? new Properties() : new Properties(tasksProps);
+                if(!provisioningProps.isEmpty()) {
+                    provisioningProps = new Properties(provisioningProps);
+                }
                 try(InputStream in = Files.newInputStream(tasksPropsPath)) {
-                    tasksProps.load(in);
+                    provisioningProps.load(in);
                 } catch (IOException e) {
                     throw new ProvisioningException(Errors.readFile(tasksPropsPath), e);
                 }
-            } else {
-                tasksProps = new Properties();
             }
 
             if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage("docs.schemas")) {
@@ -161,6 +163,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
         }
+        tasksProps = new MapPropertyResolver(provisioningProps);
 
         versionResolver = new MapPropertyResolver(artifactVersions);
 
@@ -215,9 +218,12 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
             final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
             if(Files.exists(tasksXml)) {
-                final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml, tasksProps);
+                final WildFlyPackageTasks pkgTasks = WildFlyPackageTasks.load(tasksXml);
                 if(pkgTasks.hasCopyArtifacts()) {
                     copyArtifacts(pkgTasks);
+                }
+                if(pkgTasks.hasCopyPaths()) {
+                    copyPaths(pkgTasks, pmWfDir);
                 }
                 if(pkgTasks.hasMkDirs()) {
                     mkdirs(pkgTasks, ctx.getInstallDir());
@@ -419,6 +425,56 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to copy artifact " + gavString, e);
+            }
+        }
+    }
+
+    private void copyPaths(final WildFlyPackageTasks tasks, final Path pmWfDir) throws ProvisioningException {
+        for(CopyPath copyPath : tasks.getCopyPaths()) {
+            final Path src = pmWfDir.resolve(copyPath.getSrc());
+            if (!Files.exists(src)) {
+                throw new ProvisioningException(Errors.pathDoesNotExist(src));
+            }
+            final Path target = copyPath.getTarget() == null ? ctx.getInstallDir() : ctx.getInstallDir().resolve(copyPath.getTarget());
+            if (copyPath.isReplaceProperties()) {
+                if (!Files.exists(target.getParent())) {
+                    try {
+                        Files.createDirectories(target.getParent());
+                    } catch (IOException e) {
+                        throw new ProvisioningException(Errors.mkdirs(target.getParent()), e);
+                    }
+                }
+                try {
+                    Files.walkFileTree(src, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                            new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                    final Path targetDir = target.resolve(src.relativize(dir));
+                                    try {
+                                        Files.copy(dir, targetDir);
+                                    } catch (FileAlreadyExistsException e) {
+                                        if (!Files.isDirectory(targetDir)) {
+                                            throw e;
+                                        }
+                                    }
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    PropertyReplacer.copy(file, target.resolve(src.relativize(file)), tasksProps);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.copyFile(src, target), e);
+                }
+            } else {
+                try {
+                    IoUtils.copy(src, target);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.copyFile(src, target));
+                }
             }
         }
     }

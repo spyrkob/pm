@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.plugin.wildfly.PropertyResolver;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
@@ -38,9 +37,9 @@ public class FeaturePackBuildModelParser {
 
     private final XMLMapper mapper;
 
-    public FeaturePackBuildModelParser(PropertyResolver properties) {
+    public FeaturePackBuildModelParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_2_0, new FeaturePackBuildModelParser20(properties));
+        mapper.registerRootElement(ROOT_2_0, new FeaturePackBuildModelParser20());
     }
 
     public WildFlyFeaturePackBuild parse(final InputStream input) throws XMLStreamException {
