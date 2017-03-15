@@ -231,37 +231,77 @@ abstract class ScriptCollector {
 
     protected void addScripts(final ProvisionedFeaturePack provisionedFp, final PackageSpec pkgSpec, final Path wfDir,
             final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
-        for(PackageScripts.Script script : scripts) {
-            final Path scriptPath = wfDir.resolve(script.getName());
-            if(!Files.exists(scriptPath)) {
-                continue;
-            }
+        for(Script script : scripts) {
             if(!includeStatic && script.isStatic()) {
                 continue;
             }
-            addScript(scriptPath, script.getPrefix());
-            logScript(provisionedFp, pkgSpec.getName(), scriptPath);
-        }
-    }
-
-    protected void addScript(Path p) throws ProvisioningException {
-        addScript(p, null);
-    }
-
-    protected void addScript(Path p, String prefix) throws ProvisioningException {
-        addCommand("echo executing " + p);
-        try {
-            try (BufferedReader reader = Files.newBufferedReader(p)) {
+            if(script.getLine() != null) {
+                final Path scriptPath = wfDir.resolve("scripts.xml");
+                addCommand("echo executing " + scriptPath);
+                addCommand(script.getLine(), script.getPrefix());
+                logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+                return;
+            }
+            if(script.getPath() == null) {
+                throw new ProvisioningException("Script path is missing");
+            }
+            final Path scriptPath = wfDir.resolve(script.getPath());
+            if(!Files.exists(scriptPath)) {
+                continue;
+            }
+            if(script.hasParameters()) {
+                // parameters set before 'echo executing ' to correctly identify line numbers for the commands
+                for(Map.Entry<String, String> param : script.getParameters().entrySet()) {
+                    addCommand("set " + param.getKey() + '=' + param.getValue());
+                }
+            }
+            addCommand("echo executing " + scriptPath);
+            try (BufferedReader reader = Files.newBufferedReader(scriptPath)) {
+                final String prefix = script.getPrefix();
                 String line = reader.readLine();
                 while (line != null) {
-                    if(!line.isEmpty()) {
+                    if (!line.isEmpty()) {
                         addCommand(line, prefix);
                     }
                     line = reader.readLine();
                 }
+            } catch (IOException e) {
+                throw new ProvisioningException("Failed to read " + scriptPath);
+            }
+            if(script.hasParameters()) {
+                for(String param : script.getParameters().keySet()) {
+                    addCommand("unset " + param);
+                }
+            }
+            logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+        }
+    }
+
+    protected void addScript(Path p, Script script) throws ProvisioningException {
+        if(script.hasParameters()) {
+            // parameters set before 'echo executing ' to correctly identify line numbers for the commands
+            for(Map.Entry<String, String> param : script.getParameters().entrySet()) {
+                addCommand("set " + param.getKey() + '=' + param.getValue());
+            }
+        }
+        addCommand("echo executing " + p);
+        try (BufferedReader reader = Files.newBufferedReader(p)) {
+            final String prefix = script.getPrefix();
+            String line = reader.readLine();
+            while (line != null) {
+                if (!line.isEmpty()) {
+                    addCommand(line, prefix);
+                }
+                line = reader.readLine();
             }
         } catch (IOException e) {
             throw new ProvisioningException("Failed to read " + p);
+        }
+        if(script.hasParameters()) {
+            // parameters set before 'echo executing ' to correctly identify line numbers for the commands
+            for(String param : script.getParameters().keySet()) {
+                addCommand("unset " + param);
+            }
         }
     }
 

@@ -23,6 +23,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.plugin.wildfly.config.PackageScripts.Script.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
@@ -43,7 +44,9 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
     enum Attribute implements XmlNameProvider {
 
         NAME("name"),
+        PATH("path"),
         PREFIX("prefix"),
+        VALUE("value"),
         // default unknown attribute
         UNKNOWN(null);
 
@@ -52,7 +55,9 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
             attributesMap.put(NAME.getLocalName(), NAME);
+            attributesMap.put(PATH.getLocalName(), PATH);
             attributesMap.put(PREFIX.getLocalName(), PREFIX);
+            attributesMap.put(VALUE.getLocalName(), VALUE);
             attributes = attributesMap;
         }
 
@@ -87,6 +92,7 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
 
         DOMAIN("domain"),
         HOST("host"),
+        PARAM("param"),
         SCRIPT("script"),
         SCRIPTS("scripts"),
         STANDALONE("standalone"),
@@ -99,6 +105,7 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
             final Map<String, Element> elementsMap = new HashMap<>();
             elementsMap.put(Element.DOMAIN.getLocalName(), Element.DOMAIN);
             elementsMap.put(Element.HOST.getLocalName(), Element.HOST);
+            elementsMap.put(Element.PARAM.getLocalName(), Element.PARAM);
             elementsMap.put(Element.SCRIPT.getLocalName(), Element.SCRIPT);
             elementsMap.put(Element.SCRIPTS.getLocalName(), Element.SCRIPTS);
             elementsMap.put(Element.STANDALONE.getLocalName(), Element.STANDALONE);
@@ -161,13 +168,12 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public void parseScripts(final XMLExtendedStreamReader reader, PackageScripts.Builder builder, Element parent) throws XMLStreamException {
+    private static void parseScripts(final XMLExtendedStreamReader reader, PackageScripts.Builder builder, Element parent) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
+                case XMLStreamConstants.END_ELEMENT:
                     return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
+                case XMLStreamConstants.START_ELEMENT:
                     final Element element = Element.of(reader.getName());
                     switch(element) {
                         case SCRIPT:
@@ -189,24 +195,21 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
                             throw ParsingUtils.unexpectedContent(reader);
                     }
                     break;
-                }
-                default: {
+                default:
                     throw ParsingUtils.unexpectedContent(reader);
-                }
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private PackageScripts.Script parseScript(XMLStreamReader reader) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        String name = null;
+    private static PackageScripts.Script parseScript(XMLStreamReader reader) throws XMLStreamException {
+        String path = null;
         String prefix = null;
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
+                case PATH:
+                    path = reader.getAttributeValue(i);
                     break;
                 case PREFIX:
                     prefix = reader.getAttributeValue(i);
@@ -215,10 +218,68 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
+
+        final PackageScripts.Script.Builder scriptBuilder = PackageScripts.Script.builder(path, prefix);
+        final StringBuilder text = path == null ? new StringBuilder() : null;
+        while (reader.hasNext()) {
+            switch (reader.next()) {
+                case XMLStreamConstants.END_ELEMENT:
+                    if (text != null) {
+                        final String line = text.toString().trim();
+                        if(line.isEmpty()) {
+                            throw new XMLStreamException("Neither path nor content specified");
+                        }
+                        scriptBuilder.setLine(line);
+                    }
+                    return scriptBuilder.build();
+                case XMLStreamConstants.START_ELEMENT:
+                    final Element element = Element.of(reader.getName());
+                    switch(element) {
+                        case PARAM:
+                            if(path == null) {
+                                throw new XMLStreamException("path attribute is missing");
+                            }
+                            parseScriptParam(scriptBuilder, reader);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                case XMLStreamConstants.CHARACTERS:
+                    if(text != null) {
+                        text.append(reader.getText());
+                    }
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void parseScriptParam(Builder scriptBuilder, XMLStreamReader reader) throws XMLStreamException {
+        String name = null;
+        String value = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case VALUE:
+                    value = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
         if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
+        if (value == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
+        }
+        scriptBuilder.addParameter(name, value);
         ParsingUtils.parseNoContent(reader);
-        return PackageScripts.Script.newScript(name, prefix);
     }
 }

@@ -19,7 +19,9 @@ package org.jboss.provisioning.plugin.wildfly.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -29,34 +31,91 @@ public class PackageScripts {
 
     public static class Script {
 
-        public static Script newScript(String name) {
-            return newScript(name, false);
+        public static class Builder {
+
+            private final String path;
+            private final String prefix;
+            private final boolean variable;
+            private Map<String, String> params = Collections.emptyMap();
+            private String line;
+
+            private Builder() {
+                this(null);
+            }
+
+            private Builder(String path) {
+                this(path, null);
+            }
+
+            private Builder(String path, String prefix) {
+                this(path, prefix, false);
+            }
+
+            private Builder(String path, String prefix, boolean variable) {
+                this.path = path;
+                this.prefix = prefix;
+                this.variable = variable;
+            }
+
+            public Builder addParameter(String name, String value) {
+                switch(params.size()) {
+                    case 0:
+                        params = Collections.singletonMap(name, value);
+                        break;
+                    case 1:
+                        params = new HashMap<>(params);
+                    default:
+                        params.put(name, value);
+                }
+                return this;
+            }
+
+            public Builder setLine(String line) {
+                this.line = line;
+                return this;
+            }
+
+            public Script build() {
+                return new Script(this);
+            }
         }
 
-        public static Script newScript(String name, boolean variable) {
-            return new Script(name, null, variable);
+        public static Builder builder() {
+            return builder(null);
         }
 
-        public static Script newScript(String name, String prefix) {
-            return new Script(name, prefix, prefix != null);
+        public static Builder builder(String path) {
+            return builder(path, false);
         }
 
-        public static Script newScript(String name, String prefix, boolean variable) {
-            return new Script(name, prefix, variable);
+        public static Builder builder(String path, boolean variable) {
+            return builder(path, null, variable);
         }
 
-        private final String name;
+        public static Builder builder(String path, String prefix) {
+            return builder(path, prefix, prefix != null);
+        }
+
+        public static Builder builder(String path, String prefix, boolean variable) {
+            return new Builder(path, prefix, variable);
+        }
+
+        private final String path;
         private final String prefix;
         private final boolean variable;
+        private final Map<String, String> params;
+        private final String line;
 
-        private Script(String name, String prefix, boolean variable) {
-            this.name = name;
-            this.prefix = prefix;
-            this.variable = variable;
+        private Script(Builder builder) {
+            this.path = builder.path;
+            this.prefix = builder.prefix;
+            this.variable = builder.variable;
+            this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
+            this.line = builder.line;
         }
 
-        public String getName() {
-            return name;
+        public String getPath() {
+            return path;
         }
 
         public boolean hasPrefix() {
@@ -69,6 +128,18 @@ public class PackageScripts {
 
         public boolean isStatic() {
             return !variable;
+        }
+
+        public boolean hasParameters() {
+            return !params.isEmpty();
+        }
+
+        public Map<String, String> getParameters() {
+            return params;
+        }
+
+        public String getLine() {
+            return line;
         }
     }
 
@@ -130,15 +201,15 @@ public class PackageScripts {
     }
 
     public static final PackageScripts DEFAULT = builder()
-            .addStandalone(Script.newScript("main.cli"))
-            .addStandalone(Script.newScript("standalone.cli"))
-            .addStandalone(Script.newScript("variable.cli", true))
-            .addStandalone(Script.newScript("profile.cli"))
-            .addDomain(Script.newScript("main.cli"))
-            .addDomain(Script.newScript("domain.cli"))
-            .addDomain(Script.newScript("variable.cli", true))
-            .addDomain(Script.newScript("profile.cli", "/profile=$profile"))
-            .addHost(Script.newScript("host.cli", "/host=${host:master}", false))
+            .addStandalone(Script.builder("main.cli").build())
+            .addStandalone(Script.builder("standalone.cli").build())
+            .addStandalone(Script.builder("variable.cli", true).build())
+            .addStandalone(Script.builder("profile.cli").build())
+            .addDomain(Script.builder("main.cli").build())
+            .addDomain(Script.builder("domain.cli").build())
+            .addDomain(Script.builder("variable.cli", true).build())
+            .addDomain(Script.builder("profile.cli", "/profile=$profile").build())
+            .addHost(Script.builder("host.cli", "/host=${host:master}", false).build())
             .build();
 
     private final List<Script> standalone;
