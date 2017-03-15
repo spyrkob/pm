@@ -35,7 +35,7 @@ public class PackageScripts {
 
             private final String path;
             private final String prefix;
-            private final boolean variable;
+            private final boolean collectAgain;
             private Map<String, String> params = Collections.emptyMap();
             private String line;
 
@@ -51,10 +51,10 @@ public class PackageScripts {
                 this(path, prefix, false);
             }
 
-            private Builder(String path, String prefix, boolean variable) {
+            private Builder(String path, String prefix, boolean collectAgain) {
                 this.path = path;
                 this.prefix = prefix;
-                this.variable = variable;
+                this.collectAgain = collectAgain;
             }
 
             public Builder addParameter(String name, String value) {
@@ -88,28 +88,28 @@ public class PackageScripts {
             return builder(path, false);
         }
 
-        public static Builder builder(String path, boolean variable) {
-            return builder(path, null, variable);
+        public static Builder builder(String path, boolean collectAgain) {
+            return builder(path, null, collectAgain);
         }
 
         public static Builder builder(String path, String prefix) {
-            return builder(path, prefix, prefix != null);
+            return builder(path, prefix, false);
         }
 
-        public static Builder builder(String path, String prefix, boolean variable) {
-            return new Builder(path, prefix, variable);
+        public static Builder builder(String path, String prefix, boolean collectAgain) {
+            return new Builder(path, prefix, collectAgain);
         }
 
         private final String path;
         private final String prefix;
-        private final boolean variable;
+        private final boolean collectAgain;
         private final Map<String, String> params;
         private final String line;
 
         private Script(Builder builder) {
             this.path = builder.path;
             this.prefix = builder.prefix;
-            this.variable = builder.variable;
+            this.collectAgain = builder.collectAgain;
             this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
             this.line = builder.line;
         }
@@ -126,8 +126,8 @@ public class PackageScripts {
             return prefix;
         }
 
-        public boolean isStatic() {
-            return !variable;
+        public boolean isCollectAgain() {
+            return collectAgain;
         }
 
         public boolean hasParameters() {
@@ -203,12 +203,12 @@ public class PackageScripts {
     public static final PackageScripts DEFAULT = builder()
             .addStandalone(Script.builder("main.cli").build())
             .addStandalone(Script.builder("standalone.cli").build())
-            .addStandalone(Script.builder("variable.cli", true).build())
+            .addStandalone(Script.builder("variable.cli", false).build())
             .addStandalone(Script.builder("profile.cli").build())
             .addDomain(Script.builder("main.cli").build())
             .addDomain(Script.builder("domain.cli").build())
             .addDomain(Script.builder("variable.cli", true).build())
-            .addDomain(Script.builder("profile.cli", "/profile=$profile").build())
+            .addDomain(Script.builder("profile.cli", "/profile=$profile", true).build())
             .addHost(Script.builder("host.cli", "/host=${host:master}", false).build())
             .build();
 

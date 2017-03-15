@@ -43,6 +43,7 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
 
     enum Attribute implements XmlNameProvider {
 
+        COLLECT_AGAIN("collect-again"),
         NAME("name"),
         PATH("path"),
         PREFIX("prefix"),
@@ -54,6 +55,7 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
 
         static {
             Map<String, Attribute> attributesMap = new HashMap<>();
+            attributesMap.put(COLLECT_AGAIN.getLocalName(), COLLECT_AGAIN);
             attributesMap.put(NAME.getLocalName(), NAME);
             attributesMap.put(PATH.getLocalName(), PATH);
             attributesMap.put(PREFIX.getLocalName(), PREFIX);
@@ -205,6 +207,7 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
     private static PackageScripts.Script parseScript(XMLStreamReader reader) throws XMLStreamException {
         String path = null;
         String prefix = null;
+        boolean collectAgain = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
@@ -214,12 +217,15 @@ public class PackageScriptsParser10 implements XMLElementReader<PackageScripts.B
                 case PREFIX:
                     prefix = reader.getAttributeValue(i);
                     break;
+                case COLLECT_AGAIN:
+                    collectAgain = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
 
-        final PackageScripts.Script.Builder scriptBuilder = PackageScripts.Script.builder(path, prefix);
+        final PackageScripts.Script.Builder scriptBuilder = PackageScripts.Script.builder(path, prefix, collectAgain);
         final StringBuilder text = path == null ? new StringBuilder() : null;
         while (reader.hasNext()) {
             switch (reader.next()) {
