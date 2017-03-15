@@ -232,7 +232,7 @@ abstract class ScriptCollector {
     protected void addScripts(final ProvisionedFeaturePack provisionedFp, final PackageSpec pkgSpec, final Path wfDir,
             final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
         for(Script script : scripts) {
-            if(!includeStatic && script.isStatic()) {
+            if(!includeStatic && !script.isCollectAgain()) {
                 continue;
             }
             if(script.getLine() != null) {
