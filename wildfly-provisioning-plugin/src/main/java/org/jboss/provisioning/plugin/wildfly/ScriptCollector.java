@@ -85,9 +85,11 @@ abstract class ScriptCollector {
             writer.newLine();
             scriptWriter = writer;
         } catch (IOException e) {
-            try {
-                writer.close();
-            } catch (IOException e1) {
+            if(writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e1) {
+                }
             }
             throw new ProvisioningException(Errors.writeFile(script), e);
         }
