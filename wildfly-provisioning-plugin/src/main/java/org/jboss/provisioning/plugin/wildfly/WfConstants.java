@@ -28,6 +28,7 @@ public interface WfConstants {
     String CONFIG = "config";
     String CONTENT = "content";
     String DOCS = "docs";
+    String DOCS_SCHEMA = "docs.schema";
     String DOMAIN = "domain";
     String LAYOUT = "layout";
     String LAYERS = "layers";
@@ -37,6 +38,8 @@ public interface WfConstants {
     String MODULES_ALL = "modules.all";
     String PM = "pm";
     String SCHEMA = "schema";
+    String SCHEMA_GROUPS_TXT = "schema-groups.txt";
+    String SCRIPTS = "scripts";
     String STANDALONE = "standalone";
     String SYSTEM = "system";
     String TASKS_XML = "tasks.xml";

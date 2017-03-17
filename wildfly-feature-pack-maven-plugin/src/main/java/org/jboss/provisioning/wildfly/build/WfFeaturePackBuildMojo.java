@@ -281,6 +281,19 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to store artifact versions", e);
         }
 
+        // scripts
+        final Path scriptsDir = targetResources.resolve(WfConstants.SCRIPTS);
+        if(Files.exists(scriptsDir)) {
+            if(!Files.isDirectory(scriptsDir)) {
+                throw new MojoExecutionException(WfConstants.SCRIPTS + " is not a directory");
+            }
+            try {
+                IoUtils.copy(scriptsDir, resourcesWildFly.resolve(WfConstants.SCRIPTS));
+            } catch (IOException e) {
+                throw new MojoExecutionException(Errors.copyFile(scriptsDir, resourcesWildFly.resolve(WfConstants.SCRIPTS)), e);
+            }
+        }
+
         try {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
@@ -290,13 +303,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackSpec.Builder fpBuilder)
             throws MojoExecutionException {
-        docsBuilder.addDependency("docs.schemas", true);
-        final Path schemasPackageDir = fpPackagesDir.resolve("docs.schemas");
-        final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
+        docsBuilder.addDependency(WfConstants.DOCS_SCHEMA, true);
+        final Path schemasPackageDir = fpPackagesDir.resolve(WfConstants.DOCS_SCHEMA);
+        final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.SCHEMA_GROUPS_TXT);
         BufferedWriter writer = null;
         try {
             Files.createDirectories(schemasPackageDir);
-            final PackageSpec docsSchemasSpec = PackageSpec.forName("docs.schemas");
+            final PackageSpec docsSchemasSpec = PackageSpec.forName(WfConstants.DOCS_SCHEMA);
             fpBuilder.addPackage(docsSchemasSpec);
             PackageXmlWriter.getInstance().write(docsSchemasSpec, schemasPackageDir.resolve(Constants.PACKAGE_XML));
             Files.createDirectories(schemaGroupsTxt.getParent());

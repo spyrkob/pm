@@ -48,6 +48,7 @@ import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
+import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.wildfly.core.launcher.CliCommandBuilder;
 
@@ -59,6 +60,7 @@ import org.wildfly.core.launcher.CliCommandBuilder;
 abstract class ScriptCollector {
 
     private final ProvisioningContext ctx;
+    private final Path fpScripts;
 
     private String configName;
     private Path script;
@@ -71,6 +73,7 @@ abstract class ScriptCollector {
 
     ScriptCollector(ProvisioningContext ctx) throws ProvisioningException {
         this.ctx = ctx;
+        fpScripts = ctx.getResourcesDir().resolve(WfConstants.WILDFLY).resolve(WfConstants.SCRIPTS);
     }
 
 
@@ -250,9 +253,18 @@ abstract class ScriptCollector {
             if(script.getPath() == null) {
                 throw new ProvisioningException("Script path is missing");
             }
-            final Path scriptPath = wfDir.resolve(script.getPath());
+            Path scriptPath = wfDir.resolve(script.getPath());
             if(!Files.exists(scriptPath)) {
-                continue;
+                final Path tmpPath = fpScripts.resolve(script.getPath());
+                if(!Files.exists(tmpPath)) {
+                    continue;
+                }
+                scriptPath = wfDir.resolve(tmpPath.getFileName().toString());
+                try {
+                    IoUtils.copy(tmpPath, scriptPath);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.copyFile(tmpPath, scriptPath), e);
+                }
             }
             if(script.hasParameters()) {
                 // parameters set before 'echo executing ' to correctly identify line numbers for the commands
