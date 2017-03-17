@@ -83,35 +83,26 @@ public class ProvisionedStateResolver {
 
         if(fp.config.isInheritPackages()) {
             for (String name : fp.spec.getDefaultPackageNames()) {
-                resolvePackage(fp, name, true, null, null);
+                resolvePackage(fp, name);
             }
         }
         if(fp.config.hasIncludedPackages()) {
             for(String name : fp.config.getIncludedPackages()) {
-                resolvePackage(fp, name, false, null, null);
+                if(!resolvePackage(fp, name)) {
+                    throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, null, name));
+                }
             }
         }
     }
 
-    private void resolvePackage(Fp fp, final String pkgName, boolean optional, ArtifactCoords.Gav dependingFp, String dependingPackage)
-            throws ProvisioningDescriptionException {
+    private boolean resolvePackage(Fp fp, final String pkgName) throws ProvisioningDescriptionException {
 
         if(fp.isSkipResolution(pkgName)) {
-            return;
+            return true;
         }
 
         if(fp.config.isExcluded(pkgName)) {
-            if(optional) {
-                return;
-            } else {
-                if(dependingFp == null) {
-                    throw new ProvisioningDescriptionException(
-                            Errors.unsatisfiedPackageDependency(fp.gav, dependingPackage, pkgName));
-                } else {
-                    throw new ProvisioningDescriptionException(
-                            Errors.unsatisfiedExternalPackageDependency(dependingFp, dependingPackage, fp.gav, pkgName));
-                }
-            }
+            return false;
         }
 
         final PackageSpec pkgSpec = fp.spec.getPackage(pkgName);
@@ -124,10 +115,21 @@ public class ProvisionedStateResolver {
             hasDependencies = true;
             fp.setBeingResolved(pkgName);
             for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
-                resolvePackage(fp, dep.getName(), dep.isOptional(), null, pkgSpec.getName());
+                final boolean resolved;
+                try {
+                    resolved = resolvePackage(fp, dep.getName());
+                } catch(ProvisioningDescriptionException e) {
+                    if(dep.isOptional()) {
+                        continue;
+                    } else {
+                        throw e;
+                    }
+                }
+                if(!resolved && !dep.isOptional()) {
+                    throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, pkgName, dep.getName()));
+                }
             }
         }
-        fp.builder.addPackage(pkgName);
         if(pkgSpec.hasExternalDependencies()) {
             if(!hasDependencies) {
                 hasDependencies = true;
@@ -139,14 +141,28 @@ public class ProvisionedStateResolver {
 
                 final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
                 for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
-                    resolvePackage(targetFp, pkgDep.getName(), pkgDep.isOptional(), fp.gav, pkgName);
+                    final boolean resolved;
+                    try {
+                        resolved = resolvePackage(targetFp, pkgDep.getName());
+                    } catch(ProvisioningDescriptionException e) {
+                        if(pkgDep.isOptional()) {
+                            continue;
+                        } else {
+                            throw e;
+                        }
+                    }
+                    if(!resolved && !pkgDep.isOptional()) {
+                        throw new ProvisioningDescriptionException(Errors.unsatisfiedExternalPackageDependency(fp.gav, pkgName, targetFp.gav, pkgDep.getName()));
+                    }
                 }
             }
         }
 
+        fp.builder.addPackage(pkgName);
         if(hasDependencies) {
             fp.setResolved(pkgName);
         }
+        return true;
     }
 
     private Fp getFp(ArtifactCoords.Ga ga) {
