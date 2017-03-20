@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.util;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,15 +26,20 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.parameters.PackageParameterResolver;
+import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.ParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 
 /**
@@ -44,18 +48,23 @@ import org.jboss.provisioning.state.ProvisionedState;
  */
 public class ProvisionedStateResolver {
 
-    private ProvisionedState.Builder stateBuilder;
-    private FeaturePackLayoutDescription fpLayout;
-    private ProvisioningConfig extendedConfig;
+    private final ProvisionedState.Builder stateBuilder;
+    private final FeaturePackLayoutDescription fpLayout;
+    private final ProvisioningConfig extendedConfig;
+    private final PackageParameterResolver paramResolver;
 
     private Map<ArtifactCoords.Ga, Fp> fps;
 
-    public ProvisionedState resolve(ProvisioningConfig provisioningConfig,
-            FeaturePackLayoutDescription fpLayout, Path layoutDir) throws ProvisioningDescriptionException {
-
-        stateBuilder = ProvisionedState.builder();
+    public ProvisionedStateResolver(ProvisioningConfig provisioningConfig,
+            FeaturePackLayoutDescription fpLayout,
+            PackageParameterResolver paramResolver) {
+        this.stateBuilder = ProvisionedState.builder();
         this.fpLayout = fpLayout;
         this.extendedConfig = provisioningConfig;
+        this.paramResolver = paramResolver;
+    }
+
+    public ProvisionedState resolve() throws ProvisioningException {
 
         final int fpTotal = extendedConfig.getFeaturePacks().size();
         if(fpTotal == 1) {
@@ -77,7 +86,7 @@ public class ProvisionedStateResolver {
     }
 
     private void resolveFeaturePack(ArtifactCoords.Ga ga)
-            throws ProvisioningDescriptionException {
+            throws ProvisioningException {
 
         final Fp fp = getFp(ga);
 
@@ -95,7 +104,7 @@ public class ProvisionedStateResolver {
         }
     }
 
-    private boolean resolvePackage(Fp fp, final String pkgName) throws ProvisioningDescriptionException {
+    private boolean resolvePackage(Fp fp, final String pkgName) throws ProvisioningException {
 
         if(fp.isSkipResolution(pkgName)) {
             return true;
@@ -158,7 +167,22 @@ public class ProvisionedStateResolver {
             }
         }
 
-        fp.builder.addPackage(pkgName);
+        if(pkgSpec.hasParameters()) {
+            if(paramResolver == null) {
+                throw new ProvisioningException(Errors.packageParameterResolverNotProvided());
+            }
+            final ParameterResolver pkgParamResolver = paramResolver.getResolver(fp.gav, pkgName);
+            if(pkgParamResolver == null) {
+                throw new ProvisioningException(Errors.packageParameterResolverNotProvided(fp.gav, pkgName));
+            }
+            final ProvisionedPackage.Builder pkgBuilder = ProvisionedPackage.builder(pkgName);
+            for(ParameterSpec paramSpec : pkgSpec.getParameters()) {
+                pkgBuilder.addParameter(paramSpec.getName(), pkgParamResolver.resolve(paramSpec.getName(), paramSpec.getDefaultValue()));
+            }
+            fp.builder.addPackage(pkgBuilder.build());
+        } else {
+            fp.builder.addPackage(pkgName);
+        }
         if(hasDependencies) {
             fp.setResolved(pkgName);
         }

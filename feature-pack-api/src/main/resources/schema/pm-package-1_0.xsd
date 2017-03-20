@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
 
-    Copyright 2016 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,8 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence minOccurs="0" maxOccurs="1">
-      <xs:element name="dependencies" type="dependenciesType" />
+      <xs:element name="dependencies" type="dependenciesType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="parameters" type="parametersType" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
@@ -117,6 +118,37 @@
       <xs:annotation>
         <xs:documentation>
           Name of a package, the package declaring dependency depends on. 
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="parametersType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes package configuration parameters.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="1">
+      <xs:element name="parameter" type="parameterType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="parameterType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes a package configuration parameter.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>Parameter name.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="default" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Parameter default value.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

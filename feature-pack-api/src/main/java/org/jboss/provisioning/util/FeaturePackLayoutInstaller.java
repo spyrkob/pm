@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
@@ -52,15 +53,14 @@ public class FeaturePackLayoutInstaller {
      * @throws ProvisioningDescriptionException
      * @throws FeaturePackInstallException
      */
-    public static void install(Path fpLayoutDir, Path installDir, String encoding)
-            throws ProvisioningDescriptionException, FeaturePackInstallException {
+    public static void install(Path fpLayoutDir, Path installDir, String encoding) throws ProvisioningException {
         final FeaturePackLayoutDescription layoutDescr = FeaturePackLayoutDescriber.describeLayout(fpLayoutDir, encoding);
         final ProvisioningConfig.Builder configBuilder = ProvisioningConfig.builder();
         for(FeaturePackSpec fpSpec : layoutDescr.getFeaturePacks()) {
             configBuilder.addFeaturePack(FeaturePackConfig.forGav(fpSpec.getGav()));
         }
         final ProvisioningConfig installConfig = configBuilder.build();
-        final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(installConfig, layoutDescr, fpLayoutDir);
+        final ProvisionedState provisionedState = new ProvisionedStateResolver(installConfig, layoutDescr, null).resolve();
         install(layoutDescr, fpLayoutDir, installConfig, provisionedState, installDir);
     }
 

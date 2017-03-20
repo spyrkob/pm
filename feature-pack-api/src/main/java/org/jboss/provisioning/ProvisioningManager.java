@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,12 +21,11 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -44,6 +43,7 @@ public class ProvisioningManager {
         private String encoding = "UTF-8";
         private Path installationHome;
         private ArtifactResolver artifactResolver;
+        private PackageParameterResolver paramResolver;
 
         private Builder() {
         }
@@ -63,6 +63,11 @@ public class ProvisioningManager {
             return this;
         }
 
+        public Builder setPackageParameterResolver(PackageParameterResolver paramResolver) {
+            this.paramResolver = paramResolver;
+            return this;
+        }
+
         public ProvisioningManager build() {
             return new ProvisioningManager(this);
         }
@@ -75,6 +80,7 @@ public class ProvisioningManager {
     private final String encoding;
     private final Path installationHome;
     private final ArtifactResolver artifactResolver;
+    private final PackageParameterResolver paramResolver;
 
     private ProvisioningConfig provisioningConfig;
 
@@ -82,6 +88,7 @@ public class ProvisioningManager {
         this.encoding = builder.encoding;
         this.installationHome = builder.installationHome;
         this.artifactResolver = builder.artifactResolver;
+        this.paramResolver = builder.paramResolver == null ? PackageParameterResolver.NULL_RESOLVER : builder.paramResolver;
     }
 
     /**
@@ -199,7 +206,7 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        new ProvisioningTask(artifactResolver, installationHome, encoding, provisioningConfig).execute();
+        new ProvisioningTask(this, provisioningConfig).execute();
         this.provisioningConfig = null;
     }
 
@@ -229,6 +236,18 @@ public class ProvisioningManager {
         IoUtils.copy(userProvisionedXml, location);
     }
 
+    String getEncoding() {
+        return encoding;
+    }
+
+    ArtifactResolver getArtifactResolver() {
+        return artifactResolver;
+    }
+
+    PackageParameterResolver getPackageParameterResolver() {
+        return paramResolver;
+    }
+
     private ProvisioningConfig readProvisioningConfig(Path path) throws ProvisioningException {
         if (!Files.exists(path)) {
             return null;
@@ -238,38 +257,5 @@ public class ProvisioningManager {
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(path), e);
         }
-    }
-
-    public static void main(String[] args) throws Throwable {
-
-        final Path installDir = Paths.get("/home/olubyans/demo/wf");
-        final ProvisioningManager pm = ProvisioningManager.builder().setInstallationHome(installDir).build();
-
-        //pm.exportProvisionedState(installDir.getParent().resolve("provisioned-state.xml"));
-
-        pm.install(ArtifactCoords.newGav("org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Alpha9-SNAPSHOT"));
-/*        pm.install(
-                ProvisionedFeaturePackDescription.builder()
-                .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
-                .excludePackage("p1")
-                .excludePackage("p2")
-                .build());
-
-        pm.provision(ProvisionedInstallationDescription.builder()
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.getGavPart("g1:a1:v1"))
-                        .excludePackage("p1")
-                        .excludePackage("p2")
-                        .build())
-                .addFeaturePack(
-                        ProvisionedFeaturePackDescription.builder()
-                        .setGav(ArtifactCoords.getGavPart("g2:a2:v2"))
-                        .excludePackage("p3")
-                        .excludePackage("p4")
-                        .build())
-                .build());
-*/
-
     }
 }

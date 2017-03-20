@@ -18,11 +18,12 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.nio.file.Path;
+
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
-import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 
 /**
  * Collects the CLI scripts from the packages and runs them to produce the configuration.
@@ -39,10 +40,10 @@ class DomainConfigGenerator extends ScriptCollector {
     @Override
     protected void collect(final PackageScripts scripts,
             final ProvisionedFeaturePack provisionedFp,
-            final PackageSpec pkgSpec,
+            final ProvisionedPackage pkg,
             final Path wfDir,
             final boolean includeStatic) throws ProvisioningException {
-        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getDomain());
-        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getHost());
+        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getDomain());
+        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getHost());
     }
 }

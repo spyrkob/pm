@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,9 @@ package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
@@ -46,6 +48,8 @@ public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder>
         FEATURE_PACK("feature-pack"),
         PACKAGE("package"),
         PACKAGE_SPEC("package-spec"),
+        PARAMETERS("parameters"),
+        PARAMETER("parameter"),
 
         // default unknown element
         UNKNOWN(null);
@@ -93,6 +97,7 @@ public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder>
 
     enum Attribute implements XmlNameProvider {
 
+        DEFAULT("default"),
         DEPENDENCY("dependency"),
         NAME("name"),
         OPTIONAL("optional"),
@@ -146,6 +151,9 @@ public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder>
                     switch (element) {
                         case DEPENDENCIES:
                             readDependencies(reader, pkgBuilder);
+                            break;
+                        case PARAMETERS:
+                            readParameters(reader, pkgBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -284,6 +292,73 @@ public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder>
         }
 
         pkgBuilder.addDependency(fpDependency, name, optional);
+    }
+
+    private void readParameters(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        boolean hasChildren = false;
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    if (!hasChildren) {
+                        throw ParsingUtils.expectedAtLeastOneChild(Element.PARAMETERS, Element.PACKAGE);
+                    }
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PARAMETER:
+                            readParameter(reader, pkgBuilder);
+                            hasChildren = true;
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void readParameter(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
+        String name = null;
+        String defValue = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case DEFAULT:
+                    defValue = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        Set<Attribute> missingAttrs = null;
+        if (name == null) {
+            missingAttrs = new HashSet<>();
+            missingAttrs.add(Attribute.NAME);
+        }
+        if(defValue == null) {
+            if(missingAttrs == null) {
+                missingAttrs = Collections.singleton(Attribute.DEFAULT);
+            } else {
+                missingAttrs.add(Attribute.DEFAULT);
+            }
+        }
+        if (missingAttrs != null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), missingAttrs);
+        }
+        ParsingUtils.parseNoContent(reader);
+        pkgBuilder.addParameter(name, defValue);
     }
 
     private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {

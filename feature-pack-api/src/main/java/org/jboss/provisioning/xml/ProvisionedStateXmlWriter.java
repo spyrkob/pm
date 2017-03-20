@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Element;
@@ -75,9 +76,17 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
 
         if (featurePack.hasPackages()) {
             final ElementNode packages = addElement(fp, Element.PACKAGES);
-            for (String pkgName : featurePack.getPackageNames()) {
-                final ElementNode exclude = addElement(packages, Element.PACKAGE);
-                addAttribute(exclude, Attribute.NAME, pkgName);
+            for (ProvisionedPackage pkg : featurePack.getPackages()) {
+                final ElementNode pkgElement = addElement(packages, Element.PACKAGE);
+                addAttribute(pkgElement, Attribute.NAME, pkg.getName());
+                if(pkg.hasParameters()) {
+                    final ElementNode params = addElement(pkgElement, Element.PARAMETERS);
+                    for(String name : pkg.getParameterNames()) {
+                        final ElementNode param = addElement(params, Element.PARAMETER);
+                        addAttribute(param, Attribute.NAME, name);
+                        addAttribute(param, Attribute.VALUE, pkg.getParameterValue(name));
+                    }
+                }
             }
         }
     }

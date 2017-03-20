@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,6 +95,11 @@ public class PackageBuilder {
 
     public PackageBuilder writeContent(String relativeTarget, String content) {
         tasks.write(content, relativeTarget);
+        return this;
+    }
+
+    public PackageBuilder addParameter(String name, String defaultValue) {
+        this.pkg.addParameter(name, defaultValue);
         return this;
     }
 

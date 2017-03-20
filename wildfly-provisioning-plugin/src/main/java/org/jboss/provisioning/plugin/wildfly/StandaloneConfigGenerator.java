@@ -22,8 +22,8 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
-import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 
 /**
  * Collects the CLI scripts from the packages and runs them to produce the configuration.
@@ -41,8 +41,8 @@ class StandaloneConfigGenerator extends ScriptCollector {
     }
 
     @Override
-    protected void collect(PackageScripts scripts, ProvisionedFeaturePack provisionedFp, final PackageSpec pkgSpec, final Path wfDir, final boolean includeStatic)
+    protected void collect(PackageScripts scripts, ProvisionedFeaturePack provisionedFp, final ProvisionedPackage pkg, final Path wfDir, final boolean includeStatic)
             throws ProvisioningException {
-        addScripts(provisionedFp, pkgSpec, wfDir, includeStatic, scripts.getStandalone());
+        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getStandalone());
     }
 }

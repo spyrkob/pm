@@ -142,4 +142,12 @@ public interface Errors {
     static String packageAlreadyExists(Gav gav, String name) {
         return "Package " + name + " already exists in feature-pack " + gav;
     }
+
+    static String packageParameterResolverNotProvided() {
+        return "Package parameter resolver not provided.";
+    }
+
+    static String packageParameterResolverNotProvided(Gav gav, String pkgName) {
+        return "Package parameter resolver not provided for package " + pkgName + " in feature-pack " + gav;
+    }
 }

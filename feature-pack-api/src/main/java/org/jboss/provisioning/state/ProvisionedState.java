@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,7 +64,7 @@ public class ProvisionedState {
     private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
 
     private ProvisionedState(Builder builder) {
-        this.featurePacks = Collections.unmodifiableMap(builder.featurePacks);
+        this.featurePacks = builder.featurePacks.size() > 1 ? Collections.unmodifiableMap(builder.featurePacks) : builder.featurePacks;
     }
 
     public boolean hasFeaturePacks() {

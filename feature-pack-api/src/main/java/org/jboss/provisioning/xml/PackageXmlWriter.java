@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.spec.ParameterSpec;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -74,6 +75,12 @@ public class PackageXmlWriter extends BaseXmlWriter {
                 writeFeaturePackDependency(deps, pkgSpec.getExternalDependencies(name));
             }
         }
+        if(pkgSpec.hasParameters()) {
+            final ElementNode params = addElement(pkg, Element.PARAMETERS);
+            for(ParameterSpec param : pkgSpec.getParameters()) {
+                writeParameter(params, param);
+            }
+        }
 
         ensureParentDir(outputFile);
         try (FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(
@@ -101,5 +108,11 @@ public class PackageXmlWriter extends BaseXmlWriter {
         if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);
         }
+    }
+
+    private static void writeParameter(ElementNode params, ParameterSpec param) {
+        final ElementNode paramElement = addElement(params, Element.PARAMETER);
+        addAttribute(paramElement, Attribute.NAME, param.getName());
+        addAttribute(paramElement, Attribute.DEFAULT, param.getDefaultValue());
     }
 }
