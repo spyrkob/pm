@@ -140,9 +140,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
 
-            if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage("docs.schemas")) {
-                final Path schemaGroupsTxt = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav), "docs.schemas")
-                        .resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve("schema-groups.txt");
+            if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage(WfConstants.DOCS_SCHEMA)) {
+                final Path schemaGroupsTxt = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav), WfConstants.DOCS_SCHEMA)
+                        .resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.SCHEMA_GROUPS_TXT);
                 try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
                     String line = reader.readLine();
                     while(line != null) {
