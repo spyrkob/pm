@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,7 +90,7 @@ public class ProvisioningConfig {
         }
 
         public ProvisioningConfig build() {
-            return new ProvisioningConfig(Collections.unmodifiableMap(featurePacks));
+            return new ProvisioningConfig(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
         }
 
         public void exportToXml(Path location) throws IOException {

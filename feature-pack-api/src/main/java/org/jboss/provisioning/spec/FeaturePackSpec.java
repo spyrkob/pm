@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -213,11 +213,11 @@ public class FeaturePackSpec {
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
-        this.defPackages = Collections.unmodifiableSet(builder.defPackages);
-        this.packages = Collections.unmodifiableMap(builder.packages);
-        this.dependencies = Collections.unmodifiableMap(builder.dependencies);
-        this.dependencyByName = Collections.unmodifiableMap(builder.dependencyByName);
-        this.provisioningPlugins = Collections.unmodifiableList(builder.provisioningPlugins);
+        this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
+        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
+        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
+        this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
+        this.provisioningPlugins = builder.provisioningPlugins.size() > 1 ? Collections.unmodifiableList(builder.provisioningPlugins) : builder.provisioningPlugins;
     }
 
     public ArtifactCoords.Gav getGav() {

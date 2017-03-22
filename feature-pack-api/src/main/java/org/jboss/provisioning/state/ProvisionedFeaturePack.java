@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,10 @@
 
 package org.jboss.provisioning.state;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
@@ -32,27 +34,31 @@ public class ProvisionedFeaturePack {
 
     public static class Builder {
         private ArtifactCoords.Gav gav;
-        private Set<String> packages = Collections.emptySet();
+        private Map<String, ProvisionedPackage> packages = Collections.emptyMap();
 
         private Builder(ArtifactCoords.Gav gav) {
             this.gav = gav;
         }
 
         public Builder addPackage(String name) {
+            return addPackage(ProvisionedPackage.newInstance(name));
+        }
+
+        public Builder addPackage(ProvisionedPackage provisionedPkg) {
             switch(packages.size()) {
                 case 0:
-                    packages = Collections.singleton(name);
+                    packages = Collections.singletonMap(provisionedPkg.getName(), provisionedPkg);
                     break;
                 case 1:
-                    packages = new LinkedHashSet<>(packages);
+                    packages = new LinkedHashMap<>(packages);
                 default:
-                    packages.add(name);
+                    packages.put(provisionedPkg.getName(), provisionedPkg);
             }
             return this;
         }
 
         public boolean hasPackage(String name) {
-            return packages.contains(name);
+            return packages.containsKey(name);
         }
 
         public ProvisionedFeaturePack build() {
@@ -65,11 +71,11 @@ public class ProvisionedFeaturePack {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final Set<String> packages;
+    private final Map<String, ProvisionedPackage> packages;
 
     private ProvisionedFeaturePack(Builder builder) {
         this.gav = builder.gav;
-        this.packages = Collections.unmodifiableSet(builder.packages);
+        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -81,11 +87,19 @@ public class ProvisionedFeaturePack {
     }
 
     public boolean containsPackage(String name) {
-        return packages.contains(name);
+        return packages.containsKey(name);
     }
 
     public Set<String> getPackageNames() {
-        return packages;
+        return packages.keySet();
+    }
+
+    public Collection<ProvisionedPackage> getPackages() {
+        return packages.values();
+    }
+
+    public ProvisionedPackage getPackage(String name) {
+        return packages.get(name);
     }
 
     @Override

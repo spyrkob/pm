@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -83,7 +84,15 @@ public class FeaturePackRepoTestBase {
     }
 
     protected ProvisioningManager getPm() {
-        return ProvisioningManager.builder().setArtifactResolver(getRepoManager()).setInstallationHome(installHome).build();
+        return ProvisioningManager.builder()
+                .setArtifactResolver(getRepoManager())
+                .setInstallationHome(installHome)
+                .setPackageParameterResolver(getParameterResolver())
+                .build();
+    }
+
+    protected PackageParameterResolver getParameterResolver() {
+        return null;
     }
 
     protected Path resolve(String relativePath) {

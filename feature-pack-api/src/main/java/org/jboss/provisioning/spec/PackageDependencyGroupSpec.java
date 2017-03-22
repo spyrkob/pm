@@ -80,7 +80,7 @@ public class PackageDependencyGroupSpec {
 
     private PackageDependencyGroupSpec(Builder builder) {
         this.groupName = builder.groupName;
-        this.dependencies = Collections.unmodifiableMap(builder.dependencies);
+        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
     }
 
     public boolean isExternal() {

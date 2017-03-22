@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,6 +77,8 @@ public class PackageXmlParserTestCase  {
                 .addDependency("dep2")
                 .addDependency("fp-dep", "dep1")
                 .addDependency("fp-dep", "dep2")
+                .addParameter("p1", "def1")
+                .addParameter("p2", "def2")
                 .build();
         Assert.assertEquals(expected, found);
     }

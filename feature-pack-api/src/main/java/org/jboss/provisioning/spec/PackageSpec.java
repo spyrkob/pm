@@ -19,6 +19,7 @@ package org.jboss.provisioning.spec;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,9 +38,10 @@ public class PackageSpec {
 
     public static class Builder {
 
-        protected String name;
-        protected PackageDependencyGroupSpec.Builder localDeps = PackageDependencyGroupSpec.builder();
-        protected Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
+        private String name;
+        private PackageDependencyGroupSpec.Builder localDeps = PackageDependencyGroupSpec.builder();
+        private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
+        private Map<String, ParameterSpec> params = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -78,6 +80,19 @@ public class PackageSpec {
             return !localDeps.dependencies.isEmpty() || !externalDeps.isEmpty();
         }
 
+        public Builder addParameter(String name, String defaultValue) {
+            switch(params.size()) {
+                case 0:
+                    params = Collections.singletonMap(name, ParameterSpec.newInstance(name, defaultValue));
+                    break;
+                case 1:
+                    params = new HashMap<>(params);
+                default:
+                    params.put(name, ParameterSpec.newInstance(name, defaultValue));
+            }
+            return this;
+        }
+
         private PackageDependencyGroupSpec.Builder getExternalGroupBuilder(String groupName) {
             PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(groupName);
             if(groupBuilder == null) {
@@ -108,14 +123,16 @@ public class PackageSpec {
         return new Builder(name);
     }
 
-    protected final String name;
-    protected final PackageDependencyGroupSpec localDeps;
-    protected final Map<String, PackageDependencyGroupSpec> externalDeps;
+    private final String name;
+    private final PackageDependencyGroupSpec localDeps;
+    private final Map<String, PackageDependencyGroupSpec> externalDeps;
+    private final Map<String, ParameterSpec> params;
 
     protected PackageSpec(String name) {
         this.name = name;
         localDeps = PackageDependencyGroupSpec.builder().build();
         externalDeps = Collections.emptyMap();
+        params = Collections.emptyMap();
     }
 
     protected PackageSpec(Builder builder) {
@@ -136,6 +153,7 @@ public class PackageSpec {
                 externalDeps = Collections.unmodifiableMap(deps);
             }
         }
+        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public String getName() {
@@ -162,6 +180,14 @@ public class PackageSpec {
         return externalDeps.get(groupName);
     }
 
+    public boolean hasParameters() {
+        return !params.isEmpty();
+    }
+
+    public Collection<ParameterSpec> getParameters() {
+        return params.values();
+    }
+
     void logContent(DescrFormatter logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
@@ -184,6 +210,7 @@ public class PackageSpec {
         result = prime * result + ((externalDeps == null) ? 0 : externalDeps.hashCode());
         result = prime * result + ((localDeps == null) ? 0 : localDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((params == null) ? 0 : params.hashCode());
         return result;
     }
 
@@ -211,6 +238,11 @@ public class PackageSpec {
                 return false;
         } else if (!name.equals(other.name))
             return false;
+        if (params == null) {
+            if (other.params != null)
+                return false;
+        } else if (!params.equals(other.params))
+            return false;
         return true;
     }
 
@@ -223,6 +255,9 @@ public class PackageSpec {
         }
         if(!externalDeps.isEmpty()) {
             buf.append(", ").append(externalDeps);
+        }
+        if(!params.isEmpty()) {
+            buf.append(" parameters ").append(params);
         }
         buf.append(']');
         return buf.toString();

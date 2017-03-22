@@ -58,6 +58,7 @@ import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.PropertyUtils;
@@ -207,14 +208,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
         }
 
-        for(String pkgName : provisionedFp.getPackageNames()) {
-            final Path pmWfDir = packagesDir.resolve(pkgName).resolve(WfConstants.PM).resolve(WfConstants.WILDFLY);
+        for(ProvisionedPackage pkg : provisionedFp.getPackages()) {
+            final Path pmWfDir = packagesDir.resolve(pkg.getName()).resolve(WfConstants.PM).resolve(WfConstants.WILDFLY);
             if(!Files.exists(pmWfDir)) {
                 continue;
             }
             final Path moduleDir = pmWfDir.resolve(WfConstants.MODULE);
             if(Files.exists(moduleDir)) {
-                processModules(provisionedFp.getGav(), pkgName, moduleDir);
+                processModules(provisionedFp.getGav(), pkg.getName(), moduleDir);
             }
             final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
             if(Files.exists(tasksXml)) {
@@ -238,14 +239,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                             standaloneGenerator = new StandaloneConfigGenerator(ctx);
                         }
                         standaloneGenerator.init(genConfig.getStandaloneConfig().getServerConfig());
-                        standaloneGenerator.collectScripts(provisionedFp, pkgName, null);
+                        standaloneGenerator.collectScripts(provisionedFp, pkg, null);
                         standaloneGenerator.run();
                     }
                     if(genConfig.hasDomainProfile()) {
                         if(domainScriptCollector == null) {
                             domainScriptCollector = new DomainConfigGenerator(ctx);
                         }
-                        domainScriptCollector.collectScripts(provisionedFp, pkgName, genConfig.getDomainProfileConfig().getProfile());
+                        domainScriptCollector.collectScripts(provisionedFp, pkg, genConfig.getDomainProfileConfig().getProfile());
                     }
                 }
             }

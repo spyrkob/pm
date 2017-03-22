@@ -47,6 +47,7 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.wildfly.core.launcher.CliCommandBuilder;
 
@@ -140,7 +141,7 @@ abstract class ScriptCollector {
         lastLoggedPackage = null;
     }
 
-    void collectScripts(final ProvisionedFeaturePack provisionedFp, String pkgName, final String profile)
+    void collectScripts(final ProvisionedFeaturePack provisionedFp, ProvisionedPackage pkg, final String profile)
             throws ProvisioningException {
         final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
         final StringBuilder buf = new StringBuilder();
@@ -148,7 +149,7 @@ abstract class ScriptCollector {
         if(profile != null) {
             buf.append(" for profile ").append(profile);
         }
-        buf.append(" from feature-pack ").append(provisionedFp.getGav().toString()).append(" package ").append(pkgName);
+        buf.append(" from feature-pack ").append(provisionedFp.getGav().toString()).append(" package ").append(pkg.getName());
         System.out.println(buf);
         if(profile != null) {
             addCommand("set profile=" + profile);
@@ -159,16 +160,16 @@ abstract class ScriptCollector {
         } else {
             addCommand("set socketGroup=" + profile);
         }
-        collectScripts(ctx.getLayoutDescription().getFeaturePack(fpGav.toGa()), pkgName, provisionedFp,
+        collectScripts(ctx.getLayoutDescription().getFeaturePack(fpGav.toGa()), provisionedFp, pkg,
                 getProcessedPackages(fpGav),
                 LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.PACKAGES));
         reset();
     }
 
-    private void collectScripts(FeaturePackSpec fpSpec, String pkgName, ProvisionedFeaturePack provisionedFp,
+    private void collectScripts(FeaturePackSpec fpSpec, ProvisionedFeaturePack provisionedFp, ProvisionedPackage pkg,
             Set<String> processedPackages, Path packagesDir) throws ProvisioningException {
 
-        final PackageSpec pkgSpec = fpSpec.getPackage(pkgName);
+        final PackageSpec pkgSpec = fpSpec.getPackage(pkg.getName());
         if(pkgSpec.hasExternalDependencies()) {
             for(String fpDep : pkgSpec.getExternalDependencyNames()) {
                 final PackageDependencyGroupSpec externalDeps = pkgSpec.getExternalDependencies(fpDep);
@@ -178,12 +179,13 @@ abstract class ScriptCollector {
                 FeaturePackSpec externalFpSpec = null;
                 Path externalPackagesDir = null;
                 for(String depPkgName : externalDeps.getPackageNames()) {
-                    if(provisionedExternalFp.containsPackage(depPkgName) && externalProcessed.add(depPkgName)) {
+                    final ProvisionedPackage depPkg = provisionedExternalFp.getPackage(depPkgName);
+                    if(depPkg != null && externalProcessed.add(depPkgName)) {
                         if(externalFpSpec == null) {
                             externalFpSpec = ctx.getLayoutDescription().getFeaturePack(externalGav.toGa());
                             externalPackagesDir = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), externalGav).resolve(Constants.PACKAGES);
                         }
-                        collectScripts(externalFpSpec, depPkgName, provisionedExternalFp, externalProcessed, externalPackagesDir);
+                        collectScripts(externalFpSpec, provisionedExternalFp, depPkg, externalProcessed, externalPackagesDir);
                     }
                 }
             }
@@ -191,8 +193,9 @@ abstract class ScriptCollector {
 
         if(pkgSpec.hasLocalDependencies()) {
             for(String depPkgName : pkgSpec.getLocalDependencies().getPackageNames()) {
-                if(provisionedFp.containsPackage(depPkgName) && processedPackages.add(depPkgName)) {
-                    collectScripts(fpSpec, depPkgName, provisionedFp, processedPackages, packagesDir);
+                final ProvisionedPackage depPkg = provisionedFp.getPackage(depPkgName);
+                if(depPkg != null && processedPackages.add(depPkgName)) {
+                    collectScripts(fpSpec, provisionedFp, depPkg, processedPackages, packagesDir);
                 }
             }
         }
@@ -207,7 +210,7 @@ abstract class ScriptCollector {
             includedStaticPackages = new HashSet<>();
             processedStaticPackages.put(fpSpec.getGav(), includedStaticPackages);
         }
-        final boolean includeStatic = includedStaticPackages.add(pkgName);
+        final boolean includeStatic = includedStaticPackages.add(pkg.getName());
 
         final PackageScripts scripts;
         final Path scriptsPath = wfDir.resolve("scripts.xml");
@@ -222,16 +225,16 @@ abstract class ScriptCollector {
         } else {
             scripts = PackageScripts.DEFAULT;
         }
-        collect(scripts, provisionedFp, pkgSpec, wfDir, includeStatic);
+        collect(scripts, provisionedFp, pkg, wfDir, includeStatic);
     }
 
     protected abstract void collect(final PackageScripts scripts,
             final ProvisionedFeaturePack provisionedFp,
-            final PackageSpec pkgSpec,
+            final ProvisionedPackage pkg,
             final Path wfDir,
             final boolean includeStatic) throws ProvisioningException;
 
-    protected void addScripts(final ProvisionedFeaturePack provisionedFp, final PackageSpec pkgSpec, final Path wfDir,
+    protected void addScripts(final ProvisionedFeaturePack provisionedFp, final ProvisionedPackage pkg, final Path wfDir,
             final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
         for(Script script : scripts) {
             if(!includeStatic && !script.isCollectAgain()) {
@@ -241,7 +244,7 @@ abstract class ScriptCollector {
                 final Path scriptPath = wfDir.resolve("scripts.xml");
                 addCommand("echo executing " + scriptPath);
                 addCommand(script.getLine(), script.getPrefix());
-                logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+                logScript(provisionedFp, pkg.getName(), scriptPath);
                 return;
             }
             if(script.getPath() == null) {
@@ -275,7 +278,7 @@ abstract class ScriptCollector {
                     addCommand("unset " + param);
                 }
             }
-            logScript(provisionedFp, pkgSpec.getName(), scriptPath);
+            logScript(provisionedFp, pkg.getName(), scriptPath);
         }
     }
 

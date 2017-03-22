@@ -51,9 +51,7 @@ import org.jboss.provisioning.util.ZipUtils;
  */
 class ProvisioningTask {
 
-    private final ArtifactResolver artifactResolver;
-    private final Path installationHome;
-    private final String encoding;
+    private final ProvisioningManager pm;
     private final ProvisioningConfig provisioningConfig;
 
     private final Path workDir;
@@ -62,10 +60,8 @@ class ProvisioningTask {
 
     private Set<ArtifactCoords.Gav> dependencyResolution;
 
-    ProvisioningTask(ArtifactResolver artifactResolver, Path installationHome, String encoding, ProvisioningConfig provisioningConfig) {
-        this.artifactResolver = artifactResolver;
-        this.installationHome = installationHome;
-        this.encoding = encoding;
+    ProvisioningTask(ProvisioningManager pm, ProvisioningConfig provisioningConfig) {
+        this.pm = pm;
         this.provisioningConfig = provisioningConfig;
 
         workDir = IoUtils.createRandomTmpDir();
@@ -97,8 +93,9 @@ class ProvisioningTask {
             final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
 
             // Resolve the target provisioned state
-            final ProvisionedState provisionedState = new ProvisionedStateResolver().resolve(extendedConfig, layoutDescr, layoutDir);
+            final ProvisionedState provisionedState = new ProvisionedStateResolver(extendedConfig, layoutDescr, pm.getPackageParameterResolver()).resolve();
 
+            final Path installationHome = pm.getInstallationHome();
             if (Files.exists(installationHome)) {
                 IoUtils.recursiveDelete(installationHome);
             }
@@ -122,7 +119,7 @@ class ProvisioningTask {
         final FeaturePackSpec fpSpec;
         final Path fpWorkDir = LayoutUtils.getFeaturePackDir(layoutDir, fpGav, false);
         if(!layoutBuilder.hasFeaturePack(fpGav.toGa())) {
-            final Path artifactPath = artifactResolver.resolve(fpGav.toArtifactCoords());
+            final Path artifactPath = pm.getArtifactResolver().resolve(fpGav.toArtifactCoords());
             mkdirs(fpWorkDir);
             try {
                 //System.out.println("Adding " + fpGav + " to the layout at " + fpWorkDir);
@@ -132,7 +129,7 @@ class ProvisioningTask {
             }
 
             try {
-                fpSpec = FeaturePackLayoutDescriber.describeFeaturePack(fpWorkDir, encoding);
+                fpSpec = FeaturePackLayoutDescriber.describeFeaturePack(fpWorkDir, pm.getEncoding());
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningException("Failed to describe feature-pack " + fpGav, e);
             }
@@ -244,6 +241,9 @@ class ProvisioningTask {
             final FeaturePackLayoutDescription layoutDescr) throws ProvisioningException {
         final Path[] tmpDir = new Path[1];
         final ProvisioningContext ctx = new ProvisioningContext() {
+            final Path installationHome = pm.getInstallationHome();
+            final ArtifactResolver artifactResolver = pm.getArtifactResolver();
+            final String encoding = pm.getEncoding();
             @Override
             public Path getLayoutDir() {
                 return layoutDir;
@@ -322,7 +322,7 @@ class ProvisioningTask {
 
     private URL resolveUrl(ArtifactCoords coords) throws ArtifactResolutionException {
         try {
-            return artifactResolver.resolve(coords).toUri().toURL();
+            return pm.getArtifactResolver().resolve(coords).toUri().toURL();
         } catch (MalformedURLException e) {
             throw new ArtifactResolutionException("Failed to resolve " + coords, e);
         }

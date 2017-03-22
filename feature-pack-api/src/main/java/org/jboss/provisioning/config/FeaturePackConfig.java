@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -253,9 +253,7 @@ public class FeaturePackConfig {
                     }
                 }
             }
-            return new FeaturePackConfig(gav, inheritPackages,
-                    Collections.unmodifiableSet(excludedPackages),
-                    Collections.unmodifiableSet(includedPackages));
+            return new FeaturePackConfig(this);
         }
     }
 
@@ -272,7 +270,7 @@ public class FeaturePackConfig {
     }
 
     public static FeaturePackConfig forGav(ArtifactCoords.Gav gav) {
-        return new FeaturePackConfig(gav, true, Collections.emptySet(), Collections.emptySet());
+        return new Builder(gav).build();
     }
 
     private final ArtifactCoords.Gav gav;
@@ -280,13 +278,12 @@ public class FeaturePackConfig {
     private final Set<String> excludedPackages;
     private final Set<String> includedPackages;
 
-    protected FeaturePackConfig(ArtifactCoords.Gav gav, boolean inheritPackages,
-            Set<String> excludedPackages, Set<String> includedPackages) {
-        assert gav != null : "gav is null";
-        this.gav = gav;
-        this.inheritPackages = inheritPackages;
-        this.excludedPackages = excludedPackages;
-        this.includedPackages = includedPackages;
+    protected FeaturePackConfig(Builder builder) {
+        assert builder.gav != null : "gav is null";
+        this.gav = builder.gav;
+        this.inheritPackages = builder.inheritPackages;
+        this.excludedPackages = builder.excludedPackages.size() > 1 ? Collections.unmodifiableSet(builder.excludedPackages) : builder.excludedPackages;
+        this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableSet(builder.includedPackages) : builder.includedPackages;
     }
 
     public ArtifactCoords.Gav getGav() {

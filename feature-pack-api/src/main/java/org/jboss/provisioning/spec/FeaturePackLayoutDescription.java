@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,7 +82,7 @@ public class FeaturePackLayoutDescription {
         }
 
         public FeaturePackLayoutDescription build() throws ProvisioningDescriptionException {
-            return new FeaturePackLayoutDescription(Collections.unmodifiableMap(featurePacks));
+            return new FeaturePackLayoutDescription(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
         }
     }
 
