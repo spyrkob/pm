@@ -20,8 +20,9 @@ import java.nio.file.Path;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 
 /**
@@ -39,6 +40,13 @@ public interface ProvisioningContext {
     String getEncoding();
 
     /**
+     * The target installation location
+     *
+     * @return  installation location
+     */
+    Path getInstallDir();
+
+    /**
      * Configuration of the installation to be provisioned.
      *
      * @return  installation configuration
@@ -53,34 +61,46 @@ public interface ProvisioningContext {
     ProvisionedState getProvisionedState();
 
     /**
-     * Description of the feature-pack layout out of which the target
-     * installation is provisioned.
+     * Returns feature-pack specification for the given GAV.
      *
-     * @return  feature-pack layout description
+     * @return  feature-pack specification
      */
-    FeaturePackLayoutDescription getLayoutDescription();
+    FeaturePackSpec getFeaturePackSpec(ArtifactCoords.Gav fpGav);
 
     /**
-     * Feature-pack layout location.
+     * Returns a resource path for the provisioning setup.
      *
-     * @return  feature-pack layout location
+     * @return  file-system path for the resource
      */
-    Path getLayoutDir();
+    Path getResource(String... path);
 
     /**
-     * The target installation location
+     * Returns a resource path for a feature-pack.
      *
-     * @return  installation location
+     * @param fpGav  GAV of the feature-pack
+     * @param path  path to the resource relative to the feature-pack resources directory
+     * @return  file-system path for the resource
+     * @throws ProvisioningDescriptionException  in case the feature-pack was not found in the layout
      */
-    Path getInstallDir();
+    Path getFeaturePackResource(ArtifactCoords.Gav fpGav, String... path) throws ProvisioningDescriptionException;
 
     /**
-     * Feature-pack layout resources location the plug-ins may use as a source
-     * of data.
+     * Returns a resource path for a package.
      *
-     * @return  resources location
+     * @param fpGav  GAV of the feature-pack containing the package
+     * @param pkgName  name of the package
+     * @param path  path to the resource relative to the package resources directory
+     * @return  file-system path for the resource
+     * @throws ProvisioningDescriptionException  in case the feature-pack or package were not found in the layout
      */
-    Path getResourcesDir();
+    Path getPackageResource(ArtifactCoords.Gav fpGav, String pkgName, String... path) throws ProvisioningDescriptionException;
+
+    /**
+     * Returns a path for a temporary file-system resource.
+     *
+     * @return  temporary file-system path
+     */
+    Path getTmpPath(String... path);
 
     /**
      * Resolves the location of the artifact given its coordinates.
@@ -91,12 +111,4 @@ public interface ProvisioningContext {
      * resolved for any reason
      */
     Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException;
-
-    /**
-     * Returns this provisioning temporary directory.
-     * This is mainly for the provisioning plug-ins to provide a common tmp dir.
-     *
-     * @return  temporary directory
-     */
-    Path getTmpDir();
 }

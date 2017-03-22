@@ -244,19 +244,55 @@ class ProvisioningTask {
             final Path installationHome = pm.getInstallationHome();
             final ArtifactResolver artifactResolver = pm.getArtifactResolver();
             final String encoding = pm.getEncoding();
+
             @Override
-            public Path getLayoutDir() {
-                return layoutDir;
+            public Path getResource(String... path) {
+                if(path.length == 0) {
+                    throw new IllegalArgumentException("Resource path is null");
+                }
+                if(path.length == 1) {
+                    return workDir.resolve(Constants.RESOURCES).resolve(path[0]);
+                }
+                Path p = workDir.resolve(Constants.RESOURCES);
+                for(String name : path) {
+                    p = p.resolve(name);
+                }
+                return p;
+            }
+
+            @Override
+            public Path getFeaturePackResource(ArtifactCoords.Gav fpGav, String... path) throws ProvisioningDescriptionException {
+                if(path.length == 0) {
+                    throw new IllegalArgumentException("Resource path is null");
+                }
+                if(path.length == 1) {
+                    return LayoutUtils.getFeaturePackDir(layoutDir, fpGav).resolve(Constants.RESOURCES).resolve(path[0]);
+                }
+                Path p = LayoutUtils.getFeaturePackDir(layoutDir, fpGav).resolve(Constants.RESOURCES);
+                for(String name : path) {
+                    p = p.resolve(name);
+                }
+                return p;
+            }
+
+            @Override
+            public Path getPackageResource(ArtifactCoords.Gav fpGav, String packageName, String... path) throws ProvisioningDescriptionException {
+                if(path.length == 0) {
+                    throw new IllegalArgumentException("Resource path is null");
+                }
+                if(path.length == 1) {
+                    return LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), packageName).resolve(path[0]);
+                }
+                Path p = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(layoutDir, fpGav), packageName);
+                for(String name : path) {
+                    p = p.resolve(name);
+                }
+                return p;
             }
 
             @Override
             public Path getInstallDir() {
                 return installationHome;
-            }
-
-            @Override
-            public Path getResourcesDir() {
-                return workDir.resolve("resources");
             }
 
             @Override
@@ -270,8 +306,8 @@ class ProvisioningTask {
             }
 
             @Override
-            public FeaturePackLayoutDescription getLayoutDescription() {
-                return layoutDescr;
+            public FeaturePackSpec getFeaturePackSpec(ArtifactCoords.Gav fpGav) {
+                return layoutDescr.getFeaturePack(fpGav.toGa());
             }
 
             @Override
@@ -285,11 +321,21 @@ class ProvisioningTask {
             }
 
             @Override
-            public Path getTmpDir() {
+            public Path getTmpPath(String... path) {
                 if(tmpDir[0] == null) {
                     tmpDir[0] = IoUtils.createRandomTmpDir();
                 }
-                return tmpDir[0];
+                if(path.length == 0) {
+                    return tmpDir[0];
+                }
+                if(path.length == 1) {
+                    return tmpDir[0].resolve(path[0]);
+                }
+                Path p = tmpDir[0];
+                for(String name : path) {
+                    p = p.resolve(name);
+                }
+                return p;
             }
         };
 
