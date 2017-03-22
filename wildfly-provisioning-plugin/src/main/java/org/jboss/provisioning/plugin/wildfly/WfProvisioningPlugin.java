@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -47,7 +46,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningContext;
@@ -60,7 +58,6 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.util.IoUtils;
-import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
@@ -105,8 +102,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         Properties provisioningProps = new Properties();
         final Map<String, String> artifactVersions = new HashMap<>();
-        for(ArtifactCoords.Gav fpGav : ctx.getProvisionedState().getFeaturePackGavs()) {
-            final Path wfRes = LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav).resolve(Constants.RESOURCES).resolve(WfConstants.WILDFLY);
+        for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
+            final Path wfRes = ctx.getFeaturePackResource(fp.getGav(), WfConstants.WILDFLY);
             if(!Files.exists(wfRes)) {
                 continue;
             }
@@ -140,9 +137,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
             }
 
-            if(ctx.getProvisionedState().getFeaturePack(fpGav).containsPackage(WfConstants.DOCS_SCHEMA)) {
-                final Path schemaGroupsTxt = LayoutUtils.getPackageDir(LayoutUtils.getFeaturePackDir(ctx.getLayoutDir(), fpGav), WfConstants.DOCS_SCHEMA)
-                        .resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.SCHEMA_GROUPS_TXT);
+            if(fp.containsPackage(WfConstants.DOCS_SCHEMA)) {
+                final Path schemaGroupsTxt = ctx.getPackageResource(fp.getGav(), WfConstants.DOCS_SCHEMA,
+                        WfConstants.PM, WfConstants.WILDFLY,WfConstants.SCHEMA_GROUPS_TXT);
                 try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
                     String line = reader.readLine();
                     while(line != null) {
@@ -165,51 +162,20 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
         }
         tasksProps = new MapPropertyResolver(provisioningProps);
-
         versionResolver = new MapPropertyResolver(artifactVersions);
 
-        processPackages();
+        for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
+            processPackages(fp);
+        }
 
         if(domainScriptCollector != null) {
             domainScriptCollector.run();
         }
     }
 
-    private void processPackages() throws ProvisioningException {
-        try(DirectoryStream<Path> groupDtream = Files.newDirectoryStream(ctx.getLayoutDir())) {
-            for(Path groupId : groupDtream) {
-                try(DirectoryStream<Path> artifactStream = Files.newDirectoryStream(groupId)) {
-                    for(Path artifactId : artifactStream) {
-                        try(DirectoryStream<Path> versionStream = Files.newDirectoryStream(artifactId)) {
-                            int count = 0;
-                            for(Path version : versionStream) {
-                                final ArtifactCoords.Gav fpGav = ArtifactCoords.newGav(groupId.getFileName().toString(), artifactId.getFileName().toString(), version.getFileName().toString());
-                                if(++count > 1) {
-                                    throw new ProvisioningException("There is more than one version of feature-pack " + fpGav.toGa());
-                                }
-                                processPackages(ctx.getProvisionedState().getFeaturePack(fpGav), version);
-                            }
-                        } catch (IOException e) {
-                            throw new ProvisioningException(Errors.readDirectory(artifactId), e);
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.readDirectory(groupId), e);
-                }
-            }
-        } catch (IOException e) {
-            throw new ProvisioningException(Errors.readDirectory(ctx.getLayoutDir()), e);
-        }
-    }
-
-    private void processPackages(final ProvisionedFeaturePack provisionedFp, Path fpDir) throws ProvisioningException {
-        final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
-        if(!Files.exists(packagesDir)) {
-            throw new ProvisioningException(Errors.pathDoesNotExist(packagesDir));
-        }
-
+    private void processPackages(final ProvisionedFeaturePack provisionedFp) throws ProvisioningException {
         for(ProvisionedPackage pkg : provisionedFp.getPackages()) {
-            final Path pmWfDir = packagesDir.resolve(pkg.getName()).resolve(WfConstants.PM).resolve(WfConstants.WILDFLY);
+            final Path pmWfDir = ctx.getPackageResource(provisionedFp.getGav(), pkg.getName(), WfConstants.PM, WfConstants.WILDFLY);
             if(!Files.exists(pmWfDir)) {
                 continue;
             }
