@@ -15,43 +15,43 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.spec;
+package org.jboss.provisioning.parameters;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ParameterSpec {
+public class PackageParameter {
 
-    public static ParameterSpec newInstance(String name) {
-        return new ParameterSpec(name, null);
+    public static PackageParameter newInstance(String name) {
+        return new PackageParameter(name, null);
     }
 
-    public static ParameterSpec newInstance(String name, String defaultValue) {
-        return new ParameterSpec(name, defaultValue);
+    public static PackageParameter newInstance(String name, String value) {
+        return new PackageParameter(name, value);
     }
 
     private final String name;
-    private final String defaultValue;
+    private final String value;
 
-    private ParameterSpec(String name, String defaultValue) {
+    private PackageParameter(String name, String value) {
         this.name = name;
-        this.defaultValue = defaultValue;
+        this.value = value;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDefaultValue() {
-        return defaultValue;
+    public String getValue() {
+        return value;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((defaultValue == null) ? 0 : defaultValue.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -64,11 +64,11 @@ public class ParameterSpec {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ParameterSpec other = (ParameterSpec) obj;
-        if (defaultValue == null) {
-            if (other.defaultValue != null)
+        PackageParameter other = (PackageParameter) obj;
+        if (value == null) {
+            if (other.value != null)
                 return false;
-        } else if (!defaultValue.equals(other.defaultValue))
+        } else if (!value.equals(other.value))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -79,6 +79,6 @@ public class ParameterSpec {
     }
 
     public String toString() {
-        return "[param " + name + "=" + defaultValue + ']';
+        return "[param " + name + "=" + value + ']';
     }
 }

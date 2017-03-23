@@ -16,6 +16,8 @@
  */
 package org.jboss.provisioning.featurepack.pkg.xml.test;
 
+import java.io.BufferedWriter;
+import java.io.StringWriter;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.spec.PackageSpec;
@@ -72,6 +74,19 @@ public class PackageXmlParserTestCase  {
     @Test
     public void readValid() throws Exception {
         PackageSpec found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
+
+        final StringWriter writer = new StringWriter();
+        try(BufferedWriter buf = new BufferedWriter(writer)) {
+            buf.write("<custom-config xmlns=\"custom:schema\" id=\"1\">");buf.newLine();
+            buf.write("        <option name=\"a\"/>");buf.newLine();
+            buf.write("        <option name=\"b\">text</option>");buf.newLine();
+            buf.write("        <option name=\"c\">");buf.newLine();
+            buf.write("          <r:random xmlns:r=\"random:schema\">");buf.newLine();
+            buf.write("            content");buf.newLine();
+            buf.write("          </r:random>");buf.newLine();
+            buf.write("        </option>");buf.newLine();
+            buf.write("      </custom-config>");
+        }
         PackageSpec expected = PackageSpec.builder("package1")
                 .addDependency("dep1")
                 .addDependency("dep2")
@@ -79,6 +94,7 @@ public class PackageXmlParserTestCase  {
                 .addDependency("fp-dep", "dep2")
                 .addParameter("p1", "def1")
                 .addParameter("p2", "def2")
+                .addParameter("p3", writer.toString())
                 .build();
         Assert.assertEquals(expected, found);
     }

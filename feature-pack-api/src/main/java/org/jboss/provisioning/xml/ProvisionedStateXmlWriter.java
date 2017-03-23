@@ -80,12 +80,7 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
                 final ElementNode pkgElement = addElement(packages, Element.PACKAGE);
                 addAttribute(pkgElement, Attribute.NAME, pkg.getName());
                 if(pkg.hasParameters()) {
-                    final ElementNode params = addElement(pkgElement, Element.PARAMETERS);
-                    for(String name : pkg.getParameterNames()) {
-                        final ElementNode param = addElement(params, Element.PARAMETER);
-                        addAttribute(param, Attribute.NAME, name);
-                        addAttribute(param, Attribute.VALUE, pkg.getParameterValue(name));
-                    }
+                    PackageParametersXml.write(pkgElement, pkg.getParameters());
                 }
             }
         }

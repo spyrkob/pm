@@ -28,7 +28,6 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.spec.ParameterSpec;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -76,10 +75,7 @@ public class PackageXmlWriter extends BaseXmlWriter {
             }
         }
         if(pkgSpec.hasParameters()) {
-            final ElementNode params = addElement(pkg, Element.PARAMETERS);
-            for(ParameterSpec param : pkgSpec.getParameters()) {
-                writeParameter(params, param);
-            }
+            PackageParametersXml.write(pkg, pkgSpec.getParameters());
         }
 
         ensureParentDir(outputFile);
@@ -108,11 +104,8 @@ public class PackageXmlWriter extends BaseXmlWriter {
         if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);
         }
-    }
-
-    private static void writeParameter(ElementNode params, ParameterSpec param) {
-        final ElementNode paramElement = addElement(params, Element.PARAMETER);
-        addAttribute(paramElement, Attribute.NAME, param.getName());
-        addAttribute(paramElement, Attribute.DEFAULT, param.getDefaultValue());
+        if(depSpec.hasParams()) {
+            PackageParametersXml.write(depElement, depSpec.getParameters());
+        }
     }
 }

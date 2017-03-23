@@ -18,9 +18,7 @@ package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
@@ -49,8 +47,7 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
         INSTALLATION("installation"),
         PACKAGES("packages"),
         PACKAGE("package"),
-        PARAMETER("parameter"),
-        PARAMETERS("parameters"),
+        PARAMETERS(PackageParametersXml.PARAMETERS),
 
         // default unknown element
         UNKNOWN(null);
@@ -106,7 +103,6 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
         NAME("name"),
-        VALUE("value"),
         VERSION("version"),
 
         // default unknown attribute
@@ -293,7 +289,7 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PARAMETERS:
-                            readParameterList(reader, pkgBuilder);
+                            PackageParametersXml.read(reader, pkgBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -306,66 +302,5 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readParameterList(XMLExtendedStreamReader reader, ProvisionedPackage.Builder builder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PARAMETER:
-                            readParameter(reader, builder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readParameter(XMLExtendedStreamReader reader, ProvisionedPackage.Builder builder) throws XMLStreamException {
-        String name = null;
-        String value = null;
-        for (int i = 0; i < reader.getAttributeCount(); i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
-                    break;
-                case VALUE:
-                    value = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        Set<Attribute> missingAttrs = null;
-        if (name == null) {
-            missingAttrs = new HashSet<>();
-            missingAttrs.add(Attribute.NAME);
-        }
-        if(value == null) {
-            if(missingAttrs == null) {
-                missingAttrs = Collections.singleton(Attribute.VALUE);
-            } else {
-                missingAttrs.add(Attribute.VALUE);
-            }
-        }
-        if (missingAttrs != null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), missingAttrs);
-        }
-        ParsingUtils.parseNoContent(reader);
-        builder.addParameter(name, value);
     }
 }

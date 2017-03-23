@@ -17,11 +17,14 @@
 
 package org.jboss.provisioning.state;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
+
+import org.jboss.provisioning.parameters.BuilderWithParameters;
+import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
  *
@@ -29,24 +32,25 @@ import java.util.Set;
  */
 public class ProvisionedPackage {
 
-    public static class Builder {
+    public static class Builder implements BuilderWithParameters<Builder> {
 
         private final String name;
-        private Map<String, String> params = Collections.emptyMap();
+        private Map<String, PackageParameter> params = Collections.emptyMap();
 
         private Builder(String name) {
             this.name = name;
         }
 
-        public Builder addParameter(String name, String value) {
+        @Override
+        public Builder addParameter(PackageParameter param) {
             switch(params.size()) {
                 case 0:
-                    params = Collections.singletonMap(name, value);
+                    params = Collections.singletonMap(param.getName(), param);
                     break;
                 case 1:
                     params = new HashMap<>(params);
                 default:
-                    params.put(name, value);
+                    params.put(param.getName(), param);
             }
             return this;
         }
@@ -65,7 +69,7 @@ public class ProvisionedPackage {
     }
 
     private final String name;
-    private final Map<String, String> params;
+    private final Map<String, PackageParameter> params;
 
     public ProvisionedPackage(Builder builder) {
         this.name = builder.name;
@@ -85,12 +89,8 @@ public class ProvisionedPackage {
         return !params.isEmpty();
     }
 
-    public Set<String> getParameterNames() {
-        return params.keySet();
-    }
-
-    public String getParameterValue(String name) {
-        return params.get(name);
+    public Collection<PackageParameter> getParameters() {
+        return params.values();
     }
 
     @Override
@@ -123,12 +123,12 @@ public class ProvisionedPackage {
         final StringBuilder buf = new StringBuilder().append(name);
         if(!params.isEmpty()) {
             buf.append('(');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Map.Entry<String, String> param = i.next();
-            buf.append(param.getKey()).append('=').append(param.getValue());
+            final Iterator<PackageParameter> i = params.values().iterator();
+            PackageParameter param = i.next();
+            buf.append(param.getName()).append('=').append(param.getValue());
             while(i.hasNext()) {
                 param = i.next();
-                buf.append(',').append(param.getKey()).append('=').append(param.getValue());
+                buf.append(',').append(param.getName()).append('=').append(param.getValue());
             }
             buf.append(')');
         }

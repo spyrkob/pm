@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,14 +36,22 @@ class BaseXmlWriter {
     }
 
     protected static ElementNode addElement(ElementNode parent, XmlNameProvider e) {
-        final ElementNode eNode = new ElementNode(parent, e.getLocalName(), e.getNamespace());
+        return addElement(parent, e.getLocalName(), e.getNamespace());
+    }
+
+    protected static ElementNode addElement(ElementNode parent, String localName, String ns) {
+        final ElementNode eNode = new ElementNode(parent, localName, ns);
         if(parent != null) {
             parent.addChild(eNode);
         }
         return eNode;
     }
 
-    protected static void addAttribute(ElementNode e, XmlNameProvider a, String value) {
-        e.addAttribute(a.getLocalName(), new AttributeValue(value));
+    protected static void addAttribute(ElementNode e, XmlNameProvider name, String value) {
+        addAttribute(e, name.getLocalName(), value);
+    }
+
+    protected static void addAttribute(ElementNode e, String name, String value) {
+        e.addAttribute(name, new AttributeValue(value));
     }
 }
