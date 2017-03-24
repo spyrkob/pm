@@ -28,6 +28,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -64,9 +65,9 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
                                 throw new ProvisioningException(Errors.mkdirs(dir), e);
                             }
                         }
-                        for(String param : pkg.getParameterNames()) {
+                        for(PackageParameter param : pkg.getParameters()) {
                             try {
-                                IoUtils.writeFile(dir.resolve(param + ".txt"), pkg.getParameterValue(param));
+                                IoUtils.writeFile(dir.resolve(param.getName() + ".txt"), param.getValue());
                             } catch (IOException e) {
                                 throw new ProvisioningException(Errors.writeFile(dir.resolve(param + ".txt")), e);
                             }

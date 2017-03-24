@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -138,9 +139,12 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             if (packages == null) {
                 packages = addElement(depElement, Element.PACKAGES);
             }
-            for (String included : target.getIncludedPackages()) {
+            for (PackageConfig included : target.getIncludedPackages()) {
                 final ElementNode include = addElement(packages, Element.INCLUDE);
-                addAttribute(include, Attribute.NAME, included);
+                addAttribute(include, Attribute.NAME, included.getName());
+                if(included.hasParams()) {
+                    PackageParametersXml.write(include, included.getParameters());
+                }
             }
         }
     }

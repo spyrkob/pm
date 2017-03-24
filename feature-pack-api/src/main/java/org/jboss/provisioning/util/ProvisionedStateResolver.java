@@ -17,18 +17,21 @@
 
 package org.jboss.provisioning.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
@@ -37,7 +40,6 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.spec.ParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -50,36 +52,75 @@ public class ProvisionedStateResolver {
 
     private final ProvisionedState.Builder stateBuilder;
     private final FeaturePackLayoutDescription fpLayout;
-    private final ProvisioningConfig extendedConfig;
+    private final ProvisioningConfig userConfig;
+    private final ProvisioningConfig expandedConfig;
     private final PackageParameterResolver paramResolver;
 
     private Map<ArtifactCoords.Ga, Fp> fps;
 
-    public ProvisionedStateResolver(ProvisioningConfig provisioningConfig,
+    private boolean setUserParams;
+
+    public ProvisionedStateResolver(ProvisioningConfig userConfig,
+            ProvisioningConfig expandedConfig,
             FeaturePackLayoutDescription fpLayout,
             PackageParameterResolver paramResolver) {
         this.stateBuilder = ProvisionedState.builder();
         this.fpLayout = fpLayout;
-        this.extendedConfig = provisioningConfig;
+        this.userConfig = userConfig;
+        this.expandedConfig = expandedConfig;
         this.paramResolver = paramResolver;
     }
 
     public ProvisionedState resolve() throws ProvisioningException {
 
-        final int fpTotal = extendedConfig.getFeaturePacks().size();
+        final int fpTotal = expandedConfig.getFeaturePacks().size();
         if(fpTotal == 1) {
-            final ArtifactCoords.Ga fpGa = extendedConfig.getFeaturePackGaParts().iterator().next();
-            fps = Collections.singletonMap(fpGa, new Fp(fpLayout.getFeaturePack(fpGa), extendedConfig.getFeaturePack(fpGa)));
+            final ArtifactCoords.Ga fpGa = expandedConfig.getFeaturePackGaParts().iterator().next();
+            fps = Collections.singletonMap(fpGa, new Fp(fpLayout.getFeaturePack(fpGa), expandedConfig.getFeaturePack(fpGa)));
         } else {
             fps = new HashMap<>(fpTotal);
         }
 
-        for(ArtifactCoords.Ga ga: extendedConfig.getFeaturePackGaParts()) {
+        for(ArtifactCoords.Ga ga: expandedConfig.getFeaturePackGaParts()) {
             resolveFeaturePack(ga);
         }
 
-        for(ArtifactCoords.Ga fpGa : extendedConfig.getFeaturePackGaParts()) {
-            stateBuilder.addFeaturePack(fps.get(fpGa).builder.build());
+        if(setUserParams) {
+            for(FeaturePackConfig userFpConfig : userConfig.getFeaturePacks()) {
+                if(userFpConfig.hasIncludedPackages()) {
+                    final Fp fp = fps.get(userFpConfig.getGav().toGa());
+                    for(PackageConfig userPkg : userFpConfig.getIncludedPackages()) {
+                        if(userPkg.hasParams()) {
+                            final PackageConfig.Builder pkgBuilder = fp.pkgConfigs.get(userPkg.getName());
+                            for(PackageParameter param : userPkg.getParameters()) {
+                                pkgBuilder.addParameter(param);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for(ArtifactCoords.Ga fpGa : expandedConfig.getFeaturePackGaParts()) {
+            final Fp fp = fps.get(fpGa);
+            final ProvisionedFeaturePack.Builder fpBuilder = ProvisionedFeaturePack.builder(fp.gav);
+            for(String pkgName : fp.pkgOrder) {
+                final PackageConfig pkgConfig = fp.pkgConfigs.get(pkgName).build();
+                if(pkgConfig.hasParams()) {
+                    final ParameterResolver pkgParamResolver = paramResolver.getResolver(fp.gav, pkgName);
+                    if(pkgParamResolver == null) {
+                        throw new ProvisioningException(Errors.packageParameterResolverNotProvided(fp.gav, pkgName));
+                    }
+                    final ProvisionedPackage.Builder ppBuilder = ProvisionedPackage.builder(pkgConfig.getName());
+                    for(PackageParameter param : pkgConfig.getParameters()) {
+                        ppBuilder.addParameter(param.getName(), pkgParamResolver.resolve(param.getName(), param.getValue()));
+                    }
+                    fpBuilder.addPackage(ppBuilder.build());
+                } else {
+                    fpBuilder.addPackage(pkgConfig.getName());
+                }
+            }
+            stateBuilder.addFeaturePack(fpBuilder.build());
         }
 
         return stateBuilder.build();
@@ -92,41 +133,60 @@ public class ProvisionedStateResolver {
 
         if(fp.config.isInheritPackages()) {
             for (String name : fp.spec.getDefaultPackageNames()) {
-                resolvePackage(fp, name);
+                if(!fp.config.isIncluded(name)) {
+                    // spec parameters are set first
+                    resolvePackage(fp, name, Collections.emptyList());
+                }
             }
         }
         if(fp.config.hasIncludedPackages()) {
-            for(String name : fp.config.getIncludedPackages()) {
-                if(!resolvePackage(fp, name)) {
-                    throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, null, name));
+            for(PackageConfig packageConfig : fp.config.getIncludedPackages()) {
+                // user parameters are set last
+                if(!resolvePackage(fp, packageConfig.getName(), Collections.emptyList())) {
+                    throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, null, packageConfig.getName()));
+                }
+                if(packageConfig.hasParams()) {
+                    setUserParams = true;
                 }
             }
         }
     }
 
-    private boolean resolvePackage(Fp fp, final String pkgName) throws ProvisioningException {
-
-        if(fp.isSkipResolution(pkgName)) {
-            return true;
-        }
+    private boolean resolvePackage(Fp fp, final String pkgName, Collection<PackageParameter> params) throws ProvisioningException {
 
         if(fp.config.isExcluded(pkgName)) {
             return false;
+        }
+
+        PackageConfig.Builder pkgBuilder = fp.pkgConfigs.get(pkgName);
+        if(pkgBuilder != null) {
+            if(!params.isEmpty()) {
+                for(PackageParameter param : params) {
+                    pkgBuilder.addParameter(param);
+                }
+            }
+            return true;
         }
 
         final PackageSpec pkgSpec = fp.spec.getPackage(pkgName);
         if (pkgSpec == null) {
             throw new ProvisioningDescriptionException(Errors.packageNotFound(fp.gav, pkgName));
         }
+        pkgBuilder = PackageConfig.builder(pkgName);
+        // spec parameters are added first
+        if(pkgSpec.hasParameters()) {
+            for(PackageParameter param : pkgSpec.getParameters()) {
+                pkgBuilder.addParameter(param);
+            }
+        }
+        fp.registerBuilder(pkgName, pkgBuilder);
 
-        boolean hasDependencies = false;
+
         if (pkgSpec.hasLocalDependencies()) {
-            hasDependencies = true;
-            fp.setBeingResolved(pkgName);
             for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
                 final boolean resolved;
                 try {
-                    resolved = resolvePackage(fp, dep.getName());
+                    resolved = resolvePackage(fp, dep.getName(), dep.getParameters());
                 } catch(ProvisioningDescriptionException e) {
                     if(dep.isOptional()) {
                         continue;
@@ -140,10 +200,6 @@ public class ProvisionedStateResolver {
             }
         }
         if(pkgSpec.hasExternalDependencies()) {
-            if(!hasDependencies) {
-                hasDependencies = true;
-                fp.setBeingResolved(pkgName);
-            }
             for(String depName : pkgSpec.getExternalDependencyNames()) {
                 final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
                 final Fp targetFp = getFp(depSpec.getTarget().getGav().toGa());
@@ -152,7 +208,7 @@ public class ProvisionedStateResolver {
                 for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                     final boolean resolved;
                     try {
-                        resolved = resolvePackage(targetFp, pkgDep.getName());
+                        resolved = resolvePackage(targetFp, pkgDep.getName(), pkgDep.getParameters());
                     } catch(ProvisioningDescriptionException e) {
                         if(pkgDep.isOptional()) {
                             continue;
@@ -167,32 +223,19 @@ public class ProvisionedStateResolver {
             }
         }
 
-        if(pkgSpec.hasParameters()) {
-            if(paramResolver == null) {
-                throw new ProvisioningException(Errors.packageParameterResolverNotProvided());
+        if(!params.isEmpty()) {
+            for(PackageParameter param : params) {
+                pkgBuilder.addParameter(param);
             }
-            final ParameterResolver pkgParamResolver = paramResolver.getResolver(fp.gav, pkgName);
-            if(pkgParamResolver == null) {
-                throw new ProvisioningException(Errors.packageParameterResolverNotProvided(fp.gav, pkgName));
-            }
-            final ProvisionedPackage.Builder pkgBuilder = ProvisionedPackage.builder(pkgName);
-            for(ParameterSpec paramSpec : pkgSpec.getParameters()) {
-                pkgBuilder.addParameter(paramSpec.getName(), pkgParamResolver.resolve(paramSpec.getName(), paramSpec.getDefaultValue()));
-            }
-            fp.builder.addPackage(pkgBuilder.build());
-        } else {
-            fp.builder.addPackage(pkgName);
         }
-        if(hasDependencies) {
-            fp.setResolved(pkgName);
-        }
+        fp.addPackage(pkgName);
         return true;
     }
 
     private Fp getFp(ArtifactCoords.Ga ga) {
         Fp fp = fps.get(ga);
         if(fp == null) {
-            fp = new Fp(fpLayout.getFeaturePack(ga), extendedConfig.getFeaturePack(ga));
+            fp = new Fp(fpLayout.getFeaturePack(ga), expandedConfig.getFeaturePack(ga));
             fps.put(ga, fp);
         }
         return fp;
@@ -202,29 +245,29 @@ public class ProvisionedStateResolver {
         final ArtifactCoords.Gav gav;
         final FeaturePackSpec spec;
         final FeaturePackConfig config;
-        final ProvisionedFeaturePack.Builder builder;
-        private Set<String> beingResolved = null;
+        Map<String, PackageConfig.Builder> pkgConfigs = Collections.emptyMap();
+        List<String> pkgOrder = new ArrayList<>();
 
         Fp(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {
             gav = fpSpec.getGav();
             spec = fpSpec;
             config = fpConfig;
-            builder = ProvisionedFeaturePack.builder(gav);
         }
 
-        boolean isSkipResolution(String pkgName) throws ProvisioningDescriptionException {
-            return builder.hasPackage(pkgName) || beingResolved != null && beingResolved.contains(pkgName);
-        }
-
-        void setBeingResolved(String pkgName) {
-            if(beingResolved == null) {
-                beingResolved = new HashSet<>();
+        void registerBuilder(String name, PackageConfig.Builder pkgBuilder) {
+            switch(pkgConfigs.size()) {
+                case 0:
+                    pkgConfigs = Collections.singletonMap(name, pkgBuilder);
+                    break;
+                case 1:
+                    pkgConfigs = new HashMap<>(pkgConfigs);
+                default:
+                    pkgConfigs.put(name, pkgBuilder);
             }
-            beingResolved.add(pkgName);
         }
 
-        void setResolved(String pkgName) {
-            beingResolved.remove(pkgName);
+        void addPackage(String name) {
+            pkgOrder.add(name);
         }
     }
 }

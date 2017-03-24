@@ -35,7 +35,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class BasicParameterResolutionTestCase extends PmInstallFeaturePackTestBase {
+public class BasicCustomParameterResolverTestCase extends PmInstallFeaturePackTestBase {
 
     private final Gav fp1Gav = ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1");
 

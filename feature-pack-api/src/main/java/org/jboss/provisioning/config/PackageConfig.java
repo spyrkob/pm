@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.spec;
+package org.jboss.provisioning.config;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,25 +26,24 @@ import org.jboss.provisioning.parameters.BuilderWithParameters;
 import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
- * Describes dependency on a single package.
+ * Package configuration.
  *
  * @author Alexey Loubyansky
  */
-public class PackageDependencySpec implements Comparable<PackageDependencySpec> {
+public class PackageConfig {
 
     public static class Builder implements BuilderWithParameters<Builder> {
 
-        private final String name;
-        private final boolean optional;
+        private String name;
         private Map<String, PackageParameter> params = Collections.emptyMap();
 
         protected Builder(String name) {
-            this(name, false);
+            this.name = name;
         }
 
-        protected Builder(String name, boolean optional) {
-            this.name = name;
-            this.optional = optional;
+        protected Builder(PackageConfig config) {
+            this.name = config.name;
+            params = config.params.size() > 1 ? new HashMap<>(config.params) : config.params;
         }
 
         @Override
@@ -65,62 +64,38 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
             return this;
         }
 
-        public PackageDependencySpec build() {
-            return new PackageDependencySpec(this);
+        public PackageConfig build() {
+            return new PackageConfig(this);
         }
     }
 
-    public static Builder builder(String packageName) {
-        return new Builder(packageName);
+    public static Builder builder(String name) {
+        return new Builder(name);
     }
 
-    public static Builder builder(String packageName, boolean optional) {
-        return new Builder(packageName, optional);
+    public static Builder builder(PackageConfig config) {
+        return new Builder(config);
     }
 
-    /**
-     * Creates a required dependency on the provided package name.
-     *
-     * @param name  target package name
-     * @return  dependency description
-     */
-    public static PackageDependencySpec create(String name) {
-        return new PackageDependencySpec(name, false);
-    }
-
-    /**
-     * Creates a dependency on the provided package name.
-     *
-     * @param name  target package name
-     * @param optional  whether the dependency should be optional
-     * @return  dependency description
-     */
-    public static PackageDependencySpec create(String name, boolean optional) {
-        return new PackageDependencySpec(name, optional);
+    public static PackageConfig newInstance(String name) {
+        return new PackageConfig(name);
     }
 
     private final String name;
-    private final boolean optional;
     private final Map<String, PackageParameter> params;
 
-    protected PackageDependencySpec(String name, boolean optional) {
+    private PackageConfig(String name) {
         this.name = name;
-        this.optional = optional;
         params = Collections.emptyMap();
     }
 
-    protected PackageDependencySpec(Builder builder) {
+    private PackageConfig(Builder builder) {
         this.name = builder.name;
-        this.optional = builder.optional;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isOptional() {
-        return optional;
     }
 
     public boolean hasParams() {
@@ -140,7 +115,6 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + (optional ? 1231 : 1237);
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         return result;
     }
@@ -153,13 +127,11 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
             return false;
         if (getClass() != obj.getClass())
             return false;
-        PackageDependencySpec other = (PackageDependencySpec) obj;
+        PackageConfig other = (PackageConfig) obj;
         if (name == null) {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
-            return false;
-        if (optional != other.optional)
             return false;
         if (params == null) {
             if (other.params != null)
@@ -167,22 +139,5 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         } else if (!params.equals(other.params))
             return false;
         return true;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder buf = new StringBuilder();
-        buf.append('[')
-            .append(name)
-            .append(optional ? " optional]" : " required");
-        if(hasParams()) {
-            buf.append(" params=").append(params);
-        }
-        return buf.append(']').toString();
-    }
-
-    @Override
-    public int compareTo(PackageDependencySpec o) {
-        return name.compareTo(o.name);
     }
 }

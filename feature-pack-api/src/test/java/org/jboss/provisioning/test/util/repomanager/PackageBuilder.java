@@ -24,6 +24,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.fs.FsTaskContext;
@@ -70,6 +71,16 @@ public class PackageBuilder {
 
     public PackageBuilder addDependency(String pkgName, boolean optional) {
         this.pkg.addDependency(pkgName, optional);
+        return this;
+    }
+
+    public PackageBuilder addDependency(PackageDependencySpec dep) {
+        this.pkg.addDependency(dep);
+        return this;
+    }
+
+    public PackageBuilder addDependency(String fpDepName, PackageDependencySpec dep) {
+        this.pkg.addDependency(fpDepName, dep);
         return this;
     }
 

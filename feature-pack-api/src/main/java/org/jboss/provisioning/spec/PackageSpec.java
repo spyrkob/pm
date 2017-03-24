@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.parameters.BuilderWithParameters;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -36,12 +38,12 @@ public class PackageSpec {
         return new PackageSpec(name);
     }
 
-    public static class Builder {
+    public static class Builder implements BuilderWithParameters<Builder> {
 
         private String name;
         private PackageDependencyGroupSpec.Builder localDeps = PackageDependencyGroupSpec.builder();
         private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
-        private Map<String, ParameterSpec> params = Collections.emptyMap();
+        private Map<String, PackageParameter> params = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -66,6 +68,11 @@ public class PackageSpec {
             return this;
         }
 
+        public Builder addDependency(PackageDependencySpec dep) {
+            localDeps.addDependency(dep);
+            return this;
+        }
+
         public Builder addDependency(String groupName, String packageName) {
             getExternalGroupBuilder(groupName).addDependency(packageName);
             return this;
@@ -76,19 +83,25 @@ public class PackageSpec {
             return this;
         }
 
+        public Builder addDependency(String groupName, PackageDependencySpec dep) {
+            getExternalGroupBuilder(groupName).addDependency(dep);
+            return this;
+        }
+
         public boolean hasDependencies() {
             return !localDeps.dependencies.isEmpty() || !externalDeps.isEmpty();
         }
 
-        public Builder addParameter(String name, String defaultValue) {
+        @Override
+        public Builder addParameter(PackageParameter param) {
             switch(params.size()) {
                 case 0:
-                    params = Collections.singletonMap(name, ParameterSpec.newInstance(name, defaultValue));
+                    params = Collections.singletonMap(param.getName(), param);
                     break;
                 case 1:
                     params = new HashMap<>(params);
                 default:
-                    params.put(name, ParameterSpec.newInstance(name, defaultValue));
+                    params.put(param.getName(), param);
             }
             return this;
         }
@@ -126,7 +139,7 @@ public class PackageSpec {
     private final String name;
     private final PackageDependencyGroupSpec localDeps;
     private final Map<String, PackageDependencyGroupSpec> externalDeps;
-    private final Map<String, ParameterSpec> params;
+    private final Map<String, PackageParameter> params;
 
     protected PackageSpec(String name) {
         this.name = name;
@@ -184,7 +197,11 @@ public class PackageSpec {
         return !params.isEmpty();
     }
 
-    public Collection<ParameterSpec> getParameters() {
+    public boolean hasParameter(String name) {
+        return params.containsKey(name);
+    }
+
+    public Collection<PackageParameter> getParameters() {
         return params.values();
     }
 

@@ -19,12 +19,15 @@ package org.jboss.provisioning.config;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
@@ -39,7 +42,7 @@ public class FeaturePackConfig {
         protected final ArtifactCoords.Gav gav;
         protected boolean inheritPackages;
         protected Set<String> excludedPackages = Collections.emptySet();
-        protected Set<String> includedPackages = Collections.emptySet();
+        protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
         protected FeaturePackSpec fpSpec;
 
         protected Builder(ArtifactCoords.Gav gav) {
@@ -55,26 +58,8 @@ public class FeaturePackConfig {
             this.gav = fpConfig.getGav();
             this.fpSpec = fpSpec;
             inheritPackages = fpConfig.inheritPackages;
-
-            switch(fpConfig.excludedPackages.size()) {
-                case 0:
-                    break;
-                case 1:
-                    excludedPackages = Collections.singleton(fpConfig.excludedPackages.iterator().next());
-                    break;
-                default:
-                    excludedPackages = new HashSet<String>(fpConfig.excludedPackages);
-            }
-
-            switch(fpConfig.includedPackages.size()) {
-                case 0:
-                    break;
-                case 1:
-                    includedPackages = Collections.singleton(fpConfig.includedPackages.iterator().next());
-                    break;
-                default:
-                    includedPackages = new HashSet<String>(fpConfig.includedPackages);
-            }
+            excludedPackages = fpConfig.excludedPackages.size() > 1 ? new HashSet<>(fpConfig.excludedPackages) : fpConfig.excludedPackages;
+            includedPackages = fpConfig.includedPackages.size() > 1 ? new HashMap<>(fpConfig.includedPackages) : fpConfig.includedPackages;
         }
 
         public Builder setInheritPackages(boolean inheritSelectedPackages) {
@@ -83,7 +68,7 @@ public class FeaturePackConfig {
         }
 
         public Builder excludePackage(String packageName) throws ProvisioningDescriptionException {
-            if(includedPackages.contains(packageName)) {
+            if(includedPackages.containsKey(packageName)) {
                 throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
             }
             if(!excludedPackages.contains(packageName)) {
@@ -110,40 +95,60 @@ public class FeaturePackConfig {
             return this;
         }
 
-        public Builder includeAllPackages(Collection<String> packageNames) throws ProvisioningDescriptionException {
-            for(String packageName : packageNames) {
-                includePackage(packageName);
+        public Builder includeAllPackages(Collection<PackageConfig> packageConfigs) throws ProvisioningDescriptionException {
+            for(PackageConfig packageConfig : packageConfigs) {
+                includePackage(packageConfig);
             }
             return this;
         }
 
         public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
-            if(excludedPackages.contains(packageName)) {
-                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
+            return includePackage(PackageConfig.newInstance(packageName));
+        }
+
+        public Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
+            if(excludedPackages.contains(packageConfig.getName())) {
+                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageConfig.getName()));
             }
-            if(!includedPackages.contains(packageName)) {
-                switch(includedPackages.size()) {
-                    case 0:
-                        includedPackages = Collections.singleton(packageName);
-                        break;
-                    case 1:
-                        if(includedPackages.contains(packageName)) {
-                            return this;
-                        }
-                        includedPackages = new HashSet<>(includedPackages);
-                    default:
-                        includedPackages.add(packageName);
+
+            if(includedPackages.isEmpty()) {
+                includedPackages = Collections.singletonMap(packageConfig.getName(), packageConfig);
+                return this;
+            }
+
+            PackageConfig included = includedPackages.get(packageConfig.getName());
+            if(included == null) {
+                if(includedPackages.size() == 1) {
+                    includedPackages = new HashMap<>(includedPackages);
                 }
+                includedPackages.put(packageConfig.getName(), packageConfig);
+                return this;
+            }
+
+            if(!packageConfig.hasParams()) {
+                return this;
+            }
+
+            final PackageConfig.Builder builder = PackageConfig.builder(included);
+            for (PackageParameter param : packageConfig.getParameters()) {
+                builder.addParameter(param);
+            }
+            included = builder.build();
+
+            if(includedPackages.size() == 1) {
+                includedPackages = Collections.singletonMap(included.getName(), included);
+            } else {
+                includedPackages.put(included.getName(), included);
             }
             return this;
         }
 
         private void removeFromIncluded(String packageName) {
-            if(!includedPackages.contains(packageName)) {
+            if(!includedPackages.containsKey(packageName)) {
                 return;
             }
             if(includedPackages.size() == 1) {
-                includedPackages = Collections.emptySet();
+                includedPackages = Collections.emptyMap();
             } else {
                 includedPackages.remove(packageName);
             }
@@ -168,9 +173,9 @@ public class FeaturePackConfig {
                 // this.excludes - other.includes
                 // common excludes stay
                 if(other.hasIncludedPackages()) {
-                    for(String name : other.includedPackages) {
-                        includePackage(name);
-                        removeFromExcluded(name);
+                    for(PackageConfig pkgConfig : other.includedPackages.values()) {
+                        includePackage(pkgConfig);
+                        removeFromExcluded(pkgConfig.getName());
                     }
                 }
                 if (!excludedPackages.isEmpty()) {
@@ -197,9 +202,9 @@ public class FeaturePackConfig {
             } else if (inheritPackages) {
                 //this.excludes - other.includes
                 if(other.hasIncludedPackages()) {
-                    for(String name : other.includedPackages) {
-                        removeFromExcluded(name);
-                        includePackage(name);
+                    for(PackageConfig pkgConfig : other.includedPackages.values()) {
+                        removeFromExcluded(pkgConfig.getName());
+                        includePackage(pkgConfig);
                     }
                 }
             } else {
@@ -207,7 +212,7 @@ public class FeaturePackConfig {
                 // inheritPackages = true
                 excludedPackages = new HashSet<>(other.excludedPackages);
                 if(!includedPackages.isEmpty()) {
-                    for(String name : includedPackages) {
+                    for(String name : includedPackages.keySet()) {
                         removeFromExcluded(name);
                     }
                 }
@@ -238,7 +243,8 @@ public class FeaturePackConfig {
                 if(inheritPackages) {
                     if(!includedPackages.isEmpty() && fpSpec.hasDefaultPackages()) {
                         for(String name : fpSpec.getDefaultPackageNames()) {
-                            if(includedPackages.contains(name)) {
+                            final PackageConfig packageConfig = includedPackages.get(name);
+                            if(packageConfig != null && !packageConfig.hasParams()) {
                                 removeFromIncluded(name);
                             }
                         }
@@ -276,14 +282,14 @@ public class FeaturePackConfig {
     private final ArtifactCoords.Gav gav;
     private final boolean inheritPackages;
     private final Set<String> excludedPackages;
-    private final Set<String> includedPackages;
+    private final Map<String, PackageConfig> includedPackages;
 
     protected FeaturePackConfig(Builder builder) {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
         this.inheritPackages = builder.inheritPackages;
         this.excludedPackages = builder.excludedPackages.size() > 1 ? Collections.unmodifiableSet(builder.excludedPackages) : builder.excludedPackages;
-        this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableSet(builder.includedPackages) : builder.includedPackages;
+        this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableMap(builder.includedPackages) : builder.includedPackages;
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -299,11 +305,15 @@ public class FeaturePackConfig {
     }
 
     public boolean isIncluded(String packageName) {
-        return includedPackages.contains(packageName);
+        return includedPackages.containsKey(packageName);
     }
 
-    public Set<String> getIncludedPackages() {
-        return includedPackages;
+    public PackageConfig getIncludedPackage(String packageName) {
+        return includedPackages.get(packageName);
+    }
+
+    public Collection<PackageConfig> getIncludedPackages() {
+        return includedPackages.values();
     }
 
     public boolean hasExcludedPackages() {
@@ -371,7 +381,7 @@ public class FeaturePackConfig {
             builder.append(" excluded ").append(Arrays.asList(array));
         }
         if(!includedPackages.isEmpty()) {
-            final String[] array = includedPackages.toArray(new String[includedPackages.size()]);
+            final String[] array = includedPackages.keySet().toArray(new String[includedPackages.size()]);
             Arrays.sort(array);
             builder.append(" included ").append(Arrays.asList(array));
         }

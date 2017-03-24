@@ -93,7 +93,8 @@ class ProvisioningTask {
             final ProvisioningConfig extendedConfig = extendedConfigBuilder.build();
 
             // Resolve the target provisioned state
-            final ProvisionedState provisionedState = new ProvisionedStateResolver(extendedConfig, layoutDescr, pm.getPackageParameterResolver()).resolve();
+            final ProvisionedState provisionedState = new ProvisionedStateResolver(
+                    provisioningConfig, extendedConfig, layoutDescr, pm.getPackageParameterResolver()).resolve();
 
             final Path installationHome = pm.getInstallationHome();
             if (Files.exists(installationHome)) {

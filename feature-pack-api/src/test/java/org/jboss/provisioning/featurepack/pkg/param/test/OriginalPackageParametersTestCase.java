@@ -20,10 +20,8 @@ package org.jboss.provisioning.featurepack.pkg.param.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
@@ -32,13 +30,12 @@ import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ParameterResolverNotSetTestCase extends PmInstallFeaturePackTestBase {
+public class OriginalPackageParametersTestCase extends PmInstallFeaturePackTestBase {
 
     private final Gav fp1Gav = ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1");
 
@@ -62,15 +59,6 @@ public class ParameterResolverNotSetTestCase extends PmInstallFeaturePackTestBas
                 .getFeaturePack()
             .getInstaller()
         .install();
-    }
-
-    @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-        } catch(ProvisioningException e) {
-            Assert.assertEquals(Errors.packageParameterResolverNotProvided(), e.getMessage());
-        }
     }
 
     @Override

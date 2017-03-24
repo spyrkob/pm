@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.util.ParsingUtils;
 
 /**
@@ -59,7 +60,51 @@ public class FeaturePackPackagesConfigParser10 {
                     if (EXCLUDE.equals(localName)) {
                         builder.excludePackage(parseName(reader));
                     } else if (INCLUDE.equals(localName)) {
-                        builder.includePackage(parseName(reader));
+                        builder.includePackage(parseInclude(reader));
+                    } else {
+                        throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static PackageConfig parseInclude(final XMLStreamReader reader) throws XMLStreamException {
+
+        String name = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            if(reader.getAttributeName(i).getLocalPart().equals(NAME)) {
+                name = reader.getAttributeValue(i);
+            } else {
+                throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(new XmlNameProvider() {
+                @Override
+                public String getNamespace() {
+                    return "";
+                }
+                @Override
+                public String getLocalName() {
+                    return NAME;
+                }}));
+        }
+
+        final PackageConfig.Builder pkgBuilder =  PackageConfig.builder(name);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return pkgBuilder.build();
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    if(reader.getName().getLocalPart().equals(PackageParametersXml.PARAMETERS)) {
+                        PackageParametersXml.read(reader, pkgBuilder);
                     } else {
                         throw ParsingUtils.unexpectedContent(reader);
                     }

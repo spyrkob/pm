@@ -32,6 +32,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -161,24 +162,26 @@ public class FeaturePackSpec {
         public FeaturePackSpec build() throws ProvisioningDescriptionException {
             // package dependency consistency check
             if (!packages.isEmpty()) {
-                final Set<String> allPackageNames = packages.keySet();
                 for (PackageSpec pkg : packages.values()) {
                     if (pkg.hasLocalDependencies()) {
-                        List<String> notFound = Collections.emptyList();
+                        List<String> notFound = null;
                         for(PackageDependencySpec pkgDep : pkg.getLocalDependencies().getDescriptions()) {
-                            if(!allPackageNames.contains(pkgDep.getName())) {
-                                switch(notFound.size()) {
-                                    case 0:
-                                        notFound = Collections.singletonList(pkgDep.getName());
-                                        break;
-                                    case 1:
-                                        notFound = new ArrayList<>(notFound);
-                                    default:
-                                        notFound.add(pkgDep.getName());
+                            final PackageSpec depSpec = packages.get(pkgDep.getName());
+                            if(depSpec == null) {
+                                if(notFound == null) {
+                                    notFound = new ArrayList<>();
+                                }
+                                notFound.add(pkgDep.getName());
+                            } else if(pkgDep.hasParams()) {
+                                for(PackageParameter depParam : pkgDep.getParameters()) {
+                                    if(!depSpec.hasParameter(depParam.getName())) {
+                                        throw new ProvisioningDescriptionException(
+                                                Errors.unknownParameterInDependency(gav, pkg.getName(), pkgDep.getName(), depParam.getName()));
+                                    }
                                 }
                             }
                         }
-                        if (!notFound.isEmpty()) {
+                        if (notFound != null) {
                             throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
                         }
                     }

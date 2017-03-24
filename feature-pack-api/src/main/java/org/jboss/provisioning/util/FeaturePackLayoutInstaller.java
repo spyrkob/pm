@@ -60,7 +60,7 @@ public class FeaturePackLayoutInstaller {
             configBuilder.addFeaturePack(FeaturePackConfig.forGav(fpSpec.getGav()));
         }
         final ProvisioningConfig installConfig = configBuilder.build();
-        final ProvisionedState provisionedState = new ProvisionedStateResolver(installConfig, layoutDescr, null).resolve();
+        final ProvisionedState provisionedState = new ProvisionedStateResolver(installConfig, installConfig, layoutDescr, null).resolve();
         install(layoutDescr, fpLayoutDir, installConfig, provisionedState, installDir);
     }
 
