@@ -40,7 +40,7 @@ public class FeaturePackConfig {
     public static class Builder {
 
         protected final ArtifactCoords.Gav gav;
-        protected boolean inheritPackages;
+        protected boolean inheritPackages = true;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
         protected FeaturePackSpec fpSpec;
@@ -49,9 +49,9 @@ public class FeaturePackConfig {
             this(gav, true);
         }
 
-        protected Builder(ArtifactCoords.Gav gav, boolean includeDefault) {
+        protected Builder(ArtifactCoords.Gav gav, boolean inheritPackages) {
             this.gav = gav;
-            this.inheritPackages = includeDefault;
+            this.inheritPackages = inheritPackages;
         }
 
         protected Builder(FeaturePackSpec fpSpec, FeaturePackConfig fpConfig) {

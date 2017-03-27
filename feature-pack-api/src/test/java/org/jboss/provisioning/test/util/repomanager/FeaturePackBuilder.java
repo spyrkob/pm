@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,6 +91,10 @@ public class FeaturePackBuilder {
 
     public FeaturePackBuilder addDependency(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
         return addDependency(FeaturePackConfig.forGav(gav));
+    }
+
+    public FeaturePackBuilder addDependency(String name, ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
+        return addDependency(name, FeaturePackConfig.forGav(gav));
     }
 
     public FeaturePackBuilder addPackage(PackageBuilder pkg) {

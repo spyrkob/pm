@@ -58,8 +58,6 @@ public class ProvisionedStateResolver {
 
     private Map<ArtifactCoords.Ga, Fp> fps;
 
-    private boolean setUserParams;
-
     public ProvisionedStateResolver(ProvisioningConfig userConfig,
             ProvisioningConfig expandedConfig,
             FeaturePackLayoutDescription fpLayout,
@@ -85,12 +83,16 @@ public class ProvisionedStateResolver {
             resolveFeaturePack(ga);
         }
 
-        if(setUserParams) {
+        // set parameters set by the user in feature-pack configs
+        if(userConfig.hasFeaturePacks()) {
             for(FeaturePackConfig userFpConfig : userConfig.getFeaturePacks()) {
                 if(userFpConfig.hasIncludedPackages()) {
-                    final Fp fp = fps.get(userFpConfig.getGav().toGa());
+                    Fp fp = null;
                     for(PackageConfig userPkg : userFpConfig.getIncludedPackages()) {
                         if(userPkg.hasParams()) {
+                            if(fp == null) {
+                                fp = fps.get(userFpConfig.getGav().toGa());
+                            }
                             final PackageConfig.Builder pkgBuilder = fp.pkgConfigs.get(userPkg.getName());
                             for(PackageParameter param : userPkg.getParameters()) {
                                 pkgBuilder.addParameter(param);
@@ -145,8 +147,25 @@ public class ProvisionedStateResolver {
                 if(!resolvePackage(fp, packageConfig.getName(), Collections.emptyList())) {
                     throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, null, packageConfig.getName()));
                 }
-                if(packageConfig.hasParams()) {
-                    setUserParams = true;
+            }
+        }
+        // set parameters set in feature-pack dependencies
+        if(fp.spec.hasDependencies()) {
+            for(FeaturePackDependencySpec depSpec : fp.spec.getDependencies()) {
+                final FeaturePackConfig depConfig = depSpec.getTarget();
+                Fp dep = null;
+                if(depConfig.hasIncludedPackages()) {
+                    for(PackageConfig pkgConfig : depConfig.getIncludedPackages()) {
+                        if(pkgConfig.hasParams()) {
+                            if(dep == null) {
+                                dep = getFp(depConfig.getGav().toGa());
+                            }
+                            final PackageConfig.Builder pkgBuilder = dep.pkgConfigs.get(pkgConfig.getName());
+                            for(PackageParameter param : pkgConfig.getParameters()) {
+                                pkgBuilder.addParameter(param);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -173,14 +192,13 @@ public class ProvisionedStateResolver {
             throw new ProvisioningDescriptionException(Errors.packageNotFound(fp.gav, pkgName));
         }
         pkgBuilder = PackageConfig.builder(pkgName);
-        // spec parameters are added first
+        // set parameters set in the package spec first
         if(pkgSpec.hasParameters()) {
             for(PackageParameter param : pkgSpec.getParameters()) {
                 pkgBuilder.addParameter(param);
             }
         }
         fp.registerBuilder(pkgName, pkgBuilder);
-
 
         if (pkgSpec.hasLocalDependencies()) {
             for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
