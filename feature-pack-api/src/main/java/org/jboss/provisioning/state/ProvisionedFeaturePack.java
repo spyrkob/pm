@@ -19,6 +19,7 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -134,6 +135,15 @@ public class ProvisionedFeaturePack {
     }
 
     public String toString() {
-        return new StringBuilder().append('[').append(gav).append(' ').append(packages).append(']').toString();
+        final StringBuilder buf = new StringBuilder().append('[').append(gav);
+        if(!packages.isEmpty()) {
+            final Iterator<ProvisionedPackage> i = packages.values().iterator();
+            buf.append(' ').append(i.next());
+            while(i.hasNext()) {
+                buf.append(',');
+                buf.append(i.next());
+            }
+        }
+        return buf.append(']').toString();
     }
 }
