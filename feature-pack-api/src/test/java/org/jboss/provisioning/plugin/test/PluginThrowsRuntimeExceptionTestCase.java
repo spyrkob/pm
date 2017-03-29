@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +26,8 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
@@ -45,7 +44,7 @@ public class PluginThrowsRuntimeExceptionTestCase extends PmProvisionConfigTestB
 
     public static class Plugin1 implements ProvisioningPlugin {
         @Override
-        public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
+        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
             throw new IllegalStateException("Plugin1 failure");
         }
     }
@@ -79,6 +78,11 @@ public class PluginThrowsRuntimeExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
+    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisioningConfig(pm, null);
+    }
+
+    @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         try {
             super.testPmMethod(pm);
@@ -89,12 +93,8 @@ public class PluginThrowsRuntimeExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected ProvisionedState provisionedState() {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
-                        .addPackage("p1")
-                        .build())
-                .build();
+    protected ProvisionedState<?,?> provisionedState() {
+        return null;
     }
 
     @Override

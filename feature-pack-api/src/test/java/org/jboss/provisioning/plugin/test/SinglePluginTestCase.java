@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,8 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -44,7 +44,7 @@ public class SinglePluginTestCase extends PmProvisionConfigTestBase {
 
     public static class Plugin1 implements ProvisioningPlugin {
         @Override
-        public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
+        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
             try {
                 IoUtils.writeFile(ctx.getInstallDir().resolve("plugin1.txt"), "plugin1");
             } catch (IOException e) {
@@ -82,7 +82,7 @@ public class SinglePluginTestCase extends PmProvisionConfigTestBase {
     }
 
     @Override
-    protected ProvisionedState provisionedState() {
+    protected ProvisionedState<?,?> provisionedState() {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")

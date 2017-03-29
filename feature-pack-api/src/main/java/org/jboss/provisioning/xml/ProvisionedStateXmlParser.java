@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.staxmapper.XMLMapper;
 
@@ -30,7 +32,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState> {
+public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage>> {
 
     private static final QName ROOT_1_0 = new QName(ProvisionedStateXmlParser10.NAMESPACE_1_0, ProvisionedStateXmlParser10.Element.INSTALLATION.getLocalName());
 
@@ -56,7 +58,7 @@ public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState> {
     }
 
     @Override
-    public ProvisionedState parse(final Reader input) throws XMLStreamException {
+    public ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>,ProvisionedPackage> parse(final Reader input) throws XMLStreamException {
 
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final ProvisionedState.Builder builder = ProvisionedState.builder();

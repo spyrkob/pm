@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
         if(verbose) {
-            final ProvisionedState provisionedState;
+            final ProvisionedState<?,?> provisionedState;
             try {
                 provisionedState = getManager(session).getProvisionedState();
             } catch (ProvisioningException e) {
@@ -46,7 +46,7 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
             if (provisionedState == null || !provisionedState.hasFeaturePacks()) {
                 return;
             }
-            for (ProvisionedFeaturePack fp : provisionedState.getFeaturePacks()) {
+            for (ProvisionedFeaturePack<?> fp : provisionedState.getFeaturePacks()) {
                 session.println(fp.getGav().toString());
             }
         } else {

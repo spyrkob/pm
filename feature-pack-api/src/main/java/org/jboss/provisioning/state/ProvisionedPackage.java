@@ -20,7 +20,6 @@ package org.jboss.provisioning.state;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.parameters.BuilderWithParameters;
@@ -30,9 +29,9 @@ import org.jboss.provisioning.parameters.PackageParameter;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedPackage {
+public interface ProvisionedPackage {
 
-    public static class Builder implements BuilderWithParameters<Builder> {
+    class Builder implements BuilderWithParameters<Builder> {
 
         private final String name;
         private Map<String, PackageParameter> params = Collections.emptyMap();
@@ -56,82 +55,21 @@ public class ProvisionedPackage {
         }
 
         public ProvisionedPackage build() {
-            return new ProvisionedPackage(this);
+            return new ProvisionedPackageImpl(name, params.size() > 1 ? Collections.unmodifiableMap(params) : params);
         }
     }
 
-    public static Builder builder(String name) {
+    static Builder builder(String name) {
         return new Builder(name);
     }
 
-    public static ProvisionedPackage newInstance(String name) {
-        return new ProvisionedPackage(name);
+    static ProvisionedPackage newInstance(String name) {
+        return new ProvisionedPackageImpl(name);
     }
 
-    private final String name;
-    private final Map<String, PackageParameter> params;
+    String getName();
 
-    public ProvisionedPackage(Builder builder) {
-        this.name = builder.name;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
-    }
+    boolean hasParameters();
 
-    public ProvisionedPackage(String name) {
-        this.name = name;
-        this.params = Collections.emptyMap();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean hasParameters() {
-        return !params.isEmpty();
-    }
-
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ProvisionedPackage other = (ProvisionedPackage) obj;
-        if (params == null) {
-            if (other.params != null)
-                return false;
-        } else if (!params.equals(other.params))
-            return false;
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder buf = new StringBuilder().append(name);
-        if(!params.isEmpty()) {
-            buf.append('(');
-            final Iterator<PackageParameter> i = params.values().iterator();
-            PackageParameter param = i.next();
-            buf.append(param.getName()).append('=').append(param.getValue());
-            while(i.hasNext()) {
-                param = i.next();
-                buf.append(',').append(param.getName()).append('=').append(param.getValue());
-            }
-            buf.append(')');
-        }
-        return buf.toString();
-    }
+    Collection<PackageParameter> getParameters();
 }

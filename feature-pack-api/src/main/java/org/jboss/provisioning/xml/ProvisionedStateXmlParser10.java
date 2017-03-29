@@ -179,7 +179,7 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private ProvisionedFeaturePack readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private ProvisionedFeaturePack<ProvisionedPackage> readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String groupId = null;
         String artifactId = null;

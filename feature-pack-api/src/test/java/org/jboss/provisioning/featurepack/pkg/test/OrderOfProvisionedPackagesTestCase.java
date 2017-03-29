@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,7 +70,7 @@ public class OrderOfProvisionedPackagesTestCase extends PmInstallFeaturePackTest
     }
 
     @Override
-    protected ProvisionedState provisionedState() throws ProvisioningException {
+    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                         .addPackage("a")
@@ -96,7 +96,7 @@ public class OrderOfProvisionedPackagesTestCase extends PmInstallFeaturePackTest
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         super.testPmMethod(pm);
-        final ProvisionedState state = pm.getProvisionedState();
+        final ProvisionedState<?,?> state = pm.getProvisionedState();
         final Iterator<String> packageNames = state.getFeaturePack(
                 ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                 .getPackageNames().iterator();

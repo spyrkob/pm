@@ -47,12 +47,12 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
     private ProvisionedStateXmlWriter() {
     }
 
-    public void write(ProvisionedState provisionedState, Path outputFile) throws XMLStreamException, IOException {
+    public void write(ProvisionedState<?,?> provisionedState, Path outputFile) throws XMLStreamException, IOException {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
         if (provisionedState.hasFeaturePacks()) {
-            for(ProvisionedFeaturePack fp : provisionedState.getFeaturePacks()) {
+            for(ProvisionedFeaturePack<?> fp : provisionedState.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
             }
@@ -67,7 +67,7 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private void writeFeaturePack(ElementNode fp, ProvisionedFeaturePack featurePack) {
+    private void writeFeaturePack(ElementNode fp, ProvisionedFeaturePack<?> featurePack) {
         addAttribute(fp, Attribute.GROUP_ID, featurePack.getGav().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {

@@ -21,11 +21,16 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -120,7 +125,7 @@ public class ProvisioningManager {
      * @return  detailed description of the provisioned installation
      * @throws ProvisioningException  in case there was an error reading the description from the disk
      */
-    public ProvisionedState getProvisionedState() throws ProvisioningException {
+    public ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage> getProvisionedState() throws ProvisioningException {
         final Path xml = PathsUtils.getProvisionedStateXml(installationHome);
         if (!Files.exists(xml)) {
             return null;
@@ -206,7 +211,18 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        new ProvisioningTask(this, provisioningConfig).execute();
+        try(final ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance()
+                .setArtifactResolver(artifactResolver)
+                .setConfig(provisioningConfig)
+                .setEncoding(encoding)
+                .setParameterResolver(paramResolver)
+                .setInstallDir(installationHome)
+                .build()) {
+            // install the software
+            ProvisioningRuntime.install(runtime);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.provisioningConfig = null;
     }
 

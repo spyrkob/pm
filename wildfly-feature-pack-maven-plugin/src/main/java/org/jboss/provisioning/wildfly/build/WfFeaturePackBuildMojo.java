@@ -528,7 +528,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                             Map.Entry<String, FeaturePackSpec> depSrc = null;
                             if (!fpDependencies.isEmpty()) {
                                 for (Map.Entry<String, FeaturePackSpec> depEntry : fpDependencies.entrySet()) {
-                                    if (depEntry.getValue().getPackageNames().contains(depName)) {
+                                    if (depEntry.getValue().hasPackage(depName)) {
                                         if (depSrc != null) {
                                             throw new MojoExecutionException("Package " + depName
                                                     + " found in more than one feature-pack dependency: " + depSrc.getKey()

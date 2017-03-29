@@ -30,8 +30,10 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -53,11 +55,11 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
 
     public static class Plugin1 implements ProvisioningPlugin {
         @Override
-        public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
-            for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
-                for(ProvisionedPackage pkg : fp.getPackages()) {
+        public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
+            for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
+                for(PackageRuntime pkg : fp.getPackages()) {
                     if(pkg.hasParameters()) {
-                        final Path dir = ctx.getInstallDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
+                        final Path dir = runtime.getInstallDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
                         if(!Files.exists(dir)) {
                             try {
                                 Files.createDirectories(dir);
@@ -144,7 +146,7 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
     }
 
     @Override
-    protected ProvisionedState provisionedState() throws ProvisioningException {
+    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(fp1Gav)
                         .addPackage(

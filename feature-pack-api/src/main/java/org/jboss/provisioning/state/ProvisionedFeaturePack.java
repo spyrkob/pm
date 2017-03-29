@@ -19,7 +19,6 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -31,9 +30,9 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedFeaturePack {
+public interface ProvisionedFeaturePack<P extends ProvisionedPackage> {
 
-    public static class Builder {
+    class Builder {
         private ArtifactCoords.Gav gav;
         private Map<String, ProvisionedPackage> packages = Collections.emptyMap();
 
@@ -62,88 +61,24 @@ public class ProvisionedFeaturePack {
             return packages.containsKey(name);
         }
 
-        public ProvisionedFeaturePack build() {
-            return new ProvisionedFeaturePack(this);
+        public ProvisionedFeaturePack<ProvisionedPackage> build() {
+            return new ProvisionedFeaturePackImpl(gav, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
         }
     }
 
-    public static Builder builder(ArtifactCoords.Gav gav) {
+    static Builder builder(ArtifactCoords.Gav gav) {
         return new Builder(gav);
     }
 
-    private final ArtifactCoords.Gav gav;
-    private final Map<String, ProvisionedPackage> packages;
+    ArtifactCoords.Gav getGav();
 
-    private ProvisionedFeaturePack(Builder builder) {
-        this.gav = builder.gav;
-        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
-    }
+    boolean hasPackages();
 
-    public ArtifactCoords.Gav getGav() {
-        return gav;
-    }
+    boolean containsPackage(String name);
 
-    public boolean hasPackages() {
-        return !packages.isEmpty();
-    }
+    Set<String> getPackageNames();
 
-    public boolean containsPackage(String name) {
-        return packages.containsKey(name);
-    }
+    Collection<P> getPackages();
 
-    public Set<String> getPackageNames() {
-        return packages.keySet();
-    }
-
-    public Collection<ProvisionedPackage> getPackages() {
-        return packages.values();
-    }
-
-    public ProvisionedPackage getPackage(String name) {
-        return packages.get(name);
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((packages == null) ? 0 : packages.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ProvisionedFeaturePack other = (ProvisionedFeaturePack) obj;
-        if (gav == null) {
-            if (other.gav != null)
-                return false;
-        } else if (!gav.equals(other.gav))
-            return false;
-        if (packages == null) {
-            if (other.packages != null)
-                return false;
-        } else if (!packages.equals(other.packages))
-            return false;
-        return true;
-    }
-
-    public String toString() {
-        final StringBuilder buf = new StringBuilder().append('[').append(gav);
-        if(!packages.isEmpty()) {
-            final Iterator<ProvisionedPackage> i = packages.values().iterator();
-            buf.append(' ').append(i.next());
-            while(i.hasNext()) {
-                buf.append(',');
-                buf.append(i.next());
-            }
-        }
-        return buf.append(']').toString();
-    }
+    P getPackage(String name);
 }

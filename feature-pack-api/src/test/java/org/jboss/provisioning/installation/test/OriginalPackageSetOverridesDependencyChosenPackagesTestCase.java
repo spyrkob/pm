@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,7 +73,7 @@ public class OriginalPackageSetOverridesDependencyChosenPackagesTestCase extends
     }
 
     @Override
-    protected ProvisionedState provisionedState() {
+    protected ProvisionedState<?,?> provisionedState() {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                         .addPackage("p1")

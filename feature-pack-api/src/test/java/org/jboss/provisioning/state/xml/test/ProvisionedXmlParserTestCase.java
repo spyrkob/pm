@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser;
@@ -31,14 +32,14 @@ import org.junit.Test;
  */
 public class ProvisionedXmlParserTestCase {
 
-    private static final XmlParserValidator<ProvisionedState> validator = new XmlParserValidator<>(
+    private static final XmlParserValidator<ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage>> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-provisioned-state-1_0.xsd"), new ProvisionedStateXmlParser());
 
     @Test
     public void readValid() throws Exception {
-        final ProvisionedState found = validator
+        final ProvisionedState<?,?> found = validator
                 .validateAndParse("xml/provisioned/provisioned-state.xml", null, null);
-        ProvisionedState expected = ProvisionedState.builder()
+        ProvisionedState<?,?> expected = ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")).build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2"))
                         .addPackage("p1")
