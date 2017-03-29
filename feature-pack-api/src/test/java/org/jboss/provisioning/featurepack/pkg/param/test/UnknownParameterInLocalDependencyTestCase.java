@@ -23,6 +23,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -39,8 +40,10 @@ public class UnknownParameterInLocalDependencyTestCase  {
     public void testMain() throws Exception {
         final Gav fp1Gav = ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1");
         try {
-            FeaturePackSpec
-                    .builder(fp1Gav)
+            FeaturePackLayout
+                    .builder(FeaturePackSpec
+                            .builder(fp1Gav)
+                            .build())
                     .addPackage(PackageSpec.builder("a")
                             .addDependency(PackageDependencySpec.builder("b")
                                     .addParameter("param.b1", "b1")

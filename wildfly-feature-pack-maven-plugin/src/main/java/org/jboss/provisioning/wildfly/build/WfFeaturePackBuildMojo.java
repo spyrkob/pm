@@ -59,6 +59,8 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.layout.FeaturePackLayout;
+import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.WfConstants;
@@ -66,7 +68,6 @@ import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
-import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.wildfly.build.ModuleParseResult.ModuleDependency;
@@ -138,7 +139,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     private MavenProjectArtifactVersions artifactVersions;
 
     private WildFlyFeaturePackBuild wfFpConfig;
-    private Map<String, FeaturePackSpec> fpDependencies = Collections.emptyMap();
+    private Map<String, FeaturePackLayout> fpDependencies = Collections.emptyMap();
     private final PackageSpec.Builder docsBuilder = PackageSpec.builder(WfConstants.DOCS);
 
     @Override
@@ -233,11 +234,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if(docsBuilder.hasDependencies()) {
             final PackageSpec docsSpec = docsBuilder.build();
             writeXml(docsSpec, fpPackagesDir.resolve(WfConstants.DOCS));
-            try {
-                fpBuilder.addDefaultPackage(docsSpec);
-            } catch (ProvisioningDescriptionException e) {
-                erroAddingPackage(e);
-            }
+            fpBuilder.markAsDefaultPackage(docsSpec.getName());
         }
 
         fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
@@ -323,7 +320,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         } catch (XMLStreamException e) {
             throw new MojoExecutionException(Errors.writeFile(schemaGroupsTxt), e);
         } catch (ProvisioningDescriptionException e) {
-            erroAddingPackage(e);
+            errorAddingPackage(e);
         } finally {
             if(writer != null) {
                 try {
@@ -334,7 +331,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void erroAddingPackage(ProvisioningDescriptionException e) throws MojoExecutionException {
+    private void errorAddingPackage(ProvisioningDescriptionException e) throws MojoExecutionException {
         throw new MojoExecutionException("Failed to add package", e);
     }
 
@@ -365,7 +362,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
             }
         } catch (ProvisioningDescriptionException e) {
-            erroAddingPackage(e);
+            errorAddingPackage(e);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process config packages", e);
         }
@@ -464,7 +461,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
             }
         } catch (ProvisioningDescriptionException e) {
-            erroAddingPackage(e);
+            errorAddingPackage(e);
         }
     }
 
@@ -525,9 +522,9 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         if (moduleXmlByPkgName.containsKey(depName)) {
                             pkgSpecBuilder.addDependency(depName, moduleDep.isOptional());
                         } else {
-                            Map.Entry<String, FeaturePackSpec> depSrc = null;
+                            Map.Entry<String, FeaturePackLayout> depSrc = null;
                             if (!fpDependencies.isEmpty()) {
-                                for (Map.Entry<String, FeaturePackSpec> depEntry : fpDependencies.entrySet()) {
+                                for (Map.Entry<String, FeaturePackLayout> depEntry : fpDependencies.entrySet()) {
                                     if (depEntry.getValue().hasPackage(depName)) {
                                         if (depSrc != null) {
                                             throw new MojoExecutionException("Package " + depName
@@ -562,7 +559,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             try {
                 fpBuilder.addPackage(pkgSpec);
             } catch (ProvisioningDescriptionException e) {
-                erroAddingPackage(e);
+                errorAddingPackage(e);
             }
 
             if (!OS_WINDOWS) {

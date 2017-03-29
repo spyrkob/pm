@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util;
+package org.jboss.provisioning.layout;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -30,21 +30,19 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.spec.FeaturePackLayoutDescription;
-import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
 
 /**
- * Builds an installation description by analyzing the feature-pack layout
+ * Builds a layout description by analyzing the feature-pack layout
  * structure and parsing included XML files.
  *
  * @author Alexey Loubyansky
  */
 public class FeaturePackLayoutDescriber {
 
-    public static FeaturePackLayoutDescription describeLayout(Path fpLayout, String encoding) throws ProvisioningDescriptionException {
+    public static ProvisioningLayout describe(Path fpLayout, String encoding) throws ProvisioningDescriptionException {
         if(!Files.exists(fpLayout)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpLayout));
         }
@@ -52,40 +50,40 @@ public class FeaturePackLayoutDescriber {
             throw new UnsupportedOperationException(); // TODO
         }
 
-        final FeaturePackLayoutDescription.Builder installBuilder = FeaturePackLayoutDescription.builder();
+        final ProvisioningLayout.Builder layoutBuilder = ProvisioningLayout.builder();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(fpLayout)) {
             for(Path packageDir : stream) {
-                processGroup(installBuilder, packageDir, encoding);
+                processGroup(layoutBuilder, packageDir, encoding);
             }
         } catch (IOException e) {
             failedToReadDirectory(fpLayout, e);
         }
-        return installBuilder.build();
+        return layoutBuilder.build();
     }
 
-    private static void processGroup(final FeaturePackLayoutDescription.Builder installBuilder, Path pkgDir, String encoding) throws ProvisioningDescriptionException {
-        assertDirectory(pkgDir);
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(pkgDir)) {
+    private static void processGroup(final ProvisioningLayout.Builder layoutBuilder, Path groupDir, String encoding) throws ProvisioningDescriptionException {
+        assertDirectory(groupDir);
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(groupDir)) {
             for(Path artifactDir : stream) {
-                processArtifact(installBuilder, artifactDir, encoding);
+                processArtifact(layoutBuilder, artifactDir, encoding);
             }
         } catch (IOException e) {
-            failedToReadDirectory(pkgDir, e);
+            failedToReadDirectory(groupDir, e);
         }
     }
 
-    private static void processArtifact(final FeaturePackLayoutDescription.Builder installBuilder, Path artifactDir, String encoding) throws ProvisioningDescriptionException {
+    private static void processArtifact(final ProvisioningLayout.Builder layoutBuilder, Path artifactDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(artifactDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(artifactDir)) {
             for(Path p : stream) {
-                installBuilder.addFeaturePack(describeFeaturePack(p, encoding));
+                layoutBuilder.addFeaturePack(describeFeaturePack(p, encoding));
             }
         } catch (IOException e) {
             failedToReadDirectory(artifactDir, e);
         }
     }
 
-    public static FeaturePackSpec describeFeaturePackZip(Path artifactZip) throws IOException, ProvisioningDescriptionException {
+    public static FeaturePackLayout describeFeaturePackZip(Path artifactZip) throws IOException, ProvisioningDescriptionException {
         try (FileSystem zipfs = FileSystems.newFileSystem(artifactZip, null)) {
             for(Path zipRoot : zipfs.getRootDirectories()) {
                 return describeFeaturePack(zipRoot, "UTF-8");
@@ -94,29 +92,30 @@ public class FeaturePackLayoutDescriber {
         return null;
     }
 
-    public static FeaturePackSpec describeFeaturePack(Path fpDir, String encoding) throws ProvisioningDescriptionException {
+    public static FeaturePackLayout describeFeaturePack(Path fpDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(fpDir);
         final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
         if(!Files.exists(fpXml)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
         }
-        final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
+        final FeaturePackLayout.Builder layoutBuilder;
         final FeaturePackXmlParser fpXmlParser = new FeaturePackXmlParser();
         try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
-            fpXmlParser.parse(is, fpBuilder);
+            layoutBuilder = FeaturePackLayout.builder(fpXmlParser.parse(is));
         } catch (IOException e) {
             throw new ProvisioningDescriptionException(Errors.openFile(fpXml));
         } catch (XMLStreamException e) {
             throw new ProvisioningDescriptionException(Errors.parseXml(fpXml), e);
         }
+
         final Path packagesDir = fpDir.resolve(Constants.PACKAGES);
         if(Files.exists(packagesDir)) {
-            processPackages(fpBuilder, packagesDir, encoding);
+            processPackages(layoutBuilder, packagesDir, encoding);
         }
-        return fpBuilder.build();
+        return layoutBuilder.build();
     }
 
-    private static void processPackages(FeaturePackSpec.Builder fpBuilder, Path packagesDir, String encoding) throws ProvisioningDescriptionException {
+    private static void processPackages(FeaturePackLayout.Builder fpBuilder, Path packagesDir, String encoding) throws ProvisioningDescriptionException {
         assertDirectory(packagesDir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(packagesDir)) {
             for(Path path : stream) {

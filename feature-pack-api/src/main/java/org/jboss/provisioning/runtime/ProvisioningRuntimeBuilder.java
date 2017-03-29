@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolutionException;
@@ -49,11 +52,11 @@ import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
-import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.util.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.ZipUtils;
+import org.jboss.provisioning.xml.FeaturePackXmlParser;
+import org.jboss.provisioning.xml.PackageXmlParser;
 
 
 /**
@@ -218,20 +221,30 @@ public class ProvisioningRuntimeBuilder {
             return true;
         }
 
-        final PackageSpec pkgSpec = fp.spec.getPackage(pkgName);
-        if (pkgSpec == null) {
+        final PackageRuntime.Builder pkg = fp.newPackage(pkgName, LayoutUtils.getPackageDir(fp.dir, pkgName, false));
+        if(!Files.exists(pkg.dir)) {
             throw new ProvisioningDescriptionException(Errors.packageNotFound(fp.gav, pkgName));
         }
-        final PackageConfig.Builder pkgConfig = fp.newPackage(pkgSpec, LayoutUtils.getPackageDir(fp.dir, pkgName)).configBuilder;
+        final Path pkgXml = pkg.dir.resolve(Constants.PACKAGE_XML);
+        if(!Files.exists(pkgXml)) {
+            throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(pkgXml));
+        }
+        try(BufferedReader reader = Files.newBufferedReader(pkgXml)) {
+            pkg.spec = new PackageXmlParser().parse(reader);
+        } catch (IOException | XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(pkgXml), e);
+        }
+
+        final PackageConfig.Builder pkgConfig = pkg.configBuilder;
         // set parameters set in the package spec first
-        if(pkgSpec.hasParameters()) {
-            for(PackageParameter param : pkgSpec.getParameters()) {
+        if(pkg.spec.hasParameters()) {
+            for(PackageParameter param : pkg.spec.getParameters()) {
                 pkgConfig.addParameter(param);
             }
         }
 
-        if (pkgSpec.hasLocalDependencies()) {
-            for (PackageDependencySpec dep : pkgSpec.getLocalDependencies().getDescriptions()) {
+        if (pkg.spec.hasLocalDependencies()) {
+            for (PackageDependencySpec dep : pkg.spec.getLocalDependencies().getDescriptions()) {
                 final boolean resolved;
                 try {
                     resolved = resolvePackage(fp, dep.getName(), dep.getParameters());
@@ -247,12 +260,12 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
-        if(pkgSpec.hasExternalDependencies()) {
-            for(String depName : pkgSpec.getExternalDependencyNames()) {
+        if(pkg.spec.hasExternalDependencies()) {
+            for(String depName : pkg.spec.getExternalDependencyNames()) {
                 final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
                 final FeaturePackRuntime.Builder targetFp = layoutFps.get(depSpec.getTarget().getGav().toGa());
 
-                final PackageDependencyGroupSpec pkgDeps = pkgSpec.getExternalDependencies(depName);
+                final PackageDependencyGroupSpec pkgDeps = pkg.spec.getExternalDependencies(depName);
                 for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                     final boolean resolved;
                     try {
@@ -295,10 +308,15 @@ public class ProvisioningRuntimeBuilder {
                 throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
             }
 
-            try {
-                fp.spec = FeaturePackLayoutDescriber.describeFeaturePack(fp.dir, encoding);
-            } catch (ProvisioningDescriptionException e) {
-                throw new ProvisioningException("Failed to describe feature-pack " + fp.gav, e);
+            final Path fpXml = fp.dir.resolve(Constants.FEATURE_PACK_XML);
+            if(!Files.exists(fpXml)) {
+                throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
+            }
+
+            try(BufferedReader reader = Files.newBufferedReader(fpXml)) {
+                fp.spec = new FeaturePackXmlParser().parse(reader);
+            } catch (IOException | XMLStreamException e) {
+                throw new ProvisioningException(Errors.parseXml(fpXml), e);
             }
 
             if(fp.spec.hasProvisioningPlugins()) {

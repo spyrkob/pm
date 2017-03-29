@@ -37,15 +37,14 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 public class PackageRuntime implements ProvisionedPackage {
 
     static class Builder {
-        final PackageSpec spec;
         final Path dir;
         final PackageConfig.Builder configBuilder;
+        PackageSpec spec;
         private Map<String, PackageParameter> params = Collections.emptyMap();
 
-        private Builder(PackageSpec spec, Path dir) {
-            this.spec = spec;
+        private Builder(String name, Path dir) {
             this.dir = dir;
-            this.configBuilder = PackageConfig.builder(spec.getName());
+            this.configBuilder = PackageConfig.builder(name);
         }
 
         void addParameter(PackageParameter param) {
@@ -65,8 +64,8 @@ public class PackageRuntime implements ProvisionedPackage {
         }
     }
 
-    static Builder builder(PackageSpec spec, Path dir) {
-        return new Builder(spec, dir);
+    static Builder builder(String name, Path dir) {
+        return new Builder(name, dir);
     }
 
     private final PackageSpec spec;

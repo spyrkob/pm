@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.jboss.provisioning.featurepack.spec.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.junit.Assert;
@@ -33,20 +34,19 @@ public class ConsistencyOfPackageDependenciesTestCase {
     @Test
     public void testInvalidRequiredDependency() throws Exception {
 
-        final FeaturePackSpec.Builder builder = FeaturePackSpec
-                .builder(ArtifactCoords.newGav("g", "a", "v"))
-                .addDefaultPackage(
-                        PackageSpec.builder("p1")
-                        .addDependency("p2")
+        final FeaturePackLayout.Builder builder = FeaturePackLayout
+                .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
+                        .markAsDefaultPackage("p1")
                         .build())
-                .addPackage(
-                        PackageSpec.builder("p2")
-                        .addDependency("p3")
-                        .build())
-                .addPackage(
-                        PackageSpec.builder("p3")
-                        .addDependency("p4")
-                        .build());
+                        .addPackage(PackageSpec.builder("p1")
+                                .addDependency("p2", true)
+                                .build())
+                        .addPackage(PackageSpec.builder("p2")
+                                .addDependency("p3", true)
+                                .build())
+                        .addPackage(PackageSpec.builder("p3")
+                                .addDependency("p4", true)
+                                .build());
 
         try {
             builder.build();
@@ -59,20 +59,19 @@ public class ConsistencyOfPackageDependenciesTestCase {
     @Test
     public void testInvalidOptionalDependency() throws Exception {
 
-        final FeaturePackSpec.Builder builder = FeaturePackSpec
-                .builder(ArtifactCoords.newGav("g", "a", "v"))
-                .addDefaultPackage(
-                        PackageSpec.builder("p1")
-                        .addDependency("p2", true)
+        final FeaturePackLayout.Builder builder = FeaturePackLayout
+                .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
+                        .markAsDefaultPackage("p1")
                         .build())
-                .addPackage(
-                        PackageSpec.builder("p2")
-                        .addDependency("p3", true)
-                        .build())
-                .addPackage(
-                        PackageSpec.builder("p3")
-                        .addDependency("p4", true)
-                        .build());
+                        .addPackage(PackageSpec.builder("p1")
+                                .addDependency("p2", true)
+                                .build())
+                        .addPackage(PackageSpec.builder("p2")
+                                .addDependency("p3", true)
+                                .build())
+                        .addPackage(PackageSpec.builder("p3")
+                                .addDependency("p4", true)
+                                .build());
 
         try {
             builder.build();

@@ -39,7 +39,6 @@ import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 
 /**
@@ -62,16 +61,16 @@ public class FeaturePackRuntime implements ProvisionedFeaturePack<PackageRuntime
             this.dir = dir;
         }
 
-        PackageRuntime.Builder newPackage(PackageSpec spec, Path dir) {
-            final PackageRuntime.Builder pkgBuilder = PackageRuntime.builder(spec, dir);
+        PackageRuntime.Builder newPackage(String name, Path dir) {
+            final PackageRuntime.Builder pkgBuilder = PackageRuntime.builder(name, dir);
             switch(pkgBuilders.size()) {
                 case 0:
-                    pkgBuilders = Collections.singletonMap(spec.getName(), pkgBuilder);
+                    pkgBuilders = Collections.singletonMap(name, pkgBuilder);
                     break;
                 case 1:
                     pkgBuilders = new HashMap<>(pkgBuilders);
                 default:
-                    pkgBuilders.put(spec.getName(), pkgBuilder);
+                    pkgBuilders.put(name, pkgBuilder);
             }
             return pkgBuilder;
         }

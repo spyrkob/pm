@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,8 +65,9 @@ public class FeaturePackXmlParser implements XmlParser<FeaturePackSpec>{
 
     @Override
     public FeaturePackSpec parse(Reader input) throws XMLStreamException {
-        FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
-        parse(input, fpBuilder);
+        final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
+        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
+        mapper.parseDocument(fpBuilder, streamReader);
         try {
             return fpBuilder.build();
         } catch (ProvisioningDescriptionException e) {

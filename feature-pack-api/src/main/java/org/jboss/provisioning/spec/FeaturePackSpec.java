@@ -64,12 +64,6 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addDefaultPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
-            markAsDefaultPackage(pkg.getName());
-            addPackage(pkg);
-            return this;
-        }
-
         public Builder markAsDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
             switch(defPackages.size()) {
@@ -211,13 +205,11 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final Map<String, PackageSpec> packages;
     private final List<ArtifactCoords> provisioningPlugins;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
-        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
         this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
         this.provisioningPlugins = builder.provisioningPlugins.size() > 1 ? Collections.unmodifiableList(builder.provisioningPlugins) : builder.provisioningPlugins;
@@ -237,26 +229,6 @@ public class FeaturePackSpec {
 
     public boolean isDefaultPackage(String name) {
         return defPackages.contains(name);
-    }
-
-    public boolean hasPackages() {
-        return !packages.isEmpty();
-    }
-
-    public boolean hasPackage(String name) {
-        return packages.containsKey(name);
-    }
-
-    public Collection<PackageSpec> getPackages() {
-        return packages.values();
-    }
-
-    public Set<String> getPackageNames() {
-        return packages.keySet();
-    }
-
-    public PackageSpec getPackage(String name) {
-        return packages.get(name);
     }
 
     public boolean hasDependencies() {
@@ -298,14 +270,6 @@ public class FeaturePackSpec {
         logger.println(gav.toString());
         logger.increaseOffset();
 
-        if(!packages.isEmpty()) {
-            final List<String> names = new ArrayList<String>(packages.keySet());
-            names.sort(null);
-            for(String name : names) {
-                packages.get(name).logContent(logger);
-            }
-        }
-
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
@@ -331,7 +295,6 @@ public class FeaturePackSpec {
         int result = 1;
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((packages == null) ? 0 : packages.hashCode());
         result = prime * result + ((provisioningPlugins == null) ? 0 : provisioningPlugins.hashCode());
         result = prime * result + ((defPackages == null) ? 0 : defPackages.hashCode());
         return result;
@@ -355,11 +318,6 @@ public class FeaturePackSpec {
             if (other.gav != null)
                 return false;
         } else if (!gav.equals(other.gav))
-            return false;
-        if (packages == null) {
-            if (other.packages != null)
-                return false;
-        } else if (!packages.equals(other.packages))
             return false;
         if (provisioningPlugins == null) {
             if (other.provisioningPlugins != null)
@@ -394,15 +352,6 @@ public class FeaturePackSpec {
             buf.append(array[0]);
             for(int i = 1; i < array.length; ++i) {
                 buf.append(',').append(array[i]);
-            }
-        }
-        if(!packages.isEmpty()) {
-            buf.append("; packages=");
-            final String[] array = packages.keySet().toArray(new String[packages.size()]);
-            Arrays.sort(array);
-            buf.append(packages.get(array[0]));
-            for(int i = 1; i < array.length; ++i) {
-                buf.append(',').append(packages.get(array[i]));
             }
         }
         if(!provisioningPlugins.isEmpty()) {
