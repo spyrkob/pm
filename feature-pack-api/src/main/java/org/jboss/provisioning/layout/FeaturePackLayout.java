@@ -43,10 +43,10 @@ public class FeaturePackLayout {
 
     public static class Builder {
 
-        private final FeaturePackSpec spec;
+        private final FeaturePackSpec.Builder spec;
         private Map<String, PackageSpec> packages = Collections.emptyMap();
 
-        private Builder(FeaturePackSpec spec) {
+        private Builder(FeaturePackSpec.Builder spec) {
             this.spec = spec;
         }
 
@@ -63,7 +63,17 @@ public class FeaturePackLayout {
             return this;
         }
 
+        public FeaturePackSpec.Builder getSpecBuilder() {
+            return spec;
+        }
+
         public FeaturePackLayout build() throws ProvisioningDescriptionException {
+            final FeaturePackSpec builtSpec = spec.build();
+            for(String name : builtSpec.getDefaultPackageNames()) {
+                if(!packages.containsKey(name)) {
+                    throw new ProvisioningDescriptionException(Errors.unknownPackage(builtSpec.getGav(), name));
+                }
+            }
             // package dependency consistency check
             if (!packages.isEmpty()) {
                 for (PackageSpec pkg : packages.values()) {
@@ -80,7 +90,7 @@ public class FeaturePackLayout {
                                 for(PackageParameter depParam : pkgDep.getParameters()) {
                                     if(!depSpec.hasParameter(depParam.getName())) {
                                         throw new ProvisioningDescriptionException(
-                                                Errors.unknownParameterInDependency(spec.getGav(), pkg.getName(), pkgDep.getName(), depParam.getName()));
+                                                Errors.unknownParameterInDependency(builtSpec.getGav(), pkg.getName(), pkgDep.getName(), depParam.getName()));
                                     }
                                 }
                             }
@@ -91,27 +101,27 @@ public class FeaturePackLayout {
                     }
                     if(pkg.hasExternalDependencies()) {
                         for(String depName : pkg.getExternalDependencyNames()) {
-                            if(spec.getDependency(depName) == null) {
-                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(spec.getGav(), pkg.getName(), depName));
+                            if(builtSpec.getDependency(depName) == null) {
+                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), depName));
                             }
                         }
                     }
                 }
             }
-            return new FeaturePackLayout(this);
+            return new FeaturePackLayout(builtSpec, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
         }
     }
 
-    public static Builder builder(FeaturePackSpec spec) {
+    public static Builder builder(FeaturePackSpec.Builder spec) {
         return new Builder(spec);
     }
 
     private final FeaturePackSpec spec;
     private final Map<String, PackageSpec> packages;
 
-    private FeaturePackLayout(Builder builder) {
-        this.spec = builder.spec;
-        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
+    private FeaturePackLayout(FeaturePackSpec spec, Map<String, PackageSpec> packages) {
+        this.spec = spec;
+        this.packages = packages;
     }
 
     public ArtifactCoords.Gav getGav() {

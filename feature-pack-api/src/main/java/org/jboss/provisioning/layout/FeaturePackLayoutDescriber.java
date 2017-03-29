@@ -30,6 +30,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
@@ -101,7 +102,9 @@ public class FeaturePackLayoutDescriber {
         final FeaturePackLayout.Builder layoutBuilder;
         final FeaturePackXmlParser fpXmlParser = new FeaturePackXmlParser();
         try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
-            layoutBuilder = FeaturePackLayout.builder(fpXmlParser.parse(is));
+            final FeaturePackSpec.Builder specBuilder = FeaturePackSpec.builder();
+            fpXmlParser.parse(is, specBuilder);
+            layoutBuilder = FeaturePackLayout.builder(specBuilder);
         } catch (IOException e) {
             throw new ProvisioningDescriptionException(Errors.openFile(fpXml));
         } catch (XMLStreamException e) {

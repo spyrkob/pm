@@ -147,7 +147,7 @@ public class FeaturePackBuilder {
             for (PackageBuilder pkg : pkgs) {
                 final PackageSpec pkgDescr = pkg.build(fpWorkDir);
                 if(pkg.isDefault()) {
-                    fpBuilder.markAsDefaultPackage(pkgDescr.getName());
+                    fpBuilder.addDefaultPackage(pkgDescr.getName());
                 }
             }
             if(!plugins.isEmpty()) {

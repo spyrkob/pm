@@ -95,8 +95,8 @@ public interface Errors {
         return "Missing " + string;
     }
 
-    static String unknownPackage(String pkgName) {
-        return "Package " + pkgName + " is not found";
+    static String unknownPackage(ArtifactCoords.Gav gav, String pkgName) {
+        return "Package " + pkgName + " is not found in " + gav;
     }
 
     static String unknownFeaturePack(ArtifactCoords.Gav gav) {

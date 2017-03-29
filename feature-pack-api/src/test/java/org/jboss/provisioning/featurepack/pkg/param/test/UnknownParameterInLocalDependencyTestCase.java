@@ -41,9 +41,7 @@ public class UnknownParameterInLocalDependencyTestCase  {
         final Gav fp1Gav = ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1");
         try {
             FeaturePackLayout
-                    .builder(FeaturePackSpec
-                            .builder(fp1Gav)
-                            .build())
+                    .builder(FeaturePackSpec.builder(fp1Gav))
                     .addPackage(PackageSpec.builder("a")
                             .addDependency(PackageDependencySpec.builder("b")
                                     .addParameter("param.b1", "b1")

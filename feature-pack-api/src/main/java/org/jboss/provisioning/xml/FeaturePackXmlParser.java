@@ -66,8 +66,7 @@ public class FeaturePackXmlParser implements XmlParser<FeaturePackSpec>{
     @Override
     public FeaturePackSpec parse(Reader input) throws XMLStreamException {
         final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
-        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        mapper.parseDocument(fpBuilder, streamReader);
+        parse(input, fpBuilder);
         try {
             return fpBuilder.build();
         } catch (ProvisioningDescriptionException e) {

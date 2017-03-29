@@ -36,8 +36,7 @@ public class ConsistencyOfPackageDependenciesTestCase {
 
         final FeaturePackLayout.Builder builder = FeaturePackLayout
                 .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
-                        .markAsDefaultPackage("p1")
-                        .build())
+                        .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
                                 .addDependency("p2", true)
                                 .build())
@@ -61,8 +60,7 @@ public class ConsistencyOfPackageDependenciesTestCase {
 
         final FeaturePackLayout.Builder builder = FeaturePackLayout
                 .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
-                        .markAsDefaultPackage("p1")
-                        .build())
+                        .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
                                 .addDependency("p2", true)
                                 .build())

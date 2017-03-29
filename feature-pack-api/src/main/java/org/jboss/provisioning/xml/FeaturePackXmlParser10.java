@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -330,7 +330,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            fpBuilder.markAsDefaultPackage(parseName(reader));
+                            fpBuilder.addDefaultPackage(parseName(reader));
                             hasChildren = true;
                             break;
                         default:

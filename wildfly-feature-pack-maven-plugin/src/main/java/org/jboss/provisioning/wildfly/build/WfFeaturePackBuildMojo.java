@@ -67,7 +67,6 @@ import org.jboss.provisioning.plugin.wildfly.WfConstants;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.wildfly.build.ModuleParseResult.ModuleDependency;
@@ -181,7 +180,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path fpPackagesDir = fpDir.resolve(Constants.PACKAGES);
 
         // feature-pack builder
-        final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion()));
+        final FeaturePackLayout.Builder fpBuilder = FeaturePackLayout.builder(
+                FeaturePackSpec.builder(ArtifactCoords.newGav(project.getGroupId(), fpArtifactId, project.getVersion())));
 
         // feature-pack build config
         try {
@@ -190,8 +190,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to load feature-pack config file", e);
         }
 
+        for(String defaultPackage : wfFpConfig.getDefaultPackages()) {
+            fpBuilder.getSpecBuilder().addDefaultPackage(defaultPackage);
+        }
+
         try {
-            processFeaturePackDependencies(fpBuilder);
+            processFeaturePackDependencies(fpBuilder.getSpecBuilder());
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
@@ -217,7 +221,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             final PackageSpec modulesAllPkg = modulesAll.build();
             PackageXmlWriter.getInstance().write(modulesAllPkg, fpPackagesDir.resolve(modulesAllPkg.getName()).resolve(Constants.PACKAGE_XML));
             fpBuilder.addPackage(modulesAllPkg);
-        } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
+        } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException("Failed to add package", e);
         }
 
@@ -234,24 +238,18 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if(docsBuilder.hasDependencies()) {
             final PackageSpec docsSpec = docsBuilder.build();
             writeXml(docsSpec, fpPackagesDir.resolve(WfConstants.DOCS));
-            fpBuilder.markAsDefaultPackage(docsSpec.getName());
+            fpBuilder.getSpecBuilder().addDefaultPackage(docsSpec.getName());
         }
 
-        fpBuilder.addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
+        fpBuilder.getSpecBuilder().addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
 
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
-        for(String defaultPackage : wfFpConfig.getDefaultPackages()) {
-            if(!fpBuilder.hasPackage(defaultPackage)) {
-                throw new MojoExecutionException(Errors.unknownPackage(defaultPackage));
-            }
-            fpBuilder.markAsDefaultPackage(defaultPackage);
-        }
 
-        final FeaturePackSpec fpSpec;
+        final FeaturePackLayout fpLayout;
         try {
-            fpSpec = fpBuilder.build();
-            FeaturePackXmlWriter.getInstance().write(fpSpec, fpDir.resolve(Constants.FEATURE_PACK_XML));
+            fpLayout = fpBuilder.build();
+            FeaturePackXmlWriter.getInstance().write(fpLayout.getSpec(), fpDir.resolve(Constants.FEATURE_PACK_XML));
         } catch (XMLStreamException | IOException | ProvisioningDescriptionException e) {
             throw new MojoExecutionException(Errors.writeFile(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
@@ -298,7 +296,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackSpec.Builder fpBuilder)
+    private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackLayout.Builder fpBuilder)
             throws MojoExecutionException {
         docsBuilder.addDependency(WfConstants.DOCS_SCHEMA, true);
         final Path schemasPackageDir = fpPackagesDir.resolve(WfConstants.DOCS_SCHEMA);
@@ -319,8 +317,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.mkdirs(schemaGroupsTxt.getParent()), e);
         } catch (XMLStreamException e) {
             throw new MojoExecutionException(Errors.writeFile(schemaGroupsTxt), e);
-        } catch (ProvisioningDescriptionException e) {
-            errorAddingPackage(e);
         } finally {
             if(writer != null) {
                 try {
@@ -331,11 +327,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void errorAddingPackage(ProvisioningDescriptionException e) throws MojoExecutionException {
-        throw new MojoExecutionException("Failed to add package", e);
-    }
-
-    private void addConfigPackages(final Path configDir, final Path packagesDir, final Builder fpBuilder) throws MojoExecutionException {
+    private void addConfigPackages(final Path configDir, final Path packagesDir, final FeaturePackLayout.Builder fpBuilder) throws MojoExecutionException {
         if(!Files.exists(configDir)) {
             return;
         }
@@ -361,14 +353,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     fpBuilder.addPackage(pkgSpec);
                 }
             }
-        } catch (ProvisioningDescriptionException e) {
-            errorAddingPackage(e);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process config packages", e);
         }
     }
 
-    private void processFeaturePackDependencies(final Builder fpBuilder)
+    private void processFeaturePackDependencies(final FeaturePackSpec.Builder fpBuilder)
             throws Exception {
         if (!wfFpConfig.getDependencies().isEmpty()) {
             fpDependencies = new HashMap<>(wfFpConfig.getDependencies().size());
@@ -404,7 +394,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void packageContent(FeaturePackSpec.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {
+    private void packageContent(FeaturePackLayout.Builder fpBuilder, Path contentDir, Path packagesDir) throws IOException, MojoExecutionException {
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(contentDir)) {
             for(Path p : stream) {
                 final String pkgName = p.getFileName().toString();
@@ -460,8 +450,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     fpBuilder.addPackage(pkgSpec);
                 }
             }
-        } catch (ProvisioningDescriptionException e) {
-            errorAddingPackage(e);
         }
     }
 
@@ -497,7 +485,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         return moduleXmlByPkgName;
     }
 
-    private void packageModules(FeaturePackSpec.Builder fpBuilder,
+    private void packageModules(FeaturePackLayout.Builder fpBuilder,
             Path resourcesDir, Map<String, Path> moduleXmlByPkgName, Path packagesDir, PackageSpec.Builder modulesAll)
             throws IOException, MojoExecutionException {
 
@@ -556,11 +544,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 throw new IOException(Errors.writeFile(packageDir.resolve(Constants.PACKAGE_XML)), e);
             }
             modulesAll.addDependency(packageName, true);
-            try {
-                fpBuilder.addPackage(pkgSpec);
-            } catch (ProvisioningDescriptionException e) {
-                errorAddingPackage(e);
-            }
+            fpBuilder.addPackage(pkgSpec);
 
             if (!OS_WINDOWS) {
                 Files.setPosixFilePermissions(targetXml, Files.getPosixFilePermissions(moduleXml));

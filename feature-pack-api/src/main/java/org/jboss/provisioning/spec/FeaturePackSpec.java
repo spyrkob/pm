@@ -32,7 +32,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -48,7 +47,6 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private Map<String, PackageSpec> packages = Collections.emptyMap();
         private List<ArtifactCoords> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
@@ -64,7 +62,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder markAsDefaultPackage(String packageName) {
+        public Builder addDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
             switch(defPackages.size()) {
                 case 0:
@@ -76,27 +74,6 @@ public class FeaturePackSpec {
                     defPackages.add(packageName);
             }
             return this;
-        }
-
-        public Builder addPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
-            assert pkg != null : "package is null";
-            if(packages.containsKey(pkg.getName())) {
-                throw new ProvisioningDescriptionException(Errors.packageAlreadyExists(gav, pkg.getName()));
-            }
-            switch(packages.size()) {
-                case 0:
-                    packages = Collections.singletonMap(pkg.getName(), pkg);
-                    break;
-                case 1:
-                    packages = new HashMap<String, PackageSpec>(packages);
-                default:
-                    packages.put(pkg.getName(), pkg);
-            }
-            return this;
-        }
-
-        public boolean hasPackage(String packageName) {
-            return packages.containsKey(packageName);
         }
 
         public Builder addDependency(FeaturePackConfig dependency) throws ProvisioningDescriptionException {
@@ -154,41 +131,6 @@ public class FeaturePackSpec {
         }
 
         public FeaturePackSpec build() throws ProvisioningDescriptionException {
-            // package dependency consistency check
-            if (!packages.isEmpty()) {
-                for (PackageSpec pkg : packages.values()) {
-                    if (pkg.hasLocalDependencies()) {
-                        List<String> notFound = null;
-                        for(PackageDependencySpec pkgDep : pkg.getLocalDependencies().getDescriptions()) {
-                            final PackageSpec depSpec = packages.get(pkgDep.getName());
-                            if(depSpec == null) {
-                                if(notFound == null) {
-                                    notFound = new ArrayList<>();
-                                }
-                                notFound.add(pkgDep.getName());
-                            } else if(pkgDep.hasParams()) {
-                                for(PackageParameter depParam : pkgDep.getParameters()) {
-                                    if(!depSpec.hasParameter(depParam.getName())) {
-                                        throw new ProvisioningDescriptionException(
-                                                Errors.unknownParameterInDependency(gav, pkg.getName(), pkgDep.getName(), depParam.getName()));
-                                    }
-                                }
-                            }
-                        }
-                        if (notFound != null) {
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
-                        }
-                    }
-                    if(pkg.hasExternalDependencies()) {
-                        for(String depName : pkg.getExternalDependencyNames()) {
-                            if(!dependencyByName.containsKey(depName)) {
-                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(gav, pkg.getName(), depName));
-                            }
-                        }
-                    }
-                }
-            }
-
             return new FeaturePackSpec(this);
         }
     }
