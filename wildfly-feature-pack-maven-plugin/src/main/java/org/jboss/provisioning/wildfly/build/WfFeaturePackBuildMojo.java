@@ -237,6 +237,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         if(docsBuilder.hasDependencies()) {
             final PackageSpec docsSpec = docsBuilder.build();
+            fpBuilder.addPackage(docsSpec);
             writeXml(docsSpec, fpPackagesDir.resolve(WfConstants.DOCS));
             fpBuilder.getSpecBuilder().addDefaultPackage(docsSpec.getName());
         }
