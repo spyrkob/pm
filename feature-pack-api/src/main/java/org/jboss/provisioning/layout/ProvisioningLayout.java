@@ -20,10 +20,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageSpec;
 
 /**
  * This class describes a layout of feature-packs from which
@@ -63,6 +70,38 @@ public class ProvisioningLayout {
         }
 
         public ProvisioningLayout build() throws ProvisioningDescriptionException {
+            for(FeaturePackLayout fp : featurePacks.values()) {
+                if(fp.hasExternalPackageDependencies()) {
+                    final FeaturePackSpec fpSpec = fp.getSpec();
+                    for(PackageSpec pkg : fp.getPackages()) {
+                        if(pkg.hasExternalDependencies()) {
+                            for(String depName : pkg.getExternalDependencyNames()) {
+                                final FeaturePackDependencySpec fpDepSpec = fpSpec.getDependency(depName);
+                                if(fpDepSpec == null) {
+                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), depName));
+                                }
+                                final FeaturePackConfig fpDepConfig = fpDepSpec.getTarget();
+                                final FeaturePackLayout fpDepLayout = featurePacks.get(fpDepConfig.getGav().toGa());
+                                if(fpDepLayout == null) {
+                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDepConfig.getGav()));
+                                }
+                                final PackageDependencyGroupSpec pkgDepGroup = pkg.getExternalDependencies(depName);
+                                for(PackageDependencySpec pkgDep : pkgDepGroup.getDescriptions()) {
+                                    final String pkgDepName = pkgDep.getName();
+                                    if(!fpDepLayout.hasPackage(pkgDepName)) {
+                                        throw new ProvisioningDescriptionException(
+                                                Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
+                                    }
+                                    if(fpDepConfig.isExcluded(pkgDepName) && !pkgDep.isOptional()) {
+                                        throw new ProvisioningDescriptionException(
+                                                Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             return new ProvisioningLayout(this);
         }
     }

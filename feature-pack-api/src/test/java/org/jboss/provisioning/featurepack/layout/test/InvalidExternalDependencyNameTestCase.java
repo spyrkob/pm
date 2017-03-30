@@ -15,10 +15,13 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.spec.test;
+package org.jboss.provisioning.featurepack.layout.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -29,53 +32,44 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class ConsistencyOfPackageDependenciesTestCase {
+public class InvalidExternalDependencyNameTestCase {
+
+    private static final Gav fp1Gav = ArtifactCoords.newGav("g", "a1", "v");
+    private static final Gav fp2Gav = ArtifactCoords.newGav("g", "a2", "v");
 
     @Test
-    public void testInvalidRequiredDependency() throws Exception {
+    public void testRequiredDependency() throws Exception {
 
-        final FeaturePackLayout.Builder builder = FeaturePackLayout
-                .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
+        final FeaturePackLayout.Builder builder = FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
+                        .addDependency(FeaturePackConfig.forGav(fp2Gav))
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
-                                .addDependency("p2", true)
-                                .build())
-                        .addPackage(PackageSpec.builder("p2")
-                                .addDependency("p3", true)
-                                .build())
-                        .addPackage(PackageSpec.builder("p3")
-                                .addDependency("p4", true)
+                                .addDependency("fp2dep", "p2")
                                 .build());
 
         try {
             builder.build();
             Assert.fail("Cannot build feature-pack description with inconsistent package dependencies.");
         } catch (ProvisioningDescriptionException e) {
-            // expected
+            Assert.assertEquals(Errors.unknownFeaturePackDependencyName(fp1Gav, "p1", "fp2dep"), e.getMessage());
         }
     }
 
     @Test
-    public void testInvalidOptionalDependency() throws Exception {
+    public void testOptionalDependency() throws Exception {
 
-        final FeaturePackLayout.Builder builder = FeaturePackLayout
-                .builder(FeaturePackSpec.builder(ArtifactCoords.newGav("g", "a", "v"))
-                        .addDefaultPackage("p1"))
-                        .addPackage(PackageSpec.builder("p1")
-                                .addDependency("p2", true)
-                                .build())
-                        .addPackage(PackageSpec.builder("p2")
-                                .addDependency("p3", true)
-                                .build())
-                        .addPackage(PackageSpec.builder("p3")
-                                .addDependency("p4", true)
-                                .build());
+        final FeaturePackLayout.Builder builder = FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
+                .addDependency(FeaturePackConfig.forGav(fp2Gav))
+                .addDefaultPackage("p1"))
+                .addPackage(PackageSpec.builder("p1")
+                        .addDependency("fp2dep", "p2", true)
+                        .build());
 
         try {
             builder.build();
             Assert.fail("Cannot build feature-pack description with inconsistent package dependencies.");
         } catch (ProvisioningDescriptionException e) {
-            // expected
+            Assert.assertEquals(Errors.unknownFeaturePackDependencyName(fp1Gav, "p1", "fp2dep"), e.getMessage());
         }
     }
 }

@@ -107,8 +107,8 @@ public interface Errors {
         return "Feature-pack " + gav.toGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
     }
 
-    static String unsatisfiedPackageDependencies(String packageName, Collection<String> unsatisfiedDeps) {
-        return "Package " + packageName + " has unsatisfied dependencies: " + unsatisfiedDeps;
+    static String unsatisfiedPackageDependencies(ArtifactCoords.Gav fpGav, String packageName, Collection<String> unsatisfiedDeps) {
+        return "Feature-pack " + fpGav + " package " + packageName + " has unsatisfied dependencies on packages " + unsatisfiedDeps;
     }
 
     static String unsatisfiedPackageDependency(ArtifactCoords.Gav fpGav, String srcPackage, String targetPackage) {

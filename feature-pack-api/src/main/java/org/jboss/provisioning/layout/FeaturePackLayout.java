@@ -74,6 +74,7 @@ public class FeaturePackLayout {
                     throw new ProvisioningDescriptionException(Errors.unknownPackage(builtSpec.getGav(), name));
                 }
             }
+            boolean externalPackageDependencies = false;
             // package dependency consistency check
             if (!packages.isEmpty()) {
                 for (PackageSpec pkg : packages.values()) {
@@ -96,7 +97,7 @@ public class FeaturePackLayout {
                             }
                         }
                         if (notFound != null) {
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
+                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(builtSpec.getGav(), pkg.getName(), notFound));
                         }
                     }
                     if(pkg.hasExternalDependencies()) {
@@ -105,10 +106,11 @@ public class FeaturePackLayout {
                                 throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), depName));
                             }
                         }
+                        externalPackageDependencies = true;
                     }
                 }
             }
-            return new FeaturePackLayout(builtSpec, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
+            return new FeaturePackLayout(builtSpec, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages, externalPackageDependencies);
         }
     }
 
@@ -118,10 +120,12 @@ public class FeaturePackLayout {
 
     private final FeaturePackSpec spec;
     private final Map<String, PackageSpec> packages;
+    private final boolean externalPackageDependencies;
 
-    private FeaturePackLayout(FeaturePackSpec spec, Map<String, PackageSpec> packages) {
+    private FeaturePackLayout(FeaturePackSpec spec, Map<String, PackageSpec> packages, boolean externalPackageDependencies) {
         this.spec = spec;
         this.packages = packages;
+        this.externalPackageDependencies = externalPackageDependencies;
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -150,5 +154,9 @@ public class FeaturePackLayout {
 
     public Collection<PackageSpec> getPackages() {
         return packages.values();
+    }
+
+    public boolean hasExternalPackageDependencies() {
+        return externalPackageDependencies;
     }
 }

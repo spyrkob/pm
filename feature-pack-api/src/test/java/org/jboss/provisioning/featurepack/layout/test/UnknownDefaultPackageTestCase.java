@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.pkg.param.test;
+package org.jboss.provisioning.featurepack.layout.test;
 
 
 
@@ -25,7 +25,6 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,26 +33,20 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class UnknownParameterInLocalDependencyTestCase  {
+public class UnknownDefaultPackageTestCase  {
 
     @Test
     public void testMain() throws Exception {
         final Gav fp1Gav = ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1");
         try {
             FeaturePackLayout
-                    .builder(FeaturePackSpec.builder(fp1Gav))
-                    .addPackage(PackageSpec.builder("a")
-                            .addDependency(PackageDependencySpec.builder("b")
-                                    .addParameter("param.b1", "b1")
-                                    .build())
-                            .build())
-                    .addPackage(PackageSpec.builder("b")
-                            .addParameter("param.b", "b")
-                            .build())
+                    .builder(FeaturePackSpec.builder(fp1Gav)
+                            .addDefaultPackage("default"))
+                    .addPackage(PackageSpec.forName("a"))
                     .build();
-            Assert.fail("Non-existing parameter overwrite");
+            Assert.fail("Non-existing default package");
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.unknownParameterInDependency(fp1Gav, "a", "b", "param.b1"), e.getMessage());
+            Assert.assertEquals(Errors.unknownPackage(fp1Gav, "default"), e.getMessage());
         }
     }
 }
