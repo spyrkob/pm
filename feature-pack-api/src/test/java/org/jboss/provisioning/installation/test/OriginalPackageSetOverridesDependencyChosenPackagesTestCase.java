@@ -73,7 +73,7 @@ public class OriginalPackageSetOverridesDependencyChosenPackagesTestCase extends
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() {
+    protected ProvisionedState provisionedState() {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                         .addPackage("p1")

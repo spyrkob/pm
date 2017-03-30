@@ -19,6 +19,7 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,9 +31,9 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedFeaturePack<P extends ProvisionedPackage> {
+public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
 
-    class Builder {
+    public static class Builder {
         private ArtifactCoords.Gav gav;
         private Map<String, ProvisionedPackage> packages = Collections.emptyMap();
 
@@ -61,24 +62,94 @@ public interface ProvisionedFeaturePack<P extends ProvisionedPackage> {
             return packages.containsKey(name);
         }
 
-        public ProvisionedFeaturePack<ProvisionedPackage> build() {
-            return new ProvisionedFeaturePackImpl(gav, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
+        public ProvisionedFeaturePack build() {
+            return new ProvisionedFeaturePack(gav, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
         }
     }
 
-    static Builder builder(ArtifactCoords.Gav gav) {
+    public static Builder builder(ArtifactCoords.Gav gav) {
         return new Builder(gav);
     }
 
-    ArtifactCoords.Gav getGav();
+    private final ArtifactCoords.Gav gav;
+    private final Map<String, ProvisionedPackage> packages;
 
-    boolean hasPackages();
+    ProvisionedFeaturePack(ArtifactCoords.Gav gav, Map<String, ProvisionedPackage> packages) {
+        this.gav = gav;
+        this.packages = packages;
+    }
 
-    boolean containsPackage(String name);
+    @Override
+    public ArtifactCoords.Gav getGav() {
+        return gav;
+    }
 
-    Set<String> getPackageNames();
+    @Override
+    public boolean hasPackages() {
+        return !packages.isEmpty();
+    }
 
-    Collection<P> getPackages();
+    @Override
+    public boolean containsPackage(String name) {
+        return packages.containsKey(name);
+    }
 
-    P getPackage(String name);
+    @Override
+    public Set<String> getPackageNames() {
+        return packages.keySet();
+    }
+
+    @Override
+    public Collection<ProvisionedPackage> getPackages() {
+        return packages.values();
+    }
+
+    @Override
+    public ProvisionedPackage getPackage(String name) {
+        return packages.get(name);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
+        result = prime * result + ((packages == null) ? 0 : packages.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ProvisionedFeaturePack other = (ProvisionedFeaturePack) obj;
+        if (gav == null) {
+            if (other.gav != null)
+                return false;
+        } else if (!gav.equals(other.gav))
+            return false;
+        if (packages == null) {
+            if (other.packages != null)
+                return false;
+        } else if (!packages.equals(other.packages))
+            return false;
+        return true;
+    }
+
+    public String toString() {
+        final StringBuilder buf = new StringBuilder().append('[').append(gav);
+        if(!packages.isEmpty()) {
+            final Iterator<ProvisionedPackage> i = packages.values().iterator();
+            buf.append(' ').append(i.next());
+            while(i.hasNext()) {
+                buf.append(',');
+                buf.append(i.next());
+            }
+        }
+        return buf.append(']').toString();
+    }
 }

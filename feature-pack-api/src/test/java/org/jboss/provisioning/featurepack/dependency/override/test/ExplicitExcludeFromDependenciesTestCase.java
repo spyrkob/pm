@@ -112,7 +112,7 @@ public class ExplicitExcludeFromDependenciesTestCase extends PmProvisionConfigTe
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT"))
                         .addPackage("d")

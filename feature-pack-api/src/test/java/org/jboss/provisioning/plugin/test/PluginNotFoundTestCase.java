@@ -74,7 +74,7 @@ public class PluginNotFoundTestCase extends PmProvisionConfigTestBase {
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() {
+    protected ProvisionedState provisionedState() {
         return null;
     }
 

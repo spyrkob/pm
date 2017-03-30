@@ -79,7 +79,7 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return null;
     }
 

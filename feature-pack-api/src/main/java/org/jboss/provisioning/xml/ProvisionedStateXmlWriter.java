@@ -24,9 +24,9 @@ import java.nio.file.StandardOpenOption;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
-import org.jboss.provisioning.state.ProvisionedState;
+import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.state.FeaturePackPackage;
+import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -47,12 +47,12 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
     private ProvisionedStateXmlWriter() {
     }
 
-    public void write(ProvisionedState<?,?> provisionedState, Path outputFile) throws XMLStreamException, IOException {
+    public void write(FeaturePackSet<?> provisionedState, Path outputFile) throws XMLStreamException, IOException {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
         if (provisionedState.hasFeaturePacks()) {
-            for(ProvisionedFeaturePack<?> fp : provisionedState.getFeaturePacks()) {
+            for(FeaturePack<?> fp : provisionedState.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
             }
@@ -67,7 +67,7 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
         }
     }
 
-    private void writeFeaturePack(ElementNode fp, ProvisionedFeaturePack<?> featurePack) {
+    private void writeFeaturePack(ElementNode fp, FeaturePack<?> featurePack) {
         addAttribute(fp, Attribute.GROUP_ID, featurePack.getGav().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {
@@ -76,7 +76,7 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
 
         if (featurePack.hasPackages()) {
             final ElementNode packages = addElement(fp, Element.PACKAGES);
-            for (ProvisionedPackage pkg : featurePack.getPackages()) {
+            for (FeaturePackPackage pkg : featurePack.getPackages()) {
                 final ElementNode pkgElement = addElement(packages, Element.PACKAGE);
                 addAttribute(pkgElement, Attribute.NAME, pkg.getName());
                 if(pkg.hasParameters()) {

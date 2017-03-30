@@ -19,6 +19,7 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,15 +31,15 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedState<F extends ProvisionedFeaturePack<P>, P extends ProvisionedPackage> {
+public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> {
 
-    class Builder {
-        private Map<ArtifactCoords.Gav, ProvisionedFeaturePack<ProvisionedPackage>> featurePacks = Collections.emptyMap();
+    public static class Builder {
+        private Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
 
         private Builder() {
         }
 
-        public Builder addFeaturePack(ProvisionedFeaturePack<ProvisionedPackage> fp) {
+        public Builder addFeaturePack(ProvisionedFeaturePack fp) {
             switch(featurePacks.size()) {
                 case 0:
                     featurePacks = Collections.singletonMap(fp.getGav(), fp);
@@ -51,20 +52,77 @@ public interface ProvisionedState<F extends ProvisionedFeaturePack<P>, P extends
             return this;
         }
 
-        public ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage> build() {
-            return new ProvisionedStateImpl(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
+        public ProvisionedState build() {
+            return new ProvisionedState(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
         }
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    boolean hasFeaturePacks();
+    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
 
-    Set<ArtifactCoords.Gav> getFeaturePackGavs();
+    ProvisionedState(Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks) {
+        this.featurePacks = featurePacks;
+    }
 
-    Collection<F> getFeaturePacks();
+    @Override
+    public boolean hasFeaturePacks() {
+        return !featurePacks.isEmpty();
+    }
 
-    F getFeaturePack(ArtifactCoords.Gav gav);
+    @Override
+    public Set<ArtifactCoords.Gav> getFeaturePackGavs() {
+        return featurePacks.keySet();
+    }
+
+    @Override
+    public Collection<ProvisionedFeaturePack> getFeaturePacks() {
+        return featurePacks.values();
+    }
+
+    @Override
+    public ProvisionedFeaturePack getFeaturePack(ArtifactCoords.Gav gav) {
+        return featurePacks.get(gav);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((featurePacks == null) ? 0 : featurePacks.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ProvisionedState other = (ProvisionedState) obj;
+        if (featurePacks == null) {
+            if (other.featurePacks != null)
+                return false;
+        } else if (!featurePacks.equals(other.featurePacks))
+            return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[state [");
+        if(!featurePacks.isEmpty()) {
+            final Iterator<ProvisionedFeaturePack> i = featurePacks.values().iterator();
+            buf.append(i.next());
+            while(i.hasNext()) {
+                buf.append(", ").append(i.next());
+            }
+        }
+        return buf.append("]]").toString();
+    }
 }

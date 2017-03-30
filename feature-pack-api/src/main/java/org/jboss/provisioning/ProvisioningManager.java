@@ -29,8 +29,6 @@ import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -125,7 +123,7 @@ public class ProvisioningManager {
      * @return  detailed description of the provisioned installation
      * @throws ProvisioningException  in case there was an error reading the description from the disk
      */
-    public ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage> getProvisionedState() throws ProvisioningException {
+    public ProvisionedState getProvisionedState() throws ProvisioningException {
         final Path xml = PathsUtils.getProvisionedStateXml(installationHome);
         if (!Files.exists(xml)) {
             return null;

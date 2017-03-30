@@ -71,7 +71,7 @@ public class PickPackagesTestCase extends PmInstallFeaturePackTestBase {
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
                         .addPackage("b")

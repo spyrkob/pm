@@ -93,7 +93,7 @@ public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() {
+    protected ProvisionedState provisionedState() {
         return null;
     }
 

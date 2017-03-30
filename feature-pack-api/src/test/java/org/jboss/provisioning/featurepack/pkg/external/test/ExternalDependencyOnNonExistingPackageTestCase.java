@@ -81,7 +81,7 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return null;
     }
 

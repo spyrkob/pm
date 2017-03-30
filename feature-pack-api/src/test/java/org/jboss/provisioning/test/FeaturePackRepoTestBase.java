@@ -104,7 +104,7 @@ public class FeaturePackRepoTestBase {
         Assert.assertEquals(config, pm.getProvisioningConfig());
     }
 
-    protected void assertProvisionedState(ProvisioningManager pm, ProvisionedState<?,?> config) throws ProvisioningException {
+    protected void assertProvisionedState(ProvisioningManager pm, ProvisionedState config) throws ProvisioningException {
         Assert.assertEquals(config, pm.getProvisionedState());
     }
 }

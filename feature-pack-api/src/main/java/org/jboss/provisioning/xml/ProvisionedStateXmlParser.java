@@ -23,8 +23,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.staxmapper.XMLMapper;
 
@@ -32,7 +30,7 @@ import org.jboss.staxmapper.XMLMapper;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>, ProvisionedPackage>> {
+public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState> {
 
     private static final QName ROOT_1_0 = new QName(ProvisionedStateXmlParser10.NAMESPACE_1_0, ProvisionedStateXmlParser10.Element.INSTALLATION.getLocalName());
 
@@ -58,8 +56,7 @@ public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState<Pro
     }
 
     @Override
-    public ProvisionedState<ProvisionedFeaturePack<ProvisionedPackage>,ProvisionedPackage> parse(final Reader input) throws XMLStreamException {
-
+    public ProvisionedState parse(final Reader input) throws XMLStreamException {
         final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final ProvisionedState.Builder builder = ProvisionedState.builder();
         mapper.parseDocument(builder, streamReader);

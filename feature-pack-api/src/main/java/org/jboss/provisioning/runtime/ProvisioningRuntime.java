@@ -40,7 +40,7 @@ import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.state.ProvisionedState;
+import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -52,7 +52,7 @@ import org.jboss.provisioning.xml.ProvisioningXmlWriter;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningRuntime implements ProvisionedState<FeaturePackRuntime,PackageRuntime>, java.io.Closeable {
+public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, java.io.Closeable {
 
     public static void install(ProvisioningRuntime runtime) throws ProvisioningException {
 

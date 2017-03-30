@@ -39,13 +39,13 @@ import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.FeaturePack;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackRuntime implements ProvisionedFeaturePack<PackageRuntime> {
+public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
     static class Builder {
         final ArtifactCoords.Gav gav;

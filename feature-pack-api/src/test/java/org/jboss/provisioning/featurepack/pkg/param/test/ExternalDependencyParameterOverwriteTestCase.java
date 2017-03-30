@@ -104,7 +104,7 @@ public class ExternalDependencyParameterOverwriteTestCase extends PmInstallFeatu
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(fp2Gav)
                         .addPackage(ProvisionedPackage.builder("fp2.a")

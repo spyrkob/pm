@@ -146,7 +146,7 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
     }
 
     @Override
-    protected ProvisionedState<?,?> provisionedState() throws ProvisioningException {
+    protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(fp1Gav)
                         .addPackage(

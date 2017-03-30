@@ -39,7 +39,7 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
     protected abstract ProvisioningConfig provisioningConfig() throws ProvisioningException;
 
-    protected abstract ProvisionedState<?,?> provisionedState() throws ProvisioningException;
+    protected abstract ProvisionedState provisionedState() throws ProvisioningException;
 
     protected abstract DirState provisionedHomeDir(DirState.DirBuilder builder);
 

@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,7 @@ import org.jboss.provisioning.parameters.PackageParameter;
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedPackage {
+public interface ProvisionedPackage extends FeaturePackPackage {
 
     class Builder implements BuilderWithParameters<Builder> {
 
@@ -66,10 +65,4 @@ public interface ProvisionedPackage {
     static ProvisionedPackage newInstance(String name) {
         return new ProvisionedPackageImpl(name);
     }
-
-    String getName();
-
-    boolean hasParameters();
-
-    Collection<PackageParameter> getParameters();
 }
