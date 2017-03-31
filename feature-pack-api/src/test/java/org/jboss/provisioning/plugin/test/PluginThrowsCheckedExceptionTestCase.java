@@ -99,8 +99,6 @@ public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestB
 
     @Override
     protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("fp1/p1.txt", "p1")
-                .build();
+        return builder.clear().build();
     }
 }

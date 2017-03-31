@@ -44,7 +44,6 @@ import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
-import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
@@ -56,78 +55,79 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
 
     public static void install(ProvisioningRuntime runtime) throws ProvisioningException {
 
-        for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
+        // copy package content
+        for(FeaturePackRuntime fp : runtime.fpRuntimes.values()) {
             final ArtifactCoords.Gav fpGav = fp.getGav();
-            System.out.println("Installing " + fpGav /*+ " to " + installDir*/);
+            System.out.println("Installing " + fpGav);
             for(PackageRuntime pkg : fp.getPackages()) {
                 final Path pkgSrcDir = pkg.getContentDir();
                 if (Files.exists(pkgSrcDir)) {
                     try {
-                        IoUtils.copy(pkgSrcDir, runtime.getInstallDir());
+                        IoUtils.copy(pkgSrcDir, runtime.stagedDir);
                     } catch (IOException e) {
                         throw new FeaturePackInstallException(Errors.packageContentCopyFailed(pkg.getName()), e);
                     }
                 }
             }
-            recordFeaturePack(fp.getSpec(), runtime.getInstallDir());
         }
 
-        for(ProvisioningPlugin plugin : runtime.getPlugins()) {
+        // execute the plug-ins
+        for(ProvisioningPlugin plugin : runtime.plugins) {
             plugin.postInstall(runtime);
         }
 
-        writeState(runtime.getProvisioningConfig(), PathsUtils.getProvisioningXml(runtime.getInstallDir()));
-
+        // save the config
         try {
-            ProvisionedStateXmlWriter.getInstance().write(runtime, PathsUtils.getProvisionedStateXml(runtime.getInstallDir()));
+            ProvisioningXmlWriter.getInstance().write(runtime.config, PathsUtils.getProvisioningXml(runtime.stagedDir));
         } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisionedStateXml(runtime.getInstallDir())), e);
+            throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisioningXml(runtime.stagedDir)), e);
+        }
+
+        // save the provisioned state
+        try {
+            ProvisionedStateXmlWriter.getInstance().write(runtime, PathsUtils.getProvisionedStateXml(runtime.stagedDir));
+        } catch (XMLStreamException | IOException e) {
+            throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisionedStateXml(runtime.stagedDir)), e);
+        }
+
+        System.out.println("Moving provisioned installation from staged directory to " + runtime.installDir);
+        // copy from the staged to the target installation directory
+        if (Files.exists(runtime.installDir)) {
+            IoUtils.recursiveDelete(runtime.installDir);
+        }
+        try {
+            IoUtils.copy(runtime.stagedDir, runtime.installDir);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.copyFile(runtime.stagedDir, runtime.installDir));
         }
     }
 
-    private static void writeState(ProvisioningConfig config, final Path xml)
-            throws FeaturePackInstallException {
-        try {
-            ProvisioningXmlWriter.getInstance().write(config, xml);
-        } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeFile(xml), e);
-        }
-    }
-
-    private static void recordFeaturePack(FeaturePackSpec spec, final Path installDir)
-            throws FeaturePackInstallException {
-        try {
-            FeaturePackXmlWriter.getInstance().write(spec, PathsUtils.getFeaturePackXml(installDir, spec.getGav()));
-        } catch (XMLStreamException | IOException e) {
-            throw new FeaturePackInstallException(Errors.writeFile(installDir), e);
-        }
-    }
-
+    private final long startTime;
     private final ArtifactResolver artifactResolver;
     private final ProvisioningConfig config;
     private final PackageParameterResolver paramResolver;
     private final Path installDir;
+    private final Path stagedDir;
     private final Path workDir;
     private final Path tmpDir;
     private final List<ProvisioningPlugin> plugins;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
+        this.startTime = builder.startTime;
         this.artifactResolver = builder.artifactResolver;
         this.config = builder.config;
         this.paramResolver = builder.paramResolver;
 
+        this.workDir = builder.workDir;
         this.installDir = builder.installDir;
-        if (Files.exists(installDir)) {
-            IoUtils.recursiveDelete(installDir);
-        }
+        this.stagedDir = workDir.resolve("staged");
         try {
-            Files.createDirectories(installDir);
-        } catch (IOException e) {
-            throw new ProvisioningException(Errors.mkdirs(installDir), e);
+            Files.createDirectories(stagedDir);
+        } catch(IOException e) {
+            throw new ProvisioningException(Errors.mkdirs(stagedDir), e);
         }
 
-        this.workDir = builder.workDir;
         this.tmpDir = workDir.resolve("tmp");
 
         plugins = Collections.unmodifiableList(builder.plugins);
@@ -158,7 +158,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      * @return  installation location
      */
     public Path getInstallDir() {
-        return installDir;
+        return stagedDir;
     }
 
     /**
@@ -261,5 +261,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     @Override
     public void close() throws IOException {
         IoUtils.recursiveDelete(workDir);
+        final long time = System.currentTimeMillis() - startTime;
+        final long seconds = time / 1000;
+        System.out.println(new StringBuilder("Done in ").append(seconds).append('.').append(time - seconds*1000).append(" seconds").toString());
     }
 }

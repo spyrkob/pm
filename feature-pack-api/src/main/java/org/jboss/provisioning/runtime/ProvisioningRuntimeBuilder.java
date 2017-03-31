@@ -69,6 +69,7 @@ public class ProvisioningRuntimeBuilder {
         return new ProvisioningRuntimeBuilder();
     }
 
+    final long startTime;
     String encoding;
     ArtifactResolver artifactResolver;
     ProvisioningConfig config;
@@ -85,6 +86,7 @@ public class ProvisioningRuntimeBuilder {
     Map<ArtifactCoords.Gav, FeaturePackRuntime.Builder> fpRuntimes;
 
     private ProvisioningRuntimeBuilder() {
+        startTime = System.currentTimeMillis();
         workDir = IoUtils.createRandomTmpDir();
         layoutDir = workDir.resolve("layout");
     }
