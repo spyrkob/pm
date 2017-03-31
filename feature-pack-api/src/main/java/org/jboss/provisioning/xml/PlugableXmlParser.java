@@ -14,32 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.xml;
 
-import java.io.Reader;
+import javax.xml.namespace.QName;
 
-import javax.xml.stream.XMLStreamException;
-import org.jboss.provisioning.state.ProvisionedState;
+import org.jboss.staxmapper.XMLElementReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedStateXmlParser implements XmlParser<ProvisionedState> {
+public interface PlugableXmlParser<T> extends XMLElementReader<T> {
 
-    private static final ProvisionedStateXmlParser INSTANCE = new ProvisionedStateXmlParser();
-
-    public static ProvisionedStateXmlParser getInstance() {
-        return INSTANCE;
+    default void plugin(XmlParsers parsers) {
+        parsers.plugin(getRoot(), this);
     }
 
-    private ProvisionedStateXmlParser() {
-    }
-
-    @Override
-    public ProvisionedState parse(final Reader input) throws XMLStreamException {
-        final ProvisionedState.Builder builder = ProvisionedState.builder();
-        XmlParsers.parse(input, builder);
-        return builder.build();
-    }
+    QName getRoot();
 }

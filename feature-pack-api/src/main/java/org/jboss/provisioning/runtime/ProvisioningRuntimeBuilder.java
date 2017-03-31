@@ -232,7 +232,7 @@ public class ProvisioningRuntimeBuilder {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(pkgXml));
         }
         try(BufferedReader reader = Files.newBufferedReader(pkgXml)) {
-            pkg.spec = new PackageXmlParser().parse(reader);
+            pkg.spec = PackageXmlParser.getInstance().parse(reader);
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(pkgXml), e);
         }
@@ -316,7 +316,7 @@ public class ProvisioningRuntimeBuilder {
             }
 
             try(BufferedReader reader = Files.newBufferedReader(fpXml)) {
-                fp.spec = new FeaturePackXmlParser().parse(reader);
+                fp.spec = FeaturePackXmlParser.getInstance().parse(reader);
             } catch (IOException | XMLStreamException e) {
                 throw new ProvisioningException(Errors.parseXml(fpXml), e);
             }

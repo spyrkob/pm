@@ -32,7 +32,7 @@ import org.junit.Test;
 public class FeaturePackXmlParserTestCase  {
 
     private static final XmlParserValidator<FeaturePackSpec> validator = new XmlParserValidator<>(
-            Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), new FeaturePackXmlParser());
+            Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), FeaturePackXmlParser.getInstance());
 
     @Test
     public void readBadNamespace() throws Exception {

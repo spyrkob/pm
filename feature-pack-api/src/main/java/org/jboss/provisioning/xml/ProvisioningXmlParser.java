@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,9 @@ package org.jboss.provisioning.xml;
 
 import java.io.Reader;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.staxmapper.XMLMapper;
 
 /**
  *
@@ -32,35 +28,19 @@ import org.jboss.staxmapper.XMLMapper;
  */
 public class ProvisioningXmlParser implements XmlParser<ProvisioningConfig> {
 
-    private static final QName ROOT_1_0 = new QName(ProvisioningXmlParser10.NAMESPACE_1_0, ProvisioningXmlParser10.Element.INSTALLATION.getLocalName());
+    private static final ProvisioningXmlParser INSTANCE = new ProvisioningXmlParser();
 
-    private static final XMLInputFactory inputFactory;
-    static {
-        final XMLInputFactory tmpIF = XMLInputFactory.newInstance();
-        setIfSupported(tmpIF, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(tmpIF, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-        inputFactory = tmpIF;
+    public static ProvisioningXmlParser getInstance() {
+        return INSTANCE;
     }
 
-    private static void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
-    }
-
-    private final XMLMapper mapper;
-
-    public ProvisioningXmlParser() {
-        mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new ProvisioningXmlParser10());
+    private ProvisioningXmlParser() {
     }
 
     @Override
     public ProvisioningConfig parse(final Reader input) throws XMLStreamException {
-
-        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final ProvisioningConfig.Builder builder = ProvisioningConfig.builder();
-        mapper.parseDocument(builder, streamReader);
+        XmlParsers.parse(input, builder);
         return builder.build();
     }
 }

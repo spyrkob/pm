@@ -32,8 +32,7 @@ import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
-import org.jboss.provisioning.xml.ProvisionedStateXmlParser;
-import org.jboss.provisioning.xml.ProvisioningXmlParser;
+import org.jboss.provisioning.xml.XmlParsers;
 
 /**
  *
@@ -129,7 +128,9 @@ public class ProvisioningManager {
             return null;
         }
         try (BufferedReader reader = Files.newBufferedReader(xml)) {
-            return new ProvisionedStateXmlParser().parse(reader);
+            final ProvisionedState.Builder builder = ProvisionedState.builder();
+            XmlParsers.parse(reader, builder);
+            return builder.build();
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(xml), e);
         }
@@ -267,7 +268,9 @@ public class ProvisioningManager {
             return null;
         }
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            return new ProvisioningXmlParser().parse(reader);
+            final ProvisioningConfig.Builder builder = ProvisioningConfig.builder();
+            XmlParsers.parse(reader, builder);
+            return builder.build();
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(path), e);
         }

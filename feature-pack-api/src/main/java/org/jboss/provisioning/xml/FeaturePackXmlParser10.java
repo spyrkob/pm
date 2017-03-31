@@ -33,16 +33,16 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.Builder> {
+public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.FEATURE_PACK.getLocalName());
 
     public enum Element implements XmlNameProvider {
 
@@ -147,6 +147,11 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
         public String getNamespace() {
             return null;
         }
+    }
+
+    @Override
+    public QName getRoot() {
+        return ROOT_1_0;
     }
 
     @Override

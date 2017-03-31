@@ -32,8 +32,8 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
+import org.jboss.provisioning.xml.XmlParsers;
 
 /**
  * Builds a layout description by analyzing the feature-pack layout
@@ -100,10 +100,9 @@ public class FeaturePackLayoutDescriber {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
         }
         final FeaturePackLayout.Builder layoutBuilder;
-        final FeaturePackXmlParser fpXmlParser = new FeaturePackXmlParser();
         try (Reader is = Files.newBufferedReader(fpXml, Charset.forName(encoding))) {
             final FeaturePackSpec.Builder specBuilder = FeaturePackSpec.builder();
-            fpXmlParser.parse(is, specBuilder);
+            XmlParsers.parse(is, specBuilder);
             layoutBuilder = FeaturePackLayout.builder(specBuilder);
         } catch (IOException e) {
             throw new ProvisioningDescriptionException(Errors.openFile(fpXml));
@@ -135,9 +134,8 @@ public class FeaturePackLayoutDescriber {
         if(!Files.exists(pkgXml)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(pkgXml));
         }
-        final PackageXmlParser pkgParser = new PackageXmlParser();
         try (Reader in = Files.newBufferedReader(pkgXml, Charset.forName(encoding))) {
-            return pkgParser.parse(in);
+            return PackageXmlParser.getInstance().parse(in);
         } catch (IOException e) {
             throw new ProvisioningDescriptionException(Errors.openFile(pkgXml), e);
         } catch (XMLStreamException e) {

@@ -345,7 +345,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     final PackageSpec pkgSpec;
                     try (BufferedReader reader = Files.newBufferedReader(packageXml)) {
                         try {
-                            pkgSpec = new PackageXmlParser().parse(reader);
+                            pkgSpec = PackageXmlParser.getInstance().parse(reader);
                         } catch (XMLStreamException e) {
                             throw new MojoExecutionException("Failed to parse " + packageXml, e);
                         }

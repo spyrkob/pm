@@ -30,16 +30,16 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.Builder> {
+class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioned-state:1.0";
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.INSTALLATION.getLocalName());
 
     enum Element implements XmlNameProvider {
 
@@ -145,6 +145,11 @@ class ProvisionedStateXmlParser10 implements XMLElementReader<ProvisionedState.B
             return name;
         }
 
+    }
+
+    @Override
+    public QName getRoot() {
+        return ROOT_1_0;
     }
 
     @Override

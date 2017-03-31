@@ -29,7 +29,6 @@ import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.spec.PackageSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 
@@ -37,9 +36,10 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder> {
+public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-package:1.0";
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.PACKAGE_SPEC.getLocalName());
 
     public enum Element implements XmlNameProvider {
 
@@ -133,6 +133,11 @@ public class PackageXmlParser10 implements XMLElementReader<PackageSpec.Builder>
         public String getNamespace() {
             return null;
         }
+    }
+
+    @Override
+    public QName getRoot() {
+        return ROOT_1_0;
     }
 
     @Override

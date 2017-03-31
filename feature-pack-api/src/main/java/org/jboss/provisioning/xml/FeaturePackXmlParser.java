@@ -18,15 +18,10 @@ package org.jboss.provisioning.xml;
 
 import java.io.Reader;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.staxmapper.XMLMapper;
 
 
 /**
@@ -35,32 +30,17 @@ import org.jboss.staxmapper.XMLMapper;
  */
 public class FeaturePackXmlParser implements XmlParser<FeaturePackSpec>{
 
-    private static final QName ROOT_1_0 = new QName(FeaturePackXmlParser10.NAMESPACE_1_0, FeaturePackXmlParser10.Element.FEATURE_PACK.getLocalName());
+    private static final FeaturePackXmlParser INSTANCE = new FeaturePackXmlParser();
 
-    private static final XMLInputFactory inputFactory;
-    static {
-        final XMLInputFactory tmpIF = XMLInputFactory.newInstance();
-        setIfSupported(tmpIF, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(tmpIF, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-        inputFactory = tmpIF;
+    public static FeaturePackXmlParser getInstance() {
+        return INSTANCE;
     }
 
-    private static void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
-    }
-
-    private final XMLMapper mapper;
-
-    public FeaturePackXmlParser() {
-        mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new FeaturePackXmlParser10());
+    private FeaturePackXmlParser() {
     }
 
     public void parse(final Reader input, final FeaturePackSpec.Builder fpBuilder) throws XMLStreamException {
-        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        mapper.parseDocument(fpBuilder, streamReader);
+        XmlParsers.parse(input, fpBuilder);
     }
 
     @Override
