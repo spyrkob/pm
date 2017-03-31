@@ -41,7 +41,6 @@ import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.test.util.repomanager.ProvisioningPluginInstaller;
 import org.jboss.provisioning.util.IoUtils;
 
 /**
@@ -50,7 +49,6 @@ import org.jboss.provisioning.util.IoUtils;
  */
 public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase {
 
-    private static final String pluginGav = "org.jboss.pm.plugin.test:plugin1:1.0";
     private static final Gav fp1Gav = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
     public static class Plugin1 implements ProvisioningPlugin {
@@ -125,16 +123,9 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
             .newPackage("c")
                 .writeContent("c/c/c.txt", "c")
                 .getFeaturePack()
-            .addPlugIn(pluginGav)
+            .addPlugin(Plugin1.class)
             .getInstaller()
         .install();
-    }
-
-    @Override
-    protected void installPlugins(Path repoHome) throws IOException {
-        ProvisioningPluginInstaller.forCoords(pluginGav)
-            .addPlugin(Plugin1.class)
-            .install(repoHome);
     }
 
     @Override

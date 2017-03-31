@@ -56,7 +56,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         NAME("name"),
         PACKAGES("packages"),
         PACKAGE("package"),
-        PROVISIONING_PLUGINS("provisioning-plugins"),
 
         // default unknown element
         UNKNOWN(null);
@@ -175,9 +174,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                         case DEFAULT_PACKAGES:
                             readDefaultPackages(reader, fpBuilder);
                             break;
-                        case PROVISIONING_PLUGINS:
-                            readProvisioningPlugins(reader, fpBuilder);
-                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
@@ -189,20 +185,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private ArtifactCoords readArtifactCoordsAttr(XMLExtendedStreamReader reader) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count;) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case COORDS:
-                    return ArtifactCoords.fromString(reader.getAttributeValue(i));
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw new IllegalStateException();
     }
 
     private ArtifactCoords readArtifactCoords(XMLExtendedStreamReader reader, String extension) throws XMLStreamException {
@@ -336,38 +318,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                     switch (element) {
                         case PACKAGE:
                             fpBuilder.addDefaultPackage(parseName(reader));
-                            hasChildren = true;
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readProvisioningPlugins(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        boolean hasChildren = false;
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.PROVISIONING_PLUGINS, Element.ARTIFACT);
-                    }
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case ARTIFACT:
-                            fpBuilder.addProvisioningPlugin(readArtifactCoordsAttr(reader));
-                            ParsingUtils.parseNoContent(reader);
                             hasChildren = true;
                             break;
                         default:

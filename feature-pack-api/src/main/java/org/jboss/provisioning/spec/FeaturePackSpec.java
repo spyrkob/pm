@@ -17,14 +17,12 @@
 package org.jboss.provisioning.spec;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +45,6 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private List<ArtifactCoords> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
@@ -116,20 +113,6 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addProvisioningPlugin(ArtifactCoords coords) {
-            assert coords != null : "gav is null";
-            switch(provisioningPlugins.size()) {
-                case 0:
-                    provisioningPlugins = Collections.singletonList(coords);
-                    break;
-                case 1:
-                    provisioningPlugins = new ArrayList<ArtifactCoords>(provisioningPlugins);
-                default:
-                    provisioningPlugins.add(coords);
-            }
-            return this;
-        }
-
         public FeaturePackSpec build() throws ProvisioningDescriptionException {
             return new FeaturePackSpec(this);
         }
@@ -147,14 +130,12 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final List<ArtifactCoords> provisioningPlugins;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
         this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
-        this.provisioningPlugins = builder.provisioningPlugins.size() > 1 ? Collections.unmodifiableList(builder.provisioningPlugins) : builder.provisioningPlugins;
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -193,14 +174,6 @@ public class FeaturePackSpec {
         return dependencyByName.get(name);
     }
 
-    public boolean hasProvisioningPlugins() {
-        return !provisioningPlugins.isEmpty();
-    }
-
-    public List<ArtifactCoords> getProvisioningPlugins() {
-        return provisioningPlugins;
-    }
-
     public String logContent() throws IOException {
         final DescrFormatter logger = new DescrFormatter();
         logContent(logger);
@@ -220,14 +193,6 @@ public class FeaturePackSpec {
             }
             logger.decreaseOffset();
         }
-
-        if(!provisioningPlugins.isEmpty()) {
-            logger.println("Provisioning plugins:").increaseOffset();
-            for(ArtifactCoords gav : provisioningPlugins) {
-                logger.println(gav.toString());
-            }
-            logger.decreaseOffset();
-        }
         logger.decreaseOffset();
     }
 
@@ -237,7 +202,6 @@ public class FeaturePackSpec {
         int result = 1;
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((provisioningPlugins == null) ? 0 : provisioningPlugins.hashCode());
         result = prime * result + ((defPackages == null) ? 0 : defPackages.hashCode());
         return result;
     }
@@ -260,11 +224,6 @@ public class FeaturePackSpec {
             if (other.gav != null)
                 return false;
         } else if (!gav.equals(other.gav))
-            return false;
-        if (provisioningPlugins == null) {
-            if (other.provisioningPlugins != null)
-                return false;
-        } else if (!provisioningPlugins.equals(other.provisioningPlugins))
             return false;
         if (defPackages == null) {
             if (other.defPackages != null)
@@ -295,9 +254,6 @@ public class FeaturePackSpec {
             for(int i = 1; i < array.length; ++i) {
                 buf.append(',').append(array[i]);
             }
-        }
-        if(!provisioningPlugins.isEmpty()) {
-            buf.append("; provisioningPlugins=").append(provisioningPlugins);
         }
         return buf.append("]").toString();
     }

@@ -80,14 +80,6 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             }
         }
 
-        if(fpSpec.hasProvisioningPlugins()) {
-            final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
-            for(ArtifactCoords coords : fpSpec.getProvisioningPlugins()) {
-                final ElementNode artifact = addElement(plugins, Element.ARTIFACT);
-                addAttribute(artifact, Attribute.COORDS, coords.toString());
-            }
-        }
-
         try (FormattingXmlStreamWriter xmlWriter = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
                 .createXMLStreamWriter(writer))) {
             xmlWriter.writeStartDocument();

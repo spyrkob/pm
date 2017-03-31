@@ -18,8 +18,6 @@
 package org.jboss.provisioning.plugin.test;
 
 import java.io.IOException;
-import java.nio.file.Path;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -33,7 +31,6 @@ import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.test.util.repomanager.ProvisioningPluginInstaller;
 import org.jboss.provisioning.util.IoUtils;
 
 /**
@@ -82,18 +79,11 @@ public class MultiplePluginsTestCase extends PmProvisionConfigTestBase {
                 .newPackage("p1", true)
                     .writeContent("fp1/p1.txt", "p1")
                     .getFeaturePack()
-                .addPlugIn("org.jboss.pm.plugin.test:plugin1:1.0")
+                .addPlugin(Plugin1.class)
+                .addPlugin(Plugin2.class)
+                .addPlugin(Plugin3.class)
                 .getInstaller()
             .install();
-    }
-
-    @Override
-    protected void installPlugins(Path repoHome) throws IOException {
-        ProvisioningPluginInstaller.forCoords("org.jboss.pm.plugin.test:plugin1:1.0")
-            .addPlugin(Plugin1.class)
-            .addPlugin(Plugin2.class)
-            .addPlugin(Plugin3.class)
-            .install(repoHome);
     }
 
     @Override

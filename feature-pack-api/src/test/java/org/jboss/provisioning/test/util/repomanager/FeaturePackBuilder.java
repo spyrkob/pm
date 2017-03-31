@@ -17,17 +17,25 @@
 
 package org.jboss.provisioning.test.util.repomanager;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
@@ -65,7 +73,9 @@ public class FeaturePackBuilder {
     private final FeaturePackRepoManager.Installer installer;
     private final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
     private List<PackageBuilder> pkgs = Collections.emptyList();
-    private Set<ArtifactCoords> plugins = Collections.emptySet();
+    private Set<Class<?>> classes = Collections.emptySet();
+    private Map<String, Set<String>> services = Collections.emptyMap();
+    private String pluginFileName = "plugins.jar";
 
     protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
         this.installer = repo;
@@ -123,20 +133,61 @@ public class FeaturePackBuilder {
         return pkg;
     }
 
-    public FeaturePackBuilder addPlugIn(String coords) {
-        return addPlugIn(ArtifactCoords.fromString(coords));
+    public FeaturePackBuilder setPluginFileName(String pluginFileName) {
+        this.pluginFileName = pluginFileName;
+        return this;
     }
 
-    public FeaturePackBuilder addPlugIn(ArtifactCoords coords) {
-        switch (plugins.size()) {
+    public FeaturePackBuilder addClassToPlugin(Class<?> cls) {
+        if(classes.contains(cls)) {
+            return this;
+        }
+        switch(classes.size()) {
             case 0:
-                plugins = Collections.singleton(coords);
+                classes = Collections.singleton(cls);
                 break;
             case 1:
-                plugins = new LinkedHashSet<>(plugins);
+                classes = new HashSet<>(classes);
             default:
-                plugins.add(coords);
+                classes.add(cls);
         }
+        return this;
+    }
+
+    public FeaturePackBuilder addPlugin(Class<?> pluginCls) {
+        return addService(ProvisioningPlugin.class, pluginCls);
+    }
+
+    public FeaturePackBuilder addService(Class<?> serviceInterface, Class<?> serviceImpl) {
+        final String serviceName = serviceInterface.getName();
+        Set<String> implSet = services.get(serviceName);
+        if(implSet == null) {
+            switch(services.size()) {
+                case 0:
+                    services = Collections.singletonMap(serviceName, Collections.singleton(serviceImpl.getName()));
+                    break;
+                case 1:
+                    services = new HashMap<>(services);
+                default:
+                    services.put(serviceName, Collections.singleton(serviceImpl.getName()));
+            }
+        } else {
+            if(implSet.contains(serviceImpl.getName())) {
+                return this;
+            }
+            if(implSet.size() == 1) {
+                implSet = new HashSet<>(implSet);
+                implSet.add(serviceImpl.getName());
+                if(services.size() == 1) {
+                    services = Collections.singletonMap(serviceName, implSet);
+                } else {
+                    services.put(serviceName, implSet);
+                }
+            } else {
+                implSet.add(serviceImpl.getName());
+            }
+        }
+        addClassToPlugin(serviceImpl);
         return this;
     }
 
@@ -150,10 +201,8 @@ public class FeaturePackBuilder {
                     fpBuilder.addDefaultPackage(pkgDescr.getName());
                 }
             }
-            if(!plugins.isEmpty()) {
-                for(ArtifactCoords coords : plugins) {
-                    fpBuilder.addProvisioningPlugin(coords);
-                }
+            if(!classes.isEmpty()) {
+                addPlugins(fpWorkDir);
             }
             fpSpec = fpBuilder.build();
             final FeaturePackXmlWriter writer = FeaturePackXmlWriter.getInstance();
@@ -170,6 +219,68 @@ public class FeaturePackBuilder {
             throw new IllegalStateException(e);
         } finally {
             IoUtils.recursiveDelete(fpWorkDir);
+        }
+    }
+
+    private void addPlugins(Path fpDir) throws IOException {
+        final Path tmpDir = IoUtils.createRandomTmpDir();
+        try {
+            byte[] bytes = new byte[65536];
+            for(Class<?> cls : classes) {
+                Path p = tmpDir;
+                final String[] parts = cls.getName().split("\\.");
+                int i = 0;
+                while(i < parts.length - 1) {
+                    p = p.resolve(parts[i++]);
+                }
+                p = p.resolve(parts[i] + ".class");
+                Files.createDirectories(p.getParent());
+
+                final InputStream is = cls.getClassLoader().getResourceAsStream(tmpDir.relativize(p).toString());
+                if(is == null) {
+                    throw new IOException("Failed to locate " + tmpDir.relativize(p));
+                }
+                try (OutputStream os = Files.newOutputStream(p)) {
+                    int rc;
+                    while ((rc = is.read(bytes)) != -1) {
+                        os.write(bytes, 0, rc);
+                    }
+                    os.flush();
+                } finally {
+                    try {
+                        is.close();
+                    } catch(IOException e) {
+                    }
+                }
+            }
+
+            if(!services.isEmpty()) {
+                final Path servicesDir = tmpDir.resolve("META-INF").resolve("services");
+                Files.createDirectories(servicesDir);
+                for(Map.Entry<String, Set<String>> entry : services.entrySet()) {
+                    final Path service = servicesDir.resolve(entry.getKey());
+                    try(BufferedWriter writer = Files.newBufferedWriter(service)) {
+                        for(String impl : entry.getValue()) {
+                            writer.write(impl);
+                            writer.newLine();
+                        }
+                    }
+                }
+            }
+
+            final Path pluginsDir = fpDir.resolve(Constants.PLUGINS);
+            ensureDir(pluginsDir);
+            ZipUtils.zip(tmpDir, pluginsDir.resolve(pluginFileName));
+        } finally {
+            IoUtils.recursiveDelete(tmpDir);
+        }
+    }
+
+    private void ensureDir(Path dir) throws IOException {
+        if(!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        } else if(!Files.isDirectory(dir)) {
+            throw new IllegalStateException(dir + " is not a directory.");
         }
     }
 }

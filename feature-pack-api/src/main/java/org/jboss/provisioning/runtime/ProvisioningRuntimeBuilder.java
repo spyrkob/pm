@@ -19,8 +19,6 @@ package org.jboss.provisioning.runtime;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,16 +26,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
@@ -78,10 +77,10 @@ public class ProvisioningRuntimeBuilder {
     final Path workDir;
     final Path layoutDir;
     List<ProvisioningPlugin> plugins = Collections.emptyList();
-    private Map<ArtifactCoords, URL> pluginUrls = Collections.emptyMap();
 
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> layoutFps = new HashMap<>();
     private Set<ArtifactCoords.Gav> dependencyResolution;
+    private Path pluginsDir = null;
 
     Map<ArtifactCoords.Gav, FeaturePackRuntime.Builder> fpRuntimes;
 
@@ -155,15 +154,35 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if(!pluginUrls.isEmpty()) {
-            final java.net.URLClassLoader ucl = new java.net.URLClassLoader(pluginUrls.values().toArray(
-                    new java.net.URL[pluginUrls.size()]), Thread.currentThread().getContextClassLoader());
-            final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-            plugins = new ArrayList<>(pluginUrls.size());
-            for(ProvisioningPlugin plugin : pluginLoader) {
-                plugins.add(plugin);
+        if(pluginsDir != null) {
+            List<java.net.URL> urls = Collections.emptyList();
+            try(Stream<Path> stream = Files.list(pluginsDir)) {
+                final Iterator<Path> i = stream.iterator();
+                while(i.hasNext()) {
+                    switch(urls.size()) {
+                        case 0:
+                            urls = Collections.singletonList(i.next().toUri().toURL());
+                            break;
+                        case 1:
+                            urls = new ArrayList<>(urls);
+                        default:
+                            urls.add(i.next().toUri().toURL());
+                    }
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
+            }
+            if(!urls.isEmpty()) {
+                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
+                        new java.net.URL[urls.size()]), Thread.currentThread().getContextClassLoader());
+                final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, ucl);
+                plugins = new ArrayList<>(urls.size());
+                for (ProvisioningPlugin plugin : pluginLoader) {
+                    plugins.add(plugin);
+                }
             }
         }
+
         return new ProvisioningRuntime(this);
     }
 
@@ -320,12 +339,6 @@ public class ProvisioningRuntimeBuilder {
             } catch (IOException | XMLStreamException e) {
                 throw new ProvisioningException(Errors.parseXml(fpXml), e);
             }
-
-            if(fp.spec.hasProvisioningPlugins()) {
-                for(ArtifactCoords coords : fp.spec.getProvisioningPlugins()) {
-                    addProvisioningPlugin(coords);
-                }
-            }
         } else {
             if(!fp.gav.equals(fpConfig.getGav())) {
                 throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, fpConfig.getGav()));
@@ -360,6 +373,19 @@ public class ProvisioningRuntimeBuilder {
                 throw new ProvisioningException(Errors.copyFile(fpResources, workDir.resolve(Constants.RESOURCES)), e);
             }
         }
+
+        final Path fpPlugins = fp.dir.resolve(Constants.PLUGINS);
+        if(Files.exists(fpPlugins)) {
+            if(pluginsDir == null) {
+                pluginsDir = workDir.resolve(Constants.PLUGINS);
+            }
+            try {
+                IoUtils.copy(fpPlugins, pluginsDir);
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.copyFile(fpPlugins, workDir.resolve(Constants.PLUGINS)), e);
+            }
+        }
+
         return fpBuilders;
     }
 
@@ -414,27 +440,6 @@ public class ProvisioningRuntimeBuilder {
                 }
         }
         return allBuilders;
-    }
-
-    private void addProvisioningPlugin(ArtifactCoords coords) throws ArtifactResolutionException {
-        if(pluginUrls.isEmpty()) {
-            pluginUrls = Collections.singletonMap(coords, resolveUrl(coords));
-        } else if(pluginUrls.containsKey(coords)) {
-            return;
-        } else {
-            if(pluginUrls.size() == 1) {
-                pluginUrls = new LinkedHashMap<>(pluginUrls);
-            }
-            pluginUrls.put(coords, resolveUrl(coords));
-        }
-    }
-
-    private URL resolveUrl(ArtifactCoords coords) throws ArtifactResolutionException {
-        try {
-            return artifactResolver.resolve(coords).toUri().toURL();
-        } catch (MalformedURLException e) {
-            throw new ArtifactResolutionException("Failed to resolve " + coords, e);
-        }
     }
 
     private void mkdirs(final Path path) throws ProvisioningException {

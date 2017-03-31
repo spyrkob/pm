@@ -84,6 +84,8 @@ import org.jboss.provisioning.xml.PackageXmlWriter;
 @Mojo(name = "wf-build", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.COMPILE)
 public class WfFeaturePackBuildMojo extends AbstractMojo {
 
+    private static final ArtifactCoords WF_PLUGIN_COORDS = ArtifactCoords.newInstance("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT", "jar");
+
     private static final boolean OS_WINDOWS = PropertyUtils.isWindows();
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -242,10 +244,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             fpBuilder.getSpecBuilder().addDefaultPackage(docsSpec.getName());
         }
 
-        fpBuilder.getSpecBuilder().addProvisioningPlugin(ArtifactCoords.newGav("org.jboss.pm", "wildfly-provisioning-plugin", "1.0.0.Alpha-SNAPSHOT").toArtifactCoords());
-
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
-
 
         final FeaturePackLayout fpLayout;
         try {
@@ -255,13 +254,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.writeFile(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
 
+        addWildFlyPlugin(fpDir);
+
         // collect feature-pack resources
         final Path resourcesWildFly = fpDir.resolve(Constants.RESOURCES).resolve(WfConstants.WILDFLY);
-        try {
-            Files.createDirectories(resourcesWildFly);
-        } catch (IOException e) {
-            throw new MojoExecutionException(Errors.mkdirs(resourcesWildFly), e);
-        }
+        mkdirs(resourcesWildFly);
 
         // properties
         try(OutputStream out = Files.newOutputStream(resourcesWildFly.resolve(WfConstants.WILDFLY_TASKS_PROPS))) {
@@ -297,6 +294,31 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
+    private void addWildFlyPlugin(final Path fpDir)
+            throws MojoExecutionException {
+        final Path pluginsDir = fpDir.resolve(Constants.PLUGINS);
+        mkdirs(pluginsDir);
+        final Path wfPlugInPath;
+        try {
+            wfPlugInPath = resolveArtifact(WF_PLUGIN_COORDS);
+        } catch (ProvisioningException e) {
+            throw new MojoExecutionException("Failed to resolve plug-in artifact " + WF_PLUGIN_COORDS);
+        }
+        try {
+            IoUtils.copy(wfPlugInPath, pluginsDir.resolve(wfPlugInPath.getFileName()));
+        } catch (IOException e) {
+            throw new MojoExecutionException(Errors.copyFile(wfPlugInPath, pluginsDir.resolve(wfPlugInPath.getFileName())));
+        }
+    }
+
+    private static void mkdirs(final Path resourcesWildFly) throws MojoExecutionException {
+        try {
+            Files.createDirectories(resourcesWildFly);
+        } catch (IOException e) {
+            throw new MojoExecutionException(Errors.mkdirs(resourcesWildFly), e);
+        }
+    }
+
     private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackLayout.Builder fpBuilder)
             throws MojoExecutionException {
         docsBuilder.addDependency(WfConstants.DOCS_SCHEMA, true);
@@ -304,11 +326,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.SCHEMA_GROUPS_TXT);
         BufferedWriter writer = null;
         try {
-            Files.createDirectories(schemasPackageDir);
+            mkdirs(schemasPackageDir);
             final PackageSpec docsSchemasSpec = PackageSpec.forName(WfConstants.DOCS_SCHEMA);
             fpBuilder.addPackage(docsSchemasSpec);
             PackageXmlWriter.getInstance().write(docsSchemasSpec, schemasPackageDir.resolve(Constants.PACKAGE_XML));
-            Files.createDirectories(schemaGroupsTxt.getParent());
+            mkdirs(schemaGroupsTxt.getParent());
             writer = Files.newBufferedWriter(schemaGroupsTxt);
             for (String group : wfFpConfig.getSchemaGroups()) {
                 writer.write(group);
@@ -336,7 +358,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             for(Path configPackage : stream) {
                 final Path packageDir = packagesDir.resolve(configPackage.getFileName());
                 if (!Files.exists(packageDir)) {
-                    Files.createDirectories(packageDir);
+                    mkdirs(packageDir);
                 }
                 IoUtils.copy(configPackage, packageDir);
 
@@ -496,7 +518,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
             final Path packageDir = packagesDir.resolve(packageName);
             final Path targetXml = packageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.MODULE).resolve(resourcesDir.relativize(moduleXml));
-            Files.createDirectories(targetXml.getParent());
+            mkdirs(targetXml.getParent());
             IoUtils.copy(moduleXml.getParent(), targetXml.getParent());
 
             final PackageSpec.Builder pkgSpecBuilder = PackageSpec.builder(packageName);
@@ -570,7 +592,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private static void writeXml(PackageSpec pkgSpec, Path dir) throws MojoExecutionException {
         try {
-            Files.createDirectories(dir);
+            mkdirs(dir);
             PackageXmlWriter.getInstance().write(pkgSpec, dir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {
             throw new MojoExecutionException(Errors.writeFile(dir.resolve(Constants.PACKAGE_XML)), e);

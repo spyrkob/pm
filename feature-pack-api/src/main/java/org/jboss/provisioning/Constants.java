@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,7 @@ public interface Constants {
     String MODULES_XML = "module.xml";
     String PACKAGE_XML = "package.xml";
     String PACKAGES = "packages";
+    String PLUGINS = "plugins";
     String PROVISIONING_XML = "provisioning.xml";
     String RESOURCES = "resources";
 

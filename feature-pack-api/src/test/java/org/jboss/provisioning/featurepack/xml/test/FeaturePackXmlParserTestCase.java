@@ -79,13 +79,6 @@ public class FeaturePackXmlParserTestCase  {
     }
 
     @Test
-    public void readEmptyProvisioningPlugins() throws Exception {
-        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-provisioning-plugins.xml",
-                "cvc-complex-type.2.4.b: The content of element 'provisioning-plugins' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":artifact}' is expected.",
-                "There must be at least one artifact under provisioning-plugins");
-    }
-
-    @Test
     public void readEmpty() throws Exception {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
@@ -132,8 +125,6 @@ public class FeaturePackXmlParserTestCase  {
                         .build())
                 .addDefaultPackage("package1")
                 .addDefaultPackage("package2")
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:0.1.0"))
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:0.2.0"))
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -147,8 +138,6 @@ public class FeaturePackXmlParserTestCase  {
                 .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
                 .addDefaultPackage("package1")
                 .addDefaultPackage("package2")
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:v1"))
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:v2"))
                 .build();
         Assert.assertEquals(expected, found);
     }
