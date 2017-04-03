@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,6 @@
 
 package org.jboss.provisioning.plugin.test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -30,7 +27,6 @@ import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.test.util.repomanager.ProvisioningPluginInstaller;
 
 /**
  *
@@ -59,23 +55,15 @@ public class FeaturePacksReferencingSamePluginTestCase extends PmProvisionConfig
                     .newPackage("p1", true)
                         .writeContent("fp1/p1.txt", "p1")
                         .getFeaturePack()
-                    .addPlugIn("org.jboss.pm.plugin.test:plugin1:1.0")
+                    .addPlugin(Plugin1.class)
                     .getInstaller()
                 .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
                     .newPackage("p1", true)
                         .writeContent("fp2/p1.txt", "p1")
                         .getFeaturePack()
-                    .addPlugIn("org.jboss.pm.plugin.test:plugin1:1.0")
+                    .addPlugin(Plugin1.class)
                     .getInstaller()
                 .install();
-    }
-
-    @Override
-    protected void installPlugins(Path repoHome) throws IOException {
-        ProvisioningPluginInstaller.forCoords("org.jboss.pm.plugin.test:plugin1:1.0")
-            .addClass(BasicFileWritingPlugin.class)
-            .addPlugin(Plugin1.class)
-            .install(repoHome);
     }
 
     @Override

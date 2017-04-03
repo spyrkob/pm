@@ -20,10 +20,10 @@ package org.jboss.provisioning.plugin.wildfly;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
  * Collects the CLI scripts from the packages and runs them to produce the configuration.
@@ -32,7 +32,7 @@ import org.jboss.provisioning.state.ProvisionedPackage;
  */
 class StandaloneConfigGenerator extends ScriptCollector {
 
-    StandaloneConfigGenerator(ProvisioningContext ctx) throws ProvisioningException {
+    StandaloneConfigGenerator(ProvisioningRuntime ctx) throws ProvisioningException {
         super(ctx);
     }
 
@@ -41,8 +41,8 @@ class StandaloneConfigGenerator extends ScriptCollector {
     }
 
     @Override
-    protected void collect(PackageScripts scripts, ProvisionedFeaturePack provisionedFp, final ProvisionedPackage pkg, final Path wfDir, final boolean includeStatic)
+    protected void collect(PackageScripts scripts, FeaturePackRuntime fp, final PackageRuntime pkg, final Path wfDir, final boolean includeStatic)
             throws ProvisioningException {
-        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getStandalone());
+        addScripts(fp, pkg, wfDir, includeStatic, scripts.getStandalone());
     }
 }

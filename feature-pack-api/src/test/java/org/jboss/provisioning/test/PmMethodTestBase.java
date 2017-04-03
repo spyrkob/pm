@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +16,6 @@
  */
 
 package org.jboss.provisioning.test;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -45,14 +42,10 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
     protected abstract void testPmMethod(ProvisioningManager pm) throws ProvisioningException;
 
-    protected void installPlugins(Path repoHome) throws IOException {
-    }
-
     @Override
     protected void doBefore() throws Exception {
         super.doBefore();
         setupRepo(getRepoManager());
-        installPlugins(repoHome);
     }
 
     @Test

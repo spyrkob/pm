@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 package org.jboss.provisioning.plugin;
 
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
  * Provisioning plug-in can be referenced from a feature-pack configuration.
@@ -31,5 +32,5 @@ import org.jboss.provisioning.ProvisioningException;
  */
 public interface ProvisioningPlugin {
 
-    void postInstall(ProvisioningContext ctx) throws ProvisioningException;
+    void postInstall(ProvisioningRuntime runtime) throws ProvisioningException;
 }

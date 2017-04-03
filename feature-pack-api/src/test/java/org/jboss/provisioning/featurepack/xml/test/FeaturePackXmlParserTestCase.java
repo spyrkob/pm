@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ import org.junit.Test;
 public class FeaturePackXmlParserTestCase  {
 
     private static final XmlParserValidator<FeaturePackSpec> validator = new XmlParserValidator<>(
-            Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), new FeaturePackXmlParser());
+            Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), FeaturePackXmlParser.getInstance());
 
     @Test
     public void readBadNamespace() throws Exception {
@@ -79,13 +79,6 @@ public class FeaturePackXmlParserTestCase  {
     }
 
     @Test
-    public void readEmptyProvisioningPlugins() throws Exception {
-        validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-provisioning-plugins.xml",
-                "cvc-complex-type.2.4.b: The content of element 'provisioning-plugins' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":artifact}' is expected.",
-                "There must be at least one artifact under provisioning-plugins");
-    }
-
-    @Test
     public void readEmpty() throws Exception {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
@@ -106,8 +99,8 @@ public class FeaturePackXmlParserTestCase  {
                         .includePackage("included-package1")
                         .includePackage("included-package2")
                         .build())
-                .markAsDefaultPackage("package1")
-                .markAsDefaultPackage("package2")
+                .addDefaultPackage("package1")
+                .addDefaultPackage("package2")
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -130,10 +123,8 @@ public class FeaturePackXmlParserTestCase  {
                         .excludePackage("excluded-package1")
                         .includePackage("included-package1")
                         .build())
-                .markAsDefaultPackage("package1")
-                .markAsDefaultPackage("package2")
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:0.1.0"))
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:0.2.0"))
+                .addDefaultPackage("package1")
+                .addDefaultPackage("package2")
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -145,10 +136,8 @@ public class FeaturePackXmlParserTestCase  {
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", null))
                 .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)))
                 .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
-                .markAsDefaultPackage("package1")
-                .markAsDefaultPackage("package2")
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group1:plugin1:v1"))
-                .addProvisioningPlugin(ArtifactCoords.fromString("org.jboss.plugin.group2:plugin2:v2"))
+                .addDefaultPackage("package1")
+                .addDefaultPackage("package2")
                 .build();
         Assert.assertEquals(expected, found);
     }

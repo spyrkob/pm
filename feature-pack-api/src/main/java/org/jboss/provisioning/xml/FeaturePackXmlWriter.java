@@ -31,7 +31,6 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -77,15 +76,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             final String[] pkgNames = fpSpec.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
-                write(pkgs, fpSpec.getPackage(name));
-            }
-        }
-
-        if(fpSpec.hasProvisioningPlugins()) {
-            final ElementNode plugins = addElement(fp, Element.PROVISIONING_PLUGINS);
-            for(ArtifactCoords coords : fpSpec.getProvisioningPlugins()) {
-                final ElementNode artifact = addElement(plugins, Element.ARTIFACT);
-                addAttribute(artifact, Attribute.COORDS, coords.toString());
+                write(pkgs, name);
             }
         }
 
@@ -103,8 +94,8 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
     }
 
-    private static void write(ElementNode pkgs, PackageSpec pkg) {
-        addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, pkg.getName());
+    private static void write(ElementNode pkgs, String name) {
+        addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, name);
     }
 
     private static void write(ElementNode deps, FeaturePackDependencySpec dependency) {

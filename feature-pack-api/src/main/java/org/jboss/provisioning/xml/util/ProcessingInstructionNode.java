@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +28,10 @@ import javax.xml.stream.XMLStreamWriter;
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class ProcessingInstructionNode extends Node {
-    private final String name;
     private final Map<String, String> data;
     private List<Node> delegates = new ArrayList<Node>();
 
-    public ProcessingInstructionNode(final String name, final Map<String, String> data) {
-        this.name = name;
+    public ProcessingInstructionNode(final Map<String, String> data) {
         this.data = data;
     }
 
@@ -68,5 +66,4 @@ public class ProcessingInstructionNode extends Node {
         }
         return false;
     }
-
 }

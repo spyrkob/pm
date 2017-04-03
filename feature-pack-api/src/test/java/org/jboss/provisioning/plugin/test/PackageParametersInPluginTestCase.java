@@ -30,8 +30,10 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -39,7 +41,6 @@ import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.test.util.repomanager.ProvisioningPluginInstaller;
 import org.jboss.provisioning.util.IoUtils;
 
 /**
@@ -48,16 +49,15 @@ import org.jboss.provisioning.util.IoUtils;
  */
 public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase {
 
-    private static final String pluginGav = "org.jboss.pm.plugin.test:plugin1:1.0";
     private static final Gav fp1Gav = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
     public static class Plugin1 implements ProvisioningPlugin {
         @Override
-        public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
-            for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
-                for(ProvisionedPackage pkg : fp.getPackages()) {
+        public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
+            for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
+                for(PackageRuntime pkg : fp.getPackages()) {
                     if(pkg.hasParameters()) {
-                        final Path dir = ctx.getInstallDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
+                        final Path dir = runtime.getInstallDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
                         if(!Files.exists(dir)) {
                             try {
                                 Files.createDirectories(dir);
@@ -123,16 +123,9 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
             .newPackage("c")
                 .writeContent("c/c/c.txt", "c")
                 .getFeaturePack()
-            .addPlugIn(pluginGav)
+            .addPlugin(Plugin1.class)
             .getInstaller()
         .install();
-    }
-
-    @Override
-    protected void installPlugins(Path repoHome) throws IOException {
-        ProvisioningPluginInstaller.forCoords(pluginGav)
-            .addPlugin(Plugin1.class)
-            .install(repoHome);
     }
 
     @Override

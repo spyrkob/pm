@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,14 +18,9 @@ package org.jboss.provisioning.xml;
 
 import java.io.Reader;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.spec.PackageSpec.Builder;
-import org.jboss.staxmapper.XMLMapper;
 
 
 /**
@@ -34,34 +29,19 @@ import org.jboss.staxmapper.XMLMapper;
  */
 public class PackageXmlParser implements XmlParser<PackageSpec> {
 
-    private static final QName ROOT_1_0 = new QName(PackageXmlParser10.NAMESPACE_1_0, PackageXmlParser10.Element.PACKAGE_SPEC.getLocalName());
+    private static final PackageXmlParser INSTANCE = new PackageXmlParser();
 
-    private static final XMLInputFactory inputFactory;
-    static {
-        final XMLInputFactory tmpIF = XMLInputFactory.newInstance();
-        setIfSupported(tmpIF, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(tmpIF, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-        inputFactory = tmpIF;
+    public static PackageXmlParser getInstance() {
+        return INSTANCE;
     }
 
-    private static void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
-    }
-
-    private final XMLMapper mapper;
-
-    public PackageXmlParser() {
-        mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new PackageXmlParser10());
+    private PackageXmlParser() {
     }
 
     @Override
     public PackageSpec parse(final Reader input) throws XMLStreamException {
-        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
         final Builder pkgBuilder = PackageSpec.builder();
-        mapper.parseDocument(pkgBuilder, streamReader);
+        XmlParsers.parse(input, pkgBuilder);
         return pkgBuilder.build();
     }
 }

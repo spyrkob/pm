@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -111,7 +111,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
         ProvisioningConfig provisioningConfig;
         try(Reader r = Files.newBufferedReader(provXml, Charset.forName(encoding))) {
-            provisioningConfig = new ProvisioningXmlParser().parse(r);
+            provisioningConfig = ProvisioningXmlParser.getInstance().parse(r);
         } catch (FileNotFoundException e) {
             throw new MojoExecutionException(Errors.pathDoesNotExist(provXml), e);
         } catch (XMLStreamException e) {

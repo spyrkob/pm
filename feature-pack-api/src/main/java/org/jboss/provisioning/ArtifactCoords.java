@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,10 @@ import java.util.regex.Pattern;
 public class ArtifactCoords implements Comparable<ArtifactCoords> {
 
     private static final Pattern COORDS_PATTERN = Pattern.compile("([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)");
+
+    public static ArtifactCoords newInstance(String groupId, String artifactId, String version, String extension) {
+        return new ArtifactCoords(groupId, artifactId, version, null, extension);
+    }
 
     public static ArtifactCoords fromGav(Gav gav, String extension) {
         return new ArtifactCoords(gav.getGroupId(), gav.getArtifactId(), gav.getVersion(), null, extension);

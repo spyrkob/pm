@@ -48,15 +48,15 @@ import java.util.stream.Stream;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -67,8 +67,7 @@ import org.jboss.provisioning.util.ZipUtils;
  */
 public class WfProvisioningPlugin implements ProvisioningPlugin {
 
-
-    private ProvisioningContext ctx;
+    private ProvisioningRuntime runtime;
     private PropertyResolver versionResolver;
     private final Pattern moduleArtifactPattern = Pattern.compile("(\\s*)((<artifact)(\\s+name=\")(\\$\\{)(.*)(\\})(\".*>)|(</artifact>))");
 
@@ -85,7 +84,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
      */
     @Override
-    public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
+    public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
 
         System.out.println("WildFly provisioning plug-in");
 
@@ -98,12 +97,12 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
         }
 
-        this.ctx = ctx;
+        this.runtime = runtime;
 
         Properties provisioningProps = new Properties();
         final Map<String, String> artifactVersions = new HashMap<>();
-        for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
-            final Path wfRes = ctx.getFeaturePackResource(fp.getGav(), WfConstants.WILDFLY);
+        for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
+            final Path wfRes = fp.getResource(WfConstants.WILDFLY);
             if(!Files.exists(wfRes)) {
                 continue;
             }
@@ -138,8 +137,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
 
             if(fp.containsPackage(WfConstants.DOCS_SCHEMA)) {
-                final Path schemaGroupsTxt = ctx.getPackageResource(fp.getGav(), WfConstants.DOCS_SCHEMA,
-                        WfConstants.PM, WfConstants.WILDFLY,WfConstants.SCHEMA_GROUPS_TXT);
+                final Path schemaGroupsTxt = fp.getPackage(WfConstants.DOCS_SCHEMA).getResource(
+                        WfConstants.PM, WfConstants.WILDFLY, WfConstants.SCHEMA_GROUPS_TXT);
                 try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
                     String line = reader.readLine();
                     while(line != null) {
@@ -164,7 +163,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         tasksProps = new MapPropertyResolver(provisioningProps);
         versionResolver = new MapPropertyResolver(artifactVersions);
 
-        for(ProvisionedFeaturePack fp : ctx.getProvisionedState().getFeaturePacks()) {
+        for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
             processPackages(fp);
         }
 
@@ -173,15 +172,16 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
     }
 
-    private void processPackages(final ProvisionedFeaturePack provisionedFp) throws ProvisioningException {
-        for(ProvisionedPackage pkg : provisionedFp.getPackages()) {
-            final Path pmWfDir = ctx.getPackageResource(provisionedFp.getGav(), pkg.getName(), WfConstants.PM, WfConstants.WILDFLY);
+    private void processPackages(final FeaturePackRuntime fp) throws ProvisioningException {
+        for(PackageRuntime pkg : fp.getPackages()) {
+            final Path pmWfDir = pkg.getResource(WfConstants.PM, WfConstants.WILDFLY);
             if(!Files.exists(pmWfDir)) {
                 continue;
             }
+
             final Path moduleDir = pmWfDir.resolve(WfConstants.MODULE);
             if(Files.exists(moduleDir)) {
-                processModules(provisionedFp.getGav(), pkg.getName(), moduleDir);
+                processModules(fp.getGav(), pkg.getName(), moduleDir);
             }
             final Path tasksXml = pmWfDir.resolve(WfConstants.TASKS_XML);
             if(Files.exists(tasksXml)) {
@@ -193,26 +193,26 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     copyPaths(pkgTasks, pmWfDir);
                 }
                 if(pkgTasks.hasMkDirs()) {
-                    mkdirs(pkgTasks, ctx.getInstallDir());
+                    mkdirs(pkgTasks, this.runtime.getInstallDir());
                 }
                 if (pkgTasks.hasFilePermissions() && !PropertyUtils.isWindows()) {
-                    processFeaturePackFilePermissions(pkgTasks, ctx.getInstallDir());
+                    processFeaturePackFilePermissions(pkgTasks, this.runtime.getInstallDir());
                 }
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
                     if(genConfig.hasStandaloneConfig()) {
                         if(standaloneGenerator == null) {
-                            standaloneGenerator = new StandaloneConfigGenerator(ctx);
+                            standaloneGenerator = new StandaloneConfigGenerator(this.runtime);
                         }
                         standaloneGenerator.init(genConfig.getStandaloneConfig().getServerConfig());
-                        standaloneGenerator.collectScripts(provisionedFp, pkg, null);
+                        standaloneGenerator.collectScripts(fp, pkg, null);
                         standaloneGenerator.run();
                     }
                     if(genConfig.hasDomainProfile()) {
                         if(domainScriptCollector == null) {
-                            domainScriptCollector = new DomainConfigGenerator(ctx);
+                            domainScriptCollector = new DomainConfigGenerator(this.runtime);
                         }
-                        domainScriptCollector.collectScripts(provisionedFp, pkg, genConfig.getDomainProfileConfig().getProfile());
+                        domainScriptCollector.collectScripts(fp, pkg, genConfig.getDomainProfileConfig().getProfile());
                     }
                 }
             }
@@ -221,7 +221,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {
         try {
-            final Path installDir = ctx.getInstallDir();
+            final Path installDir = runtime.getInstallDir();
             Files.walkFileTree(fpModuleDir, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
@@ -291,7 +291,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
                         if (jandex) {
                             try {
-                                moduleArtifact = ctx.resolveArtifact(coords);
+                                moduleArtifact = runtime.resolveArtifact(coords);
                             } catch (ProvisioningException e) {
                                 throw new IOException(e);
                             }
@@ -320,7 +320,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         } else {
                             if(moduleArtifact == null) {
                                 try {
-                                    moduleArtifact = ctx.resolveArtifact(coords);
+                                    moduleArtifact = runtime.resolveArtifact(coords);
                                 } catch (ProvisioningException e) {
                                     throw new IOException(e);
                                 }
@@ -340,7 +340,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         if (schemaGroups.contains(coords.getGroupId())) {
                             if(moduleArtifact == null) {
                                 try {
-                                    moduleArtifact = ctx.resolveArtifact(coords);
+                                    moduleArtifact = runtime.resolveArtifact(coords);
                                 } catch (ProvisioningException e) {
                                     throw new IOException(e);
                                 }
@@ -356,7 +356,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     }
 
     private void extractSchemas(Path moduleArtifact) throws IOException {
-        final Path targetSchemasDir = this.ctx.getInstallDir().resolve(WfConstants.DOCS).resolve(WfConstants.SCHEMA);
+        final Path targetSchemasDir = this.runtime.getInstallDir().resolve(WfConstants.DOCS).resolve(WfConstants.SCHEMA);
         Files.createDirectories(targetSchemasDir);
         try (final FileSystem jarFS = FileSystems.newFileSystem(moduleArtifact, null)) {
             final Path schemaSrc = jarFS.getPath(WfConstants.SCHEMA);
@@ -371,7 +371,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             final String gavString = versionResolver.resolveProperty(copyArtifact.getArtifact());
             try {
                 final ArtifactCoords coords = fromJBossModules(gavString, "jar");
-                final Path jarSrc = ctx.resolveArtifact(coords);
+                final Path jarSrc = runtime.resolveArtifact(coords);
                 String location = copyArtifact.getToLocation();
                 if (!location.isEmpty() && location.charAt(location.length() - 1) == '/') {
                     // if the to location ends with a / then it is a directory
@@ -379,7 +379,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     location += jarSrc.getFileName();
                 }
 
-                final Path jarTarget = ctx.getInstallDir().resolve(location);
+                final Path jarTarget = runtime.getInstallDir().resolve(location);
 
                 Files.createDirectories(jarTarget.getParent());
                 if (copyArtifact.isExtract()) {
@@ -402,7 +402,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             if (!Files.exists(src)) {
                 throw new ProvisioningException(Errors.pathDoesNotExist(src));
             }
-            final Path target = copyPath.getTarget() == null ? ctx.getInstallDir() : ctx.getInstallDir().resolve(copyPath.getTarget());
+            final Path target = copyPath.getTarget() == null ? runtime.getInstallDir() : runtime.getInstallDir().resolve(copyPath.getTarget());
             if (copyPath.isReplaceProperties()) {
                 if (!Files.exists(target.getParent())) {
                     try {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,16 +30,16 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningConfig.Builder> {
+class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.INSTALLATION.getLocalName());
 
     enum Element implements XmlNameProvider {
 
@@ -146,6 +146,11 @@ class ProvisioningXmlParser10 implements XMLElementReader<ProvisioningConfig.Bui
             return name;
         }
 
+    }
+
+    @Override
+    public QName getRoot() {
+        return ROOT_1_0;
     }
 
     @Override

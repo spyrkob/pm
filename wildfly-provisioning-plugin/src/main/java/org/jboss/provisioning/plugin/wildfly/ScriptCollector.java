@@ -38,15 +38,14 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScriptsParser;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts.Script;
-import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.util.IoUtils;
 import org.wildfly.core.launcher.CliCommandBuilder;
 
@@ -57,7 +56,7 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 abstract class ScriptCollector {
 
-    private final ProvisioningContext ctx;
+    private final ProvisioningRuntime runtime;
     private final Path fpScripts;
 
     private String configName;
@@ -69,9 +68,9 @@ abstract class ScriptCollector {
     private ArtifactCoords.Gav lastLoggedGav;
     private String lastLoggedPackage;
 
-    ScriptCollector(ProvisioningContext ctx) throws ProvisioningException {
-        this.ctx = ctx;
-        fpScripts = ctx.getResource(WfConstants.WILDFLY, WfConstants.SCRIPTS);
+    ScriptCollector(ProvisioningRuntime runtime) throws ProvisioningException {
+        this.runtime = runtime;
+        fpScripts = runtime.getResource(WfConstants.WILDFLY, WfConstants.SCRIPTS);
     }
 
 
@@ -79,9 +78,12 @@ abstract class ScriptCollector {
         reset();
         processedStaticPackages.clear();
         this.configName = configName;
-        script = ctx.getTmpPath(configName);
+        script = runtime.getTmpPath(configName);
         BufferedWriter writer = null;
         try {
+            if(!Files.exists(script.getParent())) {
+                Files.createDirectories(script.getParent());
+            }
             writer = Files.newBufferedWriter(script, StandardOpenOption.CREATE_NEW);
             writer.write(embedCommand);
             writer.newLine();
@@ -142,15 +144,15 @@ abstract class ScriptCollector {
         lastLoggedPackage = null;
     }
 
-    void collectScripts(final ProvisionedFeaturePack provisionedFp, ProvisionedPackage pkg, final String profile)
+    void collectScripts(final FeaturePackRuntime fp, PackageRuntime pkg, final String profile)
             throws ProvisioningException {
-        final ArtifactCoords.Gav fpGav = provisionedFp.getGav();
+        final ArtifactCoords.Gav fpGav = fp.getGav();
         final StringBuilder buf = new StringBuilder();
         buf.append("Collecting ").append(configName).append(" configuration scripts");
         if(profile != null) {
             buf.append(" for profile ").append(profile);
         }
-        buf.append(" from feature-pack ").append(provisionedFp.getGav().toString()).append(" package ").append(pkg.getName());
+        buf.append(" from feature-pack ").append(fp.getGav().toString()).append(" package ").append(pkg.getName());
         System.out.println(buf);
         if(profile != null) {
             addCommand("set profile=" + profile);
@@ -161,28 +163,24 @@ abstract class ScriptCollector {
         } else {
             addCommand("set socketGroup=" + profile);
         }
-        collectScripts(ctx.getFeaturePackSpec(fpGav), provisionedFp, pkg, getProcessedPackages(fpGav));
+        collectScripts(fp, pkg, getProcessedPackages(fpGav));
         reset();
     }
 
-    private void collectScripts(FeaturePackSpec fpSpec, ProvisionedFeaturePack provisionedFp, ProvisionedPackage pkg,
-            Set<String> processedPackages) throws ProvisioningException {
+    private void collectScripts(FeaturePackRuntime fp, PackageRuntime pkg, Set<String> processedPackages)
+            throws ProvisioningException {
 
-        final PackageSpec pkgSpec = fpSpec.getPackage(pkg.getName());
+        final PackageSpec pkgSpec = pkg.getSpec();
         if(pkgSpec.hasExternalDependencies()) {
             for(String fpDep : pkgSpec.getExternalDependencyNames()) {
                 final PackageDependencyGroupSpec externalDeps = pkgSpec.getExternalDependencies(fpDep);
-                final ArtifactCoords.Gav externalGav = fpSpec.getDependency(externalDeps.getGroupName()).getTarget().getGav();
-                final ProvisionedFeaturePack provisionedExternalFp = ctx.getProvisionedState().getFeaturePack(externalGav);
+                final ArtifactCoords.Gav externalGav = fp.getSpec().getDependency(externalDeps.getGroupName()).getTarget().getGav();
+                final FeaturePackRuntime externalFp = runtime.getFeaturePack(externalGav);
                 final Set<String> externalProcessed = getProcessedPackages(externalGav);
-                FeaturePackSpec externalFpSpec = null;
                 for(String depPkgName : externalDeps.getPackageNames()) {
-                    final ProvisionedPackage depPkg = provisionedExternalFp.getPackage(depPkgName);
+                    final PackageRuntime depPkg = externalFp.getPackage(depPkgName);
                     if(depPkg != null && externalProcessed.add(depPkgName)) {
-                        if(externalFpSpec == null) {
-                            externalFpSpec = ctx.getFeaturePackSpec(externalGav);
-                        }
-                        collectScripts(externalFpSpec, provisionedExternalFp, depPkg, externalProcessed);
+                        collectScripts(externalFp, depPkg, externalProcessed);
                     }
                 }
             }
@@ -190,22 +188,22 @@ abstract class ScriptCollector {
 
         if(pkgSpec.hasLocalDependencies()) {
             for(String depPkgName : pkgSpec.getLocalDependencies().getPackageNames()) {
-                final ProvisionedPackage depPkg = provisionedFp.getPackage(depPkgName);
+                final PackageRuntime depPkg = fp.getPackage(depPkgName);
                 if(depPkg != null && processedPackages.add(depPkgName)) {
-                    collectScripts(fpSpec, provisionedFp, depPkg, processedPackages);
+                    collectScripts(fp, depPkg, processedPackages);
                 }
             }
         }
 
-        final Path wfDir = ctx.getPackageResource(fpSpec.getGav(), pkg.getName(), WfConstants.PM, WfConstants.WILDFLY);
+        final Path wfDir = pkg.getResource(WfConstants.PM, WfConstants.WILDFLY);
         if(!Files.exists(wfDir)) {
             return;
         }
 
-        Set<String> includedStaticPackages = processedStaticPackages.get(fpSpec.getGav());
+        Set<String> includedStaticPackages = processedStaticPackages.get(fp.getGav());
         if (includedStaticPackages == null) {
             includedStaticPackages = new HashSet<>();
-            processedStaticPackages.put(fpSpec.getGav(), includedStaticPackages);
+            processedStaticPackages.put(fp.getGav(), includedStaticPackages);
         }
         final boolean includeStatic = includedStaticPackages.add(pkg.getName());
 
@@ -222,16 +220,16 @@ abstract class ScriptCollector {
         } else {
             scripts = PackageScripts.DEFAULT;
         }
-        collect(scripts, provisionedFp, pkg, wfDir, includeStatic);
+        collect(scripts, fp, pkg, wfDir, includeStatic);
     }
 
     protected abstract void collect(final PackageScripts scripts,
-            final ProvisionedFeaturePack provisionedFp,
-            final ProvisionedPackage pkg,
+            final FeaturePackRuntime fp,
+            final PackageRuntime pkg,
             final Path wfDir,
             final boolean includeStatic) throws ProvisioningException;
 
-    protected void addScripts(final ProvisionedFeaturePack provisionedFp, final ProvisionedPackage pkg, final Path wfDir,
+    protected void addScripts(final FeaturePackRuntime fp, final PackageRuntime pkg, final Path wfDir,
             final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
         for(Script script : scripts) {
             if(!includeStatic && !script.isCollectAgain()) {
@@ -241,7 +239,7 @@ abstract class ScriptCollector {
                 final Path scriptPath = wfDir.resolve("scripts.xml");
                 addCommand("echo executing " + scriptPath);
                 addCommand(script.getLine(), script.getPrefix());
-                logScript(provisionedFp, pkg.getName(), scriptPath);
+                logScript(fp, pkg.getName(), scriptPath);
                 return;
             }
             if(script.getPath() == null) {
@@ -284,7 +282,7 @@ abstract class ScriptCollector {
                     addCommand("unset " + param);
                 }
             }
-            logScript(provisionedFp, pkg.getName(), scriptPath);
+            logScript(fp, pkg.getName(), scriptPath);
         }
     }
 
@@ -325,10 +323,10 @@ abstract class ScriptCollector {
         return fpProcessed;
     }
 
-    protected void logScript(final ProvisionedFeaturePack provisionedFp, String pkgName, Path script) {
-        if(!provisionedFp.getGav().equals(lastLoggedGav)) {
-            System.out.println("  " + provisionedFp.getGav());
-            lastLoggedGav = provisionedFp.getGav();
+    protected void logScript(final FeaturePackRuntime fp, String pkgName, Path script) {
+        if(!fp.getGav().equals(lastLoggedGav)) {
+            System.out.println("  " + fp.getGav());
+            lastLoggedGav = fp.getGav();
             lastLoggedPackage = null;
         }
         if(!pkgName.equals(lastLoggedPackage)) {
@@ -357,12 +355,12 @@ abstract class ScriptCollector {
         this.lastLoggedPackage = null;
 
         final CliCommandBuilder builder = CliCommandBuilder
-                .of(ctx.getInstallDir())
+                .of(runtime.getInstallDir())
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
-        processBuilder.environment().put("JBOSS_HOME", ctx.getInstallDir().toString());
+        processBuilder.environment().put("JBOSS_HOME", runtime.getInstallDir().toString());
 
         final Process cliProcess;
         try {

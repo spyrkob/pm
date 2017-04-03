@@ -36,7 +36,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class ExternalDependecyParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
+public class ExternalDependencyParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
 
     private final Gav fp1Gav = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private final Gav fp2Gav = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");

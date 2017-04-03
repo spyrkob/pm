@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.util.IoUtils;
 
 /**
@@ -31,7 +31,7 @@ import org.jboss.provisioning.util.IoUtils;
  */
 public abstract class BasicFileWritingPlugin implements ProvisioningPlugin {
     @Override
-    public void postInstall(ProvisioningContext ctx) throws ProvisioningException {
+    public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
         try {
             writeFile(ctx);
         } catch (IOException e) {
@@ -43,16 +43,16 @@ public abstract class BasicFileWritingPlugin implements ProvisioningPlugin {
 
     protected abstract String getContent();
 
-    protected void writeFile(ProvisioningContext ctx) throws IOException {
+    protected void writeFile(ProvisioningRuntime ctx) throws IOException {
         writeFile(ctx, getBasePath(), getContent());
     }
 
-    protected void writeFile(ProvisioningContext ctx, final String pathBase, String content) throws IOException {
+    protected void writeFile(ProvisioningRuntime ctx, final String pathBase, String content) throws IOException {
         Path p = getTargetPath(ctx, pathBase);
         IoUtils.writeFile(p, content);
     }
 
-    private Path getTargetPath(ProvisioningContext ctx, final String pathBase) {
+    private Path getTargetPath(ProvisioningRuntime ctx, final String pathBase) {
         Path p = ctx.getInstallDir().resolve(pathBase);
         if (Files.exists(p)) {
             int i = 1;

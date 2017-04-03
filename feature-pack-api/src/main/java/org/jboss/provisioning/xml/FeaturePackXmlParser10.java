@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,16 +33,16 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
-import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.Builder> {
+public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-pack:1.0";
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.FEATURE_PACK.getLocalName());
 
     public enum Element implements XmlNameProvider {
 
@@ -56,7 +56,6 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
         NAME("name"),
         PACKAGES("packages"),
         PACKAGE("package"),
-        PROVISIONING_PLUGINS("provisioning-plugins"),
 
         // default unknown element
         UNKNOWN(null);
@@ -150,6 +149,11 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
     }
 
     @Override
+    public QName getRoot() {
+        return ROOT_1_0;
+    }
+
+    @Override
     public void readElement(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         fpBuilder.setGav(readArtifactCoords(reader, "zip").toGav());
         while (reader.hasNext()) {
@@ -170,9 +174,6 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                         case DEFAULT_PACKAGES:
                             readDefaultPackages(reader, fpBuilder);
                             break;
-                        case PROVISIONING_PLUGINS:
-                            readProvisioningPlugins(reader, fpBuilder);
-                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
@@ -184,20 +185,6 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private ArtifactCoords readArtifactCoordsAttr(XMLExtendedStreamReader reader) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count;) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case COORDS:
-                    return ArtifactCoords.fromString(reader.getAttributeValue(i));
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw new IllegalStateException();
     }
 
     private ArtifactCoords readArtifactCoords(XMLExtendedStreamReader reader, String extension) throws XMLStreamException {
@@ -330,39 +317,7 @@ public class FeaturePackXmlParser10 implements XMLElementReader<FeaturePackSpec.
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PACKAGE:
-                            fpBuilder.markAsDefaultPackage(parseName(reader));
-                            hasChildren = true;
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readProvisioningPlugins(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        boolean hasChildren = false;
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.PROVISIONING_PLUGINS, Element.ARTIFACT);
-                    }
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case ARTIFACT:
-                            fpBuilder.addProvisioningPlugin(readArtifactCoordsAttr(reader));
-                            ParsingUtils.parseNoContent(reader);
+                            fpBuilder.addDefaultPackage(parseName(reader));
                             hasChildren = true;
                             break;
                         default:

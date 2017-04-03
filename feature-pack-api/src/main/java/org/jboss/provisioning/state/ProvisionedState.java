@@ -31,7 +31,7 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedState {
+public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> {
 
     public static class Builder {
         private Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
@@ -53,7 +53,7 @@ public class ProvisionedState {
         }
 
         public ProvisionedState build() {
-            return new ProvisionedState(this);
+            return new ProvisionedState(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
         }
     }
 
@@ -63,22 +63,26 @@ public class ProvisionedState {
 
     private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
 
-    private ProvisionedState(Builder builder) {
-        this.featurePacks = builder.featurePacks.size() > 1 ? Collections.unmodifiableMap(builder.featurePacks) : builder.featurePacks;
+    ProvisionedState(Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks) {
+        this.featurePacks = featurePacks;
     }
 
+    @Override
     public boolean hasFeaturePacks() {
         return !featurePacks.isEmpty();
     }
 
+    @Override
     public Set<ArtifactCoords.Gav> getFeaturePackGavs() {
         return featurePacks.keySet();
     }
 
+    @Override
     public Collection<ProvisionedFeaturePack> getFeaturePacks() {
         return featurePacks.values();
     }
 
+    @Override
     public ProvisionedFeaturePack getFeaturePack(ArtifactCoords.Gav gav) {
         return featurePacks.get(gav);
     }

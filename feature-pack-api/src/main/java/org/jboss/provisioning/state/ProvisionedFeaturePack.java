@@ -31,7 +31,7 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisionedFeaturePack {
+public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
 
     public static class Builder {
         private ArtifactCoords.Gav gav;
@@ -63,7 +63,7 @@ public class ProvisionedFeaturePack {
         }
 
         public ProvisionedFeaturePack build() {
-            return new ProvisionedFeaturePack(this);
+            return new ProvisionedFeaturePack(gav, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
         }
     }
 
@@ -74,31 +74,37 @@ public class ProvisionedFeaturePack {
     private final ArtifactCoords.Gav gav;
     private final Map<String, ProvisionedPackage> packages;
 
-    private ProvisionedFeaturePack(Builder builder) {
-        this.gav = builder.gav;
-        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
+    ProvisionedFeaturePack(ArtifactCoords.Gav gav, Map<String, ProvisionedPackage> packages) {
+        this.gav = gav;
+        this.packages = packages;
     }
 
+    @Override
     public ArtifactCoords.Gav getGav() {
         return gav;
     }
 
+    @Override
     public boolean hasPackages() {
         return !packages.isEmpty();
     }
 
+    @Override
     public boolean containsPackage(String name) {
         return packages.containsKey(name);
     }
 
+    @Override
     public Set<String> getPackageNames() {
         return packages.keySet();
     }
 
+    @Override
     public Collection<ProvisionedPackage> getPackages() {
         return packages.values();
     }
 
+    @Override
     public ProvisionedPackage getPackage(String name) {
         return packages.get(name);
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +28,5 @@
     <package name="package1" />
     <package name="package2" />
   </default-packages>
-
-  <provisioning-plugins>
-    <artifact groupId="org.jboss.plugin.group1" artifactId="plugin1" version="0.1.0" />
-    <artifact groupId="org.jboss.plugin.group2" artifactId="plugin2" version="0.2.0" />
-  </provisioning-plugins>
 
 </feature-pack>

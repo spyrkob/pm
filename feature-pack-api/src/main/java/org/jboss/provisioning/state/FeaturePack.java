@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,27 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util.analyzer;
+
+package org.jboss.provisioning.state;
+
+import java.util.Collection;
+import java.util.Set;
+
+import org.jboss.provisioning.ArtifactCoords;
+
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackDescriptionDiffs {
+public interface FeaturePack<P extends FeaturePackPackage> {
 
-    private final FeaturePackSpecificDescription fp1;
-    private final FeaturePackSpecificDescription fp2;
+    ArtifactCoords.Gav getGav();
 
-    FeaturePackDescriptionDiffs(FeaturePackSpecificDescription fp1, FeaturePackSpecificDescription fp2) {
-        this.fp1 = fp1;
-        this.fp2 = fp2;
-    }
+    boolean hasPackages();
 
-    public FeaturePackSpecificDescription getFeaturePackDiff1() {
-        return fp1;
-    }
+    boolean containsPackage(String name);
 
-    public FeaturePackSpecificDescription getFeaturePackDiff2() {
-        return fp2;
-    }
+    Set<String> getPackageNames();
+
+    Collection<P> getPackages();
+
+    P getPackage(String name);
+
 }

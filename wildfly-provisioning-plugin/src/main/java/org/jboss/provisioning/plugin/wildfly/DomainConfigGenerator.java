@@ -20,10 +20,10 @@ package org.jboss.provisioning.plugin.wildfly;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisioningContext;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
-import org.jboss.provisioning.state.ProvisionedPackage;
+import org.jboss.provisioning.runtime.FeaturePackRuntime;
+import org.jboss.provisioning.runtime.PackageRuntime;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
  * Collects the CLI scripts from the packages and runs them to produce the configuration.
@@ -32,18 +32,18 @@ import org.jboss.provisioning.state.ProvisionedPackage;
  */
 class DomainConfigGenerator extends ScriptCollector {
 
-    DomainConfigGenerator(ProvisioningContext ctx) throws ProvisioningException {
+    DomainConfigGenerator(ProvisioningRuntime ctx) throws ProvisioningException {
         super(ctx);
         init("domain", "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config");
     }
 
     @Override
     protected void collect(final PackageScripts scripts,
-            final ProvisionedFeaturePack provisionedFp,
-            final ProvisionedPackage pkg,
+            final FeaturePackRuntime fp,
+            final PackageRuntime pkg,
             final Path wfDir,
             final boolean includeStatic) throws ProvisioningException {
-        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getDomain());
-        addScripts(provisionedFp, pkg, wfDir, includeStatic, scripts.getHost());
+        addScripts(fp, pkg, wfDir, includeStatic, scripts.getDomain());
+        addScripts(fp, pkg, wfDir, includeStatic, scripts.getHost());
     }
 }

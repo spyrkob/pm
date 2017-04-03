@@ -17,14 +17,12 @@
 package org.jboss.provisioning.spec;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +30,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -48,8 +45,6 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private Map<String, PackageSpec> packages = Collections.emptyMap();
-        private List<ArtifactCoords> provisioningPlugins = Collections.emptyList();
 
         protected Builder() {
             this(null);
@@ -64,13 +59,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addDefaultPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
-            markAsDefaultPackage(pkg.getName());
-            addPackage(pkg);
-            return this;
-        }
-
-        public Builder markAsDefaultPackage(String packageName) {
+        public Builder addDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
             switch(defPackages.size()) {
                 case 0:
@@ -82,27 +71,6 @@ public class FeaturePackSpec {
                     defPackages.add(packageName);
             }
             return this;
-        }
-
-        public Builder addPackage(PackageSpec pkg) throws ProvisioningDescriptionException {
-            assert pkg != null : "package is null";
-            if(packages.containsKey(pkg.getName())) {
-                throw new ProvisioningDescriptionException(Errors.packageAlreadyExists(gav, pkg.getName()));
-            }
-            switch(packages.size()) {
-                case 0:
-                    packages = Collections.singletonMap(pkg.getName(), pkg);
-                    break;
-                case 1:
-                    packages = new HashMap<String, PackageSpec>(packages);
-                default:
-                    packages.put(pkg.getName(), pkg);
-            }
-            return this;
-        }
-
-        public boolean hasPackage(String packageName) {
-            return packages.containsKey(packageName);
         }
 
         public Builder addDependency(FeaturePackConfig dependency) throws ProvisioningDescriptionException {
@@ -145,56 +113,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addProvisioningPlugin(ArtifactCoords coords) {
-            assert coords != null : "gav is null";
-            switch(provisioningPlugins.size()) {
-                case 0:
-                    provisioningPlugins = Collections.singletonList(coords);
-                    break;
-                case 1:
-                    provisioningPlugins = new ArrayList<ArtifactCoords>(provisioningPlugins);
-                default:
-                    provisioningPlugins.add(coords);
-            }
-            return this;
-        }
-
         public FeaturePackSpec build() throws ProvisioningDescriptionException {
-            // package dependency consistency check
-            if (!packages.isEmpty()) {
-                for (PackageSpec pkg : packages.values()) {
-                    if (pkg.hasLocalDependencies()) {
-                        List<String> notFound = null;
-                        for(PackageDependencySpec pkgDep : pkg.getLocalDependencies().getDescriptions()) {
-                            final PackageSpec depSpec = packages.get(pkgDep.getName());
-                            if(depSpec == null) {
-                                if(notFound == null) {
-                                    notFound = new ArrayList<>();
-                                }
-                                notFound.add(pkgDep.getName());
-                            } else if(pkgDep.hasParams()) {
-                                for(PackageParameter depParam : pkgDep.getParameters()) {
-                                    if(!depSpec.hasParameter(depParam.getName())) {
-                                        throw new ProvisioningDescriptionException(
-                                                Errors.unknownParameterInDependency(gav, pkg.getName(), pkgDep.getName(), depParam.getName()));
-                                    }
-                                }
-                            }
-                        }
-                        if (notFound != null) {
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(pkg.getName(), notFound));
-                        }
-                    }
-                    if(pkg.hasExternalDependencies()) {
-                        for(String depName : pkg.getExternalDependencyNames()) {
-                            if(!dependencyByName.containsKey(depName)) {
-                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(gav, pkg.getName(), depName));
-                            }
-                        }
-                    }
-                }
-            }
-
             return new FeaturePackSpec(this);
         }
     }
@@ -211,16 +130,12 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final Map<String, PackageSpec> packages;
-    private final List<ArtifactCoords> provisioningPlugins;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
-        this.packages = builder.packages.size() > 1 ? Collections.unmodifiableMap(builder.packages) : builder.packages;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
         this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
-        this.provisioningPlugins = builder.provisioningPlugins.size() > 1 ? Collections.unmodifiableList(builder.provisioningPlugins) : builder.provisioningPlugins;
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -237,26 +152,6 @@ public class FeaturePackSpec {
 
     public boolean isDefaultPackage(String name) {
         return defPackages.contains(name);
-    }
-
-    public boolean hasPackages() {
-        return !packages.isEmpty();
-    }
-
-    public boolean hasPackage(String name) {
-        return packages.containsKey(name);
-    }
-
-    public Collection<PackageSpec> getPackages() {
-        return packages.values();
-    }
-
-    public Set<String> getPackageNames() {
-        return packages.keySet();
-    }
-
-    public PackageSpec getPackage(String name) {
-        return packages.get(name);
     }
 
     public boolean hasDependencies() {
@@ -279,14 +174,6 @@ public class FeaturePackSpec {
         return dependencyByName.get(name);
     }
 
-    public boolean hasProvisioningPlugins() {
-        return !provisioningPlugins.isEmpty();
-    }
-
-    public List<ArtifactCoords> getProvisioningPlugins() {
-        return provisioningPlugins;
-    }
-
     public String logContent() throws IOException {
         final DescrFormatter logger = new DescrFormatter();
         logContent(logger);
@@ -298,27 +185,11 @@ public class FeaturePackSpec {
         logger.println(gav.toString());
         logger.increaseOffset();
 
-        if(!packages.isEmpty()) {
-            final List<String> names = new ArrayList<String>(packages.keySet());
-            names.sort(null);
-            for(String name : names) {
-                packages.get(name).logContent(logger);
-            }
-        }
-
         if(!dependencies.isEmpty()) {
             logger.println("Dependencies:");
             logger.increaseOffset();
             for(ArtifactCoords.Ga ga : dependencies.keySet()) {
                 logger.println(ga.toGav().toString());
-            }
-            logger.decreaseOffset();
-        }
-
-        if(!provisioningPlugins.isEmpty()) {
-            logger.println("Provisioning plugins:").increaseOffset();
-            for(ArtifactCoords gav : provisioningPlugins) {
-                logger.println(gav.toString());
             }
             logger.decreaseOffset();
         }
@@ -331,8 +202,6 @@ public class FeaturePackSpec {
         int result = 1;
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((packages == null) ? 0 : packages.hashCode());
-        result = prime * result + ((provisioningPlugins == null) ? 0 : provisioningPlugins.hashCode());
         result = prime * result + ((defPackages == null) ? 0 : defPackages.hashCode());
         return result;
     }
@@ -355,16 +224,6 @@ public class FeaturePackSpec {
             if (other.gav != null)
                 return false;
         } else if (!gav.equals(other.gav))
-            return false;
-        if (packages == null) {
-            if (other.packages != null)
-                return false;
-        } else if (!packages.equals(other.packages))
-            return false;
-        if (provisioningPlugins == null) {
-            if (other.provisioningPlugins != null)
-                return false;
-        } else if (!provisioningPlugins.equals(other.provisioningPlugins))
             return false;
         if (defPackages == null) {
             if (other.defPackages != null)
@@ -395,18 +254,6 @@ public class FeaturePackSpec {
             for(int i = 1; i < array.length; ++i) {
                 buf.append(',').append(array[i]);
             }
-        }
-        if(!packages.isEmpty()) {
-            buf.append("; packages=");
-            final String[] array = packages.keySet().toArray(new String[packages.size()]);
-            Arrays.sort(array);
-            buf.append(packages.get(array[0]));
-            for(int i = 1; i < array.length; ++i) {
-                buf.append(',').append(packages.get(array[i]));
-            }
-        }
-        if(!provisioningPlugins.isEmpty()) {
-            buf.append("; provisioningPlugins=").append(provisioningPlugins);
         }
         return buf.append("]").toString();
     }
