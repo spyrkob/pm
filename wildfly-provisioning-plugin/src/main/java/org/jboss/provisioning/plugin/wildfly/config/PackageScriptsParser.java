@@ -17,45 +17,48 @@
 package org.jboss.provisioning.plugin.wildfly.config;
 
 
-import java.io.InputStream;
+import java.io.Reader;
+import java.util.List;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
+import org.jboss.provisioning.xml.XmlParser;
+import org.jboss.provisioning.xml.XmlParsers;
 import org.jboss.staxmapper.XMLMapper;
 
 /**
  * @author Alexey Loubyansky
  */
-public class PackageScriptsParser {
+public class PackageScriptsParser implements XmlParser<PackageScripts> {
 
-    private static final QName ROOT_1_0 = new QName(PackageScriptsParser10.NAMESPACE, PackageScriptsParser10.Element.SCRIPTS.getLocalName());
+    private static final PackageScriptsParser INSTANCE = new PackageScriptsParser();
 
-    private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
+    public static PackageScriptsParser getInstance() {
+        return INSTANCE;
+    }
 
     private final XMLMapper mapper;
 
-    public PackageScriptsParser() {
+    private PackageScriptsParser() {
         mapper = XMLMapper.Factory.create();
-        mapper.registerRootElement(ROOT_1_0, new PackageScriptsParser10());
+        mapper.registerRootElement(PackageScriptsParser10.getInstance().getRoot(), PackageScriptsParser10.getInstance());
+        mapper.registerRootElement(PackageScriptXmlParser10.getInstance().getRoot(), PackageScriptXmlParser10.getInstance());
     }
 
-    public PackageScripts parse(final InputStream input) throws XMLStreamException {
+    public void parse(final Reader input, final PackageScripts.Builder fpBuilder) throws XMLStreamException {
+        mapper.parseDocument(fpBuilder, XmlParsers.createXMLStreamReader(input));
+    }
 
-        final XMLInputFactory inputFactory = INPUT_FACTORY;
-        setIfSupported(inputFactory, XMLInputFactory.IS_VALIDATING, Boolean.FALSE);
-        setIfSupported(inputFactory, XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-        final XMLStreamReader streamReader = inputFactory.createXMLStreamReader(input);
-        final PackageScripts.Builder builder = PackageScripts.builder();
-        mapper.parseDocument(builder, streamReader);
+    public List<PackageScripts.Script> parseScript(Reader input) throws XMLStreamException {
+        final PackageScripts.ScriptsBuilder builder = new PackageScripts.ScriptsBuilder();
+        mapper.parseDocument(builder, XmlParsers.createXMLStreamReader(input));
         return builder.build();
     }
 
-    private void setIfSupported(final XMLInputFactory inputFactory, final String property, final Object value) {
-        if (inputFactory.isPropertySupported(property)) {
-            inputFactory.setProperty(property, value);
-        }
+    @Override
+    public PackageScripts parse(Reader input) throws XMLStreamException {
+        final PackageScripts.Builder builder = PackageScripts.builder();
+        parse(input, builder);
+        return builder.build();
     }
 }

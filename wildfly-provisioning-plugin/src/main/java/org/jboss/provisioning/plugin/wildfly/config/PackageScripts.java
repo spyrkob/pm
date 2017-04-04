@@ -33,9 +33,9 @@ public class PackageScripts {
 
         public static class Builder {
 
-            private final String path;
-            private final String prefix;
-            private final boolean collectAgain;
+            private String path;
+            private String prefix;
+            private boolean collectAgain;
             private Map<String, String> params = Collections.emptyMap();
             private String line;
 
@@ -55,6 +55,21 @@ public class PackageScripts {
                 this.path = path;
                 this.prefix = prefix;
                 this.collectAgain = collectAgain;
+            }
+
+            public Builder setPath(String path) {
+                this.path = path;
+                return this;
+            }
+
+            public Builder setPrefix(String prefix) {
+                this.prefix = prefix;
+                return this;
+            }
+
+            public Builder setCollectAgainPath(boolean collectAgain) {
+                this.collectAgain = collectAgain;
+                return this;
             }
 
             public Builder addParameter(String name, String value) {
@@ -143,6 +158,25 @@ public class PackageScripts {
         }
     }
 
+    public static class ScriptsBuilder {
+        private List<Script> list = Collections.emptyList();
+        public ScriptsBuilder addStandalone(Script script) {
+            switch(list.size()) {
+                case 0:
+                    list = Collections.singletonList(script);
+                    break;
+                case 1:
+                    list = new ArrayList<>(list);
+                default:
+                    list.add(script);
+            }
+            return this;
+        }
+        public List<Script> build() {
+            return list.size() > 1 ? Collections.unmodifiableList(list) : list;
+        }
+    }
+
     public static class Builder {
 
         private List<Script> standalone = Collections.emptyList();
@@ -165,6 +199,10 @@ public class PackageScripts {
             return this;
         }
 
+        public void setStandalone(List<Script> scripts) {
+            standalone = scripts;
+        }
+
         public Builder addDomain(Script script) {
             switch(domain.size()) {
                 case 0:
@@ -178,6 +216,10 @@ public class PackageScripts {
             return this;
         }
 
+        public void setDomain(List<Script> scripts) {
+            domain = scripts;
+        }
+
         public Builder addHost(Script script) {
             switch(host.size()) {
                 case 0:
@@ -189,6 +231,10 @@ public class PackageScripts {
                     host.add(script);
             }
             return this;
+        }
+
+        public void setHost(List<Script> scripts) {
+            host = scripts;
         }
 
         public PackageScripts build() {
