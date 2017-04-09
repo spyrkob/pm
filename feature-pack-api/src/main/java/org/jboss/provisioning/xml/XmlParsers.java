@@ -22,6 +22,7 @@ import java.io.Reader;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLMapper;
@@ -46,6 +47,14 @@ public class XmlParsers {
         if (inputFactory.isPropertySupported(property)) {
             inputFactory.setProperty(property, value);
         }
+    }
+
+    public static XMLStreamReader createXMLStreamReader(Reader reader) throws XMLStreamException {
+        return inputFactory.createXMLStreamReader(reader);
+    }
+
+    public static XmlParsers getInstance() {
+        return INSTANCE;
     }
 
     public static void parse(final Reader reader, Object builder) throws XMLStreamException {

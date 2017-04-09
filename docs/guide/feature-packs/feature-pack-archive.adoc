@@ -6,6 +6,7 @@ Feature-packs are distributed as ZIP archives with the following root entries:
  feature-pack.zip
  |- packages/
  |- resources/
+ |- plugins/
  `- feature-pack.xml
 
 Where
@@ -13,5 +14,7 @@ Where
 * *packages* - directory containing feature-pack packages;
 
 * *resources* - optional directory containing various resources needed to properly setup the installation;
+
+* *plugins* - optional directory containing project/product-specific provisioning plug-ins;
 
 * *feature-pack.xml* - metadata describing the feature-pack.

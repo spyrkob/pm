@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -193,6 +194,29 @@ public class ProvisioningManager {
      */
     public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
 
+        if(Files.exists(installationHome)) {
+            if(!Files.isDirectory(installationHome)) {
+                throw new ProvisioningException(Errors.notADir(installationHome));
+            }
+            try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
+                boolean usableDir = true;
+                final Iterator<Path> i = stream.iterator();
+                while(i.hasNext() ) {
+                    if(i.next().getFileName().toString().equals(Constants.PROVISIONED_STATE_DIR)) {
+                        usableDir = true;
+                        break;
+                    } else {
+                        usableDir = false;
+                    }
+                }
+                if(!usableDir) {
+                    throw new ProvisioningException("The installation home directory has to be empty or contain a provisioned installation to be used by the tool.");
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(installationHome));
+            }
+        }
+
         if(!provisioningConfig.hasFeaturePacks()) {
             if(Files.exists(installationHome)) {
                 try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
@@ -247,6 +271,9 @@ public class ProvisioningManager {
         final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
         if(!Files.exists(userProvisionedXml)) {
             throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
+        }
+        if(Files.isDirectory(location)) {
+            location = location.resolve(userProvisionedXml.getFileName());
         }
         IoUtils.copy(userProvisionedXml, location);
     }

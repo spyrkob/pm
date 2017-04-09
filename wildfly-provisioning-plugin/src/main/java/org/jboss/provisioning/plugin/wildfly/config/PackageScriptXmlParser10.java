@@ -37,14 +37,14 @@ import java.util.Map;
  *
  * @author Alexey Loubyansky
  */
-public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.Builder> {
+public class PackageScriptXmlParser10 implements PlugableXmlParser<PackageScripts.ScriptsBuilder> {
 
-    private static final String NAMESPACE = "urn:wildfly:package-scripts:1.0";
+    private static final String NAMESPACE = "urn:wildfly:package-script:1.0";
     private static final QName ROOT_1_0 = new QName(NAMESPACE, Element.SCRIPTS.getLocalName());
 
-    private static final PackageScriptsParser10 INSTANCE = new PackageScriptsParser10();
+    private static final PackageScriptXmlParser10 INSTANCE = new PackageScriptXmlParser10();
 
-    public static PackageScriptsParser10 getInstance() {
+    public static PackageScriptXmlParser10 getInstance() {
         return INSTANCE;
     }
 
@@ -99,12 +99,9 @@ public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.
 
     enum Element {
 
-        DOMAIN("domain"),
-        HOST("host"),
         PARAM("param"),
         SCRIPT("script"),
-        SCRIPTS("scripts"),
-        STANDALONE("standalone"),
+        SCRIPTS("package-scripts"),
         // default unknown element
         UNKNOWN(null);
 
@@ -112,12 +109,9 @@ public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.
 
         static {
             final Map<String, Element> elementsMap = new HashMap<>();
-            elementsMap.put(Element.DOMAIN.getLocalName(), Element.DOMAIN);
-            elementsMap.put(Element.HOST.getLocalName(), Element.HOST);
             elementsMap.put(Element.PARAM.getLocalName(), Element.PARAM);
             elementsMap.put(Element.SCRIPT.getLocalName(), Element.SCRIPT);
             elementsMap.put(Element.SCRIPTS.getLocalName(), Element.SCRIPTS);
-            elementsMap.put(Element.STANDALONE.getLocalName(), Element.STANDALONE);
             elements = elementsMap;
         }
 
@@ -142,7 +136,7 @@ public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.
         }
     }
 
-    private PackageScriptsParser10() {
+    private PackageScriptXmlParser10() {
     }
 
     @Override
@@ -151,59 +145,16 @@ public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, PackageScripts.Builder builder) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        if (count != 0) {
-            throw ParsingUtils.unexpectedContent(reader);
-        }
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case STANDALONE:
-                        case DOMAIN:
-                        case HOST:
-                            parseScripts(reader, builder, element);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void parseScripts(final XMLExtendedStreamReader reader, PackageScripts.Builder builder, Element parent) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, PackageScripts.ScriptsBuilder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
                     return;
                 case XMLStreamConstants.START_ELEMENT:
                     final Element element = Element.of(reader.getName());
-                    switch(element) {
+                    switch (element) {
                         case SCRIPT:
-                            switch (parent) {
-                                case STANDALONE:
-                                    builder.addStandalone(parseScript(reader));
-                                    break;
-                                case DOMAIN:
-                                    builder.addDomain(parseScript(reader));
-                                    break;
-                                case HOST:
-                                    builder.addHost(parseScript(reader));
-                                    break;
-                                default:
-                                    throw ParsingUtils.unexpectedContent(reader);
-                            }
+                            builder.addStandalone(parseScript(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -216,7 +167,7 @@ public class PackageScriptsParser10 implements PlugableXmlParser<PackageScripts.
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static PackageScripts.Script parseScript(XMLStreamReader reader) throws XMLStreamException {
+    private static PackageScripts.Script parseScript(XMLStreamReader reader) throws XMLStreamException {
         String path = null;
         String prefix = null;
         boolean collectAgain = false;

@@ -3,3 +3,5 @@
 include::provisioning/index.adoc[]
 
 include::feature-pack-build/index.adoc[]
+
+include::demo/index.adoc[]

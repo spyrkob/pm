@@ -97,6 +97,10 @@ public class PackageRuntime implements ProvisionedPackage {
         return params.values();
     }
 
+    public PackageParameter getParameter(String name) {
+        return params.get(name);
+    }
+
     /**
      * Returns a resource path for a package.
      *

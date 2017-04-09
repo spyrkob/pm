@@ -20,8 +20,8 @@ package org.jboss.provisioning.plugin.wildfly;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +38,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScriptsParser;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts.Script;
@@ -56,6 +57,7 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 abstract class ScriptCollector {
 
+    private static final String SCRIPTS_XML = "scripts.xml";
     private final ProvisioningRuntime runtime;
     private final Path fpScripts;
 
@@ -208,19 +210,47 @@ abstract class ScriptCollector {
         final boolean includeStatic = includedStaticPackages.add(pkg.getName());
 
         final PackageScripts scripts;
-        final Path scriptsPath = wfDir.resolve("scripts.xml");
-        if(Files.exists(scriptsPath)) {
-            try(InputStream input = Files.newInputStream(scriptsPath)) {
-                scripts = new PackageScriptsParser().parse(input);
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readFile(scriptsPath), e);
-            } catch (XMLStreamException e) {
-                throw new ProvisioningException(Errors.parseXml(scriptsPath), e);
+        if(pkg.hasParameters()) {
+            final PackageScripts.Builder scriptsBuilder = PackageScripts.builder();
+            PackageParameter param = pkg.getParameter("standalone");
+            if(param != null) {
+                scriptsBuilder.setStandalone(parseScriptsValue(param.getValue()));
             }
+            param = pkg.getParameter("domain");
+            if(param != null) {
+                scriptsBuilder.setDomain(parseScriptsValue(param.getValue()));
+            }
+            param = pkg.getParameter("host");
+            if(param != null) {
+                scriptsBuilder.setHost(parseScriptsValue(param.getValue()));
+            }
+            scripts = scriptsBuilder.build();
         } else {
-            scripts = PackageScripts.DEFAULT;
+            final Path scriptsPath = wfDir.resolve(SCRIPTS_XML);
+            if (Files.exists(scriptsPath)) {
+                try (BufferedReader reader = Files.newBufferedReader(scriptsPath)) {
+                    scripts = PackageScriptsParser.getInstance().parse(reader);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.readFile(scriptsPath), e);
+                } catch (XMLStreamException e) {
+                    throw new ProvisioningException(Errors.parseXml(scriptsPath), e);
+                }
+            } else {
+                scripts = PackageScripts.DEFAULT;
+            }
         }
         collect(scripts, fp, pkg, wfDir, includeStatic);
+    }
+
+
+    private List<Script> parseScriptsValue(final String value) throws ProvisioningException {
+        try(BufferedReader reader = new BufferedReader(new StringReader(value))) {
+            return PackageScriptsParser.getInstance().parseScript(reader);
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to read package parameter value: " + value, e);
+        } catch (XMLStreamException e) {
+            throw new ProvisioningException("Failed to parse package parameter value: " + value, e);
+        }
     }
 
     protected abstract void collect(final PackageScripts scripts,
@@ -236,7 +266,7 @@ abstract class ScriptCollector {
                 continue;
             }
             if(script.getLine() != null) {
-                final Path scriptPath = wfDir.resolve("scripts.xml");
+                final Path scriptPath = wfDir.resolve(SCRIPTS_XML);
                 addCommand("echo executing " + scriptPath);
                 addCommand(script.getLine(), script.getPrefix());
                 logScript(fp, pkg.getName(), scriptPath);
@@ -343,7 +373,6 @@ abstract class ScriptCollector {
         try {
             scriptWriter.flush();
             scriptWriter.close();
-            //IoUtils.copy(script, ctx.getInstallDir().resolve(script.getFileName().toString() + ".cli"));
         } catch(IOException e) {
             throw new ProvisioningException(Errors.writeFile(script), e);
         }
@@ -429,7 +458,15 @@ abstract class ScriptCollector {
                     System.out.println("Could not locate the cause of the error in the CLI output.");
                     System.out.println(errorWriter.getBuffer());
                 }
-                throw new ProvisioningException("CLI configuration scripts failed.");
+                final StringBuilder buf = new StringBuilder("CLI configuration scripts failed");
+                try {
+                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
+                    IoUtils.copy(script, scriptCopy);
+                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+                throw new ProvisioningException(buf.toString());
             }
         } catch (IOException e) {
             throw new ProvisioningException("Embedded CLI process failed", e);
