@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-01-13</span>
+<span id="revdate">2017-04-09</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -454,6 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_wildfly_pm_provisioning_plug_in">5.1. WildFly PM Provisioning Plug-in</a></li>
 <li><a href="#_wildfly_feature_pack_building_maven_plug_in">5.2. WildFly Feature-pack Building Maven Plug-in</a></li>
+<li><a href="#_demo">5.3. Demo</a></li>
 </ul>
 </li>
 </ul>
@@ -496,7 +497,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>a set of packages;</p>
 </li>
 <li>
-<p><em>(optional)</em> various resources required to properly assemble and setup the installation.</p>
+<p><em>(optional)</em> various resources required to properly assemble and setup the installation;</p>
+</li>
+<li>
+<p><em>(optional)</em> custom provisioning plug-ins.</p>
 </li>
 </ul>
 </div>
@@ -516,6 +520,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <pre class="nowrap">feature-pack.zip
 |- packages/
 |- resources/
+|- plugins/
 `- feature-pack.xml</pre>
 </div>
 </div>
@@ -529,6 +534,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li>
 <p><strong>resources</strong> - optional directory containing various resources needed to properly setup the installation;</p>
+</li>
+<li>
+<p><strong>plugins</strong> - optional directory containing project/product-specific provisioning plug-ins;</p>
 </li>
 <li>
 <p><strong>feature-pack.xml</strong> - metadata describing the feature-pack.</p>
@@ -550,15 +558,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>default packages</strong> - the names of the packages that are installed by default;</p>
 </li>
 <li>
-<p><em>(optional)</em> <strong>dependencies</strong> -  dependencies on other feature-packs;</p>
-</li>
-<li>
-<p><em>(optional)</em> <strong>provisioning plug-ins</strong> - provisioning plug-in implementations the tool should call during provisioning to properly install/integrate the feature-pack&#8217;s content into the target installation.</p>
+<p><em>(optional)</em> <strong>dependencies</strong> -  dependencies on other feature-packs.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Here is an illustration of how it may look like in a feature-pack.xml file:</p>
+<p>Here is an illustration of how it may look like in a <strong>feature-pack.xml</strong> file:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -575,15 +580,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
        &lt;package name="package1"/&gt;
        &lt;package name="package2"/&gt;
    &lt;/default-packages&gt;
-   &lt;provisioning-plugins&gt;
-       &lt;artifact coords="org.my-group:my-provisioning-plugin:2.0.0.Beta2"/&gt;
-   &lt;/provisioning-plugins&gt;
 &lt;/feature-pack&gt;</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Here feature-pack <strong>org.my-group:my-artifact:1.0.0.Alpha1</strong> depends on feature-pack <strong>org.another-group:another-artifact:3.0.0.Final</strong> and has packages <strong>package1</strong> and <strong>package2</strong> that are installed by default.
-It also references a provisioning plug-in which is available as a Maven artifact which will be resolved, downloaded and called by the provisioning tool to give it a chance to do some final content manipulations before the provisioning is complete.</p>
+<p>Here feature-pack <strong>org.my-group:my-artifact:1.0.0.Alpha1</strong> depends on feature-pack <strong>org.another-group:another-artifact:3.0.0.Final</strong> and has packages <strong>package1</strong> and <strong>package2</strong> that are installed by default.</p>
 </div>
 </div>
 </div>
@@ -716,7 +717,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p><strong>Optional dependency</strong> means that the dependency does not have to be satisfied for the package to be installed. For example if package <strong>p1</strong> declares an optional dependency on package <strong>p2</strong> and <strong>p2</strong> is explicitly excluded by the user, <strong>p1</strong> will still be installed. An example of an optional dependency could be a package called <strong>documentation</strong> which declares an optional dependency on package <strong>examples</strong>. If a user is not interested in the <strong>examples</strong>, the rest of the <strong>documentation</strong> could still be installed.</p>
 </div>
 <div class="paragraph">
-<p>Package dependencies are also used to determine the <a href="#fp-effective-package-set">effective package set of a feature-pack</a> to be installed described later.</p>
+<p>Package dependencies are also used to determine the <a href="#_feature_pack_without_dependencies">effective package set of a feature-pack</a> to be installed described later.</p>
 </div>
 <div class="sect3">
 <h4 id="_local_package_dependencies">3.3.1. Local package dependencies</h4>
@@ -753,7 +754,8 @@ It also references a provisioning plug-in which is available as a Maven artifact
 </div>
 <div class="literalblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
    &lt;dependencies&gt;
        &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
            &lt;name&gt;fp2-dep&lt;/name&gt;
@@ -1303,13 +1305,13 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <div class="sect2">
 <h3 id="_wildfly_pm_provisioning_plug_in">5.1. WildFly PM Provisioning Plug-in</h3>
 <div class="paragraph">
-<p>This chapter describes the WildFly provisioning plug-in which feature-packs of WildFly-based distributions reference from their <strong>feature-pack.xml</strong> files.</p>
+<p>This chapter describes the WildFly provisioning plug-in which is included into feature-packs of WildFly-based distributions.</p>
 </div>
 <div class="paragraph">
 <p>The plug-in is called by the PM tool after the feature-pack and package dependencies have been resolved and the content from packages has been copied to the target installation directory.</p>
 </div>
 <div class="paragraph">
-<p>WildFly provisioning plug-in is then responsible for:</p>
+<p>The WildFly provisioning plug-in is then responsible for:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1317,7 +1319,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p><a href="#config-gen">generating the configuration file(s) based on the installed package set (possibly customized by the user)</a>;</p>
 </li>
 <li>
-<p><a href="#module-jars">building "thin" servers (i.e. servers with module.xml files reference module JARs as Maven artifacts) or copying module JARs into the target installation</a>;</p>
+<p><a href="#module-jars">building "thin" servers (i.e. servers with module.xml files referencing module JARs as Maven artifacts) or copying module JARs into the target installation</a>;</p>
 </li>
 <li>
 <p><a href="#wildfly-tasks-xml">performing other tasks configured in wildlfy-tasks.xml</a>.</p>
@@ -1333,7 +1335,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <p>Based on the feature-pack and package dependencies, the PM tool determines the order in which the packages making up the installation should be installed. The WildFly provisioning plug-in then iterates through the packages in that order collecting CLI scripts that represent package-specific configuration snippets.</p>
 </div>
 <div class="paragraph">
-<p>Once all the CLI scripts are collected, the plug-in launches a CLI session, embeds the server with an empty configuration and runs the collected scripts.</p>
+<p>Once all the CLI scripts have been collected, the plug-in launches a CLI session, embeds the server with an empty configuration and runs the collected scripts.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1342,7 +1344,7 @@ It also references a provisioning plug-in which is available as a Maven artifact
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Note: <strong>the scripts are not executed in a batch</strong> (i.e. as a composite operation). In case some operations have to be combined in a batch, it is the responsibility of the package developer to start and run the batch from the script attached to the package.
+Note: <strong>the scripts are not executed in a batch</strong> (i.e. as a composite operation). In case some operations have to be combined into a batch, it is the responsibility of the package developer to start and run the batch from the script attached to the package.
 </td>
 </tr>
 </table>
@@ -1428,13 +1430,292 @@ Note: <strong>the scripts are not executed in a batch</strong> (i.e. as a compos
 <p>TODO</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_demo">5.3. Demo</h3>
+<div class="paragraph">
+<p>This chapter describes how to try the tool provisioning WildFly Core, Servlet and Full distributions and their customized versions.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Please, just keep in mind, there hasn&#8217;t been even an Alpha release, it&#8217;s not perfect. This chapter is here for people interested in following the evolution of the tool and communicating their requirements. Please direct your questions or feedback to <a href="mailto:olubyans@redhat.com">the developer</a>. Thanks!
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_the_tool">5.3.1. The tool</h4>
+<div class="paragraph">
+<p>The tool can be downloaded from <a href="https://github.com/aloubyansky/pm/tree/demo">here</a> and then built using</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">mvn clean install</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There is also <code>./do.sh</code> script for convenience in the root directory of the project which, if launched w/o arguments, will build the project and launch the tool&#8217;s command-line interface.
+The command-line interface can also be launched w/o re-building the project by</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">./do.sh run</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The CLI session can be terminated by executing command <code>exit</code> or simply pressing <code>Ctrl-C</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_wildfly_core">5.3.2. WildFly Core</h4>
+<div class="paragraph">
+<p>The branch of WildFly Core that uses the Maven plug-in from the provisioning tool to build the new feature-packs (along with the currently actually in-use ones) and install them into the local Maven repo is <a href="https://github.com/aloubyansky/wildfly-core/tree/new-feature-pack-demo">here</a>.</p>
+</div>
+<div class="paragraph">
+<p>Check it out and build WildFly Core using</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">mvn clean install -DskipTests</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>to install the new provisioning feature-packs into your local Maven repository.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+skipping the tests is suggested only to save your time, there aren&#8217;t any expected failures.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_wildfly_servlet_and_full">5.3.3. WildFly Servlet and Full</h4>
+<div class="paragraph">
+<p>Servlet and Full feature-packs are produced by the same build process in <a href="https://github.com/aloubyansky/wildfly/tree/new-feature-pack-demo">this branch</a>.</p>
+</div>
+<div class="paragraph">
+<p>Check it out and build the project using</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">mvn clean install -DskipTests</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>to install WildFly Servlet and Full feature-packs into your local Maven repository.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_installing_core_servlet_and_full_distributions">5.3.4. Installing Core, Servlet and Full distributions</h4>
+<div class="paragraph">
+<p>Once you&#8217;ve downloaded and built the tool and then the <code>wfcore</code> and <code>wildfly</code> projects, have the feature-packs installed into your local repositories, you can try using the tool to actually install the projects at a specific location.</p>
+</div>
+<div class="paragraph">
+<p>Here is how you can install the core:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">./do.sh run
+[pm]$ install org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta9-SNAPSHOT --dir=&lt;installation-home&gt;</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Tab-completion should work for the feature-pack coords.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Prompt <code>[pm]$</code> indicates that the current file-system directory is <code>pm</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>--dir</code> argument is optional, if it is not present, the current file-system directory will be used as the installation home directory.</p>
+</div>
+<div class="paragraph">
+<p>Servlet and Full distributions can be installed with the same command but using the corresponding feature-pack coordinates, i.e.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>org.wildfly:wildfly-servlet-feature-pack-new:11.0.0.Alpha1-SNAPSHOT</code> for the Servlet distribution;</p>
+</li>
+<li>
+<p><code>org.wildfly:wildfly-feature-pack-new:11.0.0.Alpha1-SNAPSHOT</code> for the Full distribution.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Since Full feature-pack depends on Servlet feature-pack and Servlet feature-pack depends on Core feature-pack, installing Full feature-pack will implicitly install Servlet and Core feature-packs.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_uninstalling_a_feature_pack">5.3.5. Uninstalling a feature-pack</h4>
+<div class="paragraph">
+<p>Using the Core as an example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">[pm]$ uninstall org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta9-SNAPSHOT --dir=&lt;installation-home&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_exporting_current_provisioning_specification">5.3.6. Exporting Current Provisioning Specification</h4>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">[pm]$ cd &lt;installation-home&gt;
+[&lt;installation-home&gt;]$ provisioned-spec export &lt;work-dir&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>&lt;work-dir&gt;</code> will contain <code>provisioning.xml</code> which is the current provisioning specification of the installation.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_provisioning_specific_default_configuration">5.3.7. Provisioning specific default configuration</h4>
+<div class="paragraph">
+<p>Installing any of the feature-packs will produce an installation that is equivalent to our default build or release, meaning it will contain all the modules, standalone and domain configurations.</p>
+</div>
+<div class="paragraph">
+<p>Each feature-pack has a package called <code>dist.standalone</code>. If this package is selected, it will pull the modules and configuration necessary to run the standalone server. Here is how a user can install only the standalone server:</p>
+</div>
+<div class="paragraph">
+<p>1) Export the <code>provisioning.xml</code> from the default installation to use as a config template.</p>
+</div>
+<div class="paragraph">
+<p>2) Modfiy the feature-pack config (let&#8217;s use Core as an example) to</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack-new" version="3.0.0.Beta9-SNAPSHOT"&gt;
+    &lt;packages inherit="false"&gt;
+        &lt;include name="dist.standalone"/&gt;
+    &lt;/packages&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>3) From the provisioning CLI execute</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">provision-spec &lt;work-dir&gt;/provisioning.xml --dir=&lt;installation-home&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>What you&#8217;ve done is excluded all the packages installed by default from the specified feature-pack and included only <code>dist.standalone</code> and its dependencies that are installed implicitly.
+You can do the same exercise for <code>dist.domain</code> package.</p>
+</div>
+<div class="paragraph">
+<p>Complete list of the default (pre-defined) distributions that can be installed in this way for Core feature-pack is:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>dist.standalone</p>
+</li>
+<li>
+<p>dist.domain</p>
+</li>
+<li>
+<p>dist.legacy (combines the packages above)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>for Servlet feature-pack:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>dist.standalone</p>
+</li>
+<li>
+<p>dist.load-balancer</p>
+</li>
+<li>
+<p>dist.domain</p>
+</li>
+<li>
+<p>dist.legacy (combines the packages above)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>for Full feature-pack:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>dist.domain</p>
+</li>
+<li>
+<p>dist.domain-full</p>
+</li>
+<li>
+<p>dist.domain-full-ha</p>
+</li>
+<li>
+<p>dist.domain-ha</p>
+</li>
+<li>
+<p>dist.domain-load-balancer</p>
+</li>
+<li>
+<p>dist.standalone</p>
+</li>
+<li>
+<p>dist.standalone-full</p>
+</li>
+<li>
+<p>dist.standalone-full-ha</p>
+</li>
+<li>
+<p>dist.standalone-ha</p>
+</li>
+<li>
+<p>dist.legacy (combines the packages above)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can try customizing the installation further by including and/or excluding specific packages that represent modules and subsystems in the same way.</p>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-01-13 15:15:21 CET
+Last updated 2017-04-09 13:17:40 CEST
 </div>
 </div>
 </body>
