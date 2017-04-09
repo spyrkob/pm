@@ -272,6 +272,9 @@ public class ProvisioningManager {
         if(!Files.exists(userProvisionedXml)) {
             throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
         }
+        if(Files.isDirectory(location)) {
+            location = location.resolve(userProvisionedXml.getFileName());
+        }
         IoUtils.copy(userProvisionedXml, location);
     }
 

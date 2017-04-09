@@ -1,10 +1,10 @@
 ### WildFly PM Provisioning Plug-in
 
-This chapter describes the WildFly provisioning plug-in which feature-packs of WildFly-based distributions reference from their *feature-pack.xml* files.
+This chapter describes the WildFly provisioning plug-in which is included into feature-packs of WildFly-based distributions.
 
 The plug-in is called by the PM tool after the feature-pack and package dependencies have been resolved and the content from packages has been copied to the target installation directory.
 
-WildFly provisioning plug-in is then responsible for:
+The WildFly provisioning plug-in is then responsible for:
 
 ** <<config-gen,generating the configuration file(s) based on the installed package set (possibly customized by the user)>>;
 
