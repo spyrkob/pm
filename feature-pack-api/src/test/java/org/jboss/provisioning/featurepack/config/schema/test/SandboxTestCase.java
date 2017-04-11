@@ -17,12 +17,16 @@
 
 package org.jboss.provisioning.featurepack.config.schema.test;
 
-import org.jboss.provisioning.config.schema.ConfigTypeId;
+import java.io.BufferedReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.jboss.provisioning.config.schema.Config;
+import org.jboss.provisioning.config.schema.ConfigSchema;
 import org.jboss.provisioning.config.schema.FeatureConfig;
-import org.jboss.provisioning.config.schema.FeatureConfigSchema;
-import org.jboss.provisioning.config.schema.FeatureConfigType;
-import org.jboss.provisioning.config.schema.LineupUtility;
-import org.jboss.provisioning.config.schema.SchemaConfigBuilder;
+import org.jboss.provisioning.xml.FeaturePackSchemaXmlParser;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -31,128 +35,73 @@ import org.junit.Test;
  */
 public class SandboxTestCase {
 
-    private static final String ARTIFACT_ID = "pm-test-artifact";
-    private static final String GROUP_ID = "org.jboss.pm.test";
-
-    /**
-     * @throws Exception
-     */
-    /**
-     * @throws Exception
-     */
-    /**
-     * @throws Exception
-     */
-    /**
-     * @throws Exception
-     */
     @Test
     public void testMain() throws Exception {
 
-        final FeatureConfigSchema.Builder schemaBuilder = FeatureConfigSchema.builder();
-        final FeatureConfigType sysPropType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "system-property"))
-                .build(schemaBuilder);
+        final ConfigSchema schema;
+        try(BufferedReader reader = Files.newBufferedReader(getResource("xml/feature-config/config-schema.xml"))) {
+            schema = FeaturePackSchemaXmlParser.getInstance().parse(reader);
+        }
 
-        final FeatureConfigType sysPropsType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "system-properties"))
-                .addOccurence(sysPropType.getTypeId(), false, true)
-                .build(schemaBuilder);
+        Config.builder(schema)
+        .add(FeatureConfig.builder("system-property")
+                .addParameter("name", "prop1")
+                .addParameter("value", "val1")
+                .build())
+        .add(FeatureConfig.forName("access-control"))
+        .add(FeatureConfig.builder("profile")
+                .addParameter("name", "default")
+                .build())
+        .add(FeatureConfig.builder("profile")
+                .addParameter("name", "ha")
+                .build())
+        .add(FeatureConfig.builder("interface")
+                .addParameter("name", "public")
+                .build())
+        .add(FeatureConfig.builder("socket-binding-group")
+                .addParameter("name", "standard-sockets")
+                .addParameter("default-interface", "public")
+                .build())
+        .add(FeatureConfig.builder("socket-binding-group")
+                .addParameter("name", "ha-sockets")
+                .addParameter("default-interface", "public")
+                .build())
+        .add(FeatureConfig.builder("socket-binding")
+                .addParameter("name", "http")
+                .addParameter("socket-binding-group", "standard-sockets")
+                .build())
+        .add(FeatureConfig.builder("socket-binding")
+                .addParameter("name", "https")
+                .addParameter("socket-binding-group", "standard-sockets")
+                .build())
+        .add(FeatureConfig.builder("socket-binding")
+                .addParameter("name", "http")
+                .addParameter("socket-binding-group", "ha-sockets")
+                .build())
+        .add(FeatureConfig.builder("socket-binding")
+                .addParameter("name", "https")
+                .addParameter("socket-binding-group", "ha-sockets")
+                .build())
+        .add(FeatureConfig.builder("server-group")
+                .addParameter("name", "main-server-group")
+                .addParameter("socket-binding-group", "standard-sockets")
+                .addParameter("profile", "default")
+                .build())
+        .add(FeatureConfig.builder("server-group")
+                .addParameter("name", "other-server-group")
+                .addParameter("socket-binding-group", "ha-sockets")
+                .addParameter("profile", "ha")
+                .build())
+        .build();
+    }
 
-        final FeatureConfigType accessControlType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "access-control"))
-                .build(schemaBuilder);
-
-        final FeatureConfigType managementType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "management"))
-                .addOccurence(accessControlType.getTypeId(), false)
-                .build(schemaBuilder);
-
-        final FeatureConfigType subsystemType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "subsystem"))
-                .build(schemaBuilder);
-
-        final FeatureConfigType profileType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "profile"))
-                .addOccurence(subsystemType.getTypeId(), true, true)
-                .build(schemaBuilder);
-
-        final FeatureConfigType profilesType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "profiles"))
-                .addOccurence(profileType.getTypeId(), true, true)
-                .build(schemaBuilder);
-
-        final FeatureConfigType interfaceType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "interface"))
-                .build(schemaBuilder);
-
-        final FeatureConfigType interfacesType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "interfaces"))
-                .addOccurence(interfaceType.getTypeId(), true, true)
-                .build(schemaBuilder);
-
-        final FeatureConfigType socketGroupType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "socket-binding-group"))
-                .addDependency("default-interface", interfaceType.getTypeId())
-                .build(schemaBuilder);
-
-        final FeatureConfigType socketGroupsType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "socket-binding-groups"))
-                .addOccurence(socketGroupType.getTypeId(), true, true)
-                .build(schemaBuilder);
-
-        final FeatureConfigType serverGroupType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "server-group"))
-                .addDependency("profile", profileType.getTypeId())
-                .addDependency("socket-binding-group", socketGroupType.getTypeId())
-                .build(schemaBuilder);
-
-        final FeatureConfigType serverGroupsType = FeatureConfigType.builder(ConfigTypeId.create(GROUP_ID, ARTIFACT_ID, "server-groups"))
-                .addOccurence(serverGroupType.getTypeId(), true, true)
-                .build(schemaBuilder);
-
-        final FeatureConfigType domainType = FeatureConfigType.builder(GROUP_ID, ARTIFACT_ID, "domain")
-                .addOccurence(sysPropsType.getTypeId(), false)
-                .addOccurence(managementType.getTypeId())
-                .addOccurence(profilesType.getTypeId())
-                .addOccurence(interfacesType.getTypeId())
-                .addOccurence(socketGroupsType.getTypeId())
-                .addOccurence(serverGroupsType.getTypeId())
-                .build(schemaBuilder);
-
-        final FeatureConfigSchema schema = schemaBuilder.build();
-
-        final FeatureConfig domain = SchemaConfigBuilder.builder(schema, domainType.getTypeId())
-                .configureNew(managementType.getTypeId())
-                    .done()
-                .configureNew(profilesType.getTypeId())
-                    .configureNew(profileType.getTypeId(), "default")
-                        .configureNew(subsystemType.getTypeId())
-                            .done()
-                        .done()
-                    .done()
-                .configureNew(interfacesType.getTypeId())
-                    .configureNew(interfaceType.getTypeId(), "management")
-                        .done()
-                    .configureNew(interfaceType.getTypeId(), "public")
-                        .done()
-                    .configureNew(interfaceType.getTypeId(), "unsecure")
-                        .done()
-                    .done()
-                .configureNew(socketGroupsType.getTypeId())
-                    .configureNew(socketGroupType.getTypeId(), "standard-sockets")
-                        .dependsOn("default-interface", interfaceType.getTypeId(), "public")
-                        .done()
-                    .done()
-                .configureNew(serverGroupsType.getTypeId())
-                    .configureNew(serverGroupType.getTypeId(), "main-server-group")
-                        .dependsOn("profile", profileType.getTypeId(), "default")
-                        .dependsOn("socket-binding-group", socketGroupType.getTypeId(), "standard-sockets")
-                        .done()
-                    .configureNew(serverGroupType.getTypeId(), "other-server-group")
-                        .dependsOn("profile", profileType.getTypeId(), "default")
-                        .dependsOn("socket-binding-group", socketGroupType.getTypeId(), "standard-sockets")
-                        .done()
-                    .done()
-                .build();
-/*
-        final FeatureConfig sampleConfig = domainType.configBuilder("sample")
-                .addFeatureConfig(requiredOnce.configBuilder("a")
-                        .addDependency("requiredDep", reqUnbA)
-                        .build())
-                .addFeatureConfig(reqUnbA)
-                .build();
-*/
-        for(FeatureConfig config : LineupUtility.lineup(domain, domain)) {
-            System.out.println(config.getRef() == null ? config.getTypeId() : config.getRef());
+    private static Path getResource(String path) {
+        java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
+        Assert.assertNotNull("Resource " + path + " is not on the classpath", resUrl);
+        try {
+            return Paths.get(resUrl.toURI());
+        } catch (java.net.URISyntaxException e) {
+            throw new IllegalStateException("Failed to get URI from URL", e);
         }
     }
 }

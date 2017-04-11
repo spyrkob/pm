@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,37 +23,37 @@ package org.jboss.provisioning.config.schema;
  */
 public class ConfigRef {
 
-    public static ConfigRef create(ConfigTypeId configId, String name) {
-        return new ConfigRef(configId, name);
+    public static ConfigRef create(String spot, String featureId) {
+        return new ConfigRef(spot, featureId);
     }
 
-    final ConfigTypeId typeId;
-    final String name;
+    final String spot;
+    final String featureId;
 
-    private ConfigRef(ConfigTypeId typeId, String name) {
-        this.typeId = typeId;
-        this.name = name;
+    private ConfigRef(String spot, String featureId) {
+        this.spot = spot;
+        this.featureId = featureId;
     }
 
-    public ConfigTypeId getTypeId() {
-        return typeId;
+    public String getSpot() {
+        return spot;
     }
 
-    public String getName() {
-        return name;
+    public String getFeatureId() {
+        return featureId;
     }
 
     @Override
     public String toString() {
-        return typeId + ":" + name;
+        return spot + "#" + featureId;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((typeId == null) ? 0 : typeId.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
+        result = prime * result + ((featureId == null) ? 0 : featureId.hashCode());
         return result;
     }
 
@@ -66,15 +66,15 @@ public class ConfigRef {
         if (getClass() != obj.getClass())
             return false;
         ConfigRef other = (ConfigRef) obj;
-        if (typeId == null) {
-            if (other.typeId != null)
+        if (spot == null) {
+            if (other.spot != null)
                 return false;
-        } else if (!typeId.equals(other.typeId))
+        } else if (!spot.equals(other.spot))
             return false;
-        if (name == null) {
-            if (other.name != null)
+        if (featureId == null) {
+            if (other.featureId != null)
                 return false;
-        } else if (!name.equals(other.name))
+        } else if (!featureId.equals(other.featureId))
             return false;
         return true;
     }
