@@ -82,6 +82,9 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter {
                 if(pkg.hasParameters()) {
                     PackageParametersXml.write(pkgElement, pkg.getParameters());
                 }
+                if(pkg.hasConfigs()) {
+                    ParameterSetsXml.write(pkgElement, pkg.getConfigs());
+                }
             }
         }
     }

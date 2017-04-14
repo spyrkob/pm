@@ -15,26 +15,30 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.test.util.repomanager;
 
-import java.util.Collection;
-
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.ParameterSet;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackPackage {
+public class PackageConfigBuilder {
 
-    String getName();
+    private final PackageBuilder pkgBuilder;
+    final ParameterSet.Builder configBuilder;
 
-    boolean hasParameters();
+    PackageConfigBuilder(PackageBuilder pkgBuilder, String configName) {
+        this.pkgBuilder = pkgBuilder;
+        this.configBuilder = ParameterSet.builder(configName);
+    }
 
-    Collection<PackageParameter> getParameters();
+    public PackageConfigBuilder addParameter(String name, String value) {
+        configBuilder.addParameter(name, value);
+        return this;
+    }
 
-    boolean hasConfigs();
-
-    Collection<ParameterSet> getConfigs();
+    public PackageBuilder getPackage() {
+        return pkgBuilder;
+    }
 }

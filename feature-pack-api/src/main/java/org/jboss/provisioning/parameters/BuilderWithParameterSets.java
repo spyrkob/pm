@@ -15,26 +15,13 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
-
-import java.util.Collection;
-
-import org.jboss.provisioning.parameters.PackageParameter;
-import org.jboss.provisioning.parameters.ParameterSet;
+package org.jboss.provisioning.parameters;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackPackage {
+public interface BuilderWithParameterSets<T extends BuilderWithParameterSets<T>> {
 
-    String getName();
-
-    boolean hasParameters();
-
-    Collection<PackageParameter> getParameters();
-
-    boolean hasConfigs();
-
-    Collection<ParameterSet> getConfigs();
+    T addConfig(ParameterSet config);
 }

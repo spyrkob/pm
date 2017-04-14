@@ -43,6 +43,7 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
 
     enum Element implements XmlNameProvider {
 
+        CONFIG(ParameterSetsXml.CONFIG),
         FEATURE_PACK("feature-pack"),
         INSTALLATION("installation"),
         PACKAGES("packages"),
@@ -295,6 +296,9 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
                     switch (element) {
                         case PARAMETERS:
                             PackageParametersXml.read(reader, pkgBuilder);
+                            break;
+                        case CONFIG:
+                            pkgBuilder.addConfig(ParameterSetsXml.readConfig(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

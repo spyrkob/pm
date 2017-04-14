@@ -22,8 +22,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.parameters.BuilderWithParameterSets;
 import org.jboss.provisioning.parameters.BuilderWithParameters;
 import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.parameters.ParameterSet;
 
 /**
  * Describes dependency on a single package.
@@ -32,11 +34,12 @@ import org.jboss.provisioning.parameters.PackageParameter;
  */
 public class PackageDependencySpec implements Comparable<PackageDependencySpec> {
 
-    public static class Builder implements BuilderWithParameters<Builder> {
+    public static class Builder implements BuilderWithParameters<Builder>, BuilderWithParameterSets<Builder> {
 
         private final String name;
         private final boolean optional;
         private Map<String, PackageParameter> params = Collections.emptyMap();
+        private Map<String, ParameterSet> configs = Collections.emptyMap();
 
         protected Builder(String name) {
             this(name, false);
@@ -61,6 +64,25 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
                     params = new HashMap<>(params);
                 default:
                     params.put(param.getName(), param);
+            }
+            return this;
+        }
+
+        @Override
+        public Builder addConfig(ParameterSet config) {
+            switch(configs.size()) {
+                case 0:
+                    configs = Collections.singletonMap(config.getName(), config);
+                    break;
+                case 1:
+                    if(configs.containsKey(config.getName())) {
+                        configs = Collections.singletonMap(config.getName(),config);
+                        break;
+                    }
+                    configs = new HashMap<>(configs);
+                default:
+                    configs.put(config.getName(), config);
+
             }
             return this;
         }
@@ -102,17 +124,20 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
     private final String name;
     private final boolean optional;
     private final Map<String, PackageParameter> params;
+    private final Map<String, ParameterSet> configs;
 
     protected PackageDependencySpec(String name, boolean optional) {
         this.name = name;
         this.optional = optional;
         params = Collections.emptyMap();
+        configs = Collections.emptyMap();
     }
 
     protected PackageDependencySpec(Builder builder) {
         this.name = builder.name;
         this.optional = builder.optional;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
+        this.configs = builder.configs.size() > 1 ? Collections.unmodifiableMap(builder.configs) : builder.configs;
     }
 
     public String getName() {
@@ -135,10 +160,19 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         return params.values();
     }
 
+    public boolean hasConfigs() {
+        return !configs.isEmpty();
+    }
+
+    public Collection<ParameterSet> getConfigs() {
+        return configs.values();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((configs == null) ? 0 : configs.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (optional ? 1231 : 1237);
         result = prime * result + ((params == null) ? 0 : params.hashCode());
@@ -154,6 +188,11 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         if (getClass() != obj.getClass())
             return false;
         PackageDependencySpec other = (PackageDependencySpec) obj;
+        if (configs == null) {
+            if (other.configs != null)
+                return false;
+        } else if (!configs.equals(other.configs))
+            return false;
         if (name == null) {
             if (other.name != null)
                 return false;

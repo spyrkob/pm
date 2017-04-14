@@ -107,5 +107,8 @@ public class PackageXmlWriter extends BaseXmlWriter {
         if(depSpec.hasParams()) {
             PackageParametersXml.write(depElement, depSpec.getParameters());
         }
+        if(depSpec.hasConfigs()) {
+            ParameterSetsXml.write(depElement, depSpec.getConfigs());
+        }
     }
 }

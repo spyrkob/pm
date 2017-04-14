@@ -17,18 +17,28 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.parameters.ParameterSet;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedPackage;
+import org.jboss.provisioning.util.LayoutUtils;
+import org.jboss.provisioning.xml.ParameterSetXmlParser;
 
 /**
  *
@@ -41,6 +51,7 @@ public class PackageRuntime implements ProvisionedPackage {
         final PackageConfig.Builder configBuilder;
         PackageSpec spec;
         private Map<String, PackageParameter> params = Collections.emptyMap();
+        private Map<String, ParameterSet> configs = Collections.emptyMap();
 
         private Builder(String name, Path dir) {
             this.dir = dir;
@@ -59,7 +70,24 @@ public class PackageRuntime implements ProvisionedPackage {
             }
         }
 
-        PackageRuntime build() {
+        void addConfig(ParameterSet config) {
+            switch(configs.size()) {
+                case 0:
+                    configs = Collections.singletonMap(config.getName(), config);
+                    break;
+                case 1:
+                    if(configs.containsKey(config.getName())) {
+                        configs = Collections.singletonMap(config.getName(),config);
+                        break;
+                    }
+                    configs = new HashMap<>(configs);
+                default:
+                    configs.put(config.getName(), config);
+
+            }
+        }
+
+        PackageRuntime build() throws ProvisioningException {
             return new PackageRuntime(this);
         }
     }
@@ -71,11 +99,57 @@ public class PackageRuntime implements ProvisionedPackage {
     private final PackageSpec spec;
     private final Path layoutDir;
     private final Map<String, PackageParameter> params;
+    private final Map<String, ParameterSet> configs;
 
-    private PackageRuntime(Builder builder) {
+
+    private PackageRuntime(Builder builder) throws ProvisioningException {
         this.spec = builder.spec;
         this.layoutDir = builder.dir;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
+
+        if(builder.configs.isEmpty()) {
+            this.configs = builder.configs;
+        }  else if(builder.configs.size() == 1) {
+            final ParameterSet config = normalize(builder.configs.values().iterator().next());
+            this.configs = Collections.singletonMap(config.getName(), config);
+        } else {
+            final Map<String, ParameterSet> tmp = new HashMap<>(builder.configs.size());
+            for(ParameterSet config : builder.configs.values()) {
+                tmp.put(config.getName(), normalize(config));
+            }
+            this.configs = Collections.unmodifiableMap(tmp);
+        }
+    }
+
+    private ParameterSet normalize(ParameterSet config) throws ProvisioningException {
+        if(!config.containsAll(params.keySet())) {
+            ParameterSet originalConfig = null;
+            final Path configXml = LayoutUtils.getPackageConfigsDir(layoutDir).resolve(config.getName() + ".xml");
+            if(Files.exists(configXml)) {
+                try (BufferedReader input = Files.newBufferedReader(configXml)) {
+                    originalConfig = ParameterSetXmlParser.getInstance().parse(input);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.readFile(configXml), e);
+                } catch (XMLStreamException e) {
+                    throw new ProvisioningException(Errors.parseXml(configXml), e);
+                }
+            }
+            final ParameterSet.Builder configBuilder = ParameterSet.builder(config.getName());
+            for(PackageParameter param : params.values()) {
+                final PackageParameter override = config.getParameter(param.getName());
+                if(override == null) {
+                    if(originalConfig != null && originalConfig.hasParameter(param.getName())) {
+                        configBuilder.addParameter(originalConfig.getParameter(param.getName()));
+                    } else {
+                        configBuilder.addParameter(param);
+                    }
+                } else {
+                    configBuilder.addParameter(override);
+                }
+            }
+            return configBuilder.build();
+        }
+        return config;
     }
 
     public PackageSpec getSpec() {
@@ -99,6 +173,16 @@ public class PackageRuntime implements ProvisionedPackage {
 
     public PackageParameter getParameter(String name) {
         return params.get(name);
+    }
+
+    @Override
+    public boolean hasConfigs() {
+        return !configs.isEmpty();
+    }
+
+    @Override
+    public Collection<ParameterSet> getConfigs() {
+        return configs.values();
     }
 
     /**

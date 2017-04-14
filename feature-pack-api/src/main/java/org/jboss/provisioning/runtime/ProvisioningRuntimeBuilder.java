@@ -47,6 +47,7 @@ import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
+import org.jboss.provisioning.parameters.ParameterSet;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
@@ -150,6 +151,15 @@ public class ProvisioningRuntimeBuilder {
                             pkgBuilder.configBuilder.addParameter(param);
                         }
                     }
+                    if (userPkg.hasConfigs()) {
+                        if (fp == null) {
+                            fp = layoutFps.get(userFpConfig.getGav().toGa());
+                        }
+                        final PackageRuntime.Builder pkgBuilder = fp.pkgBuilders.get(userPkg.getName());
+                        for (ParameterSet config : userPkg.getConfigs()) {
+                            pkgBuilder.configBuilder.addConfig(config);
+                        }
+                    }
                 }
             }
         }
@@ -218,6 +228,15 @@ public class ProvisioningRuntimeBuilder {
                             final PackageConfig.Builder pkgBuilder = dep.pkgBuilders.get(pkgConfig.getName()).configBuilder;
                             for(PackageParameter param : pkgConfig.getParameters()) {
                                 pkgBuilder.addParameter(param);
+                            }
+                        }
+                        if(pkgConfig.hasConfigs()) {
+                            if(dep == null) {
+                                dep = layoutFps.get(depConfig.getGav().toGa());
+                            }
+                            final PackageConfig.Builder pkgBuilder = dep.pkgBuilders.get(pkgConfig.getName()).configBuilder;
+                            for(ParameterSet config : pkgConfig.getConfigs()) {
+                                pkgBuilder.addConfig(config);
                             }
                         }
                     }

@@ -14,27 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.provisioning.xml;
 
-package org.jboss.provisioning.state;
+import java.io.Reader;
 
-import java.util.Collection;
+import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.ParameterSet;
+
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackPackage {
+public class ParameterSetXmlParser implements XmlParser<ParameterSet> {
 
-    String getName();
+    private static final ParameterSetXmlParser INSTANCE = new ParameterSetXmlParser();
 
-    boolean hasParameters();
+    public static ParameterSetXmlParser getInstance() {
+        return INSTANCE;
+    }
 
-    Collection<PackageParameter> getParameters();
+    private ParameterSetXmlParser() {
+    }
 
-    boolean hasConfigs();
-
-    Collection<ParameterSet> getConfigs();
+    @Override
+    public ParameterSet parse(final Reader input) throws XMLStreamException {
+        final ParameterSet.Builder builder = ParameterSet.builder();
+        XmlParsers.parse(input, builder);
+        return builder.build();
+    }
 }

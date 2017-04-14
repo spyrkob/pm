@@ -38,6 +38,7 @@ import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
+import org.jboss.provisioning.parameters.ParameterSet;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePack;
 
@@ -113,6 +114,11 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                         param = PackageParameter.newInstance(param.getName(), resolved);
                     }
                     pkgRtBuilder.addParameter(param);
+                }
+                if(pkgConfig.hasConfigs()) {
+                    for(ParameterSet config : pkgConfig.getConfigs()) {
+                        pkgRtBuilder.addConfig(config);
+                    }
                 }
             }
             tmpPackages.put(pkgName, pkgRtBuilder.build());

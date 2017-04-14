@@ -28,6 +28,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.parameters.ParameterSet;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
@@ -132,6 +133,11 @@ public class FeaturePackConfig {
             final PackageConfig.Builder builder = PackageConfig.builder(included);
             for (PackageParameter param : packageConfig.getParameters()) {
                 builder.addParameter(param);
+            }
+            if(packageConfig.hasConfigs()) {
+                for(ParameterSet config : packageConfig.getConfigs()) {
+                    builder.addConfig(config);
+                }
             }
             included = builder.build();
 

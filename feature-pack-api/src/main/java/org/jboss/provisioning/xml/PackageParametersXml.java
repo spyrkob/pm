@@ -53,7 +53,7 @@ class PackageParametersXml extends BaseXmlWriter {
         }
     }
 
-    private static void writeParameter(ElementNode params, PackageParameter param) {
+    static void writeParameter(ElementNode params, PackageParameter param) {
         final ElementNode paramElement = addElement(params, PARAMETER, params.getNamespace());
         addAttribute(paramElement, NAME, param.getName());
         paramElement.addChild(new TextNode(param.getValue()));
@@ -79,7 +79,7 @@ class PackageParametersXml extends BaseXmlWriter {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readParameter(XMLStreamReader reader, BuilderWithParameters<?> pkgBuilder) throws XMLStreamException {
+    static void readParameter(XMLStreamReader reader, BuilderWithParameters<?> pkgBuilder) throws XMLStreamException {
         String name = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {

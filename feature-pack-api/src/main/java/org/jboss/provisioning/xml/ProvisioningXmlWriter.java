@@ -84,7 +84,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
                 packages = addElement(fp, Element.PACKAGES);
             }
             for (String excluded : featurePack.getExcludedPackages()) {
-                final ElementNode exclude = addElement(packages, Element.EXCLUDE);
+                final ElementNode exclude = addElement(packages, FeaturePackPackagesConfigParser10.EXCLUDE, ProvisioningXmlParser10.NAMESPACE_1_0);
                 addAttribute(exclude, Attribute.NAME, excluded);
             }
         }
@@ -93,10 +93,13 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
                 packages = addElement(fp, Element.PACKAGES);
             }
             for (PackageConfig included : featurePack.getIncludedPackages()) {
-                final ElementNode include = addElement(packages, Element.INCLUDE);
+                final ElementNode include = addElement(packages, FeaturePackPackagesConfigParser10.INCLUDE, ProvisioningXmlParser10.NAMESPACE_1_0);
                 addAttribute(include, Attribute.NAME, included.getName());
                 if(included.hasParams()) {
                     PackageParametersXml.write(include, included.getParameters());
+                }
+                if(included.hasConfigs()) {
+                    ParameterSetsXml.write(include, included.getConfigs());
                 }
             }
         }

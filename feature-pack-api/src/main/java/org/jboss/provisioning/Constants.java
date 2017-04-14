@@ -27,6 +27,7 @@ public interface Constants {
     String PM_INSTALL_WORK_DIR = "pm.install.workdir";
     String PM_TOOL_HOME_DIR = "pm.tool.home";
 
+    String CONFIGS = "configs";
     String CONTENT = "content";
     String FEATURE_PACK_XML = "feature-pack.xml";
     String MODULES_XML = "module.xml";

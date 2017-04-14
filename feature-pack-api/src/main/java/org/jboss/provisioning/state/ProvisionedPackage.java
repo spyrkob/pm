@@ -21,8 +21,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.provisioning.parameters.BuilderWithParameterSets;
 import org.jboss.provisioning.parameters.BuilderWithParameters;
 import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.parameters.ParameterSet;
 
 /**
  *
@@ -30,10 +32,11 @@ import org.jboss.provisioning.parameters.PackageParameter;
  */
 public interface ProvisionedPackage extends FeaturePackPackage {
 
-    class Builder implements BuilderWithParameters<Builder> {
+    class Builder implements BuilderWithParameters<Builder>, BuilderWithParameterSets<Builder> {
 
         private final String name;
         private Map<String, PackageParameter> params = Collections.emptyMap();
+        private Map<String, ParameterSet> configs = Collections.emptyMap();
 
         private Builder(String name) {
             this.name = name;
@@ -53,8 +56,28 @@ public interface ProvisionedPackage extends FeaturePackPackage {
             return this;
         }
 
+        @Override
+        public Builder addConfig(ParameterSet config) {
+            switch(configs.size()) {
+                case 0:
+                    configs = Collections.singletonMap(config.getName(), config);
+                    break;
+                case 1:
+                    if(configs.containsKey(config.getName())) {
+                        configs = Collections.singletonMap(config.getName(),config);
+                        break;
+                    }
+                    configs = new HashMap<>(configs);
+                default:
+                    configs.put(config.getName(), config);
+
+            }
+            return this;
+        }
+
         public ProvisionedPackage build() {
-            return new ProvisionedPackageImpl(name, params.size() > 1 ? Collections.unmodifiableMap(params) : params);
+            return new ProvisionedPackageImpl(name, params.size() > 1 ? Collections.unmodifiableMap(params) : params,
+                    configs.size() > 1 ? Collections.unmodifiableMap(configs) : configs);
         }
     }
 

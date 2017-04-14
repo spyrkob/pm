@@ -19,11 +19,16 @@ package org.jboss.provisioning.test.util.repomanager;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.parameters.ParameterSet;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
@@ -31,6 +36,7 @@ import org.jboss.provisioning.test.util.fs.FsTaskContext;
 import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.xml.PackageXmlWriter;
+import org.jboss.provisioning.xml.ParameterSetXmlWriter;
 
 /**
  *
@@ -46,6 +52,7 @@ public class PackageBuilder {
     private boolean isDefault;
     private final PackageSpec.Builder pkg;
     private final FsTaskList tasks = FsTaskList.newList();
+    private Map<String, PackageConfigBuilder> configs = Collections.emptyMap();
 
     private PackageBuilder(FeaturePackBuilder fp, String name) {
         this.fp = fp;
@@ -114,6 +121,21 @@ public class PackageBuilder {
         return this;
     }
 
+    public PackageConfigBuilder addConfig(String config) {
+        if(configs.isEmpty()) {
+            configs = new HashMap<>();
+            final PackageConfigBuilder configBuilder = new PackageConfigBuilder(this, config);
+            configs.put(config, configBuilder);
+            return configBuilder;
+        }
+        PackageConfigBuilder configBuilder = configs.get(config);
+        if(configBuilder == null) {
+            configBuilder = new PackageConfigBuilder(this, config);
+            configs.put(config, configBuilder);
+        }
+        return configBuilder;
+    }
+
     public PackageSpec build(Path fpDir) {
         final PackageSpec pkgSpec = pkg.build();
         final Path pkgDir;
@@ -123,6 +145,23 @@ public class PackageBuilder {
             throw new IllegalStateException(e);
         }
         TestUtils.mkdirs(pkgDir);
+        if(!configs.isEmpty()) {
+            final Path configsDir = LayoutUtils.getPackageConfigsDir(pkgDir);
+            TestUtils.mkdirs(configsDir);
+            for(PackageConfigBuilder configBuilder : configs.values()) {
+                final ParameterSet config = configBuilder.configBuilder.build();
+                for(PackageParameter param : config.getParameters()) {
+                    if(!pkgSpec.hasParameter(param.getName())) {
+                        throw new IllegalStateException("Config " + config.getName() + " of package " + pkgSpec.getName() + " contains undefined parameter " + param.getName());
+                    }
+                }
+                try {
+                    ParameterSetXmlWriter.getInstance().write(config, configsDir.resolve(config.getName() + ".xml"));
+                } catch (XMLStreamException | IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
         try {
             if(!tasks.isEmpty()) {
                 tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());

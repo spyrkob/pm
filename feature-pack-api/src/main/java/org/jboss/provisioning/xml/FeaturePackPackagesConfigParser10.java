@@ -34,8 +34,8 @@ import org.jboss.provisioning.util.ParsingUtils;
  */
 public class FeaturePackPackagesConfigParser10 {
 
-    private static final String EXCLUDE = "exclude";
-    private static final String INCLUDE = "include";
+    static final String EXCLUDE = "exclude";
+    static final String INCLUDE = "include";
     private static final String INHERIT = "inherit";
     private static final String NAME = "name";
 
@@ -103,8 +103,11 @@ public class FeaturePackPackagesConfigParser10 {
                     return pkgBuilder.build();
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    if(reader.getName().getLocalPart().equals(PackageParametersXml.PARAMETERS)) {
+                    final String eName = reader.getName().getLocalPart();
+                    if(eName.equals(PackageParametersXml.PARAMETERS)) {
                         PackageParametersXml.read(reader, pkgBuilder);
+                    } else if (eName.equals(ParameterSetsXml.CONFIG)) {
+                        pkgBuilder.addConfig(ParameterSetsXml.readConfig(reader));
                     } else {
                         throw ParsingUtils.unexpectedContent(reader);
                     }

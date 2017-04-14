@@ -15,39 +15,36 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config;
+package org.jboss.provisioning.parameters;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-
-import org.jboss.provisioning.parameters.BuilderWithParameterSets;
-import org.jboss.provisioning.parameters.BuilderWithParameters;
-import org.jboss.provisioning.parameters.PackageParameter;
-import org.jboss.provisioning.parameters.ParameterSet;
+import java.util.Set;
 
 /**
- * Package configuration.
  *
  * @author Alexey Loubyansky
  */
-public class PackageConfig {
+public class ParameterSet {
 
-    public static class Builder implements BuilderWithParameters<Builder>, BuilderWithParameterSets<Builder> {
+    public static class Builder implements BuilderWithParameters<Builder> {
 
         private String name;
         private Map<String, PackageParameter> params = Collections.emptyMap();
-        private Map<String, ParameterSet> configs = Collections.emptyMap();
 
-        protected Builder(String name) {
+        private Builder() {
+        }
+
+        private Builder(String name) {
             this.name = name;
         }
 
-        protected Builder(PackageConfig config) {
-            this.name = config.name;
-            params = config.params.size() > 1 ? new HashMap<>(config.params) : config.params;
-            configs = config.configs.size() > 1 ? new HashMap<>(config.configs) : config.configs;
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
         }
 
         @Override
@@ -68,84 +65,63 @@ public class PackageConfig {
             return this;
         }
 
-        @Override
-        public Builder addConfig(ParameterSet config) {
-            switch(configs.size()) {
-                case 0:
-                    configs = Collections.singletonMap(config.getName(), config);
-                    break;
-                case 1:
-                    if(configs.containsKey(config.getName())) {
-                        configs = Collections.singletonMap(config.getName(),config);
-                        break;
-                    }
-                    configs = new HashMap<>(configs);
-                default:
-                    configs.put(config.getName(), config);
-
-            }
-            return this;
+        public ParameterSet build() {
+            return new ParameterSet(this);
         }
+    }
 
-        public PackageConfig build() {
-            return new PackageConfig(this);
-        }
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static Builder builder(String name) {
         return new Builder(name);
     }
 
-    public static Builder builder(PackageConfig config) {
-        return new Builder(config);
-    }
-
-    public static PackageConfig newInstance(String name) {
-        return new PackageConfig(name);
+    public static ParameterSet forName(String name) {
+        return new ParameterSet(name);
     }
 
     private final String name;
     private final Map<String, PackageParameter> params;
-    private final Map<String, ParameterSet> configs;
 
-    private PackageConfig(String name) {
+    private ParameterSet(String name) {
         this.name = name;
         params = Collections.emptyMap();
-        configs = Collections.emptyMap();
     }
 
-    private PackageConfig(Builder builder) {
+    private ParameterSet(Builder builder) {
         this.name = builder.name;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
-        this.configs = builder.configs.size() > 1 ? Collections.unmodifiableMap(builder.configs) : builder.configs;
     }
 
     public String getName() {
         return name;
     }
 
-    public boolean hasParams() {
+    public boolean hasParameters() {
         return !params.isEmpty();
-    }
-
-    public PackageParameter getParameter(String name) {
-        return params.get(name);
     }
 
     public Collection<PackageParameter> getParameters() {
         return params.values();
     }
 
-    public boolean hasConfigs() {
-        return !configs.isEmpty();
+    public boolean containsAll(Set<String> paramNames) {
+        for(String name : paramNames) {
+            if(!params.containsKey(name)) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    public ParameterSet getConfig(String name) {
-        return configs.get(name);
+    public boolean hasParameter(String name) {
+        return params.containsKey(name);
     }
 
-    public Collection<ParameterSet> getConfigs() {
-        return configs.values();
+    public PackageParameter getParameter(String name) {
+        return params.get(name);
     }
 
     @Override
@@ -165,7 +141,7 @@ public class PackageConfig {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        PackageConfig other = (PackageConfig) obj;
+        ParameterSet other = (ParameterSet) obj;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -177,5 +153,21 @@ public class PackageConfig {
         } else if (!params.equals(other.params))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append(name).append('{');
+        if(!params.isEmpty()) {
+            final Iterator<PackageParameter> i = params.values().iterator();
+            PackageParameter param = i.next();
+            buf.append(param.getName()).append('=').append(param.getValue());
+            while(i.hasNext()) {
+                buf.append(',');
+                param = i.next();
+                buf.append(param.getName()).append('=').append(param.getValue());            }
+        }
+        return buf.append('}').toString();
     }
 }

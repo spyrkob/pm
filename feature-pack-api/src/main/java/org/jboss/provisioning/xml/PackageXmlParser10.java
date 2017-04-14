@@ -43,6 +43,7 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
 
     public enum Element implements XmlNameProvider {
 
+        CONFIG("config"),
         DEPENDENCIES("dependencies"),
         FEATURE_PACK("feature-pack"),
         PACKAGE("package"),
@@ -237,6 +238,9 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
                     switch (element) {
                         case PARAMETERS:
                             PackageParametersXml.read(reader, depBuilder);
+                            break;
+                        case CONFIG:
+                            depBuilder.addConfig(ParameterSetsXml.readConfig(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
