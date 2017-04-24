@@ -23,40 +23,54 @@ import java.util.Arrays;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigRef {
+public class SchemaPath {
 
-    public static ConfigRef create(SchemaPath path, String... featureId) {
-        return new ConfigRef(path, featureId);
+    public static SchemaPath create(String... spot) {
+        return new SchemaPath(spot);
     }
 
-    final SchemaPath path;
-    final String[] featureId;
+    final String[] spots;
 
-    private ConfigRef(SchemaPath path, String[] featureId) {
-        if(path.length() != featureId.length) {
-            throw new IllegalArgumentException("SchemaPath length does not match featureId length");
-        }
-        this.path = path;
-        this.featureId = featureId;
+    private SchemaPath(String[] spots) {
+        this.spots = spots;
     }
 
-    public SchemaPath getPath() {
-        return path;
+    public String getName(int i) {
+        return spots[i];
     }
 
-    public String[] getFeatureId() {
-        return featureId;
+    public String getSpotName() {
+        return spots[spots.length - 1];
+    }
+
+    public boolean hasParent() {
+        return spots.length > 1;
+    }
+
+    public SchemaPath getParent() {
+        return new SchemaPath(Arrays.copyOf(spots, spots.length - 1));
+    }
+
+    public int length() {
+        return spots.length;
+    }
+
+    public SchemaPath resolve(String... spot) {
+        final String[] tmp = new String[spots.length + spot.length];
+        System.arraycopy(spots, 0, tmp, 0, spots.length);
+        System.arraycopy(spot, 0, tmp, spots.length, spot.length);
+        return new SchemaPath(tmp);
     }
 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[');
-        if(featureId.length > 0) {
-            buf.append(path.getName(0)).append('=').append(featureId[0]);
-            if(featureId.length > 1) {
-                for(int i = 1; i < featureId.length; ++i) {
-                    buf.append(',').append(path.getName(i)).append('=').append(featureId[i]);
+        if(spots.length > 0) {
+            buf.append(spots[0]);
+            if(spots.length > 1) {
+                for(int i = 1; i < spots.length; ++i) {
+                    buf.append(',').append(spots[i]);
                 }
             }
         }
@@ -67,8 +81,7 @@ public class ConfigRef {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(featureId);
-        result = prime * result + ((path == null) ? 0 : path.hashCode());
+        result = prime * result + Arrays.hashCode(spots);
         return result;
     }
 
@@ -80,13 +93,8 @@ public class ConfigRef {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ConfigRef other = (ConfigRef) obj;
-        if (!Arrays.equals(featureId, other.featureId))
-            return false;
-        if (path == null) {
-            if (other.path != null)
-                return false;
-        } else if (!path.equals(other.path))
+        SchemaPath other = (SchemaPath) obj;
+        if (!Arrays.equals(spots, other.spots))
             return false;
         return true;
     }

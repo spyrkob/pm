@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
+
 /**
  *
  * @author Alexey Loubyansky
@@ -29,6 +31,8 @@ public class FeatureConfigDescription {
 
     final String spot;
     final String parentSpot;
+    final SchemaPath path;
+    final SchemaPath parentPath;
     final boolean required;
     final boolean maxOccursUnbounded;
     final List<FeatureConfigDescription> features;
@@ -37,9 +41,12 @@ public class FeatureConfigDescription {
     final String parentRefParam;
     final Map<String, String> refParams;
 
-    FeatureConfigDescription(String spot, String parentSpot, List<FeatureConfigDescription> features, XmlFeatureSpec xmlSpec, XmlFeatureOccurence occurence) {
+    FeatureConfigDescription(String spot, String parentSpot, SchemaPath schemaPath, SchemaPath parentPath,
+            List<FeatureConfigDescription> features, XmlFeatureSpec xmlSpec, XmlFeatureOccurence occurence) {
         this.spot = spot;
         this.parentSpot = parentSpot;
+        this.path = schemaPath;
+        this.parentPath = parentPath;
         this.required = occurence.required;
         this.maxOccursUnbounded = occurence.maxOccursUnbounded;
         this.features = features;
@@ -48,5 +55,30 @@ public class FeatureConfigDescription {
         idParam = xmlSpec.idParam;
         parentRefParam = xmlSpec.parentRefParam;
         refParams = xmlSpec.refParams.size() > 1 ? Collections.unmodifiableMap(xmlSpec.refParams) : xmlSpec.refParams;
+    }
+
+    public ConfigRef getConfigRef(FeatureConfig config) throws ProvisioningDescriptionException {
+        if(path == null) {
+            throw new ProvisioningDescriptionException("Feature " + spot + " is not associated with a schema path.");
+        }
+        if(idParam == null) {
+            throw new ProvisioningDescriptionException("ID parameter is not defined for feature " + path);
+        }
+        final String[] values = new String[path.length()];
+        int i = 0;
+        while(i < values.length - 1) {
+            values[i] = config.getParameterValue(parentPath.getName(i++), true);
+        }
+        values[i] = config.getParameterValue(idParam, true);
+        return ConfigRef.create(path, values);
+    }
+
+    public ConfigRef getConfigRef(SchemaPath path, FeatureConfig config) throws ProvisioningDescriptionException {
+        final String[] values = new String[path.length()];
+        int i = 0;
+        while(i < values.length) {
+            values[i] = config.getParameterValue(path.getName(i++), true);
+        }
+        return ConfigRef.create(path, values);
     }
 }

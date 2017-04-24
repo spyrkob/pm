@@ -77,14 +77,11 @@
   <feature-spec name="socket-binding-group">
     <parameters>
       <parameter name="name" feature-id="true"/>
-      <parameter name="default-interface" spot-ref="interface"/>
     </parameters>
     <feature spec="socket-binding" required="true" unbounded="true" spot="socket-binding"/>
   </feature-spec>
   <feature-spec name="socket-binding">
     <parameters>
-      <parameter name="socket-binding-group" parent-ref="socket-binding-group" />
-      <!--  <parameter name="name" feature-id="true"/> -->
       <parameter name="name"/>
       <parameter name="port"/>
     </parameters>
@@ -96,8 +93,6 @@
   <feature-spec name="server-group">
     <parameters>
       <parameter name="name" feature-id="true"/>
-      <parameter name="profile" spot-ref="profile"/>
-      <parameter spot-ref="socket-binding-group"/>
     </parameters>
   </feature-spec>
 </config-schema>
