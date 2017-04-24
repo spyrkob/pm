@@ -24,16 +24,20 @@
   </features>
   
   <feature-spec name="domain">
-    <feature spec="system-properties" required="false"/>
-    <feature spec="management"/>
-    <feature spec="profiles"/>
-    <feature spec="interfaces"/>
-    <feature spec="socket-binding-groups"/>
-    <feature spec="server-groups"/>
+    <features>
+      <feature spec="system-properties" required="false" />
+      <feature spec="management" />
+      <feature spec="profiles" />
+      <feature spec="interfaces" />
+      <feature spec="socket-binding-groups" />
+      <feature spec="server-groups" />
+    </features>
   </feature-spec>
 
   <feature-spec name="system-properties">
-    <feature spec="system-property" required="false" unbounded="true" spot="system-property"/>
+    <features>
+      <feature spec="system-property" required="false" unbounded="true" spot="system-property"/>
+    </features>
   </feature-spec>
   <feature-spec name="system-property">
     <parameters>
@@ -43,30 +47,39 @@
   </feature-spec>
 
   <feature-spec name="management">
-    <feature spec="access-control" required="false" spot="access-control"/>
+    <features>
+      <feature spec="access-control" required="false" spot="access-control"/>
+    </features>
   </feature-spec>
   <feature-spec name="access-control"/>
 
   <feature-spec name="profiles">
-    <feature spec="profile" required="true" unbounded="true" spot="profile"/>
+    <features>
+      <feature spec="profile" required="true" unbounded="true" spot="profile"/>
+    </features>
   </feature-spec>
   <feature-spec name="profile">
     <parameters>
       <parameter name="name" feature-id="true"/>
     </parameters>
-    <feature spec="subsystem" required="true" unbounded="true" spot="subsystem"/>
+    <features>
+      <feature spec="subsystem" required="true" unbounded="true" spot="subsystem"/>
+    </features>
   </feature-spec>
   <feature-spec name="subsystem">
     <references>
       <reference spot="profile"/>
     </references>
     <parameters>
+      <parameter name="name" feature-id="true"/>
       <parameter name="profile"/>
     </parameters>
   </feature-spec>
 
   <feature-spec name="interfaces">
-    <feature spec="interface" required="true" unbounded="true" spot="interface"/>
+    <features>
+      <feature spec="interface" required="true" unbounded="true" spot="interface"/>
+    </features>
   </feature-spec>
   <feature-spec name="interface">
     <parameters>
@@ -75,18 +88,22 @@
   </feature-spec>
 
   <feature-spec name="socket-binding-groups">
-    <feature spec="socket-binding-group" required="true" unbounded="true" spot="socket-binding-group"/>
+    <features>
+      <feature spec="socket-binding-group" required="true" unbounded="true" spot="socket-binding-group"/>
+    </features>
   </feature-spec>
   <feature-spec name="socket-binding-group">
     <references>
       <reference spot="interface">
-        <!-- <path parameter="default-interface"/> -->
+        <path parameter="default-interface"/>
       </reference>
     </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
     </parameters>
-    <feature spec="socket-binding" required="true" unbounded="true" spot="socket-binding"/>
+    <features>
+      <feature spec="socket-binding" required="true" unbounded="true" spot="socket-binding"/>
+    </features>
   </feature-spec>
   <feature-spec name="socket-binding">
     <references>
@@ -94,14 +111,15 @@
       <reference spot="interface" nillable="true"/>
     </references>
     <parameters>
-      <!--  <parameter name="name" feature-id="true"/> -->
-      <parameter name="name"/>
+      <parameter name="name" feature-id="true"/>
       <parameter name="port"/>
     </parameters>
   </feature-spec>
 
   <feature-spec name="server-groups">
-    <feature spec="server-group" required="true" unbounded="true" spot="server-group"/>
+    <features>
+      <feature spec="server-group" required="true" unbounded="true" spot="server-group"/>
+    </features>
   </feature-spec>
   <feature-spec name="server-group">
     <references>

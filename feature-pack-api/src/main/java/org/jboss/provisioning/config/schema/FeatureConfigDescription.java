@@ -72,11 +72,11 @@ public class FeatureConfigDescription {
         return ConfigRef.create(path, values);
     }
 
-    public ConfigRef getConfigRef(SchemaPath path, boolean required, FeatureConfig config) throws ProvisioningDescriptionException {
-        final String[] values = new String[path.length()];
+    public ConfigRef getConfigRef(SchemaPath path, String[] params, boolean required, FeatureConfig config) throws ProvisioningDescriptionException {
+        final String[] values = new String[params.length];
         int i = 0;
         while(i < values.length) {
-            final String value = config.getParameterValue(path.getName(i), required);
+            final String value = config.getParameterValue(params[i], required);
             if(value == null) {
                 return null;
             }

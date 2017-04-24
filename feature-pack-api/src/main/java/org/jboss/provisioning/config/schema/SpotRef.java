@@ -17,30 +17,26 @@
 
 package org.jboss.provisioning.config.schema;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Alexey Loubyansky
  */
 public class SpotRef {
 
-    public static SpotRef create(String spot, boolean nillable) {
-        return new SpotRef(spot, nillable);
+    public static SpotRef create(String spot, boolean nillable, String[] pathParams) {
+        return new SpotRef(spot, nillable, pathParams);
     }
 
     final String spot;
     final boolean nillable;
+    final String[] pathParams;
 
-    private SpotRef(String spot, boolean nillable) {
+    private SpotRef(String spot, boolean nillable, String[] pathParams) {
         this.spot = spot;
         this.nillable = nillable;
-    }
-
-    public String getSpot() {
-        return spot;
-    }
-
-    public boolean isNillable() {
-        return nillable;
+        this.pathParams = pathParams;
     }
 
     @Override
@@ -48,6 +44,14 @@ public class SpotRef {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(spot)
         .append(" nillable=").append(nillable);
+        if(pathParams != null && pathParams.length > 0) {
+            buf.append(" path-params=").append(pathParams[0]);
+            if (pathParams.length > 1) {
+                for (int i = 1; i < pathParams.length; ++i) {
+                    buf.append(',').append(pathParams[i]);
+                }
+            }
+        }
         return buf.append(']').toString();
     }
 
@@ -56,6 +60,7 @@ public class SpotRef {
         final int prime = 31;
         int result = 1;
         result = prime * result + (nillable ? 1231 : 1237);
+        result = prime * result + Arrays.hashCode(pathParams);
         result = prime * result + ((spot == null) ? 0 : spot.hashCode());
         return result;
     }
@@ -70,6 +75,8 @@ public class SpotRef {
             return false;
         SpotRef other = (SpotRef) obj;
         if (nillable != other.nillable)
+            return false;
+        if (!Arrays.equals(pathParams, other.pathParams))
             return false;
         if (spot == null) {
             if (other.spot != null)

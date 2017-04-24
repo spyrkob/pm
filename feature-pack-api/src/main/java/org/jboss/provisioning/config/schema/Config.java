@@ -150,7 +150,9 @@ public class Config {
                 if (!config.descr.spotRefs.isEmpty()) {
                     for (SpotRef refSpot : config.descr.spotRefs) {
                         final FeatureConfigDescription refDescr = this.schema.getDescription(refSpot.spot);
-                        final ConfigRef ref = config.descr.getConfigRef(refDescr.path, !refSpot.nillable, config.config);
+                        final ConfigRef ref = config.descr.getConfigRef(refDescr.path,
+                                refSpot.pathParams == null ? refDescr.path.spots : refSpot.pathParams,
+                                        !refSpot.nillable, config.config);
                         if (ref != null) {
                             final ConfiguredFeature dependency = refs.get(ref);
                             if (dependency == null) {
@@ -208,7 +210,7 @@ public class Config {
                 return;
             }
             if (feature.descr.parentPath != null) {
-                final ConfigRef parentRef = feature.descr.getConfigRef(feature.descr.parentPath, true, feature.config);
+                final ConfigRef parentRef = feature.descr.getConfigRef(feature.descr.parentPath, feature.descr.parentPath.spots, true, feature.config);
                 feature.parent = refs.get(parentRef);
                 if (feature.parent == null) {
                     final StringBuilder buf = new StringBuilder();

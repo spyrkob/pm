@@ -16,8 +16,10 @@
  */
 package org.jboss.provisioning.xml;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         FEATURE_SPEC("feature-spec"),
         PARAMETERS("parameters"),
         PARAMETER("parameter"),
+        PATH("path"),
         REFERENCES("references"),
         REFERENCE("reference"),
 
@@ -111,6 +114,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         NILLABLE("nillable"),
         NS("ns"),
         OPTIONAL("optional"),
+        PARAMETER("parameter"),
         REQUIRED("required"),
         SPEC("spec"),
         SPOT("spot"),
@@ -263,6 +267,32 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                         case PARAMETERS:
                             parseParameters(reader, specBuilder);
                             break;
+                        case FEATURES:
+                            parseFeatures(reader, specBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseFeatures(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
                         case FEATURE:
                             specBuilder.addFeature(parseFeature(reader));
                             break;
@@ -324,8 +354,56 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         if(spot == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPOT));
         }
-        specBuilder.addReference(SpotRef.create(spot, nillable));
+        List<String> pathParams = null;
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    specBuilder.addReference(SpotRef.create(spot, nillable, pathParams == null ? null : pathParams.toArray(new String[pathParams.size()])));
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case PATH:
+                            if(pathParams == null) {
+                                pathParams = Collections.singletonList(parsePathParameter(reader));
+                            } else {
+                                if(pathParams.size() == 1) {
+                                    pathParams = new ArrayList<>(pathParams);
+                                }
+                                pathParams.add(parsePathParameter(reader));
+                            }
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private String parsePathParameter(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String param = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case PARAMETER:
+                    param = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(param == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.PARAMETER));
+        }
         ParsingUtils.parseNoContent(reader);
+        return param;
     }
 
     private void parseParameters(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
