@@ -67,7 +67,7 @@ public class Config {
                 final ConfigRef configRef;
                 configRef = ConfigRef.create(config.spot, configId);
                 if (refs.containsKey(configRef)) {
-                    throw new ProvisioningDescriptionException("Config with id " + configRef + " already registered");
+                    throw new ProvisioningDescriptionException("Duplicate feature ID " + configRef);
                 }
                 configured = new ConfiguredFeature(configRef, configDescr, config);
                 switch (refs.size()) {
@@ -214,7 +214,15 @@ public class Config {
                     final ConfigRef parentRef = ConfigRef.create(feature.descr.parentSpot, parentId);
                     feature.parent = refs.get(parentRef);
                     if(feature.parent == null) {
-                        throw new ProvisioningDescriptionException("Failed to resolve parent " + parentRef + " for " + feature.id);
+                        final StringBuilder buf = new StringBuilder();
+                        buf.append("Failed to resolve parent ").append(parentRef).append(" for ");
+                        if(feature.id == null) {
+                            buf.append(feature.descr.spot);
+                        } else {
+                            buf.append(feature.id);
+                        }
+                        buf.append(" configuration");
+                        throw new ProvisioningDescriptionException(buf.toString());
                     }
                 } else {
                     final FeatureConfigDescription parentDescr = schema.getDescription(feature.descr.parentSpot);

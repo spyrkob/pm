@@ -46,6 +46,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
 
         CONFIG_SCHEMA("config-schema"),
         FEATURE("feature"),
+        FEATURES("features"),
         FEATURE_SPEC("feature-spec"),
         PARAMETERS("parameters"),
         PARAMETER("parameter"),
@@ -108,7 +109,6 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         OPTIONAL("optional"),
         PARENT_REF("parent-ref"),
         REQUIRED("required"),
-        ROOT("root"),
         SPEC("spec"),
         SPOT("spot"),
         SPOT_REF("spot-ref"),
@@ -165,6 +165,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     public void readElement(XMLExtendedStreamReader reader, ConfigSchema.Builder schemaBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
 
+        boolean parsedFeatures = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -175,6 +176,39 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                     switch (element) {
                         case FEATURE_SPEC:
                             parseFeatureSpec(reader, schemaBuilder);
+                            break;
+                        case FEATURES:
+                            if(parsedFeatures) {
+                                throw new XMLStreamException(Element.FEATURES + " may appear only once");
+                            }
+                            parsedFeatures = true;
+                            parseFeatures(reader, schemaBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseFeatures(XMLExtendedStreamReader reader, ConfigSchema.Builder schemaBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case FEATURE:
+                            schemaBuilder.addFeature(parseFeature(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -192,15 +226,11 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     private void parseFeatureSpec(XMLExtendedStreamReader reader, ConfigSchema.Builder schemaBuilder) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String specName = null;
-        boolean root = false;
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case NAME:
                     specName = reader.getAttributeValue(i);
-                    break;
-                case ROOT:
-                    root = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -216,7 +246,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     try {
-                        schemaBuilder.add(specBuilder, root);
+                        schemaBuilder.addSpec(specBuilder);
                     } catch (ProvisioningDescriptionException e) {
                         throw new XMLStreamException("Failed to add a feature-spec", e);
                     }

@@ -19,7 +19,11 @@
 -->
 <config-schema xmlns="urn:wildfly:pm-config-schema:1.0">
 
-  <feature-spec name="domain" root="true">
+  <features>
+    <feature spec="domain" required="true"/>
+  </features>
+  
+  <feature-spec name="domain">
     <feature spec="system-properties" required="false"/>
     <feature spec="management"/>
     <feature spec="profiles"/>
@@ -50,9 +54,13 @@
     <parameters>
       <parameter name="name" feature-id="true"/>
     </parameters>
-    <feature spec="subsystem" required="true" unbounded="true"/>
+    <feature spec="subsystem" required="true" unbounded="true" spot="subsystem"/>
   </feature-spec>
-  <feature-spec name="subsystem"/>
+  <feature-spec name="subsystem">
+    <parameters>
+      <parameter name="profile" parent-ref="profile"/>
+    </parameters>
+  </feature-spec>
 
   <feature-spec name="interfaces">
     <feature spec="interface" required="true" unbounded="true" spot="interface"/>
@@ -76,6 +84,7 @@
   <feature-spec name="socket-binding">
     <parameters>
       <parameter name="socket-binding-group" parent-ref="socket-binding-group" />
+      <!--  <parameter name="name" feature-id="true"/> -->
       <parameter name="name"/>
       <parameter name="port"/>
     </parameters>

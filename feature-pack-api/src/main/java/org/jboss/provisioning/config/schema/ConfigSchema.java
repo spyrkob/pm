@@ -33,7 +33,7 @@ public class ConfigSchema {
 
     public static class Builder {
 
-        private XmlFeatureSpec root;
+        private List<XmlFeatureOccurence> rootOccurs = Collections.emptyList();
         private Map<String, XmlFeatureSpec> xmlSpecs = Collections.emptyMap();
 
         private int noIdCount;
@@ -44,17 +44,20 @@ public class ConfigSchema {
         private Builder() {
         }
 
-        public Builder add(XmlFeatureSpec spec) throws ProvisioningDescriptionException {
-            return add(spec, false);
+        public Builder addFeature(XmlFeatureOccurence feature) {
+            switch(rootOccurs.size()) {
+                case 0:
+                    rootOccurs = Collections.singletonList(feature);
+                    break;
+                case 1:
+                    rootOccurs = new ArrayList<>(rootOccurs);
+                default:
+                    rootOccurs.add(feature);
+            }
+            return this;
         }
 
-        public Builder add(XmlFeatureSpec spec, boolean root) throws ProvisioningDescriptionException {
-            if(root) {
-                if(this.root != null) {
-                    throw new ProvisioningDescriptionException("Can't set schema root to " + spec.getName() + ", the root has already been set to " + this.root.getName());
-                }
-                this.root = spec;
-            }
+        public Builder addSpec(XmlFeatureSpec spec) throws ProvisioningDescriptionException {
             switch(xmlSpecs.size()) {
                 case 0:
                     xmlSpecs = Collections.singletonMap(spec.getName(), spec);
@@ -69,18 +72,15 @@ public class ConfigSchema {
 
         public ConfigSchema build() throws ProvisioningDescriptionException {
 
-            if(root == null) {
-                throw new ProvisioningDescriptionException("The schema is missing root feature-spec");
-            }
-            if(root.features.isEmpty()) {
-                throw new ProvisioningDescriptionException("Root spec doesn't include any feature");
+            if(rootOccurs.isEmpty()) {
+                throw new ProvisioningDescriptionException("The schema does not include root features");
             }
 
-            if(root.features.size() == 1) {
-                roots = Collections.singletonList(buildFeatureSpec(null, root.features.values().iterator().next()));
+            if(rootOccurs.size() == 1) {
+                roots = Collections.singletonList(buildFeatureSpec(null, rootOccurs.iterator().next()));
             } else {
-                final List<FeatureConfigDescription> tmp = new ArrayList<>(root.features.size());
-                for (XmlFeatureOccurence occurence : root.features.values()) {
+                final List<FeatureConfigDescription> tmp = new ArrayList<>(rootOccurs.size());
+                for (XmlFeatureOccurence occurence : rootOccurs) {
                     tmp.add(buildFeatureSpec(null, occurence));
                 }
                 roots = Collections.unmodifiableList(tmp);
