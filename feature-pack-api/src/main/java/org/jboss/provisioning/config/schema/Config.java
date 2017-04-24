@@ -147,8 +147,8 @@ public class Config {
                     throw new ProvisioningDescriptionException(buf.toString());
                 }
 
-                if (!config.descr.refParams.isEmpty()) {
-                    for(String refSpot : config.descr.refParams.values()) {
+                if (!config.descr.spotRefs.isEmpty()) {
+                    for(String refSpot : config.descr.spotRefs) {
                         final FeatureConfigDescription refDescr = this.schema.getDescription(refSpot);
                         final ConfigRef ref = config.descr.getConfigRef(refDescr.path, config.config);
                       final ConfiguredFeature dependency = refs.get(ref);

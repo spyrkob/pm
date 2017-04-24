@@ -20,6 +20,7 @@ package org.jboss.provisioning.config.schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
@@ -38,8 +39,7 @@ public class FeatureConfigDescription {
     final List<FeatureConfigDescription> features;
     final Map<String, FeatureParameter> params;
     final String idParam;
-    final String parentRefParam;
-    final Map<String, String> refParams;
+    final Set<String> spotRefs;
 
     FeatureConfigDescription(String spot, String parentSpot, SchemaPath schemaPath, SchemaPath parentPath,
             List<FeatureConfigDescription> features, XmlFeatureSpec xmlSpec, XmlFeatureOccurence occurence) {
@@ -53,8 +53,7 @@ public class FeatureConfigDescription {
 
         params = xmlSpec.parameters.size() > 1 ? Collections.unmodifiableMap(xmlSpec.parameters) : xmlSpec.parameters;
         idParam = xmlSpec.idParam;
-        parentRefParam = xmlSpec.parentRefParam;
-        refParams = xmlSpec.refParams.size() > 1 ? Collections.unmodifiableMap(xmlSpec.refParams) : xmlSpec.refParams;
+        spotRefs = xmlSpec.dependencies.size() > 1 ? Collections.unmodifiableSet(xmlSpec.dependencies) : xmlSpec.dependencies;
     }
 
     public ConfigRef getConfigRef(FeatureConfig config) throws ProvisioningDescriptionException {

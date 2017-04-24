@@ -19,8 +19,11 @@ package org.jboss.provisioning.config.schema;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
@@ -32,8 +35,7 @@ public class XmlFeatureSpec {
     final String name;
     Map<String, FeatureParameter> parameters = Collections.emptyMap();
     String idParam;
-    String parentRefParam;
-    Map<String, String> refParams = Collections.emptyMap();
+    Set<String> dependencies = Collections.emptySet();
     Map<String, XmlFeatureOccurence> features = Collections.emptyMap();
 
     public XmlFeatureSpec(String name) {
@@ -56,29 +58,24 @@ public class XmlFeatureSpec {
         }
     }
 
+    public void addDependency(String spot) {
+        switch (dependencies.size()) {
+            case 0:
+                dependencies = Collections.singleton(spot);
+                break;
+            case 1:
+                dependencies = new HashSet<>(dependencies);
+            default:
+                dependencies.add(spot);
+        }
+    }
+
     public void addParameter(FeatureParameter param) throws ProvisioningDescriptionException {
         if (param.id) {
             if (idParam != null) {
                 throw new ProvisioningDescriptionException("Can't overwrite ID parameter " + idParam + " with " + param.name);
             }
             idParam = param.name;
-        }
-        if (param.isRef()) {
-            switch (refParams.size()) {
-                case 0:
-                    refParams = Collections.singletonMap(param.getName(), param.getRef());
-                    break;
-                case 1:
-                    refParams = new HashMap<>(refParams);
-                default:
-                    refParams.put(param.getName(), param.getRef());
-            }
-            if(param.parentRef) {
-                if(parentRefParam != null) {
-                    throw new ProvisioningDescriptionException("Can't overwrite parent reference parameter " + parentRefParam + " with " + param.name);
-                }
-                parentRefParam = param.name;
-            }
         }
         switch (parameters.size()) {
             case 0:

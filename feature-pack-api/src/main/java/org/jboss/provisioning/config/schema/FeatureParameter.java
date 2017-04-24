@@ -24,36 +24,28 @@ package org.jboss.provisioning.config.schema;
 public class FeatureParameter {
 
     public static FeatureParameter create(String name) {
-        return new FeatureParameter(name, false, null, false, null);
+        return new FeatureParameter(name, false, null);
     }
 
     public static FeatureParameter create(String name, String value) {
-        return new FeatureParameter(name, false, null, false, value);
+        return new FeatureParameter(name, false, value);
     }
 
     public static FeatureParameter createId(String name) {
-        return new FeatureParameter(name, true, null, false, null);
+        return new FeatureParameter(name, true, null);
     }
 
-    public static FeatureParameter createRef(String name, String featureId) {
-        return new FeatureParameter(name, true, featureId, false, null);
-    }
-
-    public static FeatureParameter create(String name, boolean id, String ref, boolean parentRef, String defaultValue) {
-        return new FeatureParameter(name, id, ref, parentRef, defaultValue);
+    public static FeatureParameter create(String name, boolean id, String defaultValue) {
+        return new FeatureParameter(name, id, defaultValue);
     }
 
     final String name;
     final boolean id;
-    final String ref;
-    final boolean parentRef;
     final String defaultValue;
 
-    private FeatureParameter(String name, boolean id, String ref, boolean parentRef, String defaultValue) {
+    private FeatureParameter(String name, boolean id, String defaultValue) {
         this.name = name;
         this.id = id;
-        this.ref = ref;
-        this.parentRef = parentRef;
         this.defaultValue = defaultValue;
     }
 
@@ -63,18 +55,6 @@ public class FeatureParameter {
 
     public boolean isId() {
         return id;
-    }
-
-    public boolean isRef() {
-        return ref != null;
-    }
-
-    public boolean isParentRef() {
-        return parentRef;
-    }
-
-    public String getRef() {
-        return ref;
     }
 
     public String getDefaultValue() {
@@ -88,8 +68,6 @@ public class FeatureParameter {
         result = prime * result + ((defaultValue == null) ? 0 : defaultValue.hashCode());
         result = prime * result + (id ? 1231 : 1237);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + (parentRef ? 1231 : 1237);
-        result = prime * result + ((ref == null) ? 0 : ref.hashCode());
         return result;
     }
 
@@ -113,13 +91,6 @@ public class FeatureParameter {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
-            return false;
-        if (parentRef != other.parentRef)
-            return false;
-        if (ref == null) {
-            if (other.ref != null)
-                return false;
-        } else if (!ref.equals(other.ref))
             return false;
         return true;
     }
