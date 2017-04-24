@@ -39,7 +39,7 @@ public class FeatureConfigDescription {
     final List<FeatureConfigDescription> features;
     final Map<String, FeatureParameter> params;
     final String idParam;
-    final Set<String> spotRefs;
+    final Set<SpotRef> spotRefs;
 
     FeatureConfigDescription(String spot, String parentSpot, SchemaPath schemaPath, SchemaPath parentPath,
             List<FeatureConfigDescription> features, XmlFeatureSpec xmlSpec, XmlFeatureOccurence occurence) {
@@ -53,7 +53,7 @@ public class FeatureConfigDescription {
 
         params = xmlSpec.parameters.size() > 1 ? Collections.unmodifiableMap(xmlSpec.parameters) : xmlSpec.parameters;
         idParam = xmlSpec.idParam;
-        spotRefs = xmlSpec.dependencies.size() > 1 ? Collections.unmodifiableSet(xmlSpec.dependencies) : xmlSpec.dependencies;
+        spotRefs = xmlSpec.references.size() > 1 ? Collections.unmodifiableSet(xmlSpec.references) : xmlSpec.references;
     }
 
     public ConfigRef getConfigRef(FeatureConfig config) throws ProvisioningDescriptionException {
@@ -72,11 +72,15 @@ public class FeatureConfigDescription {
         return ConfigRef.create(path, values);
     }
 
-    public ConfigRef getConfigRef(SchemaPath path, FeatureConfig config) throws ProvisioningDescriptionException {
+    public ConfigRef getConfigRef(SchemaPath path, boolean required, FeatureConfig config) throws ProvisioningDescriptionException {
         final String[] values = new String[path.length()];
         int i = 0;
         while(i < values.length) {
-            values[i] = config.getParameterValue(path.getName(i++), true);
+            final String value = config.getParameterValue(path.getName(i), required);
+            if(value == null) {
+                return null;
+            }
+            values[i++] = value;
         }
         return ConfigRef.create(path, values);
     }

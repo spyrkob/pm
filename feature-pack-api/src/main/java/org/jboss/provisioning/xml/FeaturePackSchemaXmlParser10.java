@@ -26,6 +26,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.schema.SpotRef;
 import org.jboss.provisioning.config.schema.XmlFeatureOccurence;
 import org.jboss.provisioning.config.schema.FeatureParameter;
 import org.jboss.provisioning.config.schema.ConfigSchema;
@@ -45,13 +46,13 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     enum Element implements XmlNameProvider {
 
         CONFIG_SCHEMA("config-schema"),
-        DEPENDENCIES("dependencies"),
-        DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURES("features"),
         FEATURE_SPEC("feature-spec"),
         PARAMETERS("parameters"),
         PARAMETER("parameter"),
+        REFERENCES("references"),
+        REFERENCE("reference"),
 
         // default unknown element
         UNKNOWN(null);
@@ -107,6 +108,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         DEFAULT("default"),
         FEATURE_ID("feature-id"),
         NAME("name"),
+        NILLABLE("nillable"),
         NS("ns"),
         OPTIONAL("optional"),
         REQUIRED("required"),
@@ -255,8 +257,8 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case DEPENDENCIES:
-                            parseDependencies(reader, specBuilder);
+                        case REFERENCES:
+                            parseReferences(reader, specBuilder);
                             break;
                         case PARAMETERS:
                             parseParameters(reader, specBuilder);
@@ -277,7 +279,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDependencies(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
+    private void parseReferences(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -287,8 +289,8 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case DEPENDENCY:
-                            parseDependency(reader, specBuilder);
+                        case REFERENCE:
+                            parseReference(reader, specBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -303,13 +305,17 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDependency(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
+    private void parseReference(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
         String spot = null;
+        boolean nillable = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case SPOT:
                     spot = reader.getAttributeValue(i);
+                    break;
+                case NILLABLE:
+                    nillable = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
@@ -318,7 +324,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         if(spot == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPOT));
         }
-        specBuilder.addDependency(spot);
+        specBuilder.addReference(SpotRef.create(spot, nillable));
         ParsingUtils.parseNoContent(reader);
     }
 

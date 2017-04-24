@@ -57,9 +57,9 @@
     <feature spec="subsystem" required="true" unbounded="true" spot="subsystem"/>
   </feature-spec>
   <feature-spec name="subsystem">
-    <dependencies>
-      <dependency spot="profile"/>
-    </dependencies>
+    <references>
+      <reference spot="profile"/>
+    </references>
     <parameters>
       <parameter name="profile"/>
     </parameters>
@@ -78,18 +78,21 @@
     <feature spec="socket-binding-group" required="true" unbounded="true" spot="socket-binding-group"/>
   </feature-spec>
   <feature-spec name="socket-binding-group">
-    <dependencies>
-      <dependency spot="interface"/>
-    </dependencies>
+    <references>
+      <reference spot="interface">
+        <!-- <path parameter="default-interface"/> -->
+      </reference>
+    </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
     </parameters>
     <feature spec="socket-binding" required="true" unbounded="true" spot="socket-binding"/>
   </feature-spec>
   <feature-spec name="socket-binding">
-    <dependencies>
-      <dependency spot="socket-binding-group"/>
-    </dependencies>
+    <references>
+      <reference spot="socket-binding-group"/>
+      <reference spot="interface" nillable="true"/>
+    </references>
     <parameters>
       <!--  <parameter name="name" feature-id="true"/> -->
       <parameter name="name"/>
@@ -101,12 +104,10 @@
     <feature spec="server-group" required="true" unbounded="true" spot="server-group"/>
   </feature-spec>
   <feature-spec name="server-group">
-    <dependencies>
-      <dependency spot="profile"/>
-      <dependency spot="socket-binding-group">
-        <!-- <parameter name="socket-group"/> -->
-      </dependency>
-    </dependencies>
+    <references>
+      <reference spot="profile"/>
+      <reference spot="socket-binding-group"/>
+    </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
     </parameters>

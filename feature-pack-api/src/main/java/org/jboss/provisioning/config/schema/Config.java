@@ -148,40 +148,26 @@ public class Config {
                 }
 
                 if (!config.descr.spotRefs.isEmpty()) {
-                    for(String refSpot : config.descr.spotRefs) {
-                        final FeatureConfigDescription refDescr = this.schema.getDescription(refSpot);
-                        final ConfigRef ref = config.descr.getConfigRef(refDescr.path, config.config);
-                      final ConfiguredFeature dependency = refs.get(ref);
-                      if (dependency == null) {
-                          final StringBuilder buf = new StringBuilder();
-                          if (config.id != null) {
-                              buf.append(config.id);
-                          } else {
-                              buf.append("Configuration of ").append(config.descr.path);
-                          }
-                          buf.append(" has unsatisfied dependency on ").append(ref);
-                          throw new ProvisioningDescriptionException(buf.toString());
-                      }
-                      lineUp(dependency);
+                    for (SpotRef refSpot : config.descr.spotRefs) {
+                        final FeatureConfigDescription refDescr = this.schema.getDescription(refSpot.spot);
+                        final ConfigRef ref = config.descr.getConfigRef(refDescr.path, !refSpot.nillable, config.config);
+                        if (ref != null) {
+                            final ConfiguredFeature dependency = refs.get(ref);
+                            if (dependency == null) {
+                                final StringBuilder buf = new StringBuilder();
+                                if (config.id != null) {
+                                    buf.append(config.id);
+                                } else {
+                                    buf.append("Configuration of ").append(config.descr.path);
+                                }
+                                buf.append(" has unsatisfied dependency on ").append(ref);
+                                throw new ProvisioningDescriptionException(buf.toString());
+                            }
+                            lineUp(dependency);
+                        }
                     }
-//                    for (Map.Entry<String, String> entry : config.descr.refParams.entrySet()) {
-//                        final String featureId = config.config.getParameterValue(entry.getKey(), true);
-//                        final ConfigRef ref = ConfigRef.create(entry.getValue(), featureId);
-//                        final ConfiguredFeature dependency = refs.get(ref);
-//                        if (dependency == null) {
-//                            final StringBuilder buf = new StringBuilder();
-//                            if (config.id != null) {
-//                                buf.append(config.id);
-//                            } else {
-//                                buf.append("Configuration of ").append(config.descr.path);
-//                            }
-//                            buf.append(" has unsatisfied dependency on ").append(ref);
-//                            throw new ProvisioningDescriptionException(buf.toString());
-//                        }
-//                        lineUp(dependency);
-//                    }
                 }
-            } else if(!config.config.params.isEmpty()) {
+            } else if (!config.config.params.isEmpty()) {
                 final StringBuilder buf = new StringBuilder();
                 if (config.id == null) {
                     buf.append(config.descr.path);
@@ -222,7 +208,7 @@ public class Config {
                 return;
             }
             if (feature.descr.parentPath != null) {
-                final ConfigRef parentRef = feature.descr.getConfigRef(feature.descr.parentPath, feature.config);
+                final ConfigRef parentRef = feature.descr.getConfigRef(feature.descr.parentPath, true, feature.config);
                 feature.parent = refs.get(parentRef);
                 if (feature.parent == null) {
                     final StringBuilder buf = new StringBuilder();
