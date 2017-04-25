@@ -27,6 +27,7 @@ import org.jboss.provisioning.config.schema.ConfigId;
 import org.jboss.provisioning.config.schema.ConfigSchema;
 import org.jboss.provisioning.config.schema.FeatureConfig;
 import org.jboss.provisioning.config.schema.ConfigPath;
+import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.jboss.provisioning.xml.FeaturePackSchemaXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,9 +52,7 @@ public class SandboxTestCase {
                 .addParameter("value", "val1")
                 .build())
         .add(FeatureConfig.forName("access-control"))
-        .add(FeatureConfig.builder("profile")
-                .addParameter("name", "default")
-                .build())
+        .add(featureConfig("default-profile-feature.xml"))
         .add(FeatureConfig.builder("subsystem")
                 .addParameter("name", "logging")
                 .addParameter("profile", "default")
@@ -62,9 +61,7 @@ public class SandboxTestCase {
                 .addParameter("name", "jmx")
                 .addParameter("profile", "default")
                 .build())
-        .add(FeatureConfig.builder("profile")
-                .addParameter("name", "ha")
-                .build())
+        .add(featureConfig("ha-profile-feature.xml"))
         .add(FeatureConfig.builder("subsystem")
                 .addDependency(ConfigId.create(ConfigPath.create("profile", "subsystem"), "ha", "logging"))
                 .addParameter("name", "jmx")
@@ -112,6 +109,13 @@ public class SandboxTestCase {
                 .addParameter("profile", "ha")
                 .build())
         .build();
+    }
+
+    private static FeatureConfig featureConfig(String xml) throws Exception {
+        final Path path = getResource("xml/feature-config/" + xml);
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            return FeatureConfigXmlParser.getInstance().parse(reader);
+        }
     }
 
     private static Path getResource(String path) {

@@ -17,7 +17,9 @@
 
 package org.jboss.provisioning.config.schema;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -27,6 +29,38 @@ public class ConfigId {
 
     public static ConfigId create(ConfigPath path, String... values) {
         return new ConfigId(path, values);
+    }
+
+    public static ConfigId fromString(String str) {
+        if(str == null) {
+            throw new IllegalArgumentException("str is null");
+        }
+        if(str.isEmpty()) {
+            throw new IllegalArgumentException("str is empty");
+        }
+
+        final List<String> names = new ArrayList<>();
+        final List<String> values = new ArrayList<>();
+        int c = 0;
+        int i = str.indexOf('/');
+        while(i > 0) {
+            final int e = str.indexOf('=', c + 1);
+            if(e > i || e < 0) {
+                throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+            }
+            names.add(str.substring(c, e));
+            values.add(str.substring(e + 1, i));
+            c = i + 1;
+            i = str.indexOf('/', c);
+        }
+        final int e = str.indexOf('=', c + 1);
+        if(e < 0 || e == str.length() - 1) {
+            throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+        }
+        names.add(str.substring(c, e));
+        values.add(str.substring(e + 1));
+
+        return ConfigId.create(ConfigPath.create(names.toArray(new String[names.size()])), values.toArray(new String[values.size()]));
     }
 
     final ConfigPath path;
@@ -43,16 +77,15 @@ public class ConfigId {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[');
         if(values.length > 0) {
             buf.append(path.names[0]).append('=').append(values[0]);
             if(values.length > 1) {
                 for(int i = 1; i < values.length; ++i) {
-                    buf.append(',').append(path.names[i]).append('=').append(values[i]);
+                    buf.append('/').append(path.names[i]).append('=').append(values[i]);
                 }
             }
         }
-        return buf.append(']').toString();
+        return buf.toString();
     }
 
     @Override

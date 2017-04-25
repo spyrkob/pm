@@ -227,7 +227,7 @@ public class Config {
                 feature.parent = configsById.get(parentId);
                 if (feature.parent == null) {
                     final StringBuilder buf = new StringBuilder();
-                    buf.append("Failed to resolve parent ").append(parentId).append(" for ");
+                    buf.append("Failed to resolve parent feature ").append(parentId).append(" of ");
                     if (feature.id == null) {
                         buf.append(feature.descr.path);
                     } else {

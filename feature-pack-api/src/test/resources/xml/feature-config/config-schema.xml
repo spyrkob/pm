@@ -41,7 +41,7 @@
   </feature-spec>
   <feature-spec name="system-property">
     <parameters>
-      <parameter name="name"/>
+      <parameter name="name" feature-id="true"/>
       <parameter name="value"/>
     </parameters>
   </feature-spec>

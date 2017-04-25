@@ -81,15 +81,23 @@ public class FeatureConfig {
 
     public static class Builder {
 
-        private final String configName;
+        private String configName;
         private Map<String, String> params = Collections.emptyMap();
         private Set<Dependency> dependencies = Collections.emptySet();
+
+        private Builder() {
+        }
 
         private Builder(String configName) {
             this.configName = configName;
         }
 
-        public Builder addParameter(String name, String value) throws ProvisioningDescriptionException {
+        public Builder setName(String configName) {
+            this.configName = configName;
+            return this;
+        }
+
+        public Builder addParameter(String name, String value) {
             switch(params.size()) {
                 case 0:
                     params = Collections.singletonMap(name, value);
@@ -102,11 +110,11 @@ public class FeatureConfig {
             return this;
         }
 
-        public Builder addDependency(ConfigId configId) throws ProvisioningDescriptionException {
+        public Builder addDependency(ConfigId configId) {
             return addDependency(configId, false);
         }
 
-        public Builder addDependency(ConfigId configId, boolean optional) throws ProvisioningDescriptionException {
+        public Builder addDependency(ConfigId configId, boolean optional) {
             switch(dependencies.size()) {
                 case 0:
                     dependencies = Collections.singleton(new Dependency(configId, optional));
@@ -122,6 +130,10 @@ public class FeatureConfig {
         public FeatureConfig build() throws ProvisioningDescriptionException {
             return new FeatureConfig(this);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static Builder builder(String spot) {
