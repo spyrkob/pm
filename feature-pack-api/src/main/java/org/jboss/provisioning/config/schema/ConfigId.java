@@ -39,13 +39,25 @@ public class ConfigId {
             throw new IllegalArgumentException("str is empty");
         }
 
+        int i = str.indexOf('/');
+        if(i == 0) {
+            throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+        }
+
+        if(i < 0) {
+            final int e = str.indexOf('=');
+            if(e <= 0 || e == str.length() - 1) {
+                throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+            }
+            return ConfigId.create(ConfigPath.create(new String[]{str.substring(0, e)}), new String[]{str.substring(e + 1)});
+        }
+
         final List<String> names = new ArrayList<>();
         final List<String> values = new ArrayList<>();
         int c = 0;
-        int i = str.indexOf('/');
-        while(i > 0) {
-            final int e = str.indexOf('=', c + 1);
-            if(e > i || e < 0) {
+        while (i > 0) {
+            final int e = str.indexOf('=', c);
+            if (e < 0 || e == c || e >= i - 1) {
                 throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
             }
             names.add(str.substring(c, e));
@@ -53,14 +65,15 @@ public class ConfigId {
             c = i + 1;
             i = str.indexOf('/', c);
         }
-        final int e = str.indexOf('=', c + 1);
-        if(e < 0 || e == str.length() - 1) {
+        final int e = str.indexOf('=', c);
+        if (e < 0 || e == c || e == str.length() - 1) {
             throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
         }
         names.add(str.substring(c, e));
         values.add(str.substring(e + 1));
 
-        return ConfigId.create(ConfigPath.create(names.toArray(new String[names.size()])), values.toArray(new String[values.size()]));
+        return ConfigId.create(ConfigPath.create(names.toArray(new String[names.size()])),
+                values.toArray(new String[values.size()]));
     }
 
     final ConfigPath path;

@@ -17,9 +17,11 @@
 
 package org.jboss.provisioning.config.schema;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,133 +33,168 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureConfig {
 
-    public static class Dependency {
-        final ConfigId configId;
-        final boolean optional;
+    public interface Dependency {
 
-        private Dependency(ConfigId configId, boolean optional) {
-            this.configId = configId;
+        ConfigId getConfigId() throws ProvisioningDescriptionException;
+
+        boolean isOptional();
+    }
+
+    private class ParameterizedDependency implements Dependency {
+
+        private final ConfigPath path;
+        private final String[] values;
+        private final boolean optional;
+        private final ConfigId configId;
+
+
+        private ParameterizedDependency(String path, boolean optional) {
+
+            if(path == null) {
+                throw new IllegalArgumentException("str is null");
+            }
+            if(path.isEmpty()) {
+                throw new IllegalArgumentException("str is empty");
+            }
+
+            int i = path.indexOf('/');
+            if(i == 0) {
+                throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+            }
+
+            if (i < 0) {
+                final int e = path.indexOf('=');
+                if (e <= 0 || e == path.length() - 1) {
+                    throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+                }
+                final String value = path.substring(e + 1);
+                if(value.charAt(0) == '$') {
+                    configId = null;
+                    this.values = new String[] { value };
+                    this.path = ConfigPath.create(new String[] { path.substring(0, e) });
+                } else {
+                    configId = ConfigId.create(ConfigPath.create(new String[] { path.substring(0, e) }), new String[]{value});
+                    this.values = null;
+                    this.path = null;
+                }
+            } else {
+                boolean includesParams = false;
+                final List<String> names = new ArrayList<>();
+                final List<String> values = new ArrayList<>();
+                int c = 0;
+                while (i > 0) {
+                    final int e = path.indexOf('=', c);
+                    if (e < 0 || e == c || e >= i - 1) {
+                        throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+                    }
+                    names.add(path.substring(c, e));
+                    if(includesParams) {
+                        values.add(path.substring(e + 1, i));
+                    } else {
+                        final String value = path.substring(e + 1, i);
+                        includesParams = value.charAt(0) == '$';
+                        values.add(value);
+                    }
+                    c = i + 1;
+                    i = path.indexOf('/', c);
+                }
+                final int e = path.indexOf('=', c);
+                if (e < 0 || e == c || e == path.length() - 1) {
+                    throw new IllegalArgumentException("The string doesn't follow format name=value(/name=value)*");
+                }
+                names.add(path.substring(c, e));
+                values.add(path.substring(e + 1));
+
+                if(includesParams) {
+                    this.configId = null;
+                    this.path = ConfigPath.create(names.toArray(new String[names.size()]));
+                    this.values = values.toArray(new String[values.size()]);
+                } else {
+                    this.configId = ConfigId.create(ConfigPath.create(names.toArray(new String[names.size()])), values.toArray(new String[values.size()]));
+                    this.path = null;
+                    this.values = null;
+                }
+            }
+
             this.optional = optional;
         }
 
         @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (optional ? 1231 : 1237);
-            result = prime * result + ((configId == null) ? 0 : configId.hashCode());
-            return result;
+        public ConfigId getConfigId() throws ProvisioningDescriptionException {
+            if(configId != null) {
+                return configId;
+            }
+            final String[] values = new String[this.values.length];
+            int i = 0;
+            while(i < values.length) {
+                final String value = this.values[i];
+                if(value.charAt(0) == '$') {
+                    values[i++] = getParameterValue(value.substring(1), true);
+                } else {
+                    values[i++] = value;
+                }
+            }
+            return ConfigId.create(path, values);
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            Dependency other = (Dependency) obj;
-            if (optional != other.optional)
-                return false;
-            if (configId == null) {
-                if (other.configId != null)
-                    return false;
-            } else if (!configId.equals(other.configId))
-                return false;
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder buf = new StringBuilder();
-            buf.append('[');
-            if(optional) {
-                buf.append("optional ");
-            }
-            return buf.append(configId).append(']').toString();
+        public boolean isOptional() {
+            return optional;
         }
     }
 
-    public static class Builder {
-
-        private String configName;
-        private Map<String, String> params = Collections.emptyMap();
-        private Set<Dependency> dependencies = Collections.emptySet();
-
-        private Builder() {
-        }
-
-        private Builder(String configName) {
-            this.configName = configName;
-        }
-
-        public Builder setName(String configName) {
-            this.configName = configName;
-            return this;
-        }
-
-        public Builder addParameter(String name, String value) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(name, value);
-                    break;
-                case 1:
-                    params = new HashMap<>(params);
-                default:
-                    params.put(name, value);
-            }
-            return this;
-        }
-
-        public Builder addDependency(ConfigId configId) {
-            return addDependency(configId, false);
-        }
-
-        public Builder addDependency(ConfigId configId, boolean optional) {
-            switch(dependencies.size()) {
-                case 0:
-                    dependencies = Collections.singleton(new Dependency(configId, optional));
-                    break;
-                case 1:
-                    dependencies = new LinkedHashSet<>(dependencies);
-                default:
-                    dependencies.add(new Dependency(configId, optional));
-            }
-            return this;
-        }
-
-        public FeatureConfig build() throws ProvisioningDescriptionException {
-            return new FeatureConfig(this);
-        }
+    public static FeatureConfig forName(String name) {
+        return new FeatureConfig(name);
     }
 
-    public static Builder builder() {
-        return new Builder();
+    String configName;
+    Map<String, String> params = Collections.emptyMap();
+    Set<Dependency> dependencies = Collections.emptySet();
+
+    public FeatureConfig() {
     }
 
-    public static Builder builder(String spot) {
-        return new Builder(spot);
-    }
-
-    public static FeatureConfig forName(String spot) {
-        return new FeatureConfig(spot);
-    }
-
-    final String configName;
-    final Map<String, String> params;
-    final Set<Dependency> dependencies;
-
-    private FeatureConfig(String configName) {
+    public FeatureConfig(String configName) {
         this.configName = configName;
-        this.params = Collections.emptyMap();
-        this.dependencies = Collections.emptySet();
     }
 
-    private FeatureConfig(Builder builder) {
-        this.configName = builder.configName;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
-        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableSet(builder.dependencies) : builder.dependencies;
+    public FeatureConfig setConfigName(String configName) {
+        this.configName = configName;
+        return this;
+    }
+
+    public FeatureConfig addParameter(String name, String value) {
+        switch(params.size()) {
+            case 0:
+                params = Collections.singletonMap(name, value);
+                break;
+            case 1:
+                params = new HashMap<>(params);
+            default:
+                params.put(name, value);
+        }
+        return this;
+    }
+
+    public FeatureConfig addDependency(final Dependency dependency) {
+        switch(dependencies.size()) {
+            case 0:
+                dependencies = Collections.singleton(dependency);
+                break;
+            case 1:
+                dependencies = new LinkedHashSet<>(dependencies);
+            default:
+                dependencies.add(dependency);
+        }
+        return this;
+    }
+
+    public FeatureConfig addDependency(String path) {
+        return addDependency(new ParameterizedDependency(path, false));
+    }
+
+    public FeatureConfig addDependency(String path, boolean optional) {
+        return addDependency(new ParameterizedDependency(path, optional));
     }
 
     public String getParameterValue(String name, boolean required) throws ProvisioningDescriptionException {

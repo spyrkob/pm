@@ -17,13 +17,46 @@
 
 package org.jboss.provisioning.config.schema;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 public class ConfigPath {
+
+    public static ConfigPath fromString(String str) {
+        if(str == null) {
+            throw new IllegalArgumentException("str is null");
+        }
+        if(str.isEmpty()) {
+            throw new IllegalArgumentException("str is empty");
+        }
+
+        int i = str.indexOf('/');
+        if(i == 0) {
+            throw new IllegalArgumentException("Path does not follow format name(/name)*");
+        }
+
+        if(i < 0) {
+            return create(str);
+        }
+
+        final List<String> names = new ArrayList<>();
+        int c = 0;
+        while (i > 0) {
+            if (i == str.length() - 1) {
+                throw new IllegalArgumentException("Path does not follow format name(/name)*");
+            }
+            names.add(str.substring(c, i));
+            c = i + 1;
+            i = str.indexOf('/', c);
+        }
+        names.add(str.substring(c));
+        return create(names.toArray(new String[names.size()]));
+    }
 
     public static ConfigPath create(String... names) {
         return new ConfigPath(names);
@@ -49,16 +82,15 @@ public class ConfigPath {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[');
         if(names.length > 0) {
             buf.append(names[0]);
             if(names.length > 1) {
                 for(int i = 1; i < names.length; ++i) {
-                    buf.append(',').append(names[i]);
+                    buf.append('/').append(names[i]);
                 }
             }
         }
-        return buf.append(']').toString();
+        return buf.toString();
     }
 
     @Override

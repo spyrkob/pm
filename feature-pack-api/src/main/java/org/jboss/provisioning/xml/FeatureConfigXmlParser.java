@@ -20,7 +20,6 @@ import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.schema.FeatureConfig;
 
 /**
@@ -40,12 +39,8 @@ public class FeatureConfigXmlParser implements XmlParser<FeatureConfig> {
 
     @Override
     public FeatureConfig parse(final Reader input) throws XMLStreamException {
-        final FeatureConfig.Builder builder = FeatureConfig.builder();
-        XmlParsers.parse(input, builder);
-        try {
-            return builder.build();
-        } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to parse feature config", e);
-        }
+        final FeatureConfig config = new FeatureConfig();
+        XmlParsers.parse(input, config);
+        return config;
     }
 }

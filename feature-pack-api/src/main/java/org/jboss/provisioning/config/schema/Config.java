@@ -171,7 +171,7 @@ public class Config {
 
             if(!config.config.dependencies.isEmpty()) {
                 for(FeatureConfig.Dependency dependency : config.config.dependencies) {
-                    lineUp(config, dependency.configId, dependency.optional);
+                    lineUp(config, dependency.getConfigId(), dependency.isOptional());
                 }
             }
 

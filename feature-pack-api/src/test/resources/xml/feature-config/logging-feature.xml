@@ -17,8 +17,8 @@
     limitations under the License.
 
 -->
-<feature xmlns="urn:wildfly:pm-feature-config:1.0" name="profile">
+<feature xmlns="urn:wildfly:pm-feature-config:1.0" name="subsystem">
   <parameters>
-    <parameter name="name" value="default"/>
+    <parameter name="name" value="logging"/>
   </parameters>
 </feature>

@@ -27,9 +27,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.config.schema.ConfigId;
 import org.jboss.provisioning.config.schema.FeatureConfig;
-import org.jboss.provisioning.config.schema.FeatureConfig.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -38,7 +36,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig.Builder> {
+public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-config:1.0";
     public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.FEATURE.getLocalName());
@@ -145,8 +143,8 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, FeatureConfig.Builder configBuilder) throws XMLStreamException {
-        configBuilder.setName(parseName(reader, false));
+    public void readElement(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
+        config.setConfigName(parseName(reader, false));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -156,10 +154,10 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case DEPENDENCIES:
-                            readDependencies(reader, configBuilder);
+                            readDependencies(reader, config);
                             break;
                         case PARAMETERS:
-                            readParameters(reader, configBuilder);
+                            readParameters(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -174,7 +172,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readDependencies(XMLExtendedStreamReader reader, Builder configBuilder) throws XMLStreamException {
+    private void readDependencies(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -185,7 +183,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case DEPENDENCY:
-                            readDependency(reader, configBuilder);
+                            readDependency(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -200,7 +198,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readDependency(XMLExtendedStreamReader reader, Builder builder) throws XMLStreamException {
+    private void readDependency(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         String feature = null;
         boolean optional = false;
         final int count = reader.getAttributeCount();
@@ -221,10 +219,10 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.FEATURE));
         }
         ParsingUtils.parseNoContent(reader);
-        builder.addDependency(ConfigId.fromString(feature), optional);
+        config.addDependency(feature, optional);
     }
 
-    private void readParameters(XMLExtendedStreamReader reader, Builder configBuilder) throws XMLStreamException {
+    private void readParameters(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -235,7 +233,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case PARAMETER:
-                            readParameter(reader, configBuilder);
+                            readParameter(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -250,7 +248,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readParameter(XMLExtendedStreamReader reader, Builder builder) throws XMLStreamException {
+    private void readParameter(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         String name = null;
         String value = null;
         final int count = reader.getAttributeCount();
@@ -281,7 +279,7 @@ public class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
         }
         ParsingUtils.parseNoContent(reader);
-        builder.addParameter(name, value);
+        config.addParameter(name, value);
     }
 
     private String parseName(final XMLExtendedStreamReader reader, boolean exclusive) throws XMLStreamException {
