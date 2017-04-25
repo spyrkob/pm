@@ -154,18 +154,7 @@ public class Config {
                                 refSpot.pathParams == null ? refDescr.path.spots : refSpot.pathParams,
                                         !refSpot.nillable, config.config);
                         if (ref != null) {
-                            final ConfiguredFeature dependency = refs.get(ref);
-                            if (dependency == null) {
-                                final StringBuilder buf = new StringBuilder();
-                                if (config.id != null) {
-                                    buf.append(config.id);
-                                } else {
-                                    buf.append("Configuration of ").append(config.descr.path);
-                                }
-                                buf.append(" has unsatisfied dependency on ").append(ref);
-                                throw new ProvisioningDescriptionException(buf.toString());
-                            }
-                            lineUp(dependency);
+                            lineUp(config, ref, false);
                         }
                     }
                 }
@@ -180,6 +169,12 @@ public class Config {
                 throw new ProvisioningDescriptionException(buf.toString());
             }
 
+            if(!config.config.dependencies.isEmpty()) {
+                for(FeatureConfig.Dependency dependency : config.config.dependencies) {
+                    lineUp(config, dependency.ref, dependency.optional);
+                }
+            }
+
             line.add(config);
             final StringBuilder buf = new StringBuilder();
             buf.append("lined up ");
@@ -189,6 +184,24 @@ public class Config {
                 buf.append(config.descr.path);
             }
             System.out.println(buf.toString());
+        }
+
+        private void lineUp(ConfiguredFeature config, final ConfigRef ref, boolean optional) throws ProvisioningDescriptionException {
+            final ConfiguredFeature dependency = refs.get(ref);
+            if (dependency == null) {
+                if(optional) {
+                    return;
+                }
+                final StringBuilder buf = new StringBuilder();
+                if (config.id != null) {
+                    buf.append(config.id);
+                } else {
+                    buf.append("Configuration of ").append(config.descr.path);
+                }
+                buf.append(" has unsatisfied dependency on ").append(ref);
+                throw new ProvisioningDescriptionException(buf.toString());
+            }
+            lineUp(dependency);
         }
 
         private void initParents(String spot) throws ProvisioningDescriptionException {

@@ -20,7 +20,9 @@ package org.jboss.provisioning.config.schema;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
@@ -30,10 +32,59 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureConfig {
 
+    public static class Dependency {
+        final ConfigRef ref;
+        final boolean optional;
+
+        private Dependency(ConfigRef ref, boolean optional) {
+            this.ref = ref;
+            this.optional = optional;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + (optional ? 1231 : 1237);
+            result = prime * result + ((ref == null) ? 0 : ref.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Dependency other = (Dependency) obj;
+            if (optional != other.optional)
+                return false;
+            if (ref == null) {
+                if (other.ref != null)
+                    return false;
+            } else if (!ref.equals(other.ref))
+                return false;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder buf = new StringBuilder();
+            buf.append('[');
+            if(optional) {
+                buf.append("optional ");
+            }
+            return buf.append(ref).append(']').toString();
+        }
+    }
+
     public static class Builder {
 
         private final String spot;
         private Map<String, String> params = Collections.emptyMap();
+        private Set<Dependency> dependencies = Collections.emptySet();
 
         private Builder(String spot) {
             this.spot = spot;
@@ -48,6 +99,23 @@ public class FeatureConfig {
                     params = new HashMap<>(params);
                 default:
                     params.put(name, value);
+            }
+            return this;
+        }
+
+        public Builder addDependency(ConfigRef ref) throws ProvisioningDescriptionException {
+            return addDependency(ref, false);
+        }
+
+        public Builder addDependency(ConfigRef ref, boolean optional) throws ProvisioningDescriptionException {
+            switch(dependencies.size()) {
+                case 0:
+                    dependencies = Collections.singleton(new Dependency(ref, optional));
+                    break;
+                case 1:
+                    dependencies = new LinkedHashSet<>(dependencies);
+                default:
+                    dependencies.add(new Dependency(ref, optional));
             }
             return this;
         }
@@ -67,15 +135,18 @@ public class FeatureConfig {
 
     final String spot;
     final Map<String, String> params;
+    final Set<Dependency> dependencies;
 
     private FeatureConfig(String spot) {
         this.spot = spot;
         this.params = Collections.emptyMap();
+        this.dependencies = Collections.emptySet();
     }
 
     private FeatureConfig(Builder builder) {
         this.spot = builder.spot;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
+        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableSet(builder.dependencies) : builder.dependencies;
     }
 
     public String getSpot() {
@@ -91,7 +162,7 @@ public class FeatureConfig {
     }
 
     public String getParameterValue(String name, boolean required) throws ProvisioningDescriptionException {
-        final String value = getParameterValue(name);
+        final String value = params.get(name);
         if(value == null && required) {
             throw new ProvisioningDescriptionException(spot + " configuration is missing required parameter '" + name + "'");
         }
@@ -102,8 +173,9 @@ public class FeatureConfig {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
+        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
+        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
         return result;
     }
 
@@ -116,15 +188,20 @@ public class FeatureConfig {
         if (getClass() != obj.getClass())
             return false;
         FeatureConfig other = (FeatureConfig) obj;
-        if (spot == null) {
-            if (other.spot != null)
+        if (dependencies == null) {
+            if (other.dependencies != null)
                 return false;
-        } else if (!spot.equals(other.spot))
+        } else if (!dependencies.equals(other.dependencies))
             return false;
         if (params == null) {
             if (other.params != null)
                 return false;
         } else if (!params.equals(other.params))
+            return false;
+        if (spot == null) {
+            if (other.spot != null)
+                return false;
+        } else if (!spot.equals(other.spot))
             return false;
         return true;
     }
