@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.config.schema;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -33,11 +32,11 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 public class FeatureConfig {
 
     public static class Dependency {
-        final ConfigRef ref;
+        final ConfigId configId;
         final boolean optional;
 
-        private Dependency(ConfigRef ref, boolean optional) {
-            this.ref = ref;
+        private Dependency(ConfigId configId, boolean optional) {
+            this.configId = configId;
             this.optional = optional;
         }
 
@@ -46,7 +45,7 @@ public class FeatureConfig {
             final int prime = 31;
             int result = 1;
             result = prime * result + (optional ? 1231 : 1237);
-            result = prime * result + ((ref == null) ? 0 : ref.hashCode());
+            result = prime * result + ((configId == null) ? 0 : configId.hashCode());
             return result;
         }
 
@@ -61,10 +60,10 @@ public class FeatureConfig {
             Dependency other = (Dependency) obj;
             if (optional != other.optional)
                 return false;
-            if (ref == null) {
-                if (other.ref != null)
+            if (configId == null) {
+                if (other.configId != null)
                     return false;
-            } else if (!ref.equals(other.ref))
+            } else if (!configId.equals(other.configId))
                 return false;
             return true;
         }
@@ -76,18 +75,18 @@ public class FeatureConfig {
             if(optional) {
                 buf.append("optional ");
             }
-            return buf.append(ref).append(']').toString();
+            return buf.append(configId).append(']').toString();
         }
     }
 
     public static class Builder {
 
-        private final String spot;
+        private final String configName;
         private Map<String, String> params = Collections.emptyMap();
         private Set<Dependency> dependencies = Collections.emptySet();
 
-        private Builder(String spot) {
-            this.spot = spot;
+        private Builder(String configName) {
+            this.configName = configName;
         }
 
         public Builder addParameter(String name, String value) throws ProvisioningDescriptionException {
@@ -103,19 +102,19 @@ public class FeatureConfig {
             return this;
         }
 
-        public Builder addDependency(ConfigRef ref) throws ProvisioningDescriptionException {
-            return addDependency(ref, false);
+        public Builder addDependency(ConfigId configId) throws ProvisioningDescriptionException {
+            return addDependency(configId, false);
         }
 
-        public Builder addDependency(ConfigRef ref, boolean optional) throws ProvisioningDescriptionException {
+        public Builder addDependency(ConfigId configId, boolean optional) throws ProvisioningDescriptionException {
             switch(dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singleton(new Dependency(ref, optional));
+                    dependencies = Collections.singleton(new Dependency(configId, optional));
                     break;
                 case 1:
                     dependencies = new LinkedHashSet<>(dependencies);
                 default:
-                    dependencies.add(new Dependency(ref, optional));
+                    dependencies.add(new Dependency(configId, optional));
             }
             return this;
         }
@@ -133,38 +132,26 @@ public class FeatureConfig {
         return new FeatureConfig(spot);
     }
 
-    final String spot;
+    final String configName;
     final Map<String, String> params;
     final Set<Dependency> dependencies;
 
-    private FeatureConfig(String spot) {
-        this.spot = spot;
+    private FeatureConfig(String configName) {
+        this.configName = configName;
         this.params = Collections.emptyMap();
         this.dependencies = Collections.emptySet();
     }
 
     private FeatureConfig(Builder builder) {
-        this.spot = builder.spot;
+        this.configName = builder.configName;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableSet(builder.dependencies) : builder.dependencies;
-    }
-
-    public String getSpot() {
-        return spot;
-    }
-
-    public Collection<String> getParameterNames() {
-        return params.keySet();
-    }
-
-    public String getParameterValue(String name) {
-        return params.get(name);
     }
 
     public String getParameterValue(String name, boolean required) throws ProvisioningDescriptionException {
         final String value = params.get(name);
         if(value == null && required) {
-            throw new ProvisioningDescriptionException(spot + " configuration is missing required parameter '" + name + "'");
+            throw new ProvisioningDescriptionException(configName + " configuration is missing required parameter '" + name + "'");
         }
         return value;
     }
@@ -175,7 +162,7 @@ public class FeatureConfig {
         int result = 1;
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
-        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
+        result = prime * result + ((configName == null) ? 0 : configName.hashCode());
         return result;
     }
 
@@ -198,10 +185,10 @@ public class FeatureConfig {
                 return false;
         } else if (!params.equals(other.params))
             return false;
-        if (spot == null) {
-            if (other.spot != null)
+        if (configName == null) {
+            if (other.configName != null)
                 return false;
-        } else if (!spot.equals(other.spot))
+        } else if (!configName.equals(other.configName))
             return false;
         return true;
     }

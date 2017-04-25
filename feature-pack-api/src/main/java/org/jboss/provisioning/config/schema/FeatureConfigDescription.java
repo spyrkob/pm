@@ -30,22 +30,22 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureConfigDescription {
 
-    final String spot;
-    final String parentSpot;
-    final SchemaPath path;
-    final SchemaPath parentPath;
+    final String configName;
+    final String parentConfigName;
+    final ConfigPath path;
+    final ConfigPath parentPath;
     final boolean required;
     final boolean maxOccursUnbounded;
     final List<FeatureConfigDescription> features;
     final Map<String, FeatureParameter> params;
     final String idParam;
-    final Set<SpotRef> spotRefs;
+    final Set<ConfigRef> configRefs;
 
-    FeatureConfigDescription(String spot, String parentSpot, SchemaPath schemaPath, SchemaPath parentPath,
+    FeatureConfigDescription(String configName, String parentConfigName, ConfigPath configPath, ConfigPath parentPath,
             List<FeatureConfigDescription> features, XmlFeatureSpec xmlSpec, XmlFeatureOccurence occurence) {
-        this.spot = spot;
-        this.parentSpot = parentSpot;
-        this.path = schemaPath;
+        this.configName = configName;
+        this.parentConfigName = parentConfigName;
+        this.path = configPath;
         this.parentPath = parentPath;
         this.required = occurence.required;
         this.maxOccursUnbounded = occurence.maxOccursUnbounded;
@@ -53,12 +53,12 @@ public class FeatureConfigDescription {
 
         params = xmlSpec.parameters.size() > 1 ? Collections.unmodifiableMap(xmlSpec.parameters) : xmlSpec.parameters;
         idParam = xmlSpec.idParam;
-        spotRefs = xmlSpec.references.size() > 1 ? Collections.unmodifiableSet(xmlSpec.references) : xmlSpec.references;
+        configRefs = xmlSpec.references.size() > 1 ? Collections.unmodifiableSet(xmlSpec.references) : xmlSpec.references;
     }
 
-    public ConfigRef getConfigRef(FeatureConfig config) throws ProvisioningDescriptionException {
+    public ConfigId getConfigId(FeatureConfig config) throws ProvisioningDescriptionException {
         if(path == null) {
-            throw new ProvisioningDescriptionException("Feature " + spot + " is not associated with a schema path.");
+            throw new ProvisioningDescriptionException("Feature " + configName + " is not associated with a schema path.");
         }
         if(idParam == null) {
             throw new ProvisioningDescriptionException("ID parameter is not defined for feature " + path);
@@ -66,13 +66,13 @@ public class FeatureConfigDescription {
         final String[] values = new String[path.length()];
         int i = 0;
         while(i < values.length - 1) {
-            values[i] = config.getParameterValue(parentPath.getName(i++), true);
+            values[i] = config.getParameterValue(parentPath.names[i++], true);
         }
         values[i] = config.getParameterValue(idParam, true);
-        return ConfigRef.create(path, values);
+        return ConfigId.create(path, values);
     }
 
-    public ConfigRef getConfigRef(SchemaPath path, String[] params, boolean required, FeatureConfig config) throws ProvisioningDescriptionException {
+    public ConfigId getConfigId(ConfigPath path, String[] params, boolean required, FeatureConfig config) throws ProvisioningDescriptionException {
         final String[] values = new String[params.length];
         int i = 0;
         while(i < values.length) {
@@ -82,6 +82,6 @@ public class FeatureConfigDescription {
             }
             values[i++] = value;
         }
-        return ConfigRef.create(path, values);
+        return ConfigId.create(path, values);
     }
 }

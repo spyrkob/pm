@@ -23,32 +23,38 @@ import java.util.Arrays;
  *
  * @author Alexey Loubyansky
  */
-public class SpotRef {
+public class ConfigPath {
 
-    public static SpotRef create(String spot, boolean nillable, String[] pathParams) {
-        return new SpotRef(spot, nillable, pathParams);
+    public static ConfigPath create(String... names) {
+        return new ConfigPath(names);
     }
 
-    final String spot;
-    final boolean nillable;
-    final String[] pathParams;
+    final String[] names;
 
-    private SpotRef(String spot, boolean nillable, String[] pathParams) {
-        this.spot = spot;
-        this.nillable = nillable;
-        this.pathParams = pathParams;
+    private ConfigPath(String[] names) {
+        this.names = names;
+    }
+
+    public int length() {
+        return names.length;
+    }
+
+    public ConfigPath resolve(String... names) {
+        final String[] tmp = new String[this.names.length + names.length];
+        System.arraycopy(this.names, 0, tmp, 0, this.names.length);
+        System.arraycopy(names, 0, tmp, this.names.length, names.length);
+        return new ConfigPath(tmp);
     }
 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[').append(spot)
-        .append(" nillable=").append(nillable);
-        if(pathParams != null && pathParams.length > 0) {
-            buf.append(" path-params=").append(pathParams[0]);
-            if (pathParams.length > 1) {
-                for (int i = 1; i < pathParams.length; ++i) {
-                    buf.append(',').append(pathParams[i]);
+        buf.append('[');
+        if(names.length > 0) {
+            buf.append(names[0]);
+            if(names.length > 1) {
+                for(int i = 1; i < names.length; ++i) {
+                    buf.append(',').append(names[i]);
                 }
             }
         }
@@ -59,9 +65,7 @@ public class SpotRef {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (nillable ? 1231 : 1237);
-        result = prime * result + Arrays.hashCode(pathParams);
-        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
+        result = prime * result + Arrays.hashCode(names);
         return result;
     }
 
@@ -73,15 +77,8 @@ public class SpotRef {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        SpotRef other = (SpotRef) obj;
-        if (nillable != other.nillable)
-            return false;
-        if (!Arrays.equals(pathParams, other.pathParams))
-            return false;
-        if (spot == null) {
-            if (other.spot != null)
-                return false;
-        } else if (!spot.equals(other.spot))
+        ConfigPath other = (ConfigPath) obj;
+        if (!Arrays.equals(names, other.names))
             return false;
         return true;
     }

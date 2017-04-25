@@ -23,44 +23,28 @@ package org.jboss.provisioning.config.schema;
  */
 public class XmlFeatureOccurence {
 
-    public static XmlFeatureOccurence create(String spot, String specName) {
-        return new XmlFeatureOccurence(spot, specName, true, false);
+    public static XmlFeatureOccurence create(String name, String specName) {
+        return new XmlFeatureOccurence(name, specName, true, false);
     }
 
-    public static XmlFeatureOccurence create(String spot, String specName, boolean required) {
-        return new XmlFeatureOccurence(spot, specName, required, false);
+    public static XmlFeatureOccurence create(String name, String specName, boolean required) {
+        return new XmlFeatureOccurence(name, specName, required, false);
     }
 
-    public static XmlFeatureOccurence create(String spot, String specName, boolean required, boolean maxOccursUnbounded) {
-        return new XmlFeatureOccurence(spot, specName, required, maxOccursUnbounded);
+    public static XmlFeatureOccurence create(String name, String specName, boolean required, boolean maxOccursUnbounded) {
+        return new XmlFeatureOccurence(name, specName, required, maxOccursUnbounded);
     }
 
-    final String spot;
+    final String name;
     final String specName;
     final boolean required;
     final boolean maxOccursUnbounded;
 
-    private XmlFeatureOccurence(String configId, String specName, boolean required, boolean maxOccursUnbounded) {
-        this.spot = configId;
+    private XmlFeatureOccurence(String name, String specName, boolean required, boolean maxOccursUnbounded) {
+        this.name = name;
         this.specName = specName;
         this.required = required;
         this.maxOccursUnbounded = maxOccursUnbounded;
-    }
-
-    public String getSpot() {
-        return spot;
-    }
-
-    public String getSpecName() {
-        return specName;
-    }
-
-    public boolean isRequired() {
-        return required;
-    }
-
-    public boolean isMaxOccursUnbounded() {
-        return maxOccursUnbounded;
     }
 
     @Override
@@ -68,7 +52,7 @@ public class XmlFeatureOccurence {
         final int prime = 31;
         int result = 1;
         result = prime * result + (maxOccursUnbounded ? 1231 : 1237);
-        result = prime * result + ((spot == null) ? 0 : spot.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (required ? 1231 : 1237);
         result = prime * result + ((specName == null) ? 0 : specName.hashCode());
         return result;
@@ -85,10 +69,10 @@ public class XmlFeatureOccurence {
         XmlFeatureOccurence other = (XmlFeatureOccurence) obj;
         if (maxOccursUnbounded != other.maxOccursUnbounded)
             return false;
-        if (spot == null) {
-            if (other.spot != null)
+        if (name == null) {
+            if (other.name != null)
                 return false;
-        } else if (!spot.equals(other.spot))
+        } else if (!name.equals(other.name))
             return false;
         if (required != other.required)
             return false;
@@ -102,6 +86,6 @@ public class XmlFeatureOccurence {
 
     @Override
     public String toString() {
-        return "[spot=" + spot + ", specName=" + specName + ", required=" + required + ", maxOccursUnbounded=" + maxOccursUnbounded + "]";
+        return '[' + name + ", spec=" + specName + ", required=" + required + ", maxOccursUnbounded=" + maxOccursUnbounded + "]";
     }
 }

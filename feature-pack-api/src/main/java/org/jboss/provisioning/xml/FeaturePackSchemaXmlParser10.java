@@ -28,7 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.config.schema.SpotRef;
+import org.jboss.provisioning.config.schema.ConfigRef;
 import org.jboss.provisioning.config.schema.XmlFeatureOccurence;
 import org.jboss.provisioning.config.schema.FeatureParameter;
 import org.jboss.provisioning.config.schema.ConfigSchema;
@@ -109,6 +109,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     enum Attribute implements XmlNameProvider {
 
         DEFAULT("default"),
+        FEATURE("feature"),
         FEATURE_ID("feature-id"),
         NAME("name"),
         NILLABLE("nillable"),
@@ -117,7 +118,6 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         PARAMETER("parameter"),
         REQUIRED("required"),
         SPEC("spec"),
-        SPOT("spot"),
         UNBOUNDED("unbounded"),
 
         // default unknown attribute
@@ -336,13 +336,13 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     }
 
     private void parseReference(XMLExtendedStreamReader reader, XmlFeatureSpec specBuilder) throws XMLStreamException {
-        String spot = null;
+        String feature = null;
         boolean nillable = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case SPOT:
-                    spot = reader.getAttributeValue(i);
+                case FEATURE:
+                    feature = reader.getAttributeValue(i);
                     break;
                 case NILLABLE:
                     nillable = Boolean.parseBoolean(reader.getAttributeValue(i));
@@ -351,14 +351,14 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if(spot == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPOT));
+        if(feature == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.FEATURE));
         }
         List<String> pathParams = null;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    specBuilder.addReference(SpotRef.create(spot, nillable, pathParams == null ? null : pathParams.toArray(new String[pathParams.size()])));
+                    specBuilder.addReference(ConfigRef.create(feature, nillable, pathParams == null ? null : pathParams.toArray(new String[pathParams.size()])));
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -464,15 +464,15 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
     }
 
     private XmlFeatureOccurence parseFeature(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String spot = null;
+        String name = null;
         String specName = null;
         boolean required = true;
         boolean unbounded = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case SPOT:
-                    spot = reader.getAttributeValue(i);
+                case NAME:
+                    name = reader.getAttributeValue(i);
                     break;
                 case SPEC:
                     specName = reader.getAttributeValue(i);
@@ -494,7 +494,7 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return XmlFeatureOccurence.create(spot, specName, required, unbounded);
+                    return XmlFeatureOccurence.create(name, specName, required, unbounded);
                 }
                 default: {
                     throw ParsingUtils.unexpectedContent(reader);

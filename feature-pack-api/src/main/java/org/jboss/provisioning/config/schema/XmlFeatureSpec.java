@@ -35,7 +35,7 @@ public class XmlFeatureSpec {
     final String name;
     Map<String, FeatureParameter> parameters = Collections.emptyMap();
     String idParam;
-    Set<SpotRef> references = Collections.emptySet();
+    Set<ConfigRef> references = Collections.emptySet();
     Map<String, XmlFeatureOccurence> features = Collections.emptyMap();
 
     public XmlFeatureSpec(String name) {
@@ -58,15 +58,15 @@ public class XmlFeatureSpec {
         }
     }
 
-    public void addReference(SpotRef spot) {
+    public void addReference(ConfigRef configRef) {
         switch (references.size()) {
             case 0:
-                references = Collections.singleton(spot);
+                references = Collections.singleton(configRef);
                 break;
             case 1:
                 references = new HashSet<>(references);
             default:
-                references.add(spot);
+                references.add(configRef);
         }
     }
 

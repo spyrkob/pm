@@ -32,7 +32,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 public class Config {
 
     public static class ConfiguredFeature {
-        final ConfigRef id;
+        final ConfigId id;
         final FeatureConfigDescription descr;
         final FeatureConfig config;
 
@@ -40,7 +40,7 @@ public class Config {
 
         private boolean linedUp;
 
-        ConfiguredFeature(ConfigRef id, FeatureConfigDescription descr, FeatureConfig config) {
+        ConfiguredFeature(ConfigId id, FeatureConfigDescription descr, FeatureConfig config) {
             this.id = id;
             this.descr = descr;
             this.config = config;
@@ -50,8 +50,8 @@ public class Config {
     public static class Builder {
 
         private final ConfigSchema schema;
-        private Map<String, List<ConfiguredFeature>> spots = new HashMap<>();
-        private Map<ConfigRef, ConfiguredFeature> refs = Collections.emptyMap();
+        private Map<String, List<ConfiguredFeature>> configsByName = new HashMap<>();
+        private Map<ConfigId, ConfiguredFeature> configsById = Collections.emptyMap();
 
         private List<ConfiguredFeature> line = new ArrayList<>();
 
@@ -60,51 +60,51 @@ public class Config {
         }
 
         public Builder add(FeatureConfig config) throws ProvisioningDescriptionException {
-            final FeatureConfigDescription configDescr = schema.getDescription(config.spot);
+            final FeatureConfigDescription configDescr = schema.getDescription(config.configName);
             final ConfiguredFeature configured;
             if (configDescr.idParam != null) {
-                final ConfigRef configRef = configDescr.getConfigRef(config);
-                if (refs.containsKey(configRef)) {
-                    throw new ProvisioningDescriptionException("Duplicate feature ID " + configRef);
+                final ConfigId configId = configDescr.getConfigId(config);
+                if (configsById.containsKey(configId)) {
+                    throw new ProvisioningDescriptionException("Duplicate feature ID " + configId);
                 }
-                configured = new ConfiguredFeature(configRef, configDescr, config);
-                switch (refs.size()) {
+                configured = new ConfiguredFeature(configId, configDescr, config);
+                switch (configsById.size()) {
                     case 0:
-                        refs = Collections.singletonMap(configRef, configured);
+                        configsById = Collections.singletonMap(configId, configured);
                         break;
                     case 1:
-                        refs = new HashMap<>(refs);
+                        configsById = new HashMap<>(configsById);
                     default:
-                        refs.put(configRef, configured);
+                        configsById.put(configId, configured);
                 }
             } else {
                 configured = new ConfiguredFeature(null, configDescr, config);
             }
 
-            List<ConfiguredFeature> spotFeatures = spots.get(config.spot);
-            if(spotFeatures == null) {
-                spots.put(config.spot, Collections.singletonList(configured));
+            List<ConfiguredFeature> featureConfigs = configsByName.get(config.configName);
+            if(featureConfigs == null) {
+                configsByName.put(config.configName, Collections.singletonList(configured));
             } else {
                 if(!configDescr.maxOccursUnbounded) {
-                    throw new ProvisioningDescriptionException("Feature config may not appear more than once at " + config.spot);
+                    throw new ProvisioningDescriptionException("Feature config may not appear more than once at " + config.configName);
                 }
-                if(spotFeatures.size() == 1) {
-                    spotFeatures = new ArrayList<>(spotFeatures);
-                    spots.put(config.spot, spotFeatures);
+                if(featureConfigs.size() == 1) {
+                    featureConfigs = new ArrayList<>(featureConfigs);
+                    configsByName.put(config.configName, featureConfigs);
                 }
-                spotFeatures.add(configured);
+                featureConfigs.add(configured);
             }
             return this;
         }
 
         public void build() throws ProvisioningDescriptionException {
 
-            final String[] spotNames = spots.keySet().toArray(new String[spots.size()]);
-            for (String spot : spotNames) {
-                initParents(spot);
+            final String[] configNames = configsByName.keySet().toArray(new String[configsByName.size()]);
+            for (String name : configNames) {
+                initParents(name);
             }
 
-            for(List<ConfiguredFeature> features : spots.values()) {
+            for(List<ConfiguredFeature> features : configsByName.values()) {
                 for(ConfiguredFeature feature : features) {
                     lineUp(feature);
                 }
@@ -147,14 +147,14 @@ public class Config {
                     throw new ProvisioningDescriptionException(buf.toString());
                 }
 
-                if (!config.descr.spotRefs.isEmpty()) {
-                    for (SpotRef refSpot : config.descr.spotRefs) {
-                        final FeatureConfigDescription refDescr = this.schema.getDescription(refSpot.spot);
-                        final ConfigRef ref = config.descr.getConfigRef(refDescr.path,
-                                refSpot.pathParams == null ? refDescr.path.spots : refSpot.pathParams,
-                                        !refSpot.nillable, config.config);
-                        if (ref != null) {
-                            lineUp(config, ref, false);
+                if (!config.descr.configRefs.isEmpty()) {
+                    for (ConfigRef configRef : config.descr.configRefs) {
+                        final FeatureConfigDescription refDescr = this.schema.getDescription(configRef.name);
+                        final ConfigId refId = config.descr.getConfigId(refDescr.path,
+                                configRef.pathParams == null ? refDescr.path.names : configRef.pathParams,
+                                        !configRef.nillable, config.config);
+                        if (refId != null) {
+                            lineUp(config, refId, false);
                         }
                     }
                 }
@@ -171,7 +171,7 @@ public class Config {
 
             if(!config.config.dependencies.isEmpty()) {
                 for(FeatureConfig.Dependency dependency : config.config.dependencies) {
-                    lineUp(config, dependency.ref, dependency.optional);
+                    lineUp(config, dependency.configId, dependency.optional);
                 }
             }
 
@@ -186,8 +186,8 @@ public class Config {
             System.out.println(buf.toString());
         }
 
-        private void lineUp(ConfiguredFeature config, final ConfigRef ref, boolean optional) throws ProvisioningDescriptionException {
-            final ConfiguredFeature dependency = refs.get(ref);
+        private void lineUp(ConfiguredFeature config, final ConfigId dependencyId, boolean optional) throws ProvisioningDescriptionException {
+            final ConfiguredFeature dependency = configsById.get(dependencyId);
             if (dependency == null) {
                 if(optional) {
                     return;
@@ -198,18 +198,18 @@ public class Config {
                 } else {
                     buf.append("Configuration of ").append(config.descr.path);
                 }
-                buf.append(" has unsatisfied dependency on ").append(ref);
+                buf.append(" has unsatisfied dependency on ").append(dependencyId);
                 throw new ProvisioningDescriptionException(buf.toString());
             }
             lineUp(dependency);
         }
 
-        private void initParents(String spot) throws ProvisioningDescriptionException {
-            final FeatureConfigDescription spotDescr = schema.getDescription(spot);
-            if(spotDescr.parentSpot != null) {
-                initParents(spotDescr.parentSpot);
+        private void initParents(String configName) throws ProvisioningDescriptionException {
+            final FeatureConfigDescription configDescr = schema.getDescription(configName);
+            if(configDescr.parentConfigName != null) {
+                initParents(configDescr.parentConfigName);
             }
-            final List<ConfiguredFeature> features = spots.get(spot);
+            final List<ConfiguredFeature> features = configsByName.get(configName);
             if(features == null) {
                 return;
             }
@@ -219,15 +219,15 @@ public class Config {
         }
 
         private void initParent(ConfiguredFeature feature) throws ProvisioningDescriptionException {
-            if(feature.parent != null || feature.descr.parentSpot == null) {
+            if(feature.parent != null || feature.descr.parentConfigName == null) {
                 return;
             }
             if (feature.descr.parentPath != null) {
-                final ConfigRef parentRef = feature.descr.getConfigRef(feature.descr.parentPath, feature.descr.parentPath.spots, true, feature.config);
-                feature.parent = refs.get(parentRef);
+                final ConfigId parentId = feature.descr.getConfigId(feature.descr.parentPath, feature.descr.parentPath.names, true, feature.config);
+                feature.parent = configsById.get(parentId);
                 if (feature.parent == null) {
                     final StringBuilder buf = new StringBuilder();
-                    buf.append("Failed to resolve parent ").append(parentRef).append(" for ");
+                    buf.append("Failed to resolve parent ").append(parentId).append(" for ");
                     if (feature.id == null) {
                         buf.append(feature.descr.path);
                     } else {
@@ -237,21 +237,21 @@ public class Config {
                     throw new ProvisioningDescriptionException(buf.toString());
                 }
             } else {
-                final FeatureConfigDescription parentDescr = schema.getDescription(feature.descr.parentSpot);
+                final FeatureConfigDescription parentDescr = schema.getDescription(feature.descr.parentConfigName);
                 if (parentDescr == null) {
-                    throw new ProvisioningDescriptionException("Unknown feature config description " + feature.descr.parentSpot);
+                    throw new ProvisioningDescriptionException("Unknown feature config description " + feature.descr.parentConfigName);
                 }
-                List<ConfiguredFeature> parents = spots.get(parentDescr.path);
+                List<ConfiguredFeature> parents = configsByName.get(parentDescr.path);
                 if (parents == null) {
                     feature.parent = new ConfiguredFeature(null, parentDescr, null);
                     parents = Collections.singletonList(feature.parent);
-                    spots.put(parentDescr.spot, parents);
+                    configsByName.put(parentDescr.configName, parents);
                 } else {
                     if (parentDescr.maxOccursUnbounded) {
                         feature.parent = new ConfiguredFeature(null, parentDescr, null);
                         if (parents.size() == 1) {
                             parents = new ArrayList<>(parents);
-                            spots.put(parentDescr.spot, parents);
+                            configsByName.put(parentDescr.configName, parents);
                         }
                         parents.add(feature.parent);
                     } else {

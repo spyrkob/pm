@@ -89,26 +89,26 @@ public class ConfigSchema {
             return new ConfigSchema(roots, configDescr);
         }
 
-        private FeatureConfigDescription buildFeatureSpec(SchemaPath parentPath, String parentSpot, XmlFeatureOccurence occurence) throws ProvisioningDescriptionException {
+        private FeatureConfigDescription buildFeatureSpec(ConfigPath parentPath, String parentSpot, XmlFeatureOccurence occurence) throws ProvisioningDescriptionException {
 
             final XmlFeatureSpec xmlSpec = xmlSpecs.get(occurence.specName);
             if(xmlSpec == null) {
                 final StringBuilder buf = new StringBuilder();
                 buf.append("The schema is missing feature spec ").append(occurence.specName);
-                if(occurence.spot != null) {
-                    buf.append(" for ").append(occurence.spot);
+                if(occurence.name != null) {
+                    buf.append(" for ").append(occurence.name);
                 }
                 throw new ProvisioningDescriptionException(buf.toString());
             }
 
             final String spot;
-            final SchemaPath featurePath;
-            if(occurence.spot == null) {
+            final ConfigPath featurePath;
+            if(occurence.name == null) {
                 spot = occurence.specName + ++noIdCount;
                 featurePath = null;
             } else {
-                spot = occurence.spot;
-                featurePath = parentPath == null ? SchemaPath.create(occurence.spot) : parentPath.resolve(occurence.spot);
+                spot = occurence.name;
+                featurePath = parentPath == null ? ConfigPath.create(occurence.name) : parentPath.resolve(occurence.name);
             }
 
             final List<FeatureConfigDescription> childDescr;

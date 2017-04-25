@@ -23,54 +23,32 @@ import java.util.Arrays;
  *
  * @author Alexey Loubyansky
  */
-public class SchemaPath {
+public class ConfigId {
 
-    public static SchemaPath create(String... spot) {
-        return new SchemaPath(spot);
+    public static ConfigId create(ConfigPath path, String... values) {
+        return new ConfigId(path, values);
     }
 
-    final String[] spots;
+    final ConfigPath path;
+    final String[] values;
 
-    private SchemaPath(String[] spots) {
-        this.spots = spots;
-    }
-
-    public String getName(int i) {
-        return spots[i];
-    }
-
-    public String getSpotName() {
-        return spots[spots.length - 1];
-    }
-
-    public boolean hasParent() {
-        return spots.length > 1;
-    }
-
-    public SchemaPath getParent() {
-        return new SchemaPath(Arrays.copyOf(spots, spots.length - 1));
-    }
-
-    public int length() {
-        return spots.length;
-    }
-
-    public SchemaPath resolve(String... spot) {
-        final String[] tmp = new String[spots.length + spot.length];
-        System.arraycopy(spots, 0, tmp, 0, spots.length);
-        System.arraycopy(spot, 0, tmp, spots.length, spot.length);
-        return new SchemaPath(tmp);
+    private ConfigId(ConfigPath path, String[] values) {
+        if(path.length() != values.length) {
+            throw new IllegalArgumentException("Path length does not match values length");
+        }
+        this.path = path;
+        this.values = values;
     }
 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[');
-        if(spots.length > 0) {
-            buf.append(spots[0]);
-            if(spots.length > 1) {
-                for(int i = 1; i < spots.length; ++i) {
-                    buf.append(',').append(spots[i]);
+        if(values.length > 0) {
+            buf.append(path.names[0]).append('=').append(values[0]);
+            if(values.length > 1) {
+                for(int i = 1; i < values.length; ++i) {
+                    buf.append(',').append(path.names[i]).append('=').append(values[i]);
                 }
             }
         }
@@ -81,7 +59,8 @@ public class SchemaPath {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(spots);
+        result = prime * result + Arrays.hashCode(values);
+        result = prime * result + ((path == null) ? 0 : path.hashCode());
         return result;
     }
 
@@ -93,8 +72,13 @@ public class SchemaPath {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        SchemaPath other = (SchemaPath) obj;
-        if (!Arrays.equals(spots, other.spots))
+        ConfigId other = (ConfigId) obj;
+        if (!Arrays.equals(values, other.values))
+            return false;
+        if (path == null) {
+            if (other.path != null)
+                return false;
+        } else if (!path.equals(other.path))
             return false;
         return true;
     }

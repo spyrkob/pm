@@ -23,10 +23,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.config.schema.Config;
-import org.jboss.provisioning.config.schema.ConfigRef;
+import org.jboss.provisioning.config.schema.ConfigId;
 import org.jboss.provisioning.config.schema.ConfigSchema;
 import org.jboss.provisioning.config.schema.FeatureConfig;
-import org.jboss.provisioning.config.schema.SchemaPath;
+import org.jboss.provisioning.config.schema.ConfigPath;
 import org.jboss.provisioning.xml.FeaturePackSchemaXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class SandboxTestCase {
                 .addParameter("name", "ha")
                 .build())
         .add(FeatureConfig.builder("subsystem")
-                .addDependency(ConfigRef.create(SchemaPath.create("profile", "subsystem"), "ha", "logging"))
+                .addDependency(ConfigId.create(ConfigPath.create("profile", "subsystem"), "ha", "logging"))
                 .addParameter("name", "jmx")
                 .addParameter("profile", "ha")
                 .build())
