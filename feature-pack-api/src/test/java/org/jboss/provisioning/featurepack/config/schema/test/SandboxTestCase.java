@@ -55,7 +55,7 @@ public class SandboxTestCase {
         .add(featureConfig("jmx-feature.xml").addParameter("profile", "default"))
 
         .add(FeatureConfig.forName("profile").addParameter("name", "ha"))
-        .add(featureConfig("jmx-feature.xml").addParameter("profile", "ha").addParameter("profile", "ha"))
+        .add(featureConfig("jmx-feature.xml").addParameter("profile", "ha"))
         .add(featureConfig("logging-feature.xml").addParameter("profile", "ha"))
 
         .add(FeatureConfig.forName("interface").addParameter("name", "public"))

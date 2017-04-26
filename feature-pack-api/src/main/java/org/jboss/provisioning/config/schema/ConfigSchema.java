@@ -77,19 +77,46 @@ public class ConfigSchema {
             }
 
             if(rootOccurs.size() == 1) {
-                roots = Collections.singletonList(buildFeatureSpec(null, null, rootOccurs.iterator().next()));
+                roots = Collections.singletonList(describeFeature(null, null, rootOccurs.iterator().next()));
             } else {
                 final List<FeatureConfigDescription> tmp = new ArrayList<>(rootOccurs.size());
                 for (XmlFeatureOccurence occurence : rootOccurs) {
-                    tmp.add(buildFeatureSpec(null, null, occurence));
+                    tmp.add(describeFeature(null, null, occurence));
                 }
                 roots = Collections.unmodifiableList(tmp);
+            }
+
+            // make sure all the reference parameters are in place
+            for (FeatureConfigDescription feature : configDescr.values()) {
+                if (feature.path == null) {
+                    continue;
+                }
+                if (feature.parentPath != null) {
+                    for (String pathName : feature.parentPath.names) {
+                        if (!feature.params.containsKey(pathName)) {
+                            throw new ProvisioningDescriptionException(feature.configName + " is missing parameter " + pathName + " to set its path.");
+                        }
+                    }
+                }
+                if (!feature.configRefs.isEmpty()) {
+                    for (ConfigRef ref : feature.configRefs) {
+                        String[] pathParams = ref.pathParams;
+                        if(pathParams == null) {
+                            pathParams = configDescr.get(ref.name).path.names;
+                        }
+                        for (String pathName : pathParams) {
+                            if (!feature.params.containsKey(pathName)) {
+                                throw new ProvisioningDescriptionException(feature.configName + " is missing parameter " + pathName + " for reference " + ref);
+                            }
+                        }
+                    }
+                }
             }
 
             return new ConfigSchema(roots, configDescr);
         }
 
-        private FeatureConfigDescription buildFeatureSpec(ConfigPath parentPath, String parentSpot, XmlFeatureOccurence occurence) throws ProvisioningDescriptionException {
+        private FeatureConfigDescription describeFeature(ConfigPath parentPath, String parentSpot, XmlFeatureOccurence occurence) throws ProvisioningDescriptionException {
 
             final XmlFeatureSpec xmlSpec = xmlSpecs.get(occurence.specName);
             if(xmlSpec == null) {
@@ -116,12 +143,12 @@ public class ConfigSchema {
                 childDescr = Collections.emptyList();
             } else if(xmlSpec.features.size() == 1) {
                 final XmlFeatureOccurence childOccurence = xmlSpec.features.values().iterator().next();
-                final FeatureConfigDescription childSpec = buildFeatureSpec(featurePath, spot, childOccurence);
+                final FeatureConfigDescription childSpec = describeFeature(featurePath, spot, childOccurence);
                 childDescr = Collections.singletonList(childSpec);
             } else {
                 final List<FeatureConfigDescription> tmp = new ArrayList<>(xmlSpec.features.size());
                 for(XmlFeatureOccurence childOccurence : xmlSpec.features.values()) {
-                    final FeatureConfigDescription childSpec = buildFeatureSpec(featurePath, spot, childOccurence);
+                    final FeatureConfigDescription childSpec = describeFeature(featurePath, spot, childOccurence);
                     tmp.add(childSpec);
                 }
                 childDescr = Collections.unmodifiableList(tmp);

@@ -241,7 +241,7 @@ public class Config {
                 if (parentDescr == null) {
                     throw new ProvisioningDescriptionException("Unknown feature config description " + feature.descr.parentConfigName);
                 }
-                List<ConfiguredFeature> parents = configsByName.get(parentDescr.path);
+                List<ConfiguredFeature> parents = configsByName.get(parentDescr.configName);
                 if (parents == null) {
                     feature.parent = new ConfiguredFeature(null, parentDescr, null);
                     parents = Collections.singletonList(feature.parent);

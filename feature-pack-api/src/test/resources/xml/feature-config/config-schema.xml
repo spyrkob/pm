@@ -100,6 +100,7 @@
     </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
+      <parameter name="default-interface"/>
     </parameters>
     <features>
       <feature spec="socket-binding" required="true" unbounded="true" name="socket-binding"/>
@@ -112,6 +113,8 @@
     </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
+      <parameter name="socket-binding-group"/>
+      <parameter name="interface"/>
       <parameter name="port"/>
     </parameters>
   </feature-spec>
@@ -128,6 +131,8 @@
     </references>
     <parameters>
       <parameter name="name" feature-id="true"/>
+      <parameter name="profile"/>
+      <parameter name="socket-binding-group"/>
     </parameters>
   </feature-spec>
 </config-schema>

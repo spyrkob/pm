@@ -246,15 +246,15 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPEC));
         }
 
-        final XmlFeatureSpec specBuilder = new XmlFeatureSpec(specName);
+        final XmlFeatureSpec xmlSpec = new XmlFeatureSpec(specName);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     try {
-                        schemaBuilder.addSpec(specBuilder);
+                        schemaBuilder.addSpec(xmlSpec);
                     } catch (ProvisioningDescriptionException e) {
-                        throw new XMLStreamException("Failed to add a feature-spec", e);
+                        throw new XMLStreamException("Failed to add " + xmlSpec.getName() + " spec to the schema", e);
                     }
                     return;
                 }
@@ -262,13 +262,13 @@ class FeaturePackSchemaXmlParser10 implements PlugableXmlParser<ConfigSchema.Bui
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case REFERENCES:
-                            parseReferences(reader, specBuilder);
+                            parseReferences(reader, xmlSpec);
                             break;
                         case PARAMETERS:
-                            parseParameters(reader, specBuilder);
+                            parseParameters(reader, xmlSpec);
                             break;
                         case FEATURES:
-                            parseFeatures(reader, specBuilder);
+                            parseFeatures(reader, xmlSpec);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

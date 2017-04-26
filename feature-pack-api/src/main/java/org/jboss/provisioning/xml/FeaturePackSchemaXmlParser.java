@@ -45,7 +45,7 @@ public class FeaturePackSchemaXmlParser implements XmlParser<ConfigSchema> {
         try {
             return builder.build();
         } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to create config schema", e);
+            throw new XMLStreamException("Failed to create configuration schema", e);
         }
     }
 }
