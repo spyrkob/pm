@@ -41,6 +41,10 @@ public class FeatureParameterSpec {
         return new FeatureParameterSpec(name, true, false, null);
     }
 
+    public static FeatureParameterSpec create(String name, boolean featureId, boolean nillable, String defaultValue) throws ProvisioningDescriptionException {
+        return new FeatureParameterSpec(name, featureId, nillable, defaultValue);
+    }
+
     final String name;
     final boolean featureId;
     final boolean nillable;

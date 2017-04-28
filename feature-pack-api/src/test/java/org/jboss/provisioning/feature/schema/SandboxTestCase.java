@@ -17,12 +17,22 @@
 
 package org.jboss.provisioning.feature.schema;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.feature.ConfigSchema;
 import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.FullConfig;
+import org.jboss.provisioning.xml.FeatureConfigXmlParser;
+import org.jboss.provisioning.xml.FeatureSpecXmlParser;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -35,44 +45,18 @@ public class SandboxTestCase {
     public void testMain() throws Exception {
 
         final ConfigSchema schema = ConfigSchema.builder()
-                .addFeatureSpec(FeatureSpec.builder("system-property")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .addParam(FeatureParameterSpec.create("value", false))
-                        .build())
-                .addFeatureSpec(FeatureSpec.builder("profile")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .build())
-                .addFeatureSpec(FeatureSpec.builder("interface")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .addParam(FeatureParameterSpec.create("inet-address"))
-                        .build())
-                .addFeatureSpec(FeatureSpec.builder("socket-binding-group")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .addParam(FeatureParameterSpec.create("default-interface", false))
-                        .addRef(FeatureReferenceSpec.builder("interface")
-                                .mapParam("default-interface", "name")
-                                .build())
-                        .build())
-                .addFeatureSpec(FeatureSpec.builder("socket-binding")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .addParam(FeatureParameterSpec.createId("socket-binding-group"))
-                        .addParam(FeatureParameterSpec.create("interface", true))
-                        .addRef(FeatureReferenceSpec.create("socket-binding-group"))
-                        .addRef(FeatureReferenceSpec.create("interface", true))
-                        .build())
-                .addFeatureSpec(FeatureSpec.builder("server-group")
-                        .addParam(FeatureParameterSpec.createId("name"))
-                        .addParam(FeatureParameterSpec.createId("profile"))
-                        .addParam(FeatureParameterSpec.createId("socket-binding-group"))
-                        .addRef(FeatureReferenceSpec.create("profile"))
-                        .addRef(FeatureReferenceSpec.create("socket-binding-group"))
-                        .build())
+                .addFeatureSpec(featureSpec("system-property-spec.xml"))
+                .addFeatureSpec(featureSpec("profile-spec.xml"))
+                .addFeatureSpec(featureSpec("interface-spec.xml"))
+                .addFeatureSpec(featureSpec("socket-binding-group-spec.xml"))
+                .addFeatureSpec(featureSpec("socket-binding-spec.xml"))
+                .addFeatureSpec(featureSpec("server-group-spec.xml"))
                 .build();
 
-        final FullConfig config = FullConfig.builder(schema)
-                .addFeature(FeatureConfig.newConfig("system-property")
-                        .setParam("name", "prop1")
-                        .setParam("value", "value1"))
+        final FullConfig.Builder configBuilder = FullConfig.builder(schema);
+        addFeatures(configBuilder, "system-property");
+
+        final FullConfig config = configBuilder
                 .addFeature(FeatureConfig.newConfig("socket-binding")
                         .setParam("name", "http")
                         .setParam("socket-binding-group", "standard-sockets"))
@@ -94,9 +78,6 @@ public class SandboxTestCase {
                         .setParam("name", "other-server-group")
                         .setParam("profile", "ha")
                         .setParam("socket-binding-group", "ha-sockets"))
-                .addFeature(FeatureConfig.newConfig("system-property")
-                        .setParam("name", "prop2")
-                        .setParam("value", "value2"))
                 .addFeature(FeatureConfig.newConfig("interface").setParam("name", "public"))
                 .addFeature(FeatureConfig.newConfig("socket-binding-group")
                         .setParam("name", "standard-sockets")
@@ -107,5 +88,42 @@ public class SandboxTestCase {
                 .addFeature(FeatureConfig.newConfig("profile").setParam("name", "default"))
                 .addFeature(FeatureConfig.newConfig("profile").setParam("name", "ha"))
                 .build();
+    }
+
+    private static void addFeatures(FullConfig.Builder builder, String feature) throws Exception {
+        final Path featureDir = getResource("xml/feature/config").resolve(feature);
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(featureDir)) {
+            for(Path p : stream) {
+                builder.addFeature(loadConfig(p));
+            }
+        }
+    }
+
+    private static FeatureConfig featureConfig(String xml) throws Exception {
+        final Path path = getResource("xml/feature/config/" + xml);
+        return loadConfig(path);
+    }
+
+    private static FeatureConfig loadConfig(Path path) throws XMLStreamException, IOException {
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            return FeatureConfigXmlParser.getInstance().parse(reader);
+        }
+    }
+
+    private static FeatureSpec featureSpec(String xml) throws Exception {
+        final Path path = getResource("xml/feature/spec/" + xml);
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            return FeatureSpecXmlParser.getInstance().parse(reader);
+        }
+    }
+
+    private static Path getResource(String path) {
+        java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
+        Assert.assertNotNull("Resource " + path + " is not on the classpath", resUrl);
+        try {
+            return Paths.get(resUrl.toURI());
+        } catch (java.net.URISyntaxException e) {
+            throw new IllegalStateException("Failed to get URI from URL", e);
+        }
     }
 }

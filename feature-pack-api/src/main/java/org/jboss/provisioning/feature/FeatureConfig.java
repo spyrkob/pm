@@ -34,12 +34,20 @@ public class FeatureConfig {
         return new FeatureConfig(specName);
     }
 
-    final String specName;
+    String specName;
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
 
+    public FeatureConfig() {
+    }
+
     public FeatureConfig(String specName) {
         this.specName = specName;
+    }
+
+    public FeatureConfig setSpecName(String specName) {
+        this.specName = specName;
+        return this;
     }
 
     public FeatureConfig setParam(String name, String value) {

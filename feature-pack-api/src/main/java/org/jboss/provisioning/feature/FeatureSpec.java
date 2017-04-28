@@ -35,13 +35,21 @@ public class FeatureSpec {
 
     public static class Builder {
 
-        private final String name;
+        private String name;
         private Map<String, FeatureReferenceSpec> refs = Collections.emptyMap();
         private Map<String, FeatureParameterSpec> params = Collections.emptyMap();
         private List<FeatureParameterSpec> idParams = Collections.emptyList();
 
+        private Builder() {
+        }
+
         private Builder(String name) {
             this.name = name;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
         }
 
         public Builder addRef(FeatureReferenceSpec ref) {
@@ -95,6 +103,10 @@ public class FeatureSpec {
 //            }
             return new FeatureSpec(this);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static Builder builder(String name) {

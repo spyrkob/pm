@@ -69,6 +69,8 @@ public class XmlParsers {
         new PackageXmlParser10().plugin(this);
         new ProvisionedStateXmlParser10().plugin(this);
         new ProvisioningXmlParser10().plugin(this);
+        new FeatureSpecXmlParser10().plugin(this);
+        new FeatureConfigXmlParser10().plugin(this);
     }
 
     public void plugin(QName root, XMLElementReader<?> reader) {

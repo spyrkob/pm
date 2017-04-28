@@ -67,7 +67,7 @@ public class FeatureReferenceSpec {
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
             if(paramMapping == null) {
-                throw new ProvisioningDescriptionException(name + " reference is missing parameter mapping.");
+                paramMapping = Collections.singletonMap(feature, "name");
             }
             return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
         }
