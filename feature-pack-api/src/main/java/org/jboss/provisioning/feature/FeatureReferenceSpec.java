@@ -18,6 +18,7 @@
 package org.jboss.provisioning.feature;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +30,52 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  * @author Alexey Loubyansky
  */
 public class FeatureReferenceSpec {
+
+    public static class Builder {
+
+        private final String feature;
+        private String name;
+        private boolean nillable;
+        private Map<String, String> paramMapping = null;
+
+        private Builder(String feature) {
+            this.feature = feature;
+            this.name = feature;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setNillable(boolean nillable) {
+            this.nillable = nillable;
+            return this;
+        }
+
+        public Builder mapParam(String localName, String targetName) {
+            if(paramMapping == null) {
+                paramMapping = Collections.singletonMap(localName, targetName);
+            } else {
+                if(paramMapping.size() == 1) {
+                    paramMapping = new HashMap<>(paramMapping);
+                }
+                paramMapping.put(localName, targetName);
+            }
+            return this;
+        }
+
+        public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
+            if(paramMapping == null) {
+                throw new ProvisioningDescriptionException(name + " reference is missing parameter mapping.");
+            }
+            return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
+        }
+    }
+
+    public static Builder builder(String feature) {
+        return new Builder(feature);
+    }
 
     public static FeatureReferenceSpec create(String feature) throws ProvisioningDescriptionException {
         return create(feature, feature, false);

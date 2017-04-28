@@ -30,6 +30,10 @@ import java.util.Set;
  */
 public class FeatureConfig {
 
+    public static FeatureConfig newConfig(String specName) {
+        return new FeatureConfig(specName);
+    }
+
     final String specName;
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
@@ -38,7 +42,7 @@ public class FeatureConfig {
         this.specName = specName;
     }
 
-    public FeatureConfig addParam(String name, String value) {
+    public FeatureConfig setParam(String name, String value) {
         switch(params.size()) {
             case 0:
                 params = Collections.singletonMap(name, value);

@@ -58,19 +58,19 @@ public class ConfigSchema {
                     for(FeatureReferenceSpec refSpec : spec.refs.values()) {
                         final FeatureSpec targetSpec = featureSpecs.get(refSpec.feature);
                         if(targetSpec == null) {
-                            throw new ProvisioningDescriptionException("Feature " + spec.name + " declares reference "
-                                    + refSpec.name + " which targets unknown feature " + refSpec.feature);
+                            throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                    + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
                         }
                         for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
                             if(!spec.params.containsKey(mapping.getKey())) {
-                                throw new ProvisioningDescriptionException("Feature " + spec.name
-                                        + " does not include parameter " + mapping.getKey() + " mapped in reference "
-                                        + refSpec.name);
+                                throw new ProvisioningDescriptionException(spec.name
+                                        + " feature does not include parameter " + mapping.getKey() + " mapped in "
+                                        + refSpec.name + " reference");
                             }
                             if(!targetSpec.params.containsKey(mapping.getValue())) {
-                                throw new ProvisioningDescriptionException("Feature " + targetSpec.name
-                                        + " does not include parameter " + mapping.getValue() + " mapped in reference "
-                                        + refSpec.name + " from " + spec.name);
+                                throw new ProvisioningDescriptionException(targetSpec.name
+                                        + " feature does not include parameter '" + mapping.getValue() + "' targeted from "
+                                        + spec.name + " through " + refSpec.name + " reference");
                             }
                         }
                     }
