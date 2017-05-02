@@ -19,23 +19,23 @@ package org.jboss.provisioning.xml;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig> {
+class ConfigXmlParser10 implements PlugableXmlParser<Config.Builder> {
 
-    public static final QName ROOT_1_0 = new QName(ConfigXml.NAMESPACE_1_0, ConfigXml.Element.FEATURE.getLocalName());
+    public static final QName ROOT_1_0 = new QName(ConfigXml.NAMESPACE_1_0, ConfigXml.Element.CONFIG.getLocalName());
 
     public QName getRoot() {
         return ROOT_1_0;
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        ConfigXml.readFeatureConfig(reader, config);
+    public void readElement(XMLExtendedStreamReader reader, Config.Builder builder) throws XMLStreamException {
+        ConfigXml.readConfig(reader, builder);
     }
 }

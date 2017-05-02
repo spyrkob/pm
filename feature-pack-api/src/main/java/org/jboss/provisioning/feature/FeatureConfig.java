@@ -126,6 +126,7 @@ public class FeatureConfig {
             Map.Entry<String, String> entry = i.next();
             buf.append(entry.getKey()).append('=').append(entry.getValue());
             while (i.hasNext()) {
+                entry = i.next();
                 buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
             }
         }

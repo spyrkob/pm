@@ -99,11 +99,6 @@ public class SandboxTestCase {
         }
     }
 
-    private static FeatureConfig featureConfig(String xml) throws Exception {
-        final Path path = getResource("xml/feature/config/" + xml);
-        return loadConfig(path);
-    }
-
     private static FeatureConfig loadConfig(Path path) throws XMLStreamException, IOException {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             return FeatureConfigXmlParser.getInstance().parse(reader);

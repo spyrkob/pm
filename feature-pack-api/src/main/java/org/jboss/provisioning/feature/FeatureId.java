@@ -30,6 +30,45 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureId {
 
+    public static FeatureId fromString(String str) throws ProvisioningDescriptionException {
+
+        final int colonIndex = str.indexOf(':');
+        if(colonIndex < 1) {
+            formatException();
+        }
+        int endIndex = str.indexOf(',', colonIndex + 4);
+        if(endIndex < 0) {
+            final int equals = str.indexOf('=', colonIndex + 2);
+            if(equals < 0 || equals == str.length() - 1) {
+                formatException();
+            }
+            return FeatureId.create(str.substring(0, colonIndex), str.substring(colonIndex + 1, equals), str.substring(equals + 1));
+        }
+
+        final Builder builder = FeatureId.builder(str.substring(0, colonIndex));
+        int lastComma = colonIndex;
+        while(endIndex > 0) {
+            int equals = str.indexOf('=', lastComma + 2);
+            if(equals < 0 || equals == str.length() - 1) {
+                formatException();
+            }
+            builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1, endIndex));
+            lastComma = endIndex;
+            endIndex = str.indexOf(',', endIndex + 1);
+        }
+
+        int equals = str.indexOf('=', lastComma + 2);
+        if(equals < 0 || equals == str.length() - 1) {
+            formatException();
+        }
+        builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1));
+        return builder.build();
+    }
+
+    private static void formatException() throws ProvisioningDescriptionException {
+        throw new ProvisioningDescriptionException("The string does not follow format spec_name:param_name=value(,param_name=value)*");
+    }
+
     public static class Builder {
 
         private final String specName;
@@ -110,9 +149,9 @@ public class FeatureId {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[').append(specName);
+        buf.append(specName);
         if (!params.isEmpty()) {
-            buf.append(' ');
+            buf.append(':');
             final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
             Map.Entry<String, String> entry = i.next();
             buf.append(entry.getKey()).append('=').append(entry.getValue());
@@ -121,6 +160,6 @@ public class FeatureId {
                 buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
             }
         }
-        return buf.append(']').toString();
+        return buf.toString();
     }
 }

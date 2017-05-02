@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    and other contributors as indicated by the @author tags.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<config name="configName" xmlns="urn:wildfly:pm-config:1.0">
+  <dependencies>
+    <dependency config="dep1"/>
+    <dependency config="dep2" inherit-features="false"/>
+    <dependency config="dep3" inherit-features="false">
+      <include spec="spec1"/>
+      <include feature-id="spec2:p1=v1,p2=v2"/>
+      <include feature-id="spec3:p1=v1">
+        <dependencies>
+          <dependency feature-id="spec4:p1=v1,p2=v2"/>
+          <dependency feature-id="spec5:p1=v1,p2=v2"/>
+        </dependencies>
+        <parameters>
+          <parameter name="p1" value="v1"/>
+          <parameter name="p2" value="v2"/>
+        </parameters>
+      </include>
+      <exclude spec="spec6"/>
+      <exclude spec="spec7"/>
+      <exclude feature-id="spec8:p1=v1"/>
+      <exclude feature-id="spec8:p1=v2"/>
+    </dependency>
+  </dependencies>
+  <features>
+    <feature spec="spec1">
+      <dependencies>
+        <dependency feature-id="spec2:p1=v1,p2=v2"/>
+        <dependency feature-id="spec3:p3=v3"/>
+      </dependencies>
+      <parameters>
+        <parameter name="p1" value="v1"/>
+        <parameter name="p2" value="v2"/>
+      </parameters>
+    </feature>
+    <feature spec="spec4">
+      <parameters>
+        <parameter name="p1" value="v1"/>
+      </parameters>
+    </feature>
+  </features>
+</config>

@@ -17,7 +17,7 @@
     limitations under the License.
 
 -->
-<feature name="system-property" xmlns="urn:wildfly:pm-feature-config:1.0">
+<feature spec="system-property" xmlns="urn:wildfly:pm-config:1.0">
   <parameters>
     <parameter name="name" value="prop2"/>
     <parameter name="value" value="value2"/>
