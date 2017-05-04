@@ -32,7 +32,7 @@ public class ConfigSchema {
 
     public static class Builder {
 
-        private Map<String, FeatureSpec> featureSpecs = new HashMap<>();
+        Map<String, FeatureSpec> featureSpecs = new HashMap<>();
         private boolean checkRefs;
 
         private Builder() {

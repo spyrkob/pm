@@ -32,9 +32,9 @@ public class Config {
 
     public static class Builder {
 
-        private String name;
-        private Map<String, ConfigDependency> dependencies = Collections.emptyMap();
-        private List<FeatureConfig> features = Collections.emptyList();
+        String name;
+        Map<String, ConfigDependency> dependencies = Collections.emptyMap();
+        List<FeatureConfig> features = Collections.emptyList();
 
         private Builder() {
         }
@@ -49,7 +49,7 @@ public class Config {
         }
 
         public Builder addDependency(ConfigDependency dep) {
-            switch(dependencies.size()) {
+            switch (dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonMap(dep.configName, dep);
                     break;

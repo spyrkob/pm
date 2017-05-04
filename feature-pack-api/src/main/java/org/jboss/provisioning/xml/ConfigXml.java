@@ -229,7 +229,7 @@ public class ConfigXml {
 
     private static ConfigDependency readConfigDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
         String config = null;
-        boolean inheritFeatures = true;
+        Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -244,10 +244,13 @@ public class ConfigXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (config == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.CONFIG));
+        if (config == null && inheritFeatures != null) {
+            throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.CONFIG);
         }
-        final ConfigDependency.Builder depBuilder = ConfigDependency.builder(config, inheritFeatures);
+        final ConfigDependency.Builder depBuilder = ConfigDependency.builder(config);
+        if(inheritFeatures != null) {
+            depBuilder.setInheritFeatures(inheritFeatures);
+        }
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
@@ -294,7 +297,11 @@ public class ConfigXml {
             if(featureId != null) {
                 throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
             }
-            depBuilder.includeSpec(spec);
+            try {
+                depBuilder.includeSpec(spec);
+            } catch (ProvisioningDescriptionException e) {
+                throw new XMLStreamException("Failed to parse config", e);
+            }
             ParsingUtils.parseNoContent(reader);
             return;
         }
@@ -305,7 +312,11 @@ public class ConfigXml {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
-                    depBuilder.includeFeature(parseFeatureId(featureId), fc);
+                    try {
+                        depBuilder.includeFeature(parseFeatureId(featureId), fc);
+                    } catch (ProvisioningDescriptionException e) {
+                        throw new XMLStreamException("Failed to parse config", e);
+                    }
                     return;
                 case XMLStreamConstants.START_ELEMENT:
                     if(fc == null) {
@@ -352,9 +363,17 @@ public class ConfigXml {
             if(featureId != null) {
                 throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
             }
-            depBuilder.excludeSpec(spec);
+            try {
+                depBuilder.excludeSpec(spec);
+            } catch (ProvisioningDescriptionException e) {
+                throw new XMLStreamException("Failed to parse config", e);
+            }
         } else if(featureId != null) {
-            depBuilder.excludeFeature(parseFeatureId(featureId));
+            try {
+                depBuilder.excludeFeature(parseFeatureId(featureId));
+            } catch (ProvisioningDescriptionException e) {
+                throw new XMLStreamException("Failed to parse config", e);
+            }
         } else {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }

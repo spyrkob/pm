@@ -26,10 +26,12 @@ import java.nio.file.Paths;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.ConfigSchema;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.feature.FeatureSpecLoader;
 import org.jboss.provisioning.feature.FullConfig;
+import org.jboss.provisioning.feature.FullConfigBuilder;
 import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 import org.junit.Assert;
@@ -44,7 +46,51 @@ public class SandboxTestCase {
     @Test
     public void testMain() throws Exception {
 
-        final ConfigSchema schema = ConfigSchema.builder()
+        final FeatureSpecLoader loader = new FeatureSpecLoader() {
+            @Override
+            public FeatureSpec load(String name) throws ProvisioningDescriptionException {
+                try {
+                    return featureSpec(name + "-spec.xml");
+                } catch (Exception e) {
+                    throw new ProvisioningDescriptionException("Failed to load schema " + name, e);
+                }
+            }
+        };
+
+        FullConfigBuilder.newInstance(loader)
+            .addFeature(FeatureConfig.newConfig("socket-binding")
+                .setParam("name", "http")
+                .setParam("socket-binding-group", "standard-sockets"))
+            .addFeature(FeatureConfig.newConfig("socket-binding")
+                .setParam("name", "https")
+                .setParam("socket-binding-group", "standard-sockets"))
+            .addFeature(FeatureConfig.newConfig("socket-binding")
+                .setParam("name", "http")
+                .setParam("socket-binding-group", "ha-sockets"))
+            .addFeature(FeatureConfig.newConfig("socket-binding")
+                .setParam("name", "https")
+                .setParam("socket-binding-group", "ha-sockets")
+                .setParam("interface", "public"))
+            .addFeature(FeatureConfig.newConfig("server-group")
+                .setParam("name", "main-server-group")
+                .setParam("profile", "default")
+                .setParam("socket-binding-group", "standard-sockets"))
+            .addFeature(FeatureConfig.newConfig("server-group")
+                .setParam("name", "other-server-group")
+                .setParam("profile", "ha")
+                .setParam("socket-binding-group", "ha-sockets"))
+            .addFeature(FeatureConfig.newConfig("interface").setParam("name", "public"))
+            .addFeature(FeatureConfig.newConfig("socket-binding-group")
+                .setParam("name", "standard-sockets")
+                .setParam("default-interface", "public"))
+            .addFeature(FeatureConfig.newConfig("socket-binding-group")
+               .setParam("name", "ha-sockets")
+               .setParam("default-interface", "public"))
+            .addFeature(FeatureConfig.newConfig("profile").setParam("name", "default"))
+            .addFeature(FeatureConfig.newConfig("profile").setParam("name", "ha"))
+            .build();
+
+/*        final ConfigSchema schema = ConfigSchema.builder()
                 .addFeatureSpec(featureSpec("system-property-spec.xml"))
                 .addFeatureSpec(featureSpec("profile-spec.xml"))
                 .addFeatureSpec(featureSpec("interface-spec.xml"))
@@ -88,7 +134,7 @@ public class SandboxTestCase {
                 .addFeature(FeatureConfig.newConfig("profile").setParam("name", "default"))
                 .addFeature(FeatureConfig.newConfig("profile").setParam("name", "ha"))
                 .build();
-    }
+*/    }
 
     private static void addFeatures(FullConfig.Builder builder, String feature) throws Exception {
         final Path featureDir = getResource("xml/feature/config").resolve(feature);

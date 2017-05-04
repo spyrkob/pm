@@ -25,6 +25,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
+
 /**
  *
  * @author Alexey Loubyansky
@@ -50,7 +52,10 @@ public class ConfigDependency {
             return this;
         }
 
-        public Builder includeSpec(String spec) {
+        public Builder includeSpec(String spec) throws ProvisioningDescriptionException {
+            if(excludedSpecs.contains(spec)) {
+                throw new ProvisioningDescriptionException(spec + " spec has been explicitly excluded");
+            }
             switch(includedSpecs.size()) {
                 case 0:
                     includedSpecs = Collections.singleton(spec);
@@ -63,11 +68,14 @@ public class ConfigDependency {
             return this;
         }
 
-        public Builder includeFeature(FeatureId featureId) {
+        public Builder includeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
             return includeFeature(featureId, null);
         }
 
-        public Builder includeFeature(FeatureId featureId, FeatureConfig feature) {
+        public Builder includeFeature(FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+            if(excludedFeatures.contains(featureId)) {
+                throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
+            }
             switch(includedFeatures.size()) {
                 case 0:
                     includedFeatures = Collections.singletonMap(featureId, feature);
@@ -80,7 +88,10 @@ public class ConfigDependency {
             return this;
         }
 
-        public Builder excludeSpec(String spec) {
+        public Builder excludeSpec(String spec) throws ProvisioningDescriptionException {
+            if(includedSpecs.contains(spec)) {
+                throw new ProvisioningDescriptionException(spec + " spec has been inplicitly excluded");
+            }
             switch(excludedSpecs.size()) {
                 case 0:
                     excludedSpecs = Collections.singleton(spec);
@@ -93,7 +104,10 @@ public class ConfigDependency {
             return this;
         }
 
-        public Builder excludeFeature(FeatureId featureId) {
+        public Builder excludeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
+            if(includedFeatures.containsKey(featureId)) {
+                throw new ProvisioningDescriptionException(featureId + " has been explicitly included");
+            }
             switch(excludedFeatures.size()) {
                 case 0:
                     excludedFeatures = Collections.singleton(featureId);
@@ -133,6 +147,20 @@ public class ConfigDependency {
         this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
         this.includedFeatures = builder.includedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.includedFeatures) : builder.includedFeatures;
         this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
+    }
+
+    boolean isExcluded(String spec) {
+        return excludedSpecs.contains(spec);
+    }
+
+    boolean isExcluded(FeatureId featureId) {
+        if (excludedFeatures.contains(featureId)) {
+            return true;
+        }
+        if (excludedSpecs.contains(featureId.specName)) {
+            return !includedFeatures.containsKey(featureId.specName);
+        }
+        return false;
     }
 
     @Override
@@ -190,7 +218,10 @@ public class ConfigDependency {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[').append(configName);
+        buf.append('[');
+        if(configName != null) {
+            buf.append(configName);
+        }
         if(!includedSpecs.isEmpty()) {
             buf.append(" includedSpecs=");
             final Iterator<String> i = includedSpecs.iterator();

@@ -80,6 +80,19 @@ public class FeatureConfig {
         return !dependencies.isEmpty();
     }
 
+    public void merge(FeatureConfig config) {
+        if(params.isEmpty()) {
+            params = config.params;
+            return;
+        }
+        if(params.size() == 1) {
+            params = new HashMap<>(params);
+        }
+        for(Map.Entry<String, String> param : config.params.entrySet()) {
+            params.put(param.getKey(), param.getValue());
+        }
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

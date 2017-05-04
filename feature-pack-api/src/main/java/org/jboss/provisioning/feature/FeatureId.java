@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.feature;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,6 +114,18 @@ public class FeatureId {
         }
         this.specName = specName;
         this.params = params.size() == 1 ? params : Collections.unmodifiableMap(params);
+    }
+
+    public String getSpec() {
+        return specName;
+    }
+
+    public Collection<String> getParamNames() {
+        return params.keySet();
+    }
+
+    public String getParam(String name) {
+        return params.get(name);
     }
 
     @Override
