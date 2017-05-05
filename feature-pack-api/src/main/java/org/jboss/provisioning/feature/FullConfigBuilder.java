@@ -189,7 +189,11 @@ public class FullConfigBuilder {
                     if(!specFeatures.liningUp) {
                         lineUp(specFeatures);
                     } else {
-                        lineUp(featuresById.get(refId));
+                        final ConfiguredFeature dep = featuresById.get(refId);
+                        if(dep == null) {
+                            throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved reference ").append(refId).toString());
+                        }
+                        lineUp(dep);
                     }
                 }
             }
@@ -198,26 +202,24 @@ public class FullConfigBuilder {
             for(FeatureId depId : feature.config.dependencies) {
                 final ConfiguredFeature dependency = featuresById.get(depId);
                 if(dependency == null) {
-                    final StringBuilder buf = new StringBuilder();
-                    if (feature.id != null) {
-                        buf.append(feature.id);
-                    } else {
-                        buf.append(feature.spec.name).append(" configuration");
-                    }
-                    buf.append(" has unsatisfied dependency on ").append(depId);
-                    throw new ProvisioningDescriptionException(buf.toString());
+                    throw new ProvisioningDescriptionException(errorFor(feature).append(" has unsatisfied dependency on ").append(depId).toString());
                 }
                 lineUp(dependency);
             }
         }
 
+        final StringBuilder buf = errorFor(feature);
+        System.out.println(buf.toString());
+    }
+
+    private StringBuilder errorFor(ConfiguredFeature feature) {
         final StringBuilder buf = new StringBuilder();
-        if(feature.id != null) {
+        if (feature.id != null) {
             buf.append(feature.id);
         } else {
             buf.append(feature.spec.name).append(" configuration");
         }
-        System.out.println(buf.toString());
+        return buf;
     }
 
     private void processDependency(ConfigDependency dep) throws ProvisioningDescriptionException {
@@ -343,12 +345,9 @@ public class FullConfigBuilder {
 
     private static String getParamValue(FeatureConfig config, final FeatureParameterSpec param)
             throws ProvisioningDescriptionException {
-        final String value = config.params.get(param.name);
-        if(value == null) {
-            if(param.featureId || !param.nillable) {
-                throw new ProvisioningDescriptionException(config.specName + " configuration is missing required parameter " + param.name);
-            }
-            return param.defaultValue;
+        final String value = config.params.getOrDefault(param.name, param.defaultValue);
+        if(value == null && (param.featureId || !param.nillable)) {
+            throw new ProvisioningDescriptionException(config.specName + " configuration is missing required parameter " + param.name);
         }
         return value;
     }

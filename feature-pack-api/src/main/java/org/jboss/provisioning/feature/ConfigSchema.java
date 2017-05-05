@@ -61,6 +61,14 @@ public class ConfigSchema {
                             throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
                                     + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
                         }
+                        if(!targetSpec.hasId()) {
+                            throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                    + refSpec.name + " which targets feature " + refSpec.feature + " that has no ID parameters");
+                        }
+                        if(targetSpec.idParams.size() != refSpec.paramMapping.size()) {
+                            throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.name + " of feature " + spec.name +
+                                    " must correspond to the ID parameters of the target feature " + refSpec.feature);
+                        }
                         for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
                             if(!spec.params.containsKey(mapping.getKey())) {
                                 throw new ProvisioningDescriptionException(spec.name

@@ -17,9 +17,8 @@
     limitations under the License.
 
 -->
-<feature spec="socket-binding-group" xmlns="urn:wildfly:pm-config:1.0">
+<feature-spec name="logging" xmlns="urn:wildfly:pm-feature-spec:1.0">
   <parameters>
-    <parameter name="name" value="standard-sockets"/>
-    <parameter name="default-interface" value="public"/>
+    <parameter name="profile" feature-id="true"/>
   </parameters>
-</feature>
+</feature-spec>

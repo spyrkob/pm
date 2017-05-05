@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    and other contributors as indicated by the @author tags.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<config name="full_domain" xmlns="urn:wildfly:pm-config:1.0">
+  <features>
+    <feature spec="profile">
+      <parameters>
+        <parameter name="name" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="profile">
+      <parameters>
+        <parameter name="name" value="ha"/>
+      </parameters>
+    </feature>
+    
+    <feature spec="logging">
+      <parameters>
+        <parameter name="profile" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="logging-console-handler">
+      <parameters>
+        <parameter name="profile" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="logging-rotating-file-handler">
+      <parameters>
+        <parameter name="profile" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="logger">
+      <parameters>
+        <parameter name="profile" value="default"/>
+        <parameter name="category" value="com.arjuna"/>
+        <parameter name="level" value="WARN"/>
+      </parameters>
+    </feature>
+    <feature spec="logger">
+      <parameters>
+        <parameter name="profile" value="default"/>
+        <parameter name="category" value="org.jboss.as.config"/>
+        <parameter name="level" value="DEBUG"/>
+      </parameters>
+    </feature>
+    <feature spec="logger">
+      <parameters>
+        <parameter name="profile" value="default"/>
+        <parameter name="category" value="sun.rmi"/>
+        <parameter name="level" value="WARN"/>
+      </parameters>
+    </feature>
+    <feature spec="root-logger">
+      <parameters>
+        <parameter name="profile" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="logging-formatter">
+      <parameters>
+        <parameter name="profile" value="default"/>
+        <parameter name="name" value="PATTERN"/>
+        <parameter name="pattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n"/>
+      </parameters>
+    </feature>
+    <feature spec="logging-formatter">
+      <parameters>
+        <parameter name="profile" value="default"/>
+        <parameter name="name" value="COLOR-PATTERN"/>
+        <parameter name="pattern" value="%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n"/>
+      </parameters>
+    </feature>
+    
+    <feature spec="logging">
+      <parameters>
+        <parameter name="profile" value="ha"/>
+      </parameters>
+    </feature>
+    <feature spec="logger">
+      <parameters>
+        <parameter name="profile" value="ha"/>
+        <parameter name="category" value="org.jboss.pm"/>
+        <parameter name="level" value="DEBUG"/>
+      </parameters>
+    </feature>
+    <feature spec="logger">
+      <parameters>
+        <parameter name="profile" value="ha"/>
+        <parameter name="category" value="java.util"/>
+        <parameter name="level" value="INFO"/>
+      </parameters>
+    </feature>
+    
+    <feature spec="interface">
+      <parameters>
+        <parameter name="name" value="public"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding-group">
+      <parameters>
+        <parameter name="name" value="standard-sockets"/>
+        <parameter name="default-interface" value="public"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding">
+      <parameters>
+        <parameter name="name" value="http"/>
+        <parameter name="socket-binding-group" value="standard-sockets"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding">
+      <parameters>
+        <parameter name="name" value="https"/>
+        <parameter name="socket-binding-group" value="standard-sockets"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding-group">
+      <parameters>
+        <parameter name="name" value="ha-sockets"/>
+        <parameter name="default-interface" value="public"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding">
+      <parameters>
+        <parameter name="name" value="http"/>
+        <parameter name="socket-binding-group" value="ha-sockets"/>
+      </parameters>
+    </feature>
+    <feature spec="socket-binding">
+      <parameters>
+        <parameter name="name" value="https"/>
+        <parameter name="socket-binding-group" value="ha-sockets"/>
+      </parameters>
+    </feature>
+    <feature spec="server-group">
+      <parameters>
+        <parameter name="name" value="main-server-group"/>
+        <parameter name="socket-binding-group" value="standard-sockets"/>
+        <parameter name="profile" value="default"/>
+      </parameters>
+    </feature>
+    <feature spec="server-group">
+      <parameters>
+        <parameter name="name" value="other-server-group"/>
+        <parameter name="socket-binding-group" value="ha-sockets"/>
+        <parameter name="profile" value="ha"/>
+      </parameters>
+    </feature>
+  </features>
+</config>

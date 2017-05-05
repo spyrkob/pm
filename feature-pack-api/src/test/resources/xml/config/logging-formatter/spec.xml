@@ -17,8 +17,15 @@
     limitations under the License.
 
 -->
-<feature spec="socket-binding" xmlns="urn:wildfly:pm-config:1.0">
+<feature-spec name="logging-formatter" xmlns="urn:wildfly:pm-feature-spec:1.0">
+  <references>
+    <reference feature="logging">
+      <parameter name="profile" maps-to="profile"/>
+    </reference>
+  </references>
   <parameters>
-    <parameter name="name" value="http"/>
+    <parameter name="profile" feature-id="true"/>
+    <parameter name="name" feature-id="true"/>
+    <parameter name="pattern"/>
   </parameters>
-</feature>
+</feature-spec>

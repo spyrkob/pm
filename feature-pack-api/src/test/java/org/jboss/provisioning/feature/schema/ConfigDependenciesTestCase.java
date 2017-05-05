@@ -41,7 +41,7 @@ public class ConfigDependenciesTestCase {
                 new DefaultFeatureSpecLoader(baseDir),
                 new DefaultConfigLoader(baseDir),
                 DefaultFeatureConfigLoader.newInstance(baseDir))
-                .addConfig("default_profile")
+                .addConfig("full_domain")
                 .build();
 
 /*        final Config expected = Config.builder("configName")
