@@ -53,13 +53,12 @@ public class ConfigXml {
 
         CONFIG("config"),
         DEPENDENCIES("dependencies"),
-        DEPENDENCY("dependency"),
+        DEPENDENCY("depends"),
         EXCLUDE("exclude"),
         FEATURE("feature"),
         FEATURES("features"),
         INCLUDE("include"),
-        PARAMETERS("parameters"),
-        PARAMETER("parameter"),
+        PARAMETER("param"),
 
         // default unknown element
         UNKNOWN(null);
@@ -324,11 +323,11 @@ public class ConfigXml {
                     }
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case DEPENDENCIES:
-                            readFeatureDependencies(reader, fc);
+                        case DEPENDENCY:
+                            readFeatureDependency(reader, fc);
                             break;
-                        case PARAMETERS:
-                            readParameters(reader, fc);
+                        case PARAMETER:
+                            readParameter(reader, fc);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -428,34 +427,11 @@ public class ConfigXml {
                 case XMLStreamConstants.START_ELEMENT:
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case DEPENDENCIES:
-                            readFeatureDependencies(reader, config);
-                            break;
-                        case PARAMETERS:
-                            readParameters(reader, config);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readFeatureDependencies(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
                         case DEPENDENCY:
                             readFeatureDependency(reader, config);
+                            break;
+                        case PARAMETER:
+                            readParameter(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -494,29 +470,6 @@ public class ConfigXml {
         } catch (ProvisioningDescriptionException e) {
             throw new XMLStreamException("Failed to parse feature-id", e);
         }
-    }
-
-    private static void readParameters(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PARAMETER:
-                            readParameter(reader, config);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
     private static void readParameter(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
