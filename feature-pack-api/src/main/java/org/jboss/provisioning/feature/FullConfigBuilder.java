@@ -69,7 +69,7 @@ public class FullConfigBuilder {
     private final FeatureSpecLoader specLoader;
     private final ConfigLoader configLoader;
     private final FeatureConfigLoader featureLoader;
-    private ConfigSchema.Builder schema = ConfigSchema.builder();
+    private FeatureSpecRegistry.Builder schema = FeatureSpecRegistry.builder();
     private Map<FeatureId, ConfiguredFeature> featuresById = new HashMap<>();
     private Map<String, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
 

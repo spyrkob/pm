@@ -18,21 +18,15 @@
 package org.jboss.provisioning.feature.schema;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.FeatureSpecLoader;
-import org.jboss.provisioning.feature.FullConfig;
 import org.jboss.provisioning.feature.FullConfigBuilder;
-import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -135,21 +129,6 @@ public class SandboxTestCase {
                 .addFeature(FeatureConfig.newConfig("profile").setParam("name", "ha"))
                 .build();
 */    }
-
-    private static void addFeatures(FullConfig.Builder builder, String feature) throws Exception {
-        final Path featureDir = getResource("xml/feature/config").resolve(feature);
-        try(DirectoryStream<Path> stream = Files.newDirectoryStream(featureDir)) {
-            for(Path p : stream) {
-                builder.addFeature(loadConfig(p));
-            }
-        }
-    }
-
-    private static FeatureConfig loadConfig(Path path) throws XMLStreamException, IOException {
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            return FeatureConfigXmlParser.getInstance().parse(reader);
-        }
-    }
 
     private static FeatureSpec featureSpec(String xml) throws Exception {
         final Path path = getResource("xml/feature/spec/" + xml);

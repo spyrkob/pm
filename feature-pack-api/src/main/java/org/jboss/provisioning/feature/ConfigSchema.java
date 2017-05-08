@@ -17,12 +17,10 @@
 
 package org.jboss.provisioning.feature;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+
 
 /**
  *
@@ -30,116 +28,35 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class ConfigSchema {
 
-    public static class Builder {
+    public interface ConfigSchemaLoader {
 
-        Map<String, FeatureSpec> featureSpecs = new HashMap<>();
-        private boolean checkRefs;
+        ConfigSchema loadSchema(String schemaName);
+    }
 
-        private Builder() {
+    final ConfigSchema parent;
+    final Set<String> specs;
+    final ConfigSchemaLoader schemaLoader;
+
+    ConfigSchema(ConfigSchema parent, Set<String> specs, ConfigSchemaLoader schemaLoader) {
+        this.parent = parent;
+        this.specs = specs;
+        this.schemaLoader = schemaLoader;
+    }
+
+    public ConfigSchema add(FeatureConfig config) throws ProvisioningDescriptionException {
+        if(!specs.contains(config.specName)) {
+            throw new ProvisioningDescriptionException("The schema does not contain spec " + config.specName);
         }
-
-        public Builder addFeatureSpec(FeatureSpec spec) throws ProvisioningDescriptionException {
-            if(featureSpecs.containsKey(spec.name)) {
-                throw new ProvisioningDescriptionException("Duplicate feature spec " + spec.name);
-            }
-            featureSpecs.put(spec.name, spec);
-            if(!checkRefs) {
-                checkRefs = spec.hasRefs();
-            }
-            return this;
-        }
-
-        public ConfigSchema build() throws ProvisioningDescriptionException {
-            if(checkRefs) {
-                for(FeatureSpec spec : featureSpecs.values()) {
-                    if(!spec.hasRefs()) {
-                        continue;
-                    }
-                    for(FeatureReferenceSpec refSpec : spec.refs.values()) {
-                        final FeatureSpec targetSpec = featureSpecs.get(refSpec.feature);
-                        if(targetSpec == null) {
-                            throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
-                                    + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
-                        }
-                        if(!targetSpec.hasId()) {
-                            throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
-                                    + refSpec.name + " which targets feature " + refSpec.feature + " that has no ID parameters");
-                        }
-                        if(targetSpec.idParams.size() != refSpec.paramMapping.size()) {
-                            throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.name + " of feature " + spec.name +
-                                    " must correspond to the ID parameters of the target feature " + refSpec.feature);
-                        }
-                        for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
-                            if(!spec.params.containsKey(mapping.getKey())) {
-                                throw new ProvisioningDescriptionException(spec.name
-                                        + " feature does not include parameter " + mapping.getKey() + " mapped in "
-                                        + refSpec.name + " reference");
-                            }
-                            if(!targetSpec.params.containsKey(mapping.getValue())) {
-                                throw new ProvisioningDescriptionException(targetSpec.name
-                                        + " feature does not include parameter '" + mapping.getValue() + "' targeted from "
-                                        + spec.name + " through " + refSpec.name + " reference");
-                            }
-                        }
-                    }
-                }
-            }
-            return new ConfigSchema(this);
-        }
+        // TODO add the ID param(s)
+        parent.add(config);
+        return this;
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public ConfigSchema getParent() {
+        return parent;
     }
 
-    final Map<String, FeatureSpec> featureSpecs;
-
-    private ConfigSchema(Builder builder) {
-        this.featureSpecs = builder.featureSpecs.size() > 1 ? Collections.unmodifiableMap(builder.featureSpecs) : builder.featureSpecs;
-    }
-
-    public FeatureSpec getFeatureSpec(String spec) throws ProvisioningDescriptionException {
-        final FeatureSpec featureSpec = featureSpecs.get(spec);
-        if(featureSpec == null) {
-            throw new ProvisioningDescriptionException("Unknown feature spec " + spec);
-        }
-        return featureSpec;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((featureSpecs == null) ? 0 : featureSpecs.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ConfigSchema other = (ConfigSchema) obj;
-        if (featureSpecs == null) {
-            if (other.featureSpecs != null)
-                return false;
-        } else if (!featureSpecs.equals(other.featureSpecs))
-            return false;
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder buf = new StringBuilder();
-        buf.append('[');
-        final Iterator<FeatureSpec> i = featureSpecs.values().iterator();
-        buf.append(i.next());
-        while(i.hasNext()) {
-            buf.append(',').append(i.next());
-        }
-        return buf.append(']').toString();
+    public ConfigSchema getSchema(String name) throws ProvisioningDescriptionException {
+        return schemaLoader.loadSchema(name);
     }
 }
