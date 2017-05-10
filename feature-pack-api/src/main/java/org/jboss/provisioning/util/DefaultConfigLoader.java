@@ -49,8 +49,8 @@ public class DefaultConfigLoader implements ConfigLoader {
     }
 
     @Override
-    public Config load(String name) throws ProvisioningDescriptionException {
-        final Path path = resolvePath(name);
+    public Config load(String configSource, String configName) throws ProvisioningDescriptionException {
+        final Path path = resolvePath(configName);
         if(!Files.exists(path)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(path));
         }

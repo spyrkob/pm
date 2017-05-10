@@ -25,5 +25,12 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public interface ConfigLoader {
 
-    Config load(String name) throws ProvisioningDescriptionException;
+    ConfigLoader NOT_CONFIGURED = new ConfigLoader() {
+        @Override
+        public Config load(String configSource, String configName) throws ProvisioningDescriptionException {
+            throw new ProvisioningDescriptionException("Failed to load config " + configName + " from " + configSource + ". Config loading has not been setup.");
+        }
+    };
+
+    Config load(String configSource, String configName) throws ProvisioningDescriptionException;
 }

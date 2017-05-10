@@ -35,14 +35,16 @@ public class ConfigDependency {
 
     public static class Builder {
 
-        private String configName;
+        private final String source;
+        private final String configName;
         private boolean inheritFeatures = true;
         private Set<String> includedSpecs = Collections.emptySet();
         private Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
         private Set<String> excludedSpecs = Collections.emptySet();
         private Set<FeatureId> excludedFeatures = Collections.emptySet();
 
-        private Builder(String configName, boolean inheritConfigs) {
+        private Builder(String source, String configName, boolean inheritConfigs) {
+            this.source = source;
             this.configName = configName;
             this.inheritFeatures = inheritConfigs;
         }
@@ -129,10 +131,19 @@ public class ConfigDependency {
         return builder(configName, true);
     }
 
-    public static Builder builder(String configName, boolean inheritFeatures) {
-        return new Builder(configName, inheritFeatures);
+    public static Builder builder(String configSource, String configName) {
+        return builder(configSource, configName, true);
     }
 
+    public static Builder builder(String configName, boolean inheritFeatures) {
+        return builder(null, configName, inheritFeatures);
+    }
+
+    public static Builder builder(String source, String configName, boolean inheritFeatures) {
+        return new Builder(source, configName, inheritFeatures);
+    }
+
+    final String configSource;
     final String configName;
     final boolean inheritFeatures;
     final Set<String> includedSpecs;
@@ -141,6 +152,7 @@ public class ConfigDependency {
     final Set<FeatureId> excludedFeatures;
 
     private ConfigDependency(Builder builder) {
+        this.configSource = builder.source;
         this.configName = builder.configName;
         this.inheritFeatures = builder.inheritFeatures;
         this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
@@ -168,6 +180,7 @@ public class ConfigDependency {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((configName == null) ? 0 : configName.hashCode());
+        result = prime * result + ((configSource == null) ? 0 : configSource.hashCode());
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
@@ -189,6 +202,11 @@ public class ConfigDependency {
             if (other.configName != null)
                 return false;
         } else if (!configName.equals(other.configName))
+            return false;
+        if (configSource == null) {
+            if (other.configSource != null)
+                return false;
+        } else if (!configSource.equals(other.configSource))
             return false;
         if (excludedFeatures == null) {
             if (other.excludedFeatures != null)
@@ -221,6 +239,9 @@ public class ConfigDependency {
         buf.append('[');
         if(configName != null) {
             buf.append(configName);
+        }
+        if(configSource != null) {
+            buf.append(" src=").append(configSource);
         }
         if(!includedSpecs.isEmpty()) {
             buf.append(" includedSpecs=");

@@ -17,11 +17,10 @@
 
 package org.jboss.provisioning.feature;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
@@ -30,6 +29,8 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  * @author Alexey Loubyansky
  */
 public class FeatureReferenceSpec {
+
+    private static final String NAME = "name";
 
     public static class Builder {
 
@@ -67,7 +68,7 @@ public class FeatureReferenceSpec {
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
             if(paramMapping == null) {
-                paramMapping = Collections.singletonMap(feature, "name");
+                paramMapping = Collections.singletonMap(feature, NAME);
             }
             return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
         }
@@ -90,13 +91,14 @@ public class FeatureReferenceSpec {
     }
 
     public static FeatureReferenceSpec create(String name, String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(name, feature, nillable, Collections.singletonMap(feature, "name"));
+        return new FeatureReferenceSpec(name, feature, nillable, Collections.singletonMap(feature, NAME));
     }
 
     final String name;
     final String feature;
     final boolean nillable;
-    final Map<String, String> paramMapping;
+    final String[] localParams;
+    final String[] targetParams;
 
     private FeatureReferenceSpec(String name, String feature, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
         this.name = name;
@@ -105,7 +107,14 @@ public class FeatureReferenceSpec {
         if(paramMapping.isEmpty()) {
             throw new ProvisioningDescriptionException("Reference " + name + " is missing parameter mapping.");
         }
-        this.paramMapping = paramMapping.size() == 1 ? paramMapping : Collections.unmodifiableMap(paramMapping);
+        this.localParams = new String[paramMapping.size()];
+        this.targetParams = new String[paramMapping.size()];
+        int i = 0;
+        for(Map.Entry<String, String> mapping : paramMapping.entrySet()) {
+            localParams[i] = mapping.getKey();
+            targetParams[i++] = mapping.getValue();
+        }
+
     }
 
     @Override
@@ -113,9 +122,10 @@ public class FeatureReferenceSpec {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((feature == null) ? 0 : feature.hashCode());
+        result = prime * result + Arrays.hashCode(localParams);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (nillable ? 1231 : 1237);
-        result = prime * result + ((paramMapping == null) ? 0 : paramMapping.hashCode());
+        result = prime * result + Arrays.hashCode(targetParams);
         return result;
     }
 
@@ -133,6 +143,8 @@ public class FeatureReferenceSpec {
                 return false;
         } else if (!feature.equals(other.feature))
             return false;
+        if (!Arrays.equals(localParams, other.localParams))
+            return false;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -140,10 +152,7 @@ public class FeatureReferenceSpec {
             return false;
         if (nillable != other.nillable)
             return false;
-        if (paramMapping == null) {
-            if (other.paramMapping != null)
-                return false;
-        } else if (!paramMapping.equals(other.paramMapping))
+        if (!Arrays.equals(targetParams, other.targetParams))
             return false;
         return true;
     }
@@ -157,12 +166,9 @@ public class FeatureReferenceSpec {
             buf.append(" nillable");
         }
         buf.append(' ');
-        final Iterator<Map.Entry<String, String>> i = paramMapping.entrySet().iterator();
-        Entry<String, String> mapping = i.next();
-        buf.append(mapping.getKey()).append('=').append(mapping.getValue());
-        while(i.hasNext()) {
-            mapping = i.next();
-            buf.append(',').append(mapping.getKey()).append('=').append(mapping.getValue());
+        buf.append(localParams[0]).append('=').append(targetParams[0]);
+        for(int i = 1; i < localParams.length; ++i) {
+            buf.append(',').append(localParams[i]).append('=').append(targetParams[i]);
         }
         return buf.append(']').toString();
     }

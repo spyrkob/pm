@@ -20,9 +20,7 @@ package org.jboss.provisioning.feature;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -33,7 +31,7 @@ public class Config {
     public static class Builder {
 
         String name;
-        Map<String, ConfigDependency> dependencies = Collections.emptyMap();
+        List<ConfigDependency> dependencies = Collections.emptyList();
         List<FeatureConfig> features = Collections.emptyList();
 
         private Builder() {
@@ -51,12 +49,12 @@ public class Config {
         public Builder addDependency(ConfigDependency dep) {
             switch (dependencies.size()) {
                 case 0:
-                    dependencies = Collections.singletonMap(dep.configName, dep);
+                    dependencies = Collections.singletonList(dep);
                     break;
                 case 1:
-                    dependencies = new LinkedHashMap<>(dependencies);
+                    dependencies = new ArrayList<>(dependencies);
                 default:
-                    dependencies.put(dep.configName, dep);
+                    dependencies.add(dep);
             }
             return this;
         }
@@ -88,12 +86,12 @@ public class Config {
     }
 
     final String name;
-    final Map<String, ConfigDependency> dependencies;
+    final List<ConfigDependency> dependencies;
     final List<FeatureConfig> features;
 
     private Config(Builder builder) {
         this.name = builder.name;
-        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
+        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableList(builder.dependencies) : builder.dependencies;
         this.features = builder.features.size() > 1 ? Collections.unmodifiableList(builder.features) : builder.features;
     }
 
@@ -139,7 +137,7 @@ public class Config {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
         if(!dependencies.isEmpty()) {
-            final Iterator<ConfigDependency> i = dependencies.values().iterator();
+            final Iterator<ConfigDependency> i = dependencies.iterator();
             buf.append(" deps=").append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());

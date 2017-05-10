@@ -114,6 +114,7 @@ public class ConfigXml {
         OPTIONAL("optional"),
         PARENT_REF("parent-ref"),
         SPEC("spec"),
+        SOURCE("source"),
         VALUE("value"),
 
         // default unknown attribute
@@ -228,12 +229,16 @@ public class ConfigXml {
     }
 
     private static ConfigDependency readConfigDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String src = null;
         String config = null;
         Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
+                case SOURCE:
+                    src = reader.getAttributeValue(i);
+                    break;
                 case CONFIG:
                     config = reader.getAttributeValue(i);
                     break;
@@ -247,7 +252,7 @@ public class ConfigXml {
         if (config == null && inheritFeatures != null) {
             throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.CONFIG);
         }
-        final ConfigDependency.Builder depBuilder = ConfigDependency.builder(config);
+        final ConfigDependency.Builder depBuilder = ConfigDependency.builder(src, config);
         if(inheritFeatures != null) {
             depBuilder.setInheritFeatures(inheritFeatures);
         }

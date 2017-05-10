@@ -54,9 +54,7 @@ public class MainConfigBuilder {
     }
 
     public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader) {
-        return newInstance(specLoader, name -> {
-            throw new UnsupportedOperationException("Failed to load config " + name + ". Config loading has not been setup.");
-        });
+        return newInstance(specLoader, ConfigLoader.NOT_CONFIGURED);
     }
 
     public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader) {
@@ -72,7 +70,8 @@ public class MainConfigBuilder {
     private final FeatureSpecLoader specLoader;
     private final ConfigLoader configLoader;
     private final FeatureConfigLoader featureLoader;
-    private FeatureSpecRegistry.Builder schema = FeatureSpecRegistry.builder();
+    private Map<String, FeatureSpec> featureSpecs = new HashMap<>();
+    private boolean checkSpecRefs;
     private Map<FeatureId, ConfiguredFeature> featuresById = new HashMap<>();
     private Map<String, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
 
@@ -84,13 +83,17 @@ public class MainConfigBuilder {
         this.featureLoader = featureLoader;
     }
 
-    public MainConfigBuilder addConfig(String name) throws ProvisioningDescriptionException {
-        return addConfig(configLoader.load(name));
+    public MainConfigBuilder addConfig(String configName) throws ProvisioningDescriptionException {
+        return addConfig(null, configName);
+    }
+
+    public MainConfigBuilder addConfig(String configSource, String configName) throws ProvisioningDescriptionException {
+        return addConfig(configLoader.load(configSource, configName));
     }
 
     public MainConfigBuilder addConfig(Config config) throws ProvisioningDescriptionException {
         if(!config.dependencies.isEmpty()) {
-            for(ConfigDependency dep : config.dependencies.values()) {
+            for(ConfigDependency dep : config.dependencies) {
                 processDependency(dep);
             }
         }
@@ -182,15 +185,17 @@ public class MainConfigBuilder {
             if(refSpec == null) {
                 throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + spec.name);
             }
-            for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
-                final String paramValue = parentId.getParam(mapping.getValue());
-                if(paramValue == null) {
-                    throw new ProvisioningDescriptionException(parentId + " is missing ID parameter " + mapping.getValue() + " for " + spec.name);
+            for (int i = 0; i < refSpec.localParams.length; ++i) {
+                final String paramValue = parentId.getParam(refSpec.targetParams[i]);
+                if (paramValue == null) {
+                    throw new ProvisioningDescriptionException(parentId + " is missing ID parameter " + refSpec.targetParams[i]
+                            + " for " + spec.name);
                 }
-                final String prevValue = config.putParam(mapping.getKey(), paramValue);
-                if(prevValue != null && !prevValue.equals(paramValue)) {
-                    throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter " + mapping.getKey() + " of " + spec.name +
-                            " conflicts with the corresponding parent ID value " + paramValue);
+                final String prevValue = config.putParam(refSpec.localParams[i], paramValue);
+                if (prevValue != null && !prevValue.equals(paramValue)) {
+                    throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
+                            + refSpec.localParams[i] + " of " + spec.name
+                            + " conflicts with the corresponding parent ID value " + paramValue);
                 }
             }
             addFeature(config, action);
@@ -198,7 +203,40 @@ public class MainConfigBuilder {
     }
 
     public void build() throws ProvisioningDescriptionException {
-        schema.build();
+        if(checkSpecRefs) {
+            for(FeatureSpec spec : featureSpecs.values()) {
+                if(!spec.hasRefs()) {
+                    continue;
+                }
+                for(FeatureReferenceSpec refSpec : spec.refs.values()) {
+                    final FeatureSpec targetSpec = featureSpecs.get(refSpec.feature);
+                    if(targetSpec == null) {
+                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
+                    }
+                    if(!targetSpec.hasId()) {
+                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                + refSpec.name + " which targets feature " + refSpec.feature + " that has no ID parameters");
+                    }
+                    if(targetSpec.idParams.size() != refSpec.localParams.length) {
+                        throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.name + " of feature " + spec.name +
+                                " must correspond to the ID parameters of the target feature " + refSpec.feature);
+                    }
+                    for(int i = 0; i < refSpec.localParams.length; ++i) {
+                        if(!spec.params.containsKey(refSpec.localParams[i])) {
+                            throw new ProvisioningDescriptionException(spec.name
+                                    + " feature does not include parameter " + refSpec.localParams[i] + " mapped in "
+                                    + refSpec.name + " reference");
+                        }
+                        if(!targetSpec.params.containsKey(refSpec.targetParams[i])) {
+                            throw new ProvisioningDescriptionException(targetSpec.name
+                                    + " feature does not include parameter '" + refSpec.targetParams[i] + "' targeted from "
+                                    + spec.name + " through " + refSpec.name + " reference");
+                        }
+                    }
+                }
+            }
+        }
         for(SpecFeatures features : featuresBySpec.values()) {
             lineUp(features);
         }
@@ -285,7 +323,7 @@ public class MainConfigBuilder {
             return;
         }
         pushDependency(dep);
-        addConfig(configLoader.load(dep.configName));
+        addConfig(configLoader.load(dep.configSource, dep.configName));
         popDependency();
         if(!dep.includedFeatures.isEmpty()) {
             for(Map.Entry<FeatureId, FeatureConfig> entry : dep.includedFeatures.entrySet()) {
@@ -336,19 +374,22 @@ public class MainConfigBuilder {
     }
 
     private FeatureSpec getSpec(String specName) throws ProvisioningDescriptionException {
-        FeatureSpec spec = schema.featureSpecs.get(specName);
+        FeatureSpec spec = featureSpecs.get(specName);
         if(spec != null) {
             return spec;
         }
         spec = specLoader.load(specName);
-        schema.addFeatureSpec(spec);
+        featureSpecs.put(specName, spec);
+        if(!checkSpecRefs) {
+            checkSpecRefs = spec.hasRefs();
+        }
         return spec;
     }
 
     private static FeatureId getRefId(FeatureSpec spec, FeatureReferenceSpec refSpec, FeatureConfig config) throws ProvisioningDescriptionException {
         final FeatureId.Builder builder = FeatureId.builder(refSpec.feature);
-        for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
-            final FeatureParameterSpec param = spec.params.get(mapping.getKey());
+        for(int i = 0; i < refSpec.localParams.length; ++i) {
+            final FeatureParameterSpec param = spec.params.get(refSpec.localParams[i]);
             final String paramValue = getParamValue(config, param);
             if(paramValue == null) {
                 if (!refSpec.nillable) {
@@ -364,7 +405,7 @@ public class MainConfigBuilder {
                 }
                 return null;
             }
-            builder.addParam(mapping.getValue(), paramValue);
+            builder.addParam(refSpec.targetParams[i], paramValue);
         }
         return builder.build();
     }
