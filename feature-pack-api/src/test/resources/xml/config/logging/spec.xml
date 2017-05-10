@@ -18,6 +18,9 @@
 
 -->
 <feature-spec name="logging" xmlns="urn:wildfly:pm-feature-spec:1.0">
+  <references>
+    <reference feature="profile"/>
+  </references>
   <parameters>
     <parameter name="profile" feature-id="true"/>
   </parameters>

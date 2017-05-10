@@ -112,6 +112,7 @@ public class ConfigXml {
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         OPTIONAL("optional"),
+        PARENT_REF("parent-ref"),
         SPEC("spec"),
         VALUE("value"),
 
@@ -405,21 +406,21 @@ public class ConfigXml {
     }
 
     public static void readFeatureConfig(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        String spec = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case SPEC:
-                    spec = reader.getAttributeValue(i);
+                    config.setSpecName(reader.getAttributeValue(i));
                     break;
+                case PARENT_REF:
+                    config.setParentRef(reader.getAttributeValue(i));
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (spec == null) {
+        if (config.getSpecName() == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPEC));
         }
-        config.setSpecName(spec);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
@@ -432,6 +433,11 @@ public class ConfigXml {
                             break;
                         case PARAMETER:
                             readParameter(reader, config);
+                            break;
+                        case FEATURE:
+                            final FeatureConfig child = new FeatureConfig();
+                            readFeatureConfig(reader, child);
+                            config.addFeature(child);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

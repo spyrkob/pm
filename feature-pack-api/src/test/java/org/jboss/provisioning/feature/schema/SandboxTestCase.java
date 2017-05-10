@@ -26,7 +26,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.FeatureSpecLoader;
-import org.jboss.provisioning.feature.FullConfigBuilder;
+import org.jboss.provisioning.feature.MainConfigBuilder;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class SandboxTestCase {
             }
         };
 
-        FullConfigBuilder.newInstance(loader)
+        MainConfigBuilder.newInstance(loader)
             .addFeature(FeatureConfig.newConfig("socket-binding")
                 .setParam("name", "http")
                 .setParam("socket-binding-group", "standard-sockets"))

@@ -30,14 +30,17 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-public class FullConfigBuilder {
+public class MainConfigBuilder {
+
+    private static final int ADD = 1;
+    private static final int OVERWRITE = 2;
 
     private static class SpecFeatures {
         List<ConfiguredFeature> list = new ArrayList<>();
         boolean liningUp;
     }
 
-    private static class ConfiguredFeature {
+    static class ConfiguredFeature {
         final FeatureId id;
         final FeatureSpec spec;
         final FeatureConfig config;
@@ -50,20 +53,20 @@ public class FullConfigBuilder {
         }
     }
 
-    public static FullConfigBuilder newInstance(FeatureSpecLoader specLoader) {
+    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader) {
         return newInstance(specLoader, name -> {
             throw new UnsupportedOperationException("Failed to load config " + name + ". Config loading has not been setup.");
         });
     }
 
-    public static FullConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader) {
+    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader) {
         return newInstance(specLoader, configLoader, featureId -> {
             throw new UnsupportedOperationException("Failed to load " + featureId + ". Feature config loading has not been setup.");
         });
     }
 
-    public static FullConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
-        return new FullConfigBuilder(specLoader, configLoader, featureLoader);
+    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
+        return new MainConfigBuilder(specLoader, configLoader, featureLoader);
     }
 
     private final FeatureSpecLoader specLoader;
@@ -75,17 +78,17 @@ public class FullConfigBuilder {
 
     private List<ConfigDependency> dependencyStack = null;
 
-    private FullConfigBuilder(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
+    private MainConfigBuilder(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
         this.specLoader = specLoader;
         this.configLoader = configLoader;
         this.featureLoader = featureLoader;
     }
 
-    public FullConfigBuilder addConfig(String name) throws ProvisioningDescriptionException {
+    public MainConfigBuilder addConfig(String name) throws ProvisioningDescriptionException {
         return addConfig(configLoader.load(name));
     }
 
-    public FullConfigBuilder addConfig(Config config) throws ProvisioningDescriptionException {
+    public MainConfigBuilder addConfig(Config config) throws ProvisioningDescriptionException {
         if(!config.dependencies.isEmpty()) {
             for(ConfigDependency dep : config.dependencies.values()) {
                 processDependency(dep);
@@ -94,19 +97,19 @@ public class FullConfigBuilder {
         if(!config.features.isEmpty()) {
             for(FeatureConfig feature : config.features) {
                 if(!isExcluded(feature.specName)) {
-                    addFeature(feature, false);
+                    addFeature(feature, ADD);
                 }
             }
         }
         return this;
     }
 
-    public FullConfigBuilder addFeature(FeatureConfig config) throws ProvisioningDescriptionException {
-        addFeature(config, false);
+    public MainConfigBuilder addFeature(FeatureConfig config) throws ProvisioningDescriptionException {
+        addFeature(config, ADD);
         return this;
     }
 
-    private void addFeature(FeatureConfig config, boolean include) throws ProvisioningDescriptionException {
+    private void addFeature(FeatureConfig config, int action) throws ProvisioningDescriptionException {
         final FeatureSpec spec = getSpec(config.specName);
         final FeatureId id = spec.hasId() ? getId(spec.idParams, config) : null;
         if(!spec.params.isEmpty()) {
@@ -133,22 +136,25 @@ public class FullConfigBuilder {
         }
 
         ConfiguredFeature feature;
-        if(id != null) {
+        if(id == null) {
+            feature = new ConfiguredFeature(null, spec, config);
+        } else {
             feature = featuresById.get(id);
             if(feature != null) {
-                if(include) {
-                    feature.config.merge(config);
-                    return;
+                if((action & OVERWRITE) == 0) {
+                    throw new ProvisioningDescriptionException("Duplicate feature " + id);
                 }
-                throw new ProvisioningDescriptionException("Duplicate feature " + id);
+                feature.config.merge(config);
+                if(!config.nested.isEmpty()) {
+                    addNested(id, config, action | ADD);
+                }
+                return;
             }
-            if(include) {
+            if((action & ADD) == 0) {
                 throw new ProvisioningDescriptionException("The original feature " + id + " not found");
             }
             feature = new ConfiguredFeature(id, spec, config);
             featuresById.put(id, feature);
-        } else {
-            feature = new ConfiguredFeature(null, spec, config);
         }
         SpecFeatures features = featuresBySpec.get(config.specName);
         if(features == null) {
@@ -156,7 +162,39 @@ public class FullConfigBuilder {
             featuresBySpec.put(config.specName, features);
         }
         features.list.add(feature);
+        if(!config.nested.isEmpty()) {
+            if(id == null) {
+                for(FeatureConfig nested : config.nested) {
+                    addFeature(nested, action | ADD);
+                }
+            } else {
+                addNested(id, config, action | ADD);
+            }
+        }
         return;
+    }
+
+    private void addNested(FeatureId parentId, FeatureConfig parent, int action) throws ProvisioningDescriptionException {
+        for(FeatureConfig config : parent.nested) {
+            final FeatureSpec spec = getSpec(config.specName);
+            final String parentRef = config.parentRef == null ? parent.specName : config.parentRef;
+            final FeatureReferenceSpec refSpec = spec.refs.get(parentRef);
+            if(refSpec == null) {
+                throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + spec.name);
+            }
+            for(Map.Entry<String, String> mapping : refSpec.paramMapping.entrySet()) {
+                final String paramValue = parentId.getParam(mapping.getValue());
+                if(paramValue == null) {
+                    throw new ProvisioningDescriptionException(parentId + " is missing ID parameter " + mapping.getValue() + " for " + spec.name);
+                }
+                final String prevValue = config.putParam(mapping.getKey(), paramValue);
+                if(prevValue != null && !prevValue.equals(paramValue)) {
+                    throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter " + mapping.getKey() + " of " + spec.name +
+                            " conflicts with the corresponding parent ID value " + paramValue);
+                }
+            }
+            addFeature(config, action);
+        }
     }
 
     public void build() throws ProvisioningDescriptionException {
@@ -230,15 +268,15 @@ public class FullConfigBuilder {
                     if(!isExcluded(featureId)) {
                         if(entry.getValue() == null) {
                             if(!featuresById.containsKey(featureId)) {
-                                addFeature(featureLoader.load(featureId), false);
+                                addFeature(featureLoader.load(featureId), ADD);
                             }
                         } else {
                             if(featuresById.containsKey(featureId)) {
-                                addFeature(entry.getValue(), true);
+                                addFeature(entry.getValue(), OVERWRITE);
                             } else {
                                 final FeatureConfig featureConfig = featureLoader.load(featureId);
                                 featureConfig.merge(entry.getValue());
-                                addFeature(featureConfig, false);
+                                addFeature(featureConfig, ADD);
                             }
                         }
                     }
@@ -252,7 +290,7 @@ public class FullConfigBuilder {
         if(!dep.includedFeatures.isEmpty()) {
             for(Map.Entry<FeatureId, FeatureConfig> entry : dep.includedFeatures.entrySet()) {
                 if(!isExcluded(entry.getKey())) {
-                    addFeature(entry.getValue(), true);
+                    addFeature(entry.getValue(), OVERWRITE);
                 }
             }
         }

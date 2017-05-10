@@ -17,10 +17,12 @@
 
 package org.jboss.provisioning.feature;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,6 +39,8 @@ public class FeatureConfig {
     String specName;
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
+    String parentRef;
+    List<FeatureConfig> nested = Collections.emptyList();
 
     public FeatureConfig() {
     }
@@ -50,17 +54,30 @@ public class FeatureConfig {
         return this;
     }
 
+    public String getSpecName() {
+        return this.specName;
+    }
+
+    public FeatureConfig setParentRef(String parentRef) {
+        this.parentRef = parentRef;
+        return this;
+    }
+
     public FeatureConfig setParam(String name, String value) {
+        putParam(name, value);
+        return this;
+    }
+
+    String putParam(String name, String value) {
         switch(params.size()) {
             case 0:
                 params = Collections.singletonMap(name, value);
-                break;
+                return null;
             case 1:
                 params = new HashMap<>(params);
             default:
-                params.put(name, value);
+                return params.put(name, value);
         }
-        return this;
     }
 
     public FeatureConfig addDependency(FeatureId featureId) {
@@ -80,16 +97,41 @@ public class FeatureConfig {
         return !dependencies.isEmpty();
     }
 
-    public void merge(FeatureConfig config) {
-        if(params.isEmpty()) {
-            params = config.params;
-            return;
+    public FeatureConfig addFeature(FeatureConfig config) {
+        switch(nested.size()) {
+            case 0:
+                nested = Collections.singletonList(config);
+                break;
+            case 1:
+                nested = new ArrayList<>(nested);
+            default:
+                nested.add(config);
         }
-        if(params.size() == 1) {
-            params = new HashMap<>(params);
+        return this;
+    }
+
+    void merge(FeatureConfig config) {
+        if (!config.params.isEmpty()) {
+            if (params.isEmpty()) {
+                params = config.params;
+            } else {
+                if (params.size() == 1) {
+                    params = new HashMap<>(params);
+                }
+                for (Map.Entry<String, String> param : config.params.entrySet()) {
+                    params.put(param.getKey(), param.getValue());
+                }
+            }
         }
-        for(Map.Entry<String, String> param : config.params.entrySet()) {
-            params.put(param.getKey(), param.getValue());
+        if (!config.dependencies.isEmpty()) {
+            if (dependencies.isEmpty()) {
+                dependencies = config.dependencies;
+            } else {
+                if (dependencies.size() == 1) {
+                    dependencies = new LinkedHashSet<>(dependencies);
+                }
+                dependencies.addAll(config.dependencies);
+            }
         }
     }
 
@@ -98,7 +140,9 @@ public class FeatureConfig {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
+        result = prime * result + ((nested == null) ? 0 : nested.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
+        result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
         result = prime * result + ((specName == null) ? 0 : specName.hashCode());
         return result;
     }
@@ -117,10 +161,20 @@ public class FeatureConfig {
                 return false;
         } else if (!dependencies.equals(other.dependencies))
             return false;
+        if (nested == null) {
+            if (other.nested != null)
+                return false;
+        } else if (!nested.equals(other.nested))
+            return false;
         if (params == null) {
             if (other.params != null)
                 return false;
         } else if (!params.equals(other.params))
+            return false;
+        if (parentRef == null) {
+            if (other.parentRef != null)
+                return false;
+        } else if (!parentRef.equals(other.parentRef))
             return false;
         if (specName == null) {
             if (other.specName != null)
@@ -143,12 +197,23 @@ public class FeatureConfig {
                 buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
             }
         }
+        if(parentRef != null) {
+            buf.append(" parentRef=").append(parentRef);
+        }
         if(!dependencies.isEmpty()) {
             buf.append(" dependencies=");
             final Iterator<FeatureId> i = dependencies.iterator();
             buf.append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());
+            }
+        }
+        if(!nested.isEmpty()) {
+            buf.append(" nested=");
+            int i = 0;
+            buf.append(nested.get(i++));
+            while(i < nested.size()) {
+                buf.append(',').append(nested.get(i++));
             }
         }
         return buf.append(']').toString();

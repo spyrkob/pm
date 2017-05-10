@@ -20,7 +20,7 @@ package org.jboss.provisioning.feature.schema;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.feature.FullConfigBuilder;
+import org.jboss.provisioning.feature.MainConfigBuilder;
 import org.jboss.provisioning.util.DefaultConfigLoader;
 import org.jboss.provisioning.util.DefaultFeatureConfigLoader;
 import org.jboss.provisioning.util.DefaultFeatureSpecLoader;
@@ -37,7 +37,7 @@ public class ConfigDependenciesTestCase {
     public void testMain() throws Exception {
 
         final Path baseDir = getResource("xml/config/");
-        FullConfigBuilder.newInstance(
+        MainConfigBuilder.newInstance(
                 new DefaultFeatureSpecLoader(baseDir),
                 new DefaultConfigLoader(baseDir),
                 DefaultFeatureConfigLoader.newInstance(baseDir))
@@ -75,6 +75,18 @@ public class ConfigDependenciesTestCase {
                 .build();
         assertEquals(expected, xmlConfig);
 */    }
+
+    @Test
+    public void testNested() throws Exception {
+
+        final Path baseDir = getResource("xml/config/");
+        MainConfigBuilder.newInstance(
+                new DefaultFeatureSpecLoader(baseDir),
+                new DefaultConfigLoader(baseDir),
+                DefaultFeatureConfigLoader.newInstance(baseDir))
+                .addConfig("full_domain_nested")
+                .build();
+    }
 
     private static Path getResource(String path) {
         java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
