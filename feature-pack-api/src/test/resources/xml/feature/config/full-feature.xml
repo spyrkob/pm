@@ -17,9 +17,22 @@
     limitations under the License.
 
 -->
-<feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <parameters>
-    <parameter name="name" feature-id="true"/>
-    <parameter name="inet-address" nillable="true"/>
-  </parameters>
-</feature-spec>
+<feature spec="feature-spec" parent-ref="parent-spec" xmlns="urn:wildfly:pm-config:1.0">
+  <depends feature-id="spec1:p1=v1"/>
+  <depends feature-id="spec2:p1=v1,p2=v2"/>
+  <param name="param1" value="value1"/>
+  <param name="param2" value="value2"/>
+  <feature spec="child-spec" parent-ref="feature-spec-ref">
+    <depends feature-id="spec3:p1=v1"/>
+    <param name="param3" value="value3"/>
+    <feature spec="grandchild-spec">
+      <param name="param4" value="value4"/>
+    </feature>
+  </feature>
+  <feature spec="child-spec" parent-ref="feature-spec-ref">
+    <param name="param5" value="value5"/>
+  </feature>
+  <feature spec="another-spec">
+    <param name="param6" value="value6"/>
+  </feature>
+</feature>

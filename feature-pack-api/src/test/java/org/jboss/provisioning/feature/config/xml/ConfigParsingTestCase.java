@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.schema;
+package org.jboss.provisioning.feature.config.xml;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,7 +42,7 @@ public class ConfigParsingTestCase {
     public void testMain() throws Exception {
         final Config xmlConfig = parseConfig("config.xml");
         final Config expected = Config.builder("configName")
-                .addDependency(ConfigDependency.builder("dep1").build())
+                .addDependency(ConfigDependency.builder("dep1").setInheritFeatures(true).build())
                 .addDependency(ConfigDependency.builder("dep2").setInheritFeatures(false).build())
                 .addDependency(ConfigDependency.builder("dep3")
                         .setInheritFeatures(false)
@@ -60,6 +60,7 @@ public class ConfigParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
+                .addDependency(ConfigDependency.builder("source4", "dep4").build())
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -68,7 +69,11 @@ public class ConfigParsingTestCase {
                         .setParam("p2", "v2"))
                 .addFeature(
                         new FeatureConfig("spec4")
-                        .setParam("p1", "v1"))
+                        .setParam("p1", "v1")
+                        .addFeature(FeatureConfig.newConfig("spec5")
+                                .addFeature(FeatureConfig.newConfig("spec6")
+                                        .setParentRef("spec5-ref")
+                                        .setParam("p1", "v1"))))
                 .build();
         assertEquals(expected, xmlConfig);
     }

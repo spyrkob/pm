@@ -35,6 +35,7 @@
       <exclude feature-id="spec8:p1=v1"/>
       <exclude feature-id="spec8:p1=v2"/>
     </depends>
+    <depends config="dep4" source="source4"/>
   </dependencies>
   <features>
     <feature spec="spec1">
@@ -45,6 +46,11 @@
     </feature>
     <feature spec="spec4">
       <param name="p1" value="v1"/>
+      <feature spec="spec5">
+        <feature spec="spec6" parent-ref="spec5-ref">
+          <param name="p1" value="v1"/>
+        </feature>
+      </feature>
     </feature>
   </features>
 </config>

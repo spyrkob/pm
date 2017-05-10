@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.schema;
+package org.jboss.provisioning.feature.config.wf;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,7 +36,7 @@ public class ConfigDependenciesTestCase {
     @Test
     public void testMain() throws Exception {
 
-        final Path baseDir = getResource("xml/config/");
+        final Path baseDir = getResource("xml/config/wf");
         MainConfigBuilder.newInstance(
                 new DefaultFeatureSpecLoader(baseDir),
                 new DefaultConfigLoader(baseDir),
@@ -79,7 +79,7 @@ public class ConfigDependenciesTestCase {
     @Test
     public void testNested() throws Exception {
 
-        final Path baseDir = getResource("xml/config/");
+        final Path baseDir = getResource("xml/config/wf");
         MainConfigBuilder.newInstance(
                 new DefaultFeatureSpecLoader(baseDir),
                 new DefaultConfigLoader(baseDir),

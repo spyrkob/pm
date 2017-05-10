@@ -419,6 +419,7 @@ public class ConfigXml {
                     break;
                 case PARENT_REF:
                     config.setParentRef(reader.getAttributeValue(i));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }

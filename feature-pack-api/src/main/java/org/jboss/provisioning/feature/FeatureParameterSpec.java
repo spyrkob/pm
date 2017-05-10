@@ -26,7 +26,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 public class FeatureParameterSpec {
 
     public static FeatureParameterSpec create(String name) throws ProvisioningDescriptionException {
-        return new FeatureParameterSpec(name, false, true, null);
+        return new FeatureParameterSpec(name, false, false, null);
     }
 
     public static FeatureParameterSpec create(String name, String value) throws ProvisioningDescriptionException {

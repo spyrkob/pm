@@ -91,7 +91,7 @@ public class FeatureSpec {
         }
 
         public FeatureSpec build() throws ProvisioningDescriptionException {
-            // the check is done in the Schema
+            // the check is done in when the whole schema is checked
 //            if(!refs.isEmpty()) {
 //                for(FeatureReferenceSpec ref : refs.values()) {
 //                    for(String param : ref.paramMapping.keySet()) {

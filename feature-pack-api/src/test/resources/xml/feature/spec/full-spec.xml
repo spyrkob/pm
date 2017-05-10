@@ -17,9 +17,20 @@
     limitations under the License.
 
 -->
-<feature spec="system-property" xmlns="urn:wildfly:pm-config:1.0">
+<feature-spec name="full" xmlns="urn:wildfly:pm-feature-spec:1.0">
+  <references>
+    <reference feature="spec1"/>
+    <reference feature="spec1" name="spec1-ref"/>
+    <reference feature="spec2" name="spec2-ref" nillable="true">
+      <parameter name="localParam1" maps-to="targetParam1"/>
+      <parameter name="localParam2" maps-to="targetParam2"/>
+    </reference>
+  </references>
   <parameters>
-    <parameter name="name" value="prop2"/>
-    <parameter name="value" value="value2"/>
+    <parameter name="a"/>
+    <parameter name="id1" feature-id="true"/>
+    <parameter name="id2" feature-id="true"/>
+    <parameter name="b" default="bb"/>
+    <parameter name="c" nillable="true"/>
   </parameters>
-</feature>
+</feature-spec>
