@@ -135,17 +135,30 @@ public class Config {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[').append(name);
+        buf.append('[');
+        boolean space = false;
+        if(name != null) {
+            buf.append(name);
+            space = true;
+        }
         if(!dependencies.isEmpty()) {
             final Iterator<ConfigDependency> i = dependencies.iterator();
-            buf.append(" deps=").append(i.next());
+            if(space) {
+                buf.append(' ');
+            } else {
+                space = true;
+            }
+            buf.append("deps=").append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());
             }
         }
         if(!features.isEmpty()) {
             final Iterator<FeatureConfig> i = features.iterator();
-            buf.append(" features=").append(i.next());
+            if(space) {
+                buf.append(' ');
+            }
+            buf.append("features=").append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());
             }

@@ -29,6 +29,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -43,6 +44,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
 
     enum Element implements XmlNameProvider {
 
+        CONFIG("config"),
         EXCLUDE("exclude"),
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
@@ -233,6 +235,11 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException(e);
                             }
+                            break;
+                        case CONFIG:
+                            final Config.Builder configBuilder = Config.builder();
+                            ConfigXml.readConfig(reader, configBuilder, false);
+                            fpBuilder.setConfig(configBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

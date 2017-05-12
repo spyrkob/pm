@@ -269,7 +269,7 @@ public class ConfigDependency {
             }
             while(i.hasNext()) {
                 entry = i.next();
-                buf.append(',').append(entry.getKey());
+                buf.append(';').append(entry.getKey());
                 if(entry.getValue() != null) {
                     buf.append("->").append(entry.getValue());
                 }

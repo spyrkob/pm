@@ -36,6 +36,6 @@ class ConfigXmlParser10 implements PlugableXmlParser<Config.Builder> {
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, Config.Builder builder) throws XMLStreamException {
-        ConfigXml.readConfig(reader, builder);
+        ConfigXml.readConfig(reader, builder, true);
     }
 }

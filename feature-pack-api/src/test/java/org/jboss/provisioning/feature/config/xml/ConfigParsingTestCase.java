@@ -50,7 +50,7 @@ public class ConfigParsingTestCase {
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                         .includeFeature(
                                 FeatureId.fromString("spec3:p1=v1"),
-                                new FeatureConfig()
+                                new FeatureConfig("spec3")
                                 .addDependency(FeatureId.fromString("spec4:p1=v1,p2=v2"))
                                 .addDependency(FeatureId.fromString("spec5:p1=v1,p2=v2"))
                                 .setParam("p1", "v1")

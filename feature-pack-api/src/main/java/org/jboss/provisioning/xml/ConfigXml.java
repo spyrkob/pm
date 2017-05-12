@@ -64,10 +64,13 @@ public class ConfigXml {
         UNKNOWN(null);
 
         private static final Map<QName, Element> elements;
+        private static final Map<String, Element> elementsByLocal;
 
         static {
             elements = Arrays.stream(values()).filter(val -> val.name != null)
                     .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
         }
 
         static Element of(QName qName) {
@@ -78,6 +81,11 @@ public class ConfigXml {
                 name = qName;
             }
             final Element element = elements.get(name);
+            return element == null ? UNKNOWN : element;
+        }
+
+        static Element of(String localName) {
+            final Element element = elementsByLocal.get(localName);
             return element == null ? UNKNOWN : element;
         }
 
@@ -158,7 +166,7 @@ public class ConfigXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, Config.Builder config, boolean nameRequired) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -171,7 +179,7 @@ public class ConfigXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (name == null) {
+        if (name == null && nameRequired) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         config.setName(name);
@@ -181,7 +189,7 @@ public class ConfigXml {
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCIES:
                             readConfigDependencies(reader, config);
@@ -210,7 +218,7 @@ public class ConfigXml {
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCY:
                             config.addDependency(readConfigDependency(reader));
@@ -261,7 +269,7 @@ public class ConfigXml {
                 case XMLStreamConstants.END_ELEMENT:
                     return depBuilder.build();
                 case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case INCLUDE:
                             readInclude(reader, depBuilder);
@@ -282,13 +290,13 @@ public class ConfigXml {
 
     private static void readInclude(XMLExtendedStreamReader reader, ConfigDependency.Builder depBuilder) throws XMLStreamException {
         String spec = null;
-        String featureId = null;
+        String featureIdStr = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case FEATURE_ID:
-                    featureId = reader.getAttributeValue(i);
+                    featureIdStr = reader.getAttributeValue(i);
                     break;
                 case SPEC:
                     spec = reader.getAttributeValue(i);
@@ -299,7 +307,7 @@ public class ConfigXml {
         }
 
         if(spec != null) {
-            if(featureId != null) {
+            if(featureIdStr != null) {
                 throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
             }
             try {
@@ -310,15 +318,19 @@ public class ConfigXml {
             ParsingUtils.parseNoContent(reader);
             return;
         }
-        if(featureId == null) {
+        if(featureIdStr == null) {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
         FeatureConfig fc = null;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
+                    final FeatureId featureId = parseFeatureId(featureIdStr);
+                    if(fc != null) {
+                        fc.setSpecName(featureId.getSpec());
+                    }
                     try {
-                        depBuilder.includeFeature(parseFeatureId(featureId), fc);
+                        depBuilder.includeFeature(featureId, fc);
                     } catch (ProvisioningDescriptionException e) {
                         throw new XMLStreamException("Failed to parse config", e);
                     }
@@ -327,7 +339,7 @@ public class ConfigXml {
                     if(fc == null) {
                         fc = new FeatureConfig();
                     }
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCY:
                             readFeatureDependency(reader, fc);
@@ -392,7 +404,7 @@ public class ConfigXml {
                 case XMLStreamConstants.END_ELEMENT:
                     return;
                 case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE:
                             final FeatureConfig fc = new FeatureConfig();
@@ -432,7 +444,7 @@ public class ConfigXml {
                 case XMLStreamConstants.END_ELEMENT:
                     return;
                 case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCY:
                             readFeatureDependency(reader, config);

@@ -189,6 +189,7 @@ public class FeatureConfig {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(specName);
         if (!params.isEmpty()) {
+            buf.append(' ');
             final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
             Map.Entry<String, String> entry = i.next();
             buf.append(entry.getKey()).append('=').append(entry.getValue());

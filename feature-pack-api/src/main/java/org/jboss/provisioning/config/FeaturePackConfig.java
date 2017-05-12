@@ -27,6 +27,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 
@@ -40,6 +41,7 @@ public class FeaturePackConfig {
     public static class Builder {
 
         protected final ArtifactCoords.Gav gav;
+        protected Config config;
         protected boolean inheritPackages = true;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
@@ -60,6 +62,11 @@ public class FeaturePackConfig {
             inheritPackages = fpConfig.inheritPackages;
             excludedPackages = fpConfig.excludedPackages.size() > 1 ? new HashSet<>(fpConfig.excludedPackages) : fpConfig.excludedPackages;
             includedPackages = fpConfig.includedPackages.size() > 1 ? new HashMap<>(fpConfig.includedPackages) : fpConfig.includedPackages;
+        }
+
+        public Builder setConfig(Config config) {
+            this.config = config;
+            return this;
         }
 
         public Builder setInheritPackages(boolean inheritSelectedPackages) {
@@ -280,6 +287,7 @@ public class FeaturePackConfig {
     }
 
     private final ArtifactCoords.Gav gav;
+    private final Config config;
     private final boolean inheritPackages;
     private final Set<String> excludedPackages;
     private final Map<String, PackageConfig> includedPackages;
@@ -287,6 +295,7 @@ public class FeaturePackConfig {
     protected FeaturePackConfig(Builder builder) {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
+        this.config = builder.config;
         this.inheritPackages = builder.inheritPackages;
         this.excludedPackages = builder.excludedPackages.size() > 1 ? Collections.unmodifiableSet(builder.excludedPackages) : builder.excludedPackages;
         this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableMap(builder.includedPackages) : builder.includedPackages;
@@ -294,6 +303,14 @@ public class FeaturePackConfig {
 
     public ArtifactCoords.Gav getGav() {
         return gav;
+    }
+
+    public boolean hasConfig() {
+        return config != null;
+    }
+
+    public Config getConfig() {
+        return config;
     }
 
     public boolean isInheritPackages() {
@@ -332,6 +349,7 @@ public class FeaturePackConfig {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((config == null) ? 0 : config.hashCode());
         result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
@@ -348,6 +366,11 @@ public class FeaturePackConfig {
         if (getClass() != obj.getClass())
             return false;
         FeaturePackConfig other = (FeaturePackConfig) obj;
+        if (config == null) {
+            if (other.config != null)
+                return false;
+        } else if (!config.equals(other.config))
+            return false;
         if (excludedPackages == null) {
             if (other.excludedPackages != null)
                 return false;
@@ -372,6 +395,9 @@ public class FeaturePackConfig {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
+        if(config != null) {
+            builder.append(' ').append(config);
+        }
         if(!inheritPackages) {
             builder.append(" inheritPackages=false");
         }
