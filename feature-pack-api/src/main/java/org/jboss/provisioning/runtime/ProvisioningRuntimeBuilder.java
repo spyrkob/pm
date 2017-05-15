@@ -339,29 +339,25 @@ public class ProvisioningRuntimeBuilder {
             } catch (IOException | XMLStreamException e) {
                 throw new ProvisioningException(Errors.parseXml(fpXml), e);
             }
-        } else {
-            if(!fp.gav.equals(fpConfig.getGav())) {
-                throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, fpConfig.getGav()));
-            }
+        } else if(!fp.gav.equals(fpConfig.getGav())) {
+            throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, fpConfig.getGav()));
         }
 
         Map<ArtifactCoords.Gav, FeaturePackConfig.Builder> fpBuilders = Collections.emptyMap();
         if(fp.spec.hasDependencies()) {
             if(dependencyResolution == null) {
                 dependencyResolution = new HashSet<>();
-            }
-            if(dependencyResolution.contains(fp.gav)) {
+            } else if(dependencyResolution.contains(fp.gav)) {
                 return fpBuilders;
-            } else {
-                dependencyResolution.add(fp.gav);
-                for (FeaturePackDependencySpec dep : fp.spec.getDependencies()) {
-                    fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget()));
-                }
-                for (FeaturePackDependencySpec dep : fp.spec.getDependencies()) {
-                    fpBuilders = enforce(layoutFps.get(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
-                }
-                dependencyResolution.remove(fp.gav);
             }
+            dependencyResolution.add(fp.gav);
+            for (FeaturePackDependencySpec dep : fp.spec.getDependencies()) {
+                fpBuilders = merge(fpBuilders, layoutFeaturePack(dep.getTarget()));
+            }
+            for (FeaturePackDependencySpec dep : fp.spec.getDependencies()) {
+                fpBuilders = enforce(layoutFps.get(dep.getTarget().getGav().toGa()), dep.getTarget(), fpBuilders);
+            }
+            dependencyResolution.remove(fp.gav);
         }
 
         // resources should be copied last overriding the dependency resources
