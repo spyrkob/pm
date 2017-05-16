@@ -68,8 +68,9 @@ public class ExcludeOptionalPackagesFromExternalDependenciesTestCase extends PmP
                         .setInheritPackages(false)
                         .build())
                 .newPackage("p1", true)
-                    .addDependency("fp3", "p1")
+                    .addDependency("fp3", "p1", true)
                     .addDependency("fp3", "p2", true)
+                    .addDependency("fp3", "p3")
                     .writeContent("fp2/p1.txt", "p1")
                     .getFeaturePack()
                 .getInstaller()
@@ -85,6 +86,10 @@ public class ExcludeOptionalPackagesFromExternalDependenciesTestCase extends PmP
                 .newPackage("p2")
                     .addDependency("fp1", "p3")
                     .writeContent("fp3/p2.txt", "p2")
+                    .getFeaturePack()
+                .newPackage("p3")
+                    .addDependency("fp1", "p2", true)
+                    .writeContent("fp3/p3.txt", "p3")
                     .getFeaturePack()
                 .getInstaller()
             .install();
@@ -104,13 +109,12 @@ public class ExcludeOptionalPackagesFromExternalDependenciesTestCase extends PmP
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")
-                        .addPackage("p2")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final"))
                         .addPackage("p1")
                         .build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "1.0.0.Final"))
-                        .addPackage("p1")
+                        .addPackage("p3")
                         .build())
                 .build();
     }
@@ -119,9 +123,8 @@ public class ExcludeOptionalPackagesFromExternalDependenciesTestCase extends PmP
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder
                 .addFile("fp1/p1.txt", "p1")
-                .addFile("fp1/p2.txt", "p2")
                 .addFile("fp2/p1.txt", "p1")
-                .addFile("fp3/p1.txt", "p1")
+                .addFile("fp3/p3.txt", "p3")
                 .build();
     }
 }

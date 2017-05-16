@@ -28,13 +28,11 @@ import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
 public class FeaturePackCircularDependenciesTestCase extends PmProvisionConfigTestBase {
 
     @Override
@@ -56,7 +54,7 @@ public class FeaturePackCircularDependenciesTestCase extends PmProvisionConfigTe
                         .builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "1.0.0.Final"))
                         .build())
                 .newPackage("p1", true)
-                    .addDependency("fp3", "p1")
+                    .addDependency("fp3", "p2")
                     .writeContent("fp2/p1.txt", "p1")
                     .getFeaturePack()
                 .newPackage("p2")
@@ -73,9 +71,10 @@ public class FeaturePackCircularDependenciesTestCase extends PmProvisionConfigTe
                         .includePackage("p2")
                         .build())
                 .newPackage("p1", true)
-                    //.addDependency("fp1", "p2")  UNCOMMENT TO MAKE IT PASS
-                    //.addDependency("fp2", "p2")
                     .writeContent("fp3/p1.txt", "p1")
+                    .getFeaturePack()
+                .newPackage("p2")
+                    .writeContent("fp3/p2.txt", "p2")
                     .getFeaturePack()
                 .getInstaller()
             .install();
@@ -103,6 +102,7 @@ public class FeaturePackCircularDependenciesTestCase extends PmProvisionConfigTe
                         .build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "1.0.0.Final"))
                         .addPackage("p1")
+                        .addPackage("p2")
                         .build())
                 .build();
     }
@@ -115,6 +115,7 @@ public class FeaturePackCircularDependenciesTestCase extends PmProvisionConfigTe
                 .addFile("fp2/p1.txt", "p1")
                 .addFile("fp2/p2.txt", "p2")
                 .addFile("fp3/p1.txt", "p1")
+                .addFile("fp3/p2.txt", "p2")
                 .build();
     }
 }

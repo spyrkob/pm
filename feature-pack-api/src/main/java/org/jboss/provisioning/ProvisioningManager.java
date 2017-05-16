@@ -29,7 +29,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
+import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder2;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -234,7 +234,7 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        try(final ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance()
+        try(final ProvisioningRuntime runtime = ProvisioningRuntimeBuilder2.newInstance()
                 .setArtifactResolver(artifactResolver)
                 .setConfig(provisioningConfig)
                 .setEncoding(encoding)

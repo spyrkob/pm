@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,7 +52,7 @@ public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConf
             .getInstaller()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
             .newPackage("p1", true)
-                .addDependency("p2")
+                //.addDependency("p2")
                 .writeContent("fp2/p1.txt", "p1")
                 .getFeaturePack()
             .newPackage("p2")
@@ -67,7 +67,8 @@ public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConf
         try {
             super.testPmMethod(pm);
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.unsatisfiedPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p1", "p2"), e.getMessage());
+            Assert.assertEquals(Errors.unsatisfiedExternalPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1",
+                    ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"), e.getMessage());
         }
     }
 

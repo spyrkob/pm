@@ -89,13 +89,11 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     }
 
     private final FeaturePackSpec spec;
-    private final FeaturePackConfig config;
     private final Path dir;
     private final Map<String, PackageRuntime> packages;
 
     private FeaturePackRuntime(Builder builder, PackageParameterResolver paramResolver) throws ProvisioningException {
         this.spec = builder.spec;
-        this.config = builder.config;
         this.dir = builder.dir;
 
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
@@ -123,10 +121,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
     public FeaturePackSpec getSpec() {
         return spec;
-    }
-
-    public FeaturePackConfig getConfig() {
-        return config;
     }
 
     @Override

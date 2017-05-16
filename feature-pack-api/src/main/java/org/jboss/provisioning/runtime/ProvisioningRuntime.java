@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,7 +36,6 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePackSet;
@@ -105,7 +103,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final long startTime;
     private final ArtifactResolver artifactResolver;
     private final ProvisioningConfig config;
-    private final PackageParameterResolver paramResolver;
     private final Path installDir;
     private final Path stagedDir;
     private final Path workDir;
@@ -113,14 +110,13 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final List<ProvisioningPlugin> plugins;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
-    ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
-        this.startTime = builder.startTime;
-        this.artifactResolver = builder.artifactResolver;
-        this.config = builder.config;
-        this.paramResolver = builder.paramResolver;
+    ProvisioningRuntime(RuntimeBuilder builder) throws ProvisioningException {
+        this.startTime = builder.getStartTime();
+        this.artifactResolver = builder.getArtifactResolver();
+        this.config = builder.getConfig();
 
-        this.workDir = builder.workDir;
-        this.installDir = builder.installDir;
+        this.workDir = builder.getWorkDir();
+        this.installDir = builder.getInstallDir();
         this.stagedDir = workDir.resolve("staged");
         try {
             Files.createDirectories(stagedDir);
@@ -130,26 +126,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
 
         this.tmpDir = workDir.resolve("tmp");
 
-        plugins = Collections.unmodifiableList(builder.plugins);
+        plugins = Collections.unmodifiableList(builder.getPlugins());
 
-        switch(builder.fpRuntimes.size()) {
-            case 0: {
-                fpRuntimes = Collections.emptyMap();
-                break;
-            }
-            case 1: {
-                final Map.Entry<ArtifactCoords.Gav, FeaturePackRuntime.Builder> entry = builder.fpRuntimes.entrySet().iterator().next();
-                fpRuntimes = Collections.singletonMap(entry.getKey(), entry.getValue().build(paramResolver));
-                break;
-            }
-            default: {
-                final Map<ArtifactCoords.Gav, FeaturePackRuntime> tmpFpRuntimes = new LinkedHashMap<>(builder.fpRuntimes.size());
-                for(Map.Entry<ArtifactCoords.Gav, FeaturePackRuntime.Builder> entry : builder.fpRuntimes.entrySet()) {
-                    tmpFpRuntimes.put(entry.getKey(), entry.getValue().build(paramResolver));
-                }
-                fpRuntimes = Collections.unmodifiableMap(tmpFpRuntimes);
-            }
-        }
+        fpRuntimes = builder.getFpRuntimes();
     }
 
     /**

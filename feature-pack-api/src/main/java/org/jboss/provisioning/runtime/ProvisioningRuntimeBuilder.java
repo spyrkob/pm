@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
@@ -62,7 +63,7 @@ import org.jboss.provisioning.xml.PackageXmlParser;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningRuntimeBuilder {
+public class ProvisioningRuntimeBuilder implements RuntimeBuilder {
 
     public static ProvisioningRuntimeBuilder newInstance() {
         return new ProvisioningRuntimeBuilder();
@@ -443,6 +444,61 @@ public class ProvisioningRuntimeBuilder {
             Files.createDirectories(path);
         } catch (IOException e) {
             throw new ProvisioningException(Errors.mkdirs(path));
+        }
+    }
+
+    @Override
+    public long getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public ArtifactResolver getArtifactResolver() {
+        return artifactResolver;
+    }
+
+    @Override
+    public ProvisioningConfig getConfig() {
+        return config;
+    }
+
+    @Override
+    public PackageParameterResolver getParamResolver() {
+        return paramResolver;
+    }
+
+    @Override
+    public Path getWorkDir() {
+        return workDir;
+    }
+
+    @Override
+    public Path getInstallDir() {
+        return installDir;
+    }
+
+    @Override
+    public List<ProvisioningPlugin> getPlugins() {
+        return plugins;
+    }
+
+    @Override
+    public Map<Gav, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
+        switch (fpRuntimes.size()) {
+            case 0: {
+                return Collections.emptyMap();
+            }
+            case 1: {
+                final Map.Entry<ArtifactCoords.Gav, FeaturePackRuntime.Builder> entry = fpRuntimes.entrySet().iterator().next();
+                return Collections.singletonMap(entry.getKey(), entry.getValue().build(paramResolver));
+            }
+            default: {
+                final Map<ArtifactCoords.Gav, FeaturePackRuntime> tmpFpRuntimes = new LinkedHashMap<>(fpRuntimes.size());
+                for (Map.Entry<ArtifactCoords.Gav, FeaturePackRuntime.Builder> entry : fpRuntimes.entrySet()) {
+                    tmpFpRuntimes.put(entry.getKey(), entry.getValue().build(paramResolver));
+                }
+                return Collections.unmodifiableMap(tmpFpRuntimes);
+            }
         }
     }
 }
