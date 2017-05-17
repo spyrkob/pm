@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,13 +109,15 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final List<ProvisioningPlugin> plugins;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
-    ProvisioningRuntime(RuntimeBuilder builder) throws ProvisioningException {
-        this.startTime = builder.getStartTime();
-        this.artifactResolver = builder.getArtifactResolver();
-        this.config = builder.getConfig();
+    ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
+        this.startTime = builder.startTime;
+        this.artifactResolver = builder.artifactResolver;
+        this.config = builder.config;
+        this.plugins = builder.plugins;
+        this.fpRuntimes = builder.fpRuntimes;
 
-        this.workDir = builder.getWorkDir();
-        this.installDir = builder.getInstallDir();
+        this.workDir = builder.workDir;
+        this.installDir = builder.installDir;
         this.stagedDir = workDir.resolve("staged");
         try {
             Files.createDirectories(stagedDir);
@@ -125,10 +126,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
 
         this.tmpDir = workDir.resolve("tmp");
-
-        plugins = Collections.unmodifiableList(builder.getPlugins());
-
-        fpRuntimes = builder.getFpRuntimes();
     }
 
     /**
