@@ -161,6 +161,50 @@ public class ConfigDependency {
         this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
     }
 
+    public String getConfigSource() {
+        return configSource;
+    }
+
+    public String getConfigName() {
+        return configName;
+    }
+
+    public boolean isInheritFeatures() {
+        return inheritFeatures;
+    }
+
+    public boolean hasExcludedSpecs() {
+        return !excludedSpecs.isEmpty();
+    }
+
+    public Set<String> getExcludedSpecs() {
+        return excludedSpecs;
+    }
+
+    public boolean hasIncludedSpecs() {
+        return !includedSpecs.isEmpty();
+    }
+
+    public Set<String> getIncludedSpecs() {
+        return includedSpecs;
+    }
+
+    public boolean hasExcludedFeatures() {
+        return !excludedFeatures.isEmpty();
+    }
+
+    public Set<FeatureId> getExcludedFeatures() {
+        return excludedFeatures;
+    }
+
+    public boolean hasIncludedFeatures() {
+        return !includedFeatures.isEmpty();
+    }
+
+    public Map<FeatureId, FeatureConfig> getIncludedFeatures() {
+        return includedFeatures;
+    }
+
     boolean isExcluded(String spec) {
         return excludedSpecs.contains(spec);
     }

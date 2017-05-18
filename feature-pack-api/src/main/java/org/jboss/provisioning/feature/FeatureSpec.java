@@ -18,6 +18,7 @@
 package org.jboss.provisioning.feature;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -91,16 +92,6 @@ public class FeatureSpec {
         }
 
         public FeatureSpec build() throws ProvisioningDescriptionException {
-            // the check is done in when the whole schema is checked
-//            if(!refs.isEmpty()) {
-//                for(FeatureReferenceSpec ref : refs.values()) {
-//                    for(String param : ref.paramMapping.keySet()) {
-//                        if(!params.containsKey(param)) {
-//                            throw new ProvisioningDescriptionException("Feature " + name + " does not include parameter " + param + " mapped by reference " + ref.name);
-//                        }
-//                    }
-//                }
-//            }
             return new FeatureSpec(this);
         }
     }
@@ -125,12 +116,28 @@ public class FeatureSpec {
         this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public boolean hasId() {
         return !idParams.isEmpty();
     }
 
     public boolean hasRefs() {
         return !refs.isEmpty();
+    }
+
+    public Collection<FeatureReferenceSpec> getRefs() {
+        return refs.values();
+    }
+
+    public boolean hasParams() {
+        return !params.isEmpty();
+    }
+
+    public Collection<FeatureParameterSpec> getParams() {
+        return params.values();
     }
 
     @Override

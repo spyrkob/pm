@@ -16,27 +16,18 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningXmlWriter extends BaseXmlWriter {
+public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
 
     private static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
 
@@ -47,7 +38,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
     private ProvisioningXmlWriter() {
     }
 
-    public void write(ProvisioningConfig provisioningConfig, Path outputFile) throws XMLStreamException, IOException {
+    protected ElementNode toElement(ProvisioningConfig provisioningConfig) {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
@@ -58,13 +49,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter {
             }
         }
 
-        ensureParentDir(outputFile);
-        try (FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
-                .createXMLStreamWriter(Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
-            writer.writeStartDocument();
-            pkg.marshall(writer);
-            writer.writeEndDocument();
-        }
+        return pkg;
     }
 
     private void writeFeaturePack(ElementNode fp, FeaturePackConfig featurePack) {

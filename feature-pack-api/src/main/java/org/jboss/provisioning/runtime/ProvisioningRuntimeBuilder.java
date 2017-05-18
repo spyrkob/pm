@@ -175,6 +175,10 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
+        if(fpConfig.hasConfig()) {
+            fp.addConfig(fpConfig.getConfig());
+        }
+
         final List<FeaturePackConfig> fpConfigStack = fpConfigStacks.get(fpConfig.getGav());
         if(fpConfig.isInheritPackages()) {
             for(String packageName : fp.spec.getDefaultPackageNames()) {

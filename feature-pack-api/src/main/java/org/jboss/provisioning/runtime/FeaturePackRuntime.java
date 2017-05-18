@@ -35,11 +35,14 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
+import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.MainConfigBuilder;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.util.DefaultFeatureSpecLoader;
 
 /**
  *
@@ -55,6 +58,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
+
+        private MainConfigBuilder configBuilder;
 
         private Builder(ArtifactCoords.Gav gav, Path dir) {
             this.gav = gav;
@@ -77,6 +82,13 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         void addPackage(String name) {
             pkgOrder.add(name);
+        }
+
+        void addConfig(Config config) throws ProvisioningDescriptionException {
+            if(configBuilder == null) {
+                configBuilder = MainConfigBuilder.newInstance(new DefaultFeatureSpecLoader(dir));
+            }
+            configBuilder.addConfig(config);
         }
 
         FeaturePackRuntime build(PackageParameterResolver paramResolver) throws ProvisioningException {

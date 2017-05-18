@@ -59,6 +59,10 @@ public class FeaturePackSpec {
             return this;
         }
 
+        public ArtifactCoords.Gav getGav() {
+            return gav;
+        }
+
         public Builder addDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
             switch(defPackages.size()) {

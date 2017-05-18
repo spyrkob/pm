@@ -16,15 +16,7 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -34,14 +26,13 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 import org.jboss.provisioning.xml.util.TextNode;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlWriter extends BaseXmlWriter {
+public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
 
     private static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
 
@@ -52,14 +43,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
     private FeaturePackXmlWriter() {
     }
 
-    public void write(FeaturePackSpec fpSpec, Path outputFile) throws XMLStreamException, IOException {
-        ensureParentDir(outputFile);
-        try (Writer writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)) {
-            write(fpSpec, writer);
-        }
-    }
-
-    public void write(FeaturePackSpec fpSpec, Writer writer) throws XMLStreamException {
+    protected ElementNode toElement(FeaturePackSpec fpSpec) {
         final ElementNode fp = addElement(null, Element.FEATURE_PACK);
         final ArtifactCoords.Gav fpGav = fpSpec.getGav();
         addGAV(fp, fpGav);
@@ -80,12 +64,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             }
         }
 
-        try (FormattingXmlStreamWriter xmlWriter = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
-                .createXMLStreamWriter(writer))) {
-            xmlWriter.writeStartDocument();
-            fp.marshall(xmlWriter);
-            xmlWriter.writeEndDocument();
-        }
+        return fp;
     }
 
     private void addGAV(final ElementNode fp, final ArtifactCoords.Gav fpGav) {

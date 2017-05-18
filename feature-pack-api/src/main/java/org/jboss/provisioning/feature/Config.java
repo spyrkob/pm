@@ -95,6 +95,26 @@ public class Config {
         this.features = builder.features.size() > 1 ? Collections.unmodifiableList(builder.features) : builder.features;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public boolean hasDependencies() {
+        return !dependencies.isEmpty();
+    }
+
+    public List<ConfigDependency> getDependencies() {
+        return dependencies;
+    }
+
+    public boolean hasFeatures() {
+        return !features.isEmpty();
+    }
+
+    public List<FeatureConfig> getFeatures() {
+        return features;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -27,7 +27,10 @@ public interface Constants {
     String PM_INSTALL_WORK_DIR = "pm.install.workdir";
     String PM_TOOL_HOME_DIR = "pm.tool.home";
 
+    String DOT_XML = ".xml";
+    String CONFIGS = "configs";
     String CONTENT = "content";
+    String FEATURES = "features";
     String FEATURE_PACK_XML = "feature-pack.xml";
     String MODULES_XML = "module.xml";
     String PACKAGE_XML = "package.xml";
@@ -35,6 +38,7 @@ public interface Constants {
     String PLUGINS = "plugins";
     String PROVISIONING_XML = "provisioning.xml";
     String RESOURCES = "resources";
+    String SPEC_XML = "spec.xml";
 
     String PROVISIONED_STATE_DIR = ".pm";
     String PROVISIONED_STATE_XML = "provisioned.xml";

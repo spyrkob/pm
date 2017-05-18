@@ -117,6 +117,30 @@ public class FeatureReferenceSpec {
 
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getFeature() {
+        return feature;
+    }
+
+    public boolean isNillable() {
+        return nillable;
+    }
+
+    public int getParamsMapped() {
+        return localParams.length;
+    }
+
+    public String getLocalParam(int i) {
+        return localParams[i];
+    }
+
+    public String getTargetParam(int i) {
+        return targetParams[i];
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

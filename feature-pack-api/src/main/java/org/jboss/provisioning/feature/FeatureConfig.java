@@ -63,6 +63,14 @@ public class FeatureConfig {
         return this;
     }
 
+    public boolean hasParams() {
+        return !params.isEmpty();
+    }
+
+    public Map<String, String> getParams() {
+        return params;
+    }
+
     public FeatureConfig setParam(String name, String value) {
         putParam(name, value);
         return this;
@@ -97,6 +105,10 @@ public class FeatureConfig {
         return !dependencies.isEmpty();
     }
 
+    public Set<FeatureId> getDependencies() {
+        return dependencies;
+    }
+
     public FeatureConfig addFeature(FeatureConfig config) {
         switch(nested.size()) {
             case 0:
@@ -108,6 +120,14 @@ public class FeatureConfig {
                 nested.add(config);
         }
         return this;
+    }
+
+    public boolean hasNested() {
+        return nested.isEmpty();
+    }
+
+    public List<FeatureConfig> getNested() {
+        return nested;
     }
 
     void merge(FeatureConfig config) {

@@ -19,15 +19,20 @@ package org.jboss.provisioning.xml;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.xml.util.AttributeValue;
 import org.jboss.provisioning.xml.util.ElementNode;
+import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class BaseXmlWriter {
+abstract class BaseXmlWriter<T> {
 
     protected static void ensureParentDir(Path p) throws IOException {
         if(!Files.exists(p.getParent())) {
@@ -54,4 +59,17 @@ class BaseXmlWriter {
     protected static void addAttribute(ElementNode e, String name, String value) {
         e.addAttribute(name, new AttributeValue(value));
     }
+
+    public void write(T t, Path outputFile) throws XMLStreamException, IOException {
+        final ElementNode root = toElement(t);
+        ensureParentDir(outputFile);
+        try (FormattingXmlStreamWriter writer = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
+                .createXMLStreamWriter(Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)))) {
+            writer.writeStartDocument();
+            root.marshall(writer);
+            writer.writeEndDocument();
+        }
+    }
+
+    protected abstract ElementNode toElement(T type);
 }

@@ -60,6 +60,26 @@ public class FeatureParameterSpec {
         this.defaultValue = defaultValue;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public boolean isFeatureId() {
+        return featureId;
+    }
+
+    public boolean isNillable() {
+        return nillable;
+    }
+
+    public boolean hasDefaultValue() {
+        return defaultValue != null;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
