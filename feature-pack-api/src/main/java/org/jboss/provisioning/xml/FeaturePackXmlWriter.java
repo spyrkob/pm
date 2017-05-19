@@ -55,12 +55,25 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             }
         }
 
+        if(fpSpec.hasUnnamedConfig()) {
+            fp.addChild(ConfigXmlWriter.getInstance().toElement(fpSpec.getUnnamedConfig(), FeaturePackXmlParser10.NAMESPACE_1_0));
+        }
+
+        if(fpSpec.hasDefaultConfigs()) {
+            final ElementNode configs = addElement(fp, Element.DEFAULT_CONFIGS);
+            final String[] configNames = fpSpec.getDefaultConfigs().toArray(new String[0]);
+            Arrays.sort(configNames);
+            for (String name : configNames) {
+                writeDefaultConfig(configs, name);
+            }
+        }
+
         if (fpSpec.hasDefaultPackages()) {
             final ElementNode pkgs = addElement(fp, Element.DEFAULT_PACKAGES);
             final String[] pkgNames = fpSpec.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
-                write(pkgs, name);
+                writeDefaultPackage(pkgs, name);
             }
         }
 
@@ -73,7 +86,11 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
     }
 
-    private static void write(ElementNode pkgs, String name) {
+    private static void writeDefaultConfig(ElementNode configs, String name) {
+        addAttribute(addElement(configs, Element.CONFIG), Attribute.NAME, name);
+    }
+
+    private static void writeDefaultPackage(ElementNode pkgs, String name) {
         addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, name);
     }
 

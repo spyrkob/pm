@@ -58,6 +58,10 @@ public class FeatureConfig {
         return this.specName;
     }
 
+    public String getParentRef() {
+        return this.parentRef;
+    }
+
     public FeatureConfig setParentRef(String parentRef) {
         this.parentRef = parentRef;
         return this;

@@ -37,7 +37,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleConfigTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -47,10 +47,10 @@ public class SimpleConfigTestCase extends PmInstallFeaturePackTestBase {
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(Config.builder("config1")
+            .addConfig(Config.builder()
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "v1"))
+                            .setParam("p1", "config1"))
                     .build())
             .newPackage("p1", true)
                 .writeContent("fp1/p1.txt", "p1")

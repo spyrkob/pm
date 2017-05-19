@@ -30,6 +30,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -45,6 +46,8 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
+        private Set<String> defConfigs = Collections.emptySet();
+        private Config unnamedConfig;
 
         protected Builder() {
             this(null);
@@ -74,6 +77,37 @@ public class FeaturePackSpec {
                 default:
                     defPackages.add(packageName);
             }
+            return this;
+        }
+
+        public Builder addDefaultConfig(String configName) throws ProvisioningDescriptionException {
+            assert configName != null : "configName is null";
+            if(unnamedConfig != null) {
+                throw new ProvisioningDescriptionException("Feature-pack already has default unnamed config");
+            }
+            switch(defConfigs.size()) {
+                case 0:
+                    defConfigs = Collections.singleton(configName);
+                    break;
+                case 1:
+                    defConfigs = new HashSet<String>(defConfigs);
+                default:
+                    defConfigs.add(configName);
+            }
+            return this;
+        }
+
+        public Builder setConfig(Config config) throws ProvisioningDescriptionException {
+            if(config.getName() != null) {
+                throw new ProvisioningDescriptionException("Config included into feature-pack spec cannot have a name");
+            }
+            if (!defConfigs.isEmpty()) {
+                throw new ProvisioningDescriptionException("Unnamed config cannot be mixed with named configs");
+            }
+            if (unnamedConfig != null) {
+                throw new ProvisioningDescriptionException("There could be only one unnamed config");
+            }
+            this.unnamedConfig = config;
             return this;
         }
 
@@ -134,16 +168,36 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
+    private final Set<String> defConfigs;
+    private final Config unnamedConfig;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
         this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
+        this.defConfigs = builder.defConfigs.size() > 1 ? Collections.unmodifiableSet(builder.defConfigs) : builder.defConfigs;
+        this.unnamedConfig = builder.unnamedConfig;
     }
 
     public ArtifactCoords.Gav getGav() {
         return gav;
+    }
+
+    public boolean hasUnnamedConfig() {
+        return unnamedConfig != null;
+    }
+
+    public Config getUnnamedConfig() {
+        return unnamedConfig;
+    }
+
+    public boolean hasDefaultConfigs() {
+        return !defConfigs.isEmpty();
+    }
+
+    public Set<String> getDefaultConfigs() {
+        return defConfigs;
     }
 
     public boolean hasDefaultPackages() {
@@ -204,9 +258,12 @@ public class FeaturePackSpec {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
-        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
+        result = prime * result + ((defConfigs == null) ? 0 : defConfigs.hashCode());
         result = prime * result + ((defPackages == null) ? 0 : defPackages.hashCode());
+        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
+        result = prime * result + ((dependencyByName == null) ? 0 : dependencyByName.hashCode());
+        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
+        result = prime * result + ((unnamedConfig == null) ? 0 : unnamedConfig.hashCode());
         return result;
     }
 
@@ -219,20 +276,35 @@ public class FeaturePackSpec {
         if (getClass() != obj.getClass())
             return false;
         FeaturePackSpec other = (FeaturePackSpec) obj;
+        if (defConfigs == null) {
+            if (other.defConfigs != null)
+                return false;
+        } else if (!defConfigs.equals(other.defConfigs))
+            return false;
+        if (defPackages == null) {
+            if (other.defPackages != null)
+                return false;
+        } else if (!defPackages.equals(other.defPackages))
+            return false;
         if (dependencies == null) {
             if (other.dependencies != null)
                 return false;
         } else if (!dependencies.equals(other.dependencies))
+            return false;
+        if (dependencyByName == null) {
+            if (other.dependencyByName != null)
+                return false;
+        } else if (!dependencyByName.equals(other.dependencyByName))
             return false;
         if (gav == null) {
             if (other.gav != null)
                 return false;
         } else if (!gav.equals(other.gav))
             return false;
-        if (defPackages == null) {
-            if (other.defPackages != null)
+        if (unnamedConfig == null) {
+            if (other.unnamedConfig != null)
                 return false;
-        } else if (!defPackages.equals(other.defPackages))
+        } else if (!unnamedConfig.equals(other.unnamedConfig))
             return false;
         return true;
     }
@@ -248,6 +320,18 @@ public class FeaturePackSpec {
             buf.append(dependencies.get(array[0]));
             for(int i = 1; i < array.length; ++i) {
                 buf.append(',').append(dependencies.get(array[i]));
+            }
+        }
+        if(unnamedConfig != null) {
+            buf.append("; config=").append(unnamedConfig);
+        }
+        if(!defConfigs.isEmpty()) {
+            buf.append("; defaultConfigs: ");
+            final String[] array = defConfigs.toArray(new String[defConfigs.size()]);
+            Arrays.sort(array);
+            buf.append(array[0]);
+            for(int i = 1; i < array.length; ++i) {
+                buf.append(',').append(array[i]);
             }
         }
         if(!defPackages.isEmpty()) {

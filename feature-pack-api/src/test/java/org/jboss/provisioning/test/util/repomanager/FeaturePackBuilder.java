@@ -155,6 +155,17 @@ public class FeaturePackBuilder {
     }
 
     public FeaturePackBuilder addConfig(Config config) throws ProvisioningDescriptionException {
+        return addConfig(config, false);
+    }
+
+    public FeaturePackBuilder addConfig(Config config, boolean defaultConfig) throws ProvisioningDescriptionException {
+        if(config.getName() == null) {
+            if(defaultConfig) {
+                throw new ProvisioningDescriptionException("default config must have a name");
+            }
+            fpBuilder.setConfig(config);
+            return this;
+        }
         if(configs.isEmpty()) {
             configs = Collections.singletonMap(config.getName(), config);
         } else {
@@ -165,6 +176,9 @@ public class FeaturePackBuilder {
                 configs = new HashMap<>(configs);
             }
             configs.put(config.getName(), config);
+        }
+        if(defaultConfig) {
+            fpBuilder.addDefaultConfig(config.getName());
         }
         return this;
     }
