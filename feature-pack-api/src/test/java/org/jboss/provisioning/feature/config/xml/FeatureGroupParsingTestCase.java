@@ -15,15 +15,20 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.config.wf;
+package org.jboss.provisioning.feature.config.xml;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.feature.MainConfigBuilder;
-import org.jboss.provisioning.util.DefaultFeatureGroupLoader;
-import org.jboss.provisioning.util.DefaultFeatureConfigLoader;
-import org.jboss.provisioning.util.DefaultFeatureSpecLoader;
+import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,29 +36,21 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigDependenciesTestCase {
+public class FeatureGroupParsingTestCase {
 
     @Test
     public void testMain() throws Exception {
-
-        final Path baseDir = getResource("xml/config/wf");
-        MainConfigBuilder.newInstance(
-                new DefaultFeatureSpecLoader(baseDir),
-                new DefaultFeatureGroupLoader(baseDir),
-                DefaultFeatureConfigLoader.newInstance(baseDir))
-                .addFeatureGroup("full_domain")
-                .build();
-
-/*        final Config expected = Config.builder("configName")
-                .addDependency(ConfigDependency.builder("dep1").build())
-                .addDependency(ConfigDependency.builder("dep2").setInheritFeatures(false).build())
-                .addDependency(ConfigDependency.builder("dep3")
+        final FeatureGroup xmlConfig = parseConfig("feature-group.xml");
+        final FeatureGroup expected = FeatureGroup.builder("groupName")
+                .addDependency(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
+                .addDependency(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                .addDependency(FeatureGroupConfig.builder("dep3")
                         .setInheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                         .includeFeature(
                                 FeatureId.fromString("spec3:p1=v1"),
-                                new FeatureConfig()
+                                new FeatureConfig("spec3")
                                 .addDependency(FeatureId.fromString("spec4:p1=v1,p2=v2"))
                                 .addDependency(FeatureId.fromString("spec5:p1=v1,p2=v2"))
                                 .setParam("p1", "v1")
@@ -63,6 +60,7 @@ public class ConfigDependenciesTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
+                .addDependency(FeatureGroupConfig.builder("source4", "dep4").build())
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -71,21 +69,20 @@ public class ConfigDependenciesTestCase {
                         .setParam("p2", "v2"))
                 .addFeature(
                         new FeatureConfig("spec4")
-                        .setParam("p1", "v1"))
+                        .setParam("p1", "v1")
+                        .addFeature(FeatureConfig.newConfig("spec5")
+                                .addFeature(FeatureConfig.newConfig("spec6")
+                                        .setParentRef("spec5-ref")
+                                        .setParam("p1", "v1"))))
                 .build();
         assertEquals(expected, xmlConfig);
-*/    }
+    }
 
-    @Test
-    public void testNested() throws Exception {
-
-        final Path baseDir = getResource("xml/config/wf");
-        MainConfigBuilder.newInstance(
-                new DefaultFeatureSpecLoader(baseDir),
-                new DefaultFeatureGroupLoader(baseDir),
-                DefaultFeatureConfigLoader.newInstance(baseDir))
-                .addFeatureGroup("full_domain_nested")
-                .build();
+    private static FeatureGroup parseConfig(String xml) throws Exception {
+        final Path path = getResource("xml/config/" + xml);
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            return FeatureGroupXmlParser.getInstance().parse(reader);
+        }
     }
 
     private static Path getResource(String path) {

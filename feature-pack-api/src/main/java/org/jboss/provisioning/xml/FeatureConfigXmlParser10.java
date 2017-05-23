@@ -28,7 +28,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  */
 class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig> {
 
-    public static final QName ROOT_1_0 = new QName(ConfigXml.NAMESPACE_1_0, ConfigXml.Element.FEATURE.getLocalName());
+    public static final QName ROOT_1_0 = new QName(FeatureGroupXml.NAMESPACE_1_0, FeatureGroupXml.Element.FEATURE.getLocalName());
 
     public QName getRoot() {
         return ROOT_1_0;
@@ -36,6 +36,6 @@ class FeatureConfigXmlParser10 implements PlugableXmlParser<FeatureConfig> {
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        ConfigXml.readFeatureConfig(reader, config);
+        FeatureGroupXml.readFeatureConfig(reader, config);
     }
 }

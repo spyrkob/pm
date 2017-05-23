@@ -21,9 +21,9 @@
   <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="0.0.1">
     <config>
       <dependencies>
-        <depends config="dep1"/>
-        <depends config="dep2" inherit-features="false"/>
-        <depends config="dep3" inherit-features="false">
+        <depends name="dep1"/>
+        <depends name="dep2" inherit-features="false"/>
+        <depends name="dep3" inherit-features="false">
           <include spec="spec1"/>
           <include feature-id="spec2:p1=v1,p2=v2"/>
           <include feature-id="spec3:p1=v1">
@@ -37,7 +37,7 @@
           <exclude feature-id="spec8:p1=v1"/>
           <exclude feature-id="spec8:p1=v2"/>
         </depends>
-        <depends config="dep4" source="source4"/>
+        <depends name="dep4" source="source4"/>
       </dependencies>
       <features>
         <feature spec="spec1">

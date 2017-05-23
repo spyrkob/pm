@@ -14,34 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.xml;
 
-import java.io.Reader;
-
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ConfigXmlParser implements XmlParser<Config> {
+class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroup.Builder> {
 
-    private static final ConfigXmlParser INSTANCE = new ConfigXmlParser();
+    public static final QName ROOT_1_0 = new QName(FeatureGroupXml.NAMESPACE_1_0, FeatureGroupXml.Element.FEATURE_GROUP.getLocalName());
 
-    public static ConfigXmlParser getInstance() {
-        return INSTANCE;
-    }
-
-    private ConfigXmlParser() {
+    public QName getRoot() {
+        return ROOT_1_0;
     }
 
     @Override
-    public Config parse(final Reader input) throws XMLStreamException {
-        final Config config = new Config();
-        XmlParsers.parse(input, config);
-        return config;
+    public void readElement(XMLExtendedStreamReader reader, FeatureGroup.Builder builder) throws XMLStreamException {
+        FeatureGroupXml.readConfig(reader, builder, true);
     }
 }

@@ -26,21 +26,21 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigLoader;
-import org.jboss.provisioning.xml.ConfigXmlParser;
+import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupLoader;
+import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class DefaultConfigLoader implements ConfigLoader {
+public class DefaultFeatureGroupLoader implements FeatureGroupLoader {
 
     private static String XML = ".xml";
 
     protected final Path baseDir;
 
-    public DefaultConfigLoader(Path baseDir) {
+    public DefaultFeatureGroupLoader(Path baseDir) {
         this.baseDir = baseDir;
     }
 
@@ -49,13 +49,13 @@ public class DefaultConfigLoader implements ConfigLoader {
     }
 
     @Override
-    public Config load(String configSource, String configName) throws ProvisioningDescriptionException {
-        final Path path = resolvePath(configName);
+    public FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException {
+        final Path path = resolvePath(fgName);
         if(!Files.exists(path)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(path));
         }
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            return ConfigXmlParser.getInstance().parse(reader);
+            return FeatureGroupXmlParser.getInstance().parse(reader);
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningDescriptionException(Errors.readFile(path), e);
         }

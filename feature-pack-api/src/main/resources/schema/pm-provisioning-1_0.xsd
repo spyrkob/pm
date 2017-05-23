@@ -91,7 +91,7 @@
       <xs:element name="include" type="configIncludeType"/>
       <xs:element name="exclude" type="configExcludeType"/>
     </xs:choice>
-    <xs:attribute name="config" type="xs:string" use="required">
+    <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
           Configuration name

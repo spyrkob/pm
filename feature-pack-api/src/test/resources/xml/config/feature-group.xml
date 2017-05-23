@@ -17,12 +17,11 @@
     limitations under the License.
 
 -->
-<feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
-
-  <config>
-    <feature-group name="dep1"/>
-    <feature-group name="dep2" inherit-features="false"/>
-    <feature-group name="dep3" inherit-features="false">
+<feature-group name="groupName" xmlns="urn:wildfly:pm-feature-group:1.0">
+  <dependencies>
+    <depends name="dep1"/>
+    <depends name="dep2" inherit-features="false"/>
+    <depends name="dep3" inherit-features="false">
       <include spec="spec1"/>
       <include feature-id="spec2:p1=v1,p2=v2"/>
       <include feature-id="spec3:p1=v1">
@@ -35,27 +34,23 @@
       <exclude spec="spec7"/>
       <exclude feature-id="spec8:p1=v1"/>
       <exclude feature-id="spec8:p1=v2"/>
-    </feature-group>
-    <feature-group name="dep4" source="source4"/>
+    </depends>
+    <depends name="dep4" source="source4"/>
+  </dependencies>
+  <features>
     <feature spec="spec1">
-      <depends feature-id="spec2:p1=v1,p2=v2" />
-      <depends feature-id="spec3:p3=v3" />
-      <param name="p1" value="v1" />
-      <param name="p2" value="v2" />
+      <depends feature-id="spec2:p1=v1,p2=v2"/>
+      <depends feature-id="spec3:p3=v3"/>
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
     </feature>
     <feature spec="spec4">
-      <param name="p1" value="v1" />
+      <param name="p1" value="v1"/>
       <feature spec="spec5">
         <feature spec="spec6" parent-ref="spec5-ref">
-          <param name="p1" value="v1" />
+          <param name="p1" value="v1"/>
         </feature>
       </feature>
     </feature>
-  </config>
-  
-  <default-packages>
-    <package name="package1" />
-    <package name="package2" />
-  </default-packages>
-
-</feature-pack>
+  </features>
+</feature-group>

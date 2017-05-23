@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigDependency;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -164,10 +164,10 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-unnamed-config.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .setConfig(Config.builder()
-                        .addDependency(ConfigDependency.builder("dep1").build())
-                        .addDependency(ConfigDependency.builder("dep2").setInheritFeatures(false).build())
-                        .addDependency(ConfigDependency.builder("dep3")
+                .setConfig(new Config()
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep1").build())
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep3")
                                 .setInheritFeatures(false)
                                 .includeSpec("spec1")
                                 .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -181,7 +181,7 @@ public class FeaturePackXmlParserTestCase  {
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                 .build())
-                        .addDependency(ConfigDependency.builder("source4", "dep4").build())
+                        .addFeatureGroup(FeatureGroupConfig.builder("source4", "dep4").build())
                         .addFeature(new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                         .addDependency(FeatureId.fromString("spec3:p3=v3"))
@@ -192,8 +192,7 @@ public class FeaturePackXmlParserTestCase  {
                         .addFeature(new FeatureConfig("spec5")
                         .addFeature(new FeatureConfig("spec6")
                         .setParentRef("spec5-ref")
-                        .setParam("p1", "v1"))))
-                        .build())
+                        .setParam("p1", "v1")))))
                 .addDefaultPackage("package1")
                 .addDefaultPackage("package2")
                 .build();

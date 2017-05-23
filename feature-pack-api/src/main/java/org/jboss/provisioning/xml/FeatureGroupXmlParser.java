@@ -21,27 +21,27 @@ import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureGroup;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ConfigXmlParser implements XmlParser<Config> {
+public class FeatureGroupXmlParser implements XmlParser<FeatureGroup> {
 
-    private static final ConfigXmlParser INSTANCE = new ConfigXmlParser();
+    private static final FeatureGroupXmlParser INSTANCE = new FeatureGroupXmlParser();
 
-    public static ConfigXmlParser getInstance() {
+    public static FeatureGroupXmlParser getInstance() {
         return INSTANCE;
     }
 
-    private ConfigXmlParser() {
+    private FeatureGroupXmlParser() {
     }
 
     @Override
-    public Config parse(final Reader input) throws XMLStreamException {
-        final Config config = new Config();
-        XmlParsers.parse(input, config);
-        return config;
+    public FeatureGroup parse(final Reader input) throws XMLStreamException {
+        final FeatureGroup.Builder configBuilder = FeatureGroup.builder();
+        XmlParsers.parse(input, configBuilder);
+        return configBuilder.build();
     }
 }

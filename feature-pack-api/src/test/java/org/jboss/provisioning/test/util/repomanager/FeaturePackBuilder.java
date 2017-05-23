@@ -265,9 +265,9 @@ public class FeaturePackBuilder {
             if(!configs.isEmpty()) {
                 final Path configsDir = fpWorkDir.resolve(Constants.CONFIGS);
                 ensureDir(configsDir);
-                final ConfigXmlWriter configWriter = ConfigXmlWriter.getInstance();
+                final ConfigXmlWriter writer = ConfigXmlWriter.getInstance();
                 for(Config config : configs.values()) {
-                    configWriter.write(config, configsDir.resolve(config.getName() + Constants.DOT_XML));
+                    writer.write(config, configsDir.resolve(config.getName() + Constants.DOT_XML));
                 }
             }
 

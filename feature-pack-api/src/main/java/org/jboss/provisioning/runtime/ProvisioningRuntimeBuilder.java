@@ -175,8 +175,8 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if(fpConfig.hasConfig()) {
-            fp.addConfig(fpConfig.getConfig());
+        if(fpConfig.hasFeatureGroup()) {
+            fp.addFeatureGroup(fpConfig.getFeatureGroup());
         }
 
         final List<FeaturePackConfig> fpConfigStack = fpConfigStacks.get(fpConfig.getGav());

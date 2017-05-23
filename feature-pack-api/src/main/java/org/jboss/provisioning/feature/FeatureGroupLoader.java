@@ -23,14 +23,14 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-public interface ConfigLoader {
+public interface FeatureGroupLoader {
 
-    ConfigLoader NOT_CONFIGURED = new ConfigLoader() {
+    FeatureGroupLoader NOT_CONFIGURED = new FeatureGroupLoader() {
         @Override
-        public Config load(String configSource, String configName) throws ProvisioningDescriptionException {
-            throw new ProvisioningDescriptionException("Failed to load config " + configName + " from " + configSource + ". Config loading has not been setup.");
+        public FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException {
+            throw new ProvisioningDescriptionException("Failed to load feature group " + fgName + " from " + fgSource + ". Feature group loading has not been setup.");
         }
     };
 
-    Config load(String configSource, String configName) throws ProvisioningDescriptionException;
+    FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException;
 }

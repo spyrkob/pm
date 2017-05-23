@@ -54,51 +54,51 @@ public class MainConfigBuilder {
     }
 
     public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader) {
-        return newInstance(specLoader, ConfigLoader.NOT_CONFIGURED);
+        return newInstance(specLoader, FeatureGroupLoader.NOT_CONFIGURED);
     }
 
-    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader) {
+    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, FeatureGroupLoader configLoader) {
         return newInstance(specLoader, configLoader, featureId -> {
             throw new UnsupportedOperationException("Failed to load " + featureId + ". Feature config loading has not been setup.");
         });
     }
 
-    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
+    public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader, FeatureGroupLoader configLoader, FeatureConfigLoader featureLoader) {
         return new MainConfigBuilder(specLoader, configLoader, featureLoader);
     }
 
     private final FeatureSpecLoader specLoader;
-    private final ConfigLoader configLoader;
+    private final FeatureGroupLoader featureGroupLoader;
     private final FeatureConfigLoader featureLoader;
     private Map<String, FeatureSpec> featureSpecs = new HashMap<>();
     private boolean checkSpecRefs;
     private Map<FeatureId, ConfiguredFeature> featuresById = new HashMap<>();
     private Map<String, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
 
-    private List<ConfigDependency> dependencyStack = null;
+    private List<FeatureGroupConfig> dependencyStack = null;
 
-    private MainConfigBuilder(FeatureSpecLoader specLoader, ConfigLoader configLoader, FeatureConfigLoader featureLoader) {
+    private MainConfigBuilder(FeatureSpecLoader specLoader, FeatureGroupLoader fgLoader, FeatureConfigLoader featureLoader) {
         this.specLoader = specLoader;
-        this.configLoader = configLoader;
+        this.featureGroupLoader = fgLoader;
         this.featureLoader = featureLoader;
     }
 
-    public MainConfigBuilder addConfig(String configName) throws ProvisioningDescriptionException {
-        return addConfig(null, configName);
+    public MainConfigBuilder addFeatureGroup(String fgName) throws ProvisioningDescriptionException {
+        return addFeatureGroup(null, fgName);
     }
 
-    public MainConfigBuilder addConfig(String configSource, String configName) throws ProvisioningDescriptionException {
-        return addConfig(configLoader.load(configSource, configName));
+    public MainConfigBuilder addFeatureGroup(String fgSource, String fgName) throws ProvisioningDescriptionException {
+        return addFeatureGroup(featureGroupLoader.load(fgSource, fgName));
     }
 
-    public MainConfigBuilder addConfig(Config config) throws ProvisioningDescriptionException {
-        if(!config.dependencies.isEmpty()) {
-            for(ConfigDependency dep : config.dependencies) {
+    public MainConfigBuilder addFeatureGroup(FeatureGroup featureGroup) throws ProvisioningDescriptionException {
+        if(!featureGroup.dependencies.isEmpty()) {
+            for(FeatureGroupConfig dep : featureGroup.dependencies) {
                 processDependency(dep);
             }
         }
-        if(!config.features.isEmpty()) {
-            for(FeatureConfig feature : config.features) {
+        if(!featureGroup.features.isEmpty()) {
+            for(FeatureConfig feature : featureGroup.features) {
                 if(!isExcluded(feature.specName)) {
                     addFeature(feature, ADD);
                 }
@@ -298,8 +298,8 @@ public class MainConfigBuilder {
         return buf;
     }
 
-    private void processDependency(ConfigDependency dep) throws ProvisioningDescriptionException {
-        if(dep.configName == null) {
+    private void processDependency(FeatureGroupConfig dep) throws ProvisioningDescriptionException {
+        if(dep.featureGroupName == null) {
             if(!dep.includedFeatures.isEmpty()) {
                 for(Map.Entry<FeatureId, FeatureConfig> entry : dep.includedFeatures.entrySet()) {
                     final FeatureId featureId = entry.getKey();
@@ -323,7 +323,7 @@ public class MainConfigBuilder {
             return;
         }
         pushDependency(dep);
-        addConfig(configLoader.load(dep.configSource, dep.configName));
+        addFeatureGroup(featureGroupLoader.load(dep.source, dep.featureGroupName));
         popDependency();
         if(!dep.includedFeatures.isEmpty()) {
             for(Map.Entry<FeatureId, FeatureConfig> entry : dep.includedFeatures.entrySet()) {
@@ -334,7 +334,7 @@ public class MainConfigBuilder {
         }
     }
 
-    private void pushDependency(ConfigDependency dep) {
+    private void pushDependency(FeatureGroupConfig dep) {
         if(dependencyStack == null) {
             dependencyStack = new ArrayList<>();
         }
@@ -351,7 +351,7 @@ public class MainConfigBuilder {
         }
         int i = dependencyStack.size();
         while(i > 0) {
-            final ConfigDependency dep = dependencyStack.get(--i);
+            final FeatureGroupConfig dep = dependencyStack.get(--i);
             if(dep.isExcluded(spec)) {
                 return true;
             }
@@ -365,7 +365,7 @@ public class MainConfigBuilder {
         }
         int i = dependencyStack.size();
         while(i > 0) {
-            final ConfigDependency dep = dependencyStack.get(--i);
+            final FeatureGroupConfig dep = dependencyStack.get(--i);
             if(dep.isExcluded(featureId)) {
                 return true;
             }

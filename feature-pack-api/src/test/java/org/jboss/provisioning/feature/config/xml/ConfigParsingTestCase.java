@@ -19,17 +19,14 @@ package org.jboss.provisioning.feature.config.xml;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigDependency;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ConfigXmlParser;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -38,13 +35,16 @@ import org.junit.Test;
  */
 public class ConfigParsingTestCase {
 
+    private static final XmlParserValidator<Config> validator = new XmlParserValidator<>(
+            Paths.get("src/main/resources/schema/pm-config-1_0.xsd"), ConfigXmlParser.getInstance());
+
     @Test
     public void testMain() throws Exception {
-        final Config xmlConfig = parseConfig("config.xml");
-        final Config expected = Config.builder("configName")
-                .addDependency(ConfigDependency.builder("dep1").setInheritFeatures(true).build())
-                .addDependency(ConfigDependency.builder("dep2").setInheritFeatures(false).build())
-                .addDependency(ConfigDependency.builder("dep3")
+        final Config xmlConfig = validator.validateAndParse("xml/config/config.xml", null, null);
+        final Config expected = new Config("configName", "model1")
+                .addFeatureGroup(FeatureGroupConfig.builder("group1").setInheritFeatures(true).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("group2").setInheritFeatures(false).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("group3")
                         .setInheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -60,7 +60,7 @@ public class ConfigParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addDependency(ConfigDependency.builder("source4", "dep4").build())
+                .addFeatureGroup(FeatureGroupConfig.builder("source4", "group4").build())
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -73,25 +73,7 @@ public class ConfigParsingTestCase {
                         .addFeature(FeatureConfig.newConfig("spec5")
                                 .addFeature(FeatureConfig.newConfig("spec6")
                                         .setParentRef("spec5-ref")
-                                        .setParam("p1", "v1"))))
-                .build();
+                                        .setParam("p1", "v1"))));
         assertEquals(expected, xmlConfig);
-    }
-
-    private static Config parseConfig(String xml) throws Exception {
-        final Path path = getResource("xml/config/" + xml);
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            return ConfigXmlParser.getInstance().parse(reader);
-        }
-    }
-
-    private static Path getResource(String path) {
-        java.net.URL resUrl = Thread.currentThread().getContextClassLoader().getResource(path);
-        Assert.assertNotNull("Resource " + path + " is not on the classpath", resUrl);
-        try {
-            return Paths.get(resUrl.toURI());
-        } catch (java.net.URISyntaxException e) {
-            throw new IllegalStateException("Failed to get URI from URL", e);
-        }
     }
 }

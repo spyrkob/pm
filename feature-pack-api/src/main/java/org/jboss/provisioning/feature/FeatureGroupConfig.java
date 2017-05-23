@@ -31,22 +31,22 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigDependency {
+public class FeatureGroupConfig {
 
     public static class Builder {
 
         private final String source;
-        private final String configName;
+        private final String featureGroupName;
         private boolean inheritFeatures = true;
         private Set<String> includedSpecs = Collections.emptySet();
         private Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
         private Set<String> excludedSpecs = Collections.emptySet();
         private Set<FeatureId> excludedFeatures = Collections.emptySet();
 
-        private Builder(String source, String configName, boolean inheritConfigs) {
+        private Builder(String source, String featureGroupName, boolean inheritFeatures) {
             this.source = source;
-            this.configName = configName;
-            this.inheritFeatures = inheritConfigs;
+            this.featureGroupName = featureGroupName;
+            this.inheritFeatures = inheritFeatures;
         }
 
         public Builder setInheritFeatures(boolean inheritFeatures) {
@@ -122,38 +122,38 @@ public class ConfigDependency {
             return this;
         }
 
-        public ConfigDependency build() {
-            return new ConfigDependency(this);
+        public FeatureGroupConfig build() {
+            return new FeatureGroupConfig(this);
         }
     }
 
-    public static Builder builder(String configName) {
-        return builder(configName, true);
+    public static Builder builder(String featureGroupName) {
+        return builder(featureGroupName, true);
     }
 
-    public static Builder builder(String configSource, String configName) {
-        return builder(configSource, configName, true);
+    public static Builder builder(String source, String featureGroupName) {
+        return builder(source, featureGroupName, true);
     }
 
-    public static Builder builder(String configName, boolean inheritFeatures) {
-        return builder(null, configName, inheritFeatures);
+    public static Builder builder(String featureGroupName, boolean inheritFeatures) {
+        return builder(null, featureGroupName, inheritFeatures);
     }
 
     public static Builder builder(String source, String configName, boolean inheritFeatures) {
         return new Builder(source, configName, inheritFeatures);
     }
 
-    final String configSource;
-    final String configName;
+    final String source;
+    final String featureGroupName;
     final boolean inheritFeatures;
     final Set<String> includedSpecs;
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<String> excludedSpecs;
     final Set<FeatureId> excludedFeatures;
 
-    private ConfigDependency(Builder builder) {
-        this.configSource = builder.source;
-        this.configName = builder.configName;
+    private FeatureGroupConfig(Builder builder) {
+        this.source = builder.source;
+        this.featureGroupName = builder.featureGroupName;
         this.inheritFeatures = builder.inheritFeatures;
         this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
         this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
@@ -162,11 +162,11 @@ public class ConfigDependency {
     }
 
     public String getConfigSource() {
-        return configSource;
+        return source;
     }
 
     public String getConfigName() {
-        return configName;
+        return featureGroupName;
     }
 
     public boolean isInheritFeatures() {
@@ -223,8 +223,8 @@ public class ConfigDependency {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((configName == null) ? 0 : configName.hashCode());
-        result = prime * result + ((configSource == null) ? 0 : configSource.hashCode());
+        result = prime * result + ((featureGroupName == null) ? 0 : featureGroupName.hashCode());
+        result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
@@ -241,16 +241,16 @@ public class ConfigDependency {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ConfigDependency other = (ConfigDependency) obj;
-        if (configName == null) {
-            if (other.configName != null)
+        FeatureGroupConfig other = (FeatureGroupConfig) obj;
+        if (featureGroupName == null) {
+            if (other.featureGroupName != null)
                 return false;
-        } else if (!configName.equals(other.configName))
+        } else if (!featureGroupName.equals(other.featureGroupName))
             return false;
-        if (configSource == null) {
-            if (other.configSource != null)
+        if (source == null) {
+            if (other.source != null)
                 return false;
-        } else if (!configSource.equals(other.configSource))
+        } else if (!source.equals(other.source))
             return false;
         if (excludedFeatures == null) {
             if (other.excludedFeatures != null)
@@ -281,11 +281,14 @@ public class ConfigDependency {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[');
-        if(configName != null) {
-            buf.append(configName);
+        if(featureGroupName != null) {
+            buf.append(featureGroupName);
         }
-        if(configSource != null) {
-            buf.append(" src=").append(configSource);
+        if(source != null) {
+            buf.append(" src=").append(source);
+        }
+        if(!inheritFeatures) {
+            buf.append(" inherit-features=false");
         }
         if(!includedSpecs.isEmpty()) {
             buf.append(" includedSpecs=");

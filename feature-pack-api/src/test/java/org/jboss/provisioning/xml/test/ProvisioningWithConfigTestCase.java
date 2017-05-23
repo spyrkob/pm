@@ -21,8 +21,8 @@ import java.nio.file.Paths;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigDependency;
+import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.test.util.XmlParserValidator;
@@ -45,10 +45,10 @@ public class ProvisioningWithConfigTestCase {
                 .validateAndParse("xml/provisioning/provisioning-config.xml", null, null);
         ProvisioningConfig expected = ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
-                        .setConfig(Config.builder()
-                                .addDependency(ConfigDependency.builder("dep1").setInheritFeatures(true).build())
-                                .addDependency(ConfigDependency.builder("dep2").setInheritFeatures(false).build())
-                                .addDependency(ConfigDependency.builder("dep3")
+                        .setFeatureGroup(FeatureGroup.builder()
+                                .addDependency(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
+                                .addDependency(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                                .addDependency(FeatureGroupConfig.builder("dep3")
                                         .setInheritFeatures(false)
                                         .includeSpec("spec1")
                                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -62,7 +62,7 @@ public class ProvisioningWithConfigTestCase {
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                         .build())
-                                .addDependency(ConfigDependency.builder("source4", "dep4").build())
+                                .addDependency(FeatureGroupConfig.builder("source4", "dep4").build())
                                 .addFeature(new FeatureConfig("spec1")
                                         .setParam("p1", "v1")
                                         .setParam("p2", "v2"))

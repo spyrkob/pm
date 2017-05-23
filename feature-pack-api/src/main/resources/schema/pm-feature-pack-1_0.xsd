@@ -88,40 +88,43 @@
   <xs:complexType name="configType">
     <xs:annotation>
       <xs:documentation>
-        Describes the default config.
+        Describes configuration in a generic way.
       </xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:element name="dependencies" type="configDependenciesType" />
-      <xs:element name="features" type="configFeaturesType" />
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="configDependenciesType">
-    <xs:annotation>
-      <xs:documentation>
-        Describes config dependencies
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice minOccurs="1" maxOccurs="unbounded">
-      <xs:element name="depends" type="configDependencyType" />
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="feature" type="configFeatureType" minOccurs="0" maxOccurs="1"/>
     </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Configuration name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="model" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Configuration model name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="configDependencyType">
+  <xs:complexType name="featureGroupDependencyType">
     <xs:annotation>
       <xs:documentation>
-        Describes config dependency
+        Describes feature-group configuration
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="0">
       <xs:element name="include" type="includeType" />
       <xs:element name="exclude" type="excludeType" />
     </xs:choice>
-    <xs:attribute name="config" type="xs:string" use="required">
+    <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          Config name
+          Feature group name
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -135,7 +138,7 @@
     <xs:attribute name="source" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>
-          The source of config
+          The source of feature group
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>    

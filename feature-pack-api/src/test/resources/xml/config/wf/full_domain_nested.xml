@@ -17,7 +17,7 @@
     limitations under the License.
 
 -->
-<config name="full_domain" xmlns="urn:wildfly:pm-config:1.0">
+<feature-group name="full_domain" xmlns="urn:wildfly:pm-feature-group:1.0">
   <features>
     <feature spec="extension">
       <param name="name" value="org.jboss.as.logging"/>
@@ -104,4 +104,4 @@
       <param name="profile" value="ha"/>
     </feature>
   </features>
-</config>
+</feature-group>

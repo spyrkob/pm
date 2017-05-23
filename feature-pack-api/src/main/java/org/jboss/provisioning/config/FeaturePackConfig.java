@@ -27,7 +27,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureGroup;
 import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
@@ -40,7 +40,7 @@ public class FeaturePackConfig {
     public static class Builder {
 
         protected final ArtifactCoords.Gav gav;
-        protected Config config;
+        protected FeatureGroup featureGroup;
         protected boolean inheritPackages = true;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
@@ -54,8 +54,8 @@ public class FeaturePackConfig {
             this.inheritPackages = inheritPackages;
         }
 
-        public Builder setConfig(Config config) {
-            this.config = config;
+        public Builder setFeatureGroup(FeatureGroup featureGroup) {
+            this.featureGroup = featureGroup;
             return this;
         }
 
@@ -158,7 +158,7 @@ public class FeaturePackConfig {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final Config config;
+    private final FeatureGroup featureGroup;
     private final boolean inheritPackages;
     private final Set<String> excludedPackages;
     private final Map<String, PackageConfig> includedPackages;
@@ -166,7 +166,7 @@ public class FeaturePackConfig {
     protected FeaturePackConfig(Builder builder) {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
-        this.config = builder.config;
+        this.featureGroup = builder.featureGroup;
         this.inheritPackages = builder.inheritPackages;
         this.excludedPackages = builder.excludedPackages.size() > 1 ? Collections.unmodifiableSet(builder.excludedPackages) : builder.excludedPackages;
         this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableMap(builder.includedPackages) : builder.includedPackages;
@@ -176,12 +176,12 @@ public class FeaturePackConfig {
         return gav;
     }
 
-    public boolean hasConfig() {
-        return config != null;
+    public boolean hasFeatureGroup() {
+        return featureGroup != null;
     }
 
-    public Config getConfig() {
-        return config;
+    public FeatureGroup getFeatureGroup() {
+        return featureGroup;
     }
 
     public boolean isInheritPackages() {
@@ -220,7 +220,7 @@ public class FeaturePackConfig {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((config == null) ? 0 : config.hashCode());
+        result = prime * result + ((featureGroup == null) ? 0 : featureGroup.hashCode());
         result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
@@ -237,10 +237,10 @@ public class FeaturePackConfig {
         if (getClass() != obj.getClass())
             return false;
         FeaturePackConfig other = (FeaturePackConfig) obj;
-        if (config == null) {
-            if (other.config != null)
+        if (featureGroup == null) {
+            if (other.featureGroup != null)
                 return false;
-        } else if (!config.equals(other.config))
+        } else if (!featureGroup.equals(other.featureGroup))
             return false;
         if (excludedPackages == null) {
             if (other.excludedPackages != null)
@@ -266,8 +266,8 @@ public class FeaturePackConfig {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
-        if(config != null) {
-            builder.append(' ').append(config);
+        if(featureGroup != null) {
+            builder.append(' ').append(featureGroup);
         }
         if(!inheritPackages) {
             builder.append(" inheritPackages=false");

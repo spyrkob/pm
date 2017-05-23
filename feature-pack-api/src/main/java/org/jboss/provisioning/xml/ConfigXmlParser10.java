@@ -26,7 +26,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class ConfigXmlParser10 implements PlugableXmlParser<Config.Builder> {
+class ConfigXmlParser10 implements PlugableXmlParser<Config> {
 
     public static final QName ROOT_1_0 = new QName(ConfigXml.NAMESPACE_1_0, ConfigXml.Element.CONFIG.getLocalName());
 
@@ -35,7 +35,7 @@ class ConfigXmlParser10 implements PlugableXmlParser<Config.Builder> {
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, Config.Builder builder) throws XMLStreamException {
-        ConfigXml.readConfig(reader, builder, true);
+    public void readElement(XMLExtendedStreamReader reader, Config builder) throws XMLStreamException {
+        ConfigXml.readConfig(reader, builder);
     }
 }

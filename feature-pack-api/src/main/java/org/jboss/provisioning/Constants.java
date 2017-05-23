@@ -30,6 +30,7 @@ public interface Constants {
     String DOT_XML = ".xml";
     String CONFIGS = "configs";
     String CONTENT = "content";
+    String FEATURE_GROUPS = "feature_groups";
     String FEATURES = "features";
     String FEATURE_PACK_XML = "feature-pack.xml";
     String MODULES_XML = "module.xml";

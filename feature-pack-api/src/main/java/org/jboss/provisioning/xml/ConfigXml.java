@@ -17,21 +17,15 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigDependency;
 import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -52,13 +46,8 @@ public class ConfigXml {
     public enum Element implements XmlNameProvider {
 
         CONFIG("config"),
-        DEPENDENCIES("dependencies"),
-        DEPENDENCY("depends"),
-        EXCLUDE("exclude"),
         FEATURE("feature"),
-        FEATURES("features"),
-        INCLUDE("include"),
-        PARAMETER("param"),
+        FEATURE_GROUP("feature-group"),
 
         // default unknown element
         UNKNOWN(null);
@@ -114,16 +103,10 @@ public class ConfigXml {
 
     protected enum Attribute implements XmlNameProvider {
 
-        CONFIG("config"),
-        FEATURE("feature"),
-        FEATURE_ID("feature-id"),
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
-        OPTIONAL("optional"),
-        PARENT_REF("parent-ref"),
-        SPEC("spec"),
+        MODEL("model"),
         SOURCE("source"),
-        VALUE("value"),
 
         // default unknown attribute
         UNKNOWN(null);
@@ -166,23 +149,21 @@ public class ConfigXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, Config.Builder config, boolean nameRequired) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
         final int count = reader.getAttributeCount();
-        String name = null;
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case NAME:
-                    name = reader.getAttributeValue(i);
+                    config.setName(reader.getAttributeValue(i));
+                    break;
+                case MODEL:
+                    config.setModel(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (name == null && nameRequired) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
-        }
-        config.setName(name);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -191,342 +172,24 @@ public class ConfigXml {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
-                        case DEPENDENCIES:
-                            readConfigDependencies(reader, config);
+                        case FEATURE_GROUP:
+                            config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader));
                             break;
-                        case FEATURES:
-                            readFeatures(reader, config);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readConfigDependencies(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case DEPENDENCY:
-                            config.addDependency(readConfigDependency(reader));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static ConfigDependency readConfigDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String src = null;
-        String config = null;
-        Boolean inheritFeatures = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case SOURCE:
-                    src = reader.getAttributeValue(i);
-                    break;
-                case CONFIG:
-                    config = reader.getAttributeValue(i);
-                    break;
-                case INHERIT_FEATURES:
-                    inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (config == null && inheritFeatures != null) {
-            throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.CONFIG);
-        }
-        final ConfigDependency.Builder depBuilder = ConfigDependency.builder(src, config);
-        if(inheritFeatures != null) {
-            depBuilder.setInheritFeatures(inheritFeatures);
-        }
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return depBuilder.build();
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case INCLUDE:
-                            readInclude(reader, depBuilder);
-                            break;
-                        case EXCLUDE:
-                            readExclude(reader, depBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readInclude(XMLExtendedStreamReader reader, ConfigDependency.Builder depBuilder) throws XMLStreamException {
-        String spec = null;
-        String featureIdStr = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case FEATURE_ID:
-                    featureIdStr = reader.getAttributeValue(i);
-                    break;
-                case SPEC:
-                    spec = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-
-        if(spec != null) {
-            if(featureIdStr != null) {
-                throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
-            }
-            try {
-                depBuilder.includeSpec(spec);
-            } catch (ProvisioningDescriptionException e) {
-                throw new XMLStreamException("Failed to parse config", e);
-            }
-            ParsingUtils.parseNoContent(reader);
-            return;
-        }
-        if(featureIdStr == null) {
-            throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
-        }
-        FeatureConfig fc = null;
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    final FeatureId featureId = parseFeatureId(featureIdStr);
-                    if(fc != null) {
-                        fc.setSpecName(featureId.getSpec());
-                    }
-                    try {
-                        depBuilder.includeFeature(featureId, fc);
-                    } catch (ProvisioningDescriptionException e) {
-                        throw new XMLStreamException("Failed to parse config", e);
-                    }
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    if(fc == null) {
-                        fc = new FeatureConfig();
-                    }
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case DEPENDENCY:
-                            readFeatureDependency(reader, fc);
-                            break;
-                        case PARAMETER:
-                            readParameter(reader, fc);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readExclude(XMLExtendedStreamReader reader, ConfigDependency.Builder depBuilder) throws XMLStreamException {
-        String spec = null;
-        String featureId = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case FEATURE_ID:
-                    featureId = reader.getAttributeValue(i);
-                    break;
-                case SPEC:
-                    spec = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-
-        if(spec != null) {
-            if(featureId != null) {
-                throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
-            }
-            try {
-                depBuilder.excludeSpec(spec);
-            } catch (ProvisioningDescriptionException e) {
-                throw new XMLStreamException("Failed to parse config", e);
-            }
-        } else if(featureId != null) {
-            try {
-                depBuilder.excludeFeature(parseFeatureId(featureId));
-            } catch (ProvisioningDescriptionException e) {
-                throw new XMLStreamException("Failed to parse config", e);
-            }
-        } else {
-            throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
-        }
-        ParsingUtils.parseNoContent(reader);
-    }
-
-    private static void readFeatures(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
                         case FEATURE:
                             final FeatureConfig fc = new FeatureConfig();
-                            readFeatureConfig(reader, fc);
+                            FeatureGroupXml.readFeatureConfig(reader, fc);
                             config.addFeature(fc);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
                     break;
-                default:
+                }
+                default: {
                     throw ParsingUtils.unexpectedContent(reader);
+                }
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    public static void readFeatureConfig(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        for (int i = 0; i < reader.getAttributeCount(); i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case SPEC:
-                    config.setSpecName(reader.getAttributeValue(i));
-                    break;
-                case PARENT_REF:
-                    config.setParentRef(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (config.getSpecName() == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPEC));
-        }
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case DEPENDENCY:
-                            readFeatureDependency(reader, config);
-                            break;
-                        case PARAMETER:
-                            readParameter(reader, config);
-                            break;
-                        case FEATURE:
-                            final FeatureConfig child = new FeatureConfig();
-                            readFeatureConfig(reader, child);
-                            config.addFeature(child);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readFeatureDependency(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        String id = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case FEATURE_ID:
-                    id = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (id == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.FEATURE_ID));
-        }
-        ParsingUtils.parseNoContent(reader);
-        config.addDependency(parseFeatureId(id));
-    }
-
-    private static FeatureId parseFeatureId(String id) throws XMLStreamException {
-        try {
-            return FeatureId.fromString(id);
-        } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to parse feature-id", e);
-        }
-    }
-
-    private static void readParameter(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
-        String name = null;
-        String value = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
-                    break;
-                case VALUE:
-                    value = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (name == null) {
-            final Set<Attribute> missingAttrs;
-            if(value == null) {
-                missingAttrs = new HashSet<>();
-                missingAttrs.add(Attribute.NAME);
-                missingAttrs.add(Attribute.VALUE);
-            } else {
-                missingAttrs = Collections.singleton(Attribute.NAME);
-            }
-            throw ParsingUtils.missingAttributes(reader.getLocation(), missingAttrs);
-        } else if (value == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
-        }
-        ParsingUtils.parseNoContent(reader);
-        config.setParam(name, value);
     }
 }
