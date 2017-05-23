@@ -26,6 +26,10 @@
       <param name="name" value="ha"/>
     </feature>
     
+    <feature spec="extension">
+      <param name="name" value="org.jboss.as.logging"/>
+    </feature>
+    
     <feature spec="logging">
       <param name="profile" value="default"/>
     </feature>

@@ -19,6 +19,10 @@
 -->
 <config name="full_domain" xmlns="urn:wildfly:pm-config:1.0">
   <features>
+    <feature spec="extension">
+      <param name="name" value="org.jboss.as.logging"/>
+    </feature>
+    
     <feature spec="profile">
       <param name="name" value="default"/>
     

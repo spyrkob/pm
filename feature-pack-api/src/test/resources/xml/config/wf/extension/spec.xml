@@ -17,13 +17,8 @@
     limitations under the License.
 
 -->
-<feature-spec name="logging" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="extension"/>
-    <reference feature="profile"/>
-  </references>
+<feature-spec name="extension" xmlns="urn:wildfly:pm-feature-spec:1.0">
   <parameters>
-    <parameter name="profile" feature-id="true"/>
-    <parameter name="extension" default="org.jboss.as.logging"/>
+    <parameter name="name" feature-id="true"/>
   </parameters>
 </feature-spec>

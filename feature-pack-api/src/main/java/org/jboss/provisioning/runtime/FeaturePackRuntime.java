@@ -108,6 +108,10 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         this.spec = builder.spec;
         this.dir = builder.dir;
 
+        if(builder.configBuilder != null) {
+            builder.configBuilder.build();
+        }
+
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
         for(String pkgName : builder.pkgOrder) {
             final PackageRuntime.Builder pkgRtBuilder = builder.pkgBuilders.get(pkgName);
