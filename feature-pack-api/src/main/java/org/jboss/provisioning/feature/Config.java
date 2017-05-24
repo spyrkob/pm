@@ -19,6 +19,7 @@ package org.jboss.provisioning.feature;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +101,27 @@ public class Config {
                 featureGroups.add(fg);
         }
         return this;
+    }
+
+    public Config setProperty(String name, String value) {
+        switch(props.size()) {
+            case 0:
+                props = Collections.singletonMap(name, value);
+                break;
+            case 1:
+                props = new HashMap<>(props);
+            default:
+                props.put(name, value);
+        }
+        return this;
+    }
+
+    public boolean hasProperties() {
+        return !props.isEmpty();
+    }
+
+    public Map<String, String> getProperties() {
+        return props;
     }
 
     @Override

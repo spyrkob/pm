@@ -42,6 +42,8 @@ public class ConfigParsingTestCase {
     public void testMain() throws Exception {
         final Config xmlConfig = validator.validateAndParse("xml/config/config.xml", null, null);
         final Config expected = new Config("configName", "model1")
+                .setProperty("prop1", "value1")
+                .setProperty("prop2", "value2")
                 .addFeatureGroup(FeatureGroupConfig.builder("group1").setInheritFeatures(true).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("group2").setInheritFeatures(false).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("group3")

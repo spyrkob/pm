@@ -29,10 +29,13 @@
         Describes configuration in a generic way.
       </xs:documentation>
     </xs:annotation>
-    <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
-    </xs:choice>
+    <xs:sequence>
+      <xs:element name="props" type="propsType" minOccurs="0" maxOccurs="1"/>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+    </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
@@ -47,6 +50,39 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="propsType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes configuration properties
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="prop" type="propType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="propType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes configuration property
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Property name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Property value
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>    
   </xs:complexType>
 
   <xs:complexType name="featureGroupDependencyType">

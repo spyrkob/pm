@@ -48,6 +48,8 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addConfig(new Config()
+                    .setProperty("prop1", "value1")
+                    .setProperty("prop2", "value2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1")))

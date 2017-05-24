@@ -17,7 +17,10 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
@@ -48,6 +51,8 @@ public class ConfigXml {
         CONFIG("config"),
         FEATURE("feature"),
         FEATURE_GROUP("feature-group"),
+        PROP("prop"),
+        PROPS("props"),
 
         // default unknown element
         UNKNOWN(null);
@@ -107,6 +112,7 @@ public class ConfigXml {
         NAME("name"),
         MODEL("model"),
         SOURCE("source"),
+        VALUE("value"),
 
         // default unknown attribute
         UNKNOWN(null);
@@ -172,6 +178,9 @@ public class ConfigXml {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
+                        case PROPS:
+                            readProps(reader, config);
+                            break;
                         case FEATURE_GROUP:
                             config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader));
                             break;
@@ -191,5 +200,63 @@ public class ConfigXml {
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void readProps(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName().getLocalPart());
+                    switch (element) {
+                        case PROP:
+                            readProp(reader, config);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void readProp(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
+        String name = null;
+        String value = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case VALUE:
+                    value = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(name == null) {
+            if(value == null) {
+                final Set<Attribute> attrs = new HashSet<>();
+                attrs.add(Attribute.NAME);
+                attrs.add(Attribute.VALUE);
+                throw ParsingUtils.missingAttributes(reader.getLocation(), attrs);
+            }
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        } else if(value == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
+        }
+        config.setProperty(name, value);
+        ParsingUtils.parseNoContent(reader);
     }
 }
