@@ -26,7 +26,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupLoader;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 
@@ -49,7 +49,7 @@ public class DefaultFeatureGroupLoader implements FeatureGroupLoader {
     }
 
     @Override
-    public FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException {
+    public FeatureGroupSpec load(String fgSource, String fgName) throws ProvisioningDescriptionException {
         final Path path = resolvePath(fgName);
         if(!Files.exists(path)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(path));

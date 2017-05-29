@@ -27,7 +27,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
@@ -40,7 +40,7 @@ public class FeaturePackConfig {
     public static class Builder {
 
         protected final ArtifactCoords.Gav gav;
-        protected FeatureGroup featureGroup;
+        protected FeatureGroupSpec featureGroup;
         protected boolean inheritPackages = true;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
@@ -54,7 +54,7 @@ public class FeaturePackConfig {
             this.inheritPackages = inheritPackages;
         }
 
-        public Builder setFeatureGroup(FeatureGroup featureGroup) {
+        public Builder setFeatureGroup(FeatureGroupSpec featureGroup) {
             this.featureGroup = featureGroup;
             return this;
         }
@@ -158,7 +158,7 @@ public class FeaturePackConfig {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final FeatureGroup featureGroup;
+    private final FeatureGroupSpec featureGroup;
     private final boolean inheritPackages;
     private final Set<String> excludedPackages;
     private final Map<String, PackageConfig> includedPackages;
@@ -180,7 +180,7 @@ public class FeaturePackConfig {
         return featureGroup != null;
     }
 
-    public FeatureGroup getFeatureGroup() {
+    public FeatureGroupSpec getFeatureGroup() {
         return featureGroup;
     }
 

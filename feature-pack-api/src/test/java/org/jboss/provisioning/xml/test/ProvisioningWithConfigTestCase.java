@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
@@ -45,7 +45,7 @@ public class ProvisioningWithConfigTestCase {
                 .validateAndParse("xml/provisioning/provisioning-config.xml", null, null);
         ProvisioningConfig expected = ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
-                        .setFeatureGroup(FeatureGroup.builder()
+                        .setFeatureGroup(FeatureGroupSpec.builder()
                                 .addDependency(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
                                 .addDependency(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
                                 .addDependency(FeatureGroupConfig.builder("dep3")

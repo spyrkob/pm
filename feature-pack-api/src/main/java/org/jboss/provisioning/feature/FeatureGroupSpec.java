@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroup {
+public class FeatureGroupSpec {
 
     public static class Builder {
 
@@ -72,8 +72,8 @@ public class FeatureGroup {
             return this;
         }
 
-        public FeatureGroup build() {
-            return new FeatureGroup(this);
+        public FeatureGroupSpec build() {
+            return new FeatureGroupSpec(this);
         }
     }
 
@@ -89,7 +89,7 @@ public class FeatureGroup {
     final List<FeatureGroupConfig> dependencies;
     final List<FeatureConfig> features;
 
-    private FeatureGroup(Builder builder) {
+    private FeatureGroupSpec(Builder builder) {
         this.name = builder.name;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableList(builder.dependencies) : builder.dependencies;
         this.features = builder.features.size() > 1 ? Collections.unmodifiableList(builder.features) : builder.features;
@@ -133,7 +133,7 @@ public class FeatureGroup {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        FeatureGroup other = (FeatureGroup) obj;
+        FeatureGroupSpec other = (FeatureGroupSpec) obj;
         if (dependencies == null) {
             if (other.dependencies != null)
                 return false;

@@ -24,7 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
@@ -40,8 +40,8 @@ public class FeatureGroupParsingTestCase {
 
     @Test
     public void testMain() throws Exception {
-        final FeatureGroup xmlConfig = parseConfig("feature-group.xml");
-        final FeatureGroup expected = FeatureGroup.builder("groupName")
+        final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
+        final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
                 .addDependency(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
                 .addDependency(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
                 .addDependency(FeatureGroupConfig.builder("dep3")
@@ -78,7 +78,7 @@ public class FeatureGroupParsingTestCase {
         assertEquals(expected, xmlConfig);
     }
 
-    private static FeatureGroup parseConfig(String xml) throws Exception {
+    private static FeatureGroupSpec parseConfig(String xml) throws Exception {
         final Path path = getResource("xml/config/" + xml);
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             return FeatureGroupXmlParser.getInstance().parse(reader);

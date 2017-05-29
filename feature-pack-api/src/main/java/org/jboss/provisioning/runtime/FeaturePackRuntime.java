@@ -35,7 +35,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.MainConfigBuilder;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
@@ -84,7 +84,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             pkgOrder.add(name);
         }
 
-        void addFeatureGroup(FeatureGroup featureGroup) throws ProvisioningDescriptionException {
+        void addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
             if(configBuilder == null) {
                 configBuilder = MainConfigBuilder.newInstance(new DefaultFeatureSpecLoader(dir));
             }

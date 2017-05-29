@@ -18,7 +18,7 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
@@ -30,7 +30,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
+public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
 
     private static final String FALSE = "false";
 
@@ -43,11 +43,11 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
     private FeatureGroupXmlWriter() {
     }
 
-    protected ElementNode toElement(FeatureGroup config) {
+    protected ElementNode toElement(FeatureGroupSpec config) {
         return toElement(config, FeatureGroupXml.NAMESPACE_1_0);
     }
 
-    protected ElementNode toElement(FeatureGroup featureGroup, String ns) {
+    protected ElementNode toElement(FeatureGroupSpec featureGroup, String ns) {
         final ElementNode configE = addElement(null, Element.FEATURE_GROUP.getLocalName(), ns);
         if(featureGroup.getName() != null) {
             addAttribute(configE, Attribute.NAME, featureGroup.getName());

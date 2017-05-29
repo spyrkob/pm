@@ -91,7 +91,7 @@ public class MainConfigBuilder {
         return addFeatureGroup(featureGroupLoader.load(fgSource, fgName));
     }
 
-    public MainConfigBuilder addFeatureGroup(FeatureGroup featureGroup) throws ProvisioningDescriptionException {
+    public MainConfigBuilder addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
         if(!featureGroup.dependencies.isEmpty()) {
             for(FeatureGroupConfig dep : featureGroup.dependencies) {
                 processDependency(dep);

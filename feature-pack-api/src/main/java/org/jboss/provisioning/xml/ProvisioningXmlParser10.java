@@ -29,7 +29,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -237,7 +237,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                             }
                             break;
                         case CONFIG:
-                            final FeatureGroup.Builder configBuilder = FeatureGroup.builder();
+                            final FeatureGroupSpec.Builder configBuilder = FeatureGroupSpec.builder();
                             FeatureGroupXml.readConfig(reader, configBuilder, false);
                             fpBuilder.setFeatureGroup(configBuilder.build());
                             break;

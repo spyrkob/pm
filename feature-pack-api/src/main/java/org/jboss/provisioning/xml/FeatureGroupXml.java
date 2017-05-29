@@ -28,7 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
@@ -165,7 +165,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroup.Builder config, boolean nameRequired) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config, boolean nameRequired) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -209,7 +209,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readConfigDependencies(XMLExtendedStreamReader reader, FeatureGroup.Builder config) throws XMLStreamException {
+    private static void readConfigDependencies(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -396,7 +396,7 @@ public class FeatureGroupXml {
         ParsingUtils.parseNoContent(reader);
     }
 
-    private static void readFeatures(XMLExtendedStreamReader reader, FeatureGroup.Builder config) throws XMLStreamException {
+    private static void readFeatures(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
