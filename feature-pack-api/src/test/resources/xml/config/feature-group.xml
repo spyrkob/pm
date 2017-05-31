@@ -29,6 +29,16 @@
         <depends feature-id="spec5:p1=v1,p2=v2"/>
         <param name="p1" value="v1"/>
         <param name="p2" value="v2"/>
+        <features>
+          <feature spec="spec9">
+            <param name="p1" value="v1"/>
+            <feature spec="spec10">
+              <feature spec="spec11" parent-ref="spec10-ref">
+                <param name="p1" value="v1"/>
+              </feature>
+            </feature>
+          </feature>
+        </features>
       </include>
       <exclude spec="spec6"/>
       <exclude spec="spec7"/>

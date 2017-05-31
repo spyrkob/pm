@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class FeatureGroupSpec {
 
-    public static class Builder {
+    public static class Builder implements BuilderWithFeatures<Builder> {
 
         String name;
         List<FeatureGroupConfig> dependencies = Collections.emptyList();
@@ -59,6 +59,7 @@ public class FeatureGroupSpec {
             return this;
         }
 
+        @Override
         public Builder addFeature(FeatureConfig feature) {
             switch(features.size()) {
                 case 0:

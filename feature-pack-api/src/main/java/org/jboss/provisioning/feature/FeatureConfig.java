@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfig {
+public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
 
     public static FeatureConfig newConfig(String specName) {
         return new FeatureConfig(specName);
@@ -113,6 +113,7 @@ public class FeatureConfig {
         return dependencies;
     }
 
+    @Override
     public FeatureConfig addFeature(FeatureConfig config) {
         switch(nested.size()) {
             case 0:

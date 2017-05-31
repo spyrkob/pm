@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.feature.BuilderWithFeatures;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
@@ -320,14 +321,11 @@ public class FeatureGroupXml {
         if(featureIdStr == null) {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
+        final FeatureId featureId = parseFeatureId(featureIdStr);
         FeatureConfig fc = null;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
-                    final FeatureId featureId = parseFeatureId(featureIdStr);
-                    if(fc != null) {
-                        fc.setSpecName(featureId.getSpec());
-                    }
                     try {
                         depBuilder.includeFeature(featureId, fc);
                     } catch (ProvisioningDescriptionException e) {
@@ -336,7 +334,7 @@ public class FeatureGroupXml {
                     return;
                 case XMLStreamConstants.START_ELEMENT:
                     if(fc == null) {
-                        fc = new FeatureConfig();
+                        fc = new FeatureConfig(featureId.getSpec());
                     }
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
@@ -345,6 +343,9 @@ public class FeatureGroupXml {
                             break;
                         case PARAMETER:
                             readParameter(reader, fc);
+                            break;
+                        case FEATURES:
+                            readFeatures(reader, fc);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -396,7 +397,7 @@ public class FeatureGroupXml {
         ParsingUtils.parseNoContent(reader);
     }
 
-    private static void readFeatures(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
+    private static void readFeatures(XMLExtendedStreamReader reader, BuilderWithFeatures<?> config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
