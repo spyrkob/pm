@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class FeatureGroupSpec {
 
-    public static class Builder implements BuilderWithFeatures<Builder> {
+    public static class Builder implements BuilderWithFeatures<Builder>, BuilderWithFeatureGroups<Builder> {
 
         String name;
         List<FeatureGroupConfig> dependencies = Collections.emptyList();
@@ -46,7 +46,7 @@ public class FeatureGroupSpec {
             return this;
         }
 
-        public Builder addDependency(FeatureGroupConfig dep) {
+        public Builder addFeatureGroup(FeatureGroupConfig dep) {
             switch (dependencies.size()) {
                 case 0:
                     dependencies = Collections.singletonList(dep);

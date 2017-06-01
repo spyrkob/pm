@@ -82,8 +82,22 @@
 
   <xs:complexType name="dependenciesType">
     <xs:choice maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="depends" type="configDependsType" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="feature-pack" type="featurePackConfigDependsType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="feature-group" type="configDependsType" minOccurs="0" maxOccurs="1"/>
     </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="featurePackConfigDependsType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="feature-group" type="configDependsType"/>
+    </xs:choice>
+    <xs:attribute name="dependency" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature-pack dependency name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="configDependsType">

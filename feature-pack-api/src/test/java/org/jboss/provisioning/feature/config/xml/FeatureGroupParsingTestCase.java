@@ -42,9 +42,9 @@ public class FeatureGroupParsingTestCase {
     public void testMain() throws Exception {
         final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
         final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
-                .addDependency(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
-                .addDependency(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
-                .addDependency(FeatureGroupConfig.builder("dep3")
+                .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep3")
                         .setInheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -67,7 +67,7 @@ public class FeatureGroupParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addDependency(FeatureGroupConfig.builder("source4", "dep4").build())
+                .addFeatureGroup(FeatureGroupConfig.builder("source4", "dep4").build())
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))

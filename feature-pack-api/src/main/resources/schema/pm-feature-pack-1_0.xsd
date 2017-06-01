@@ -94,6 +94,7 @@
     <xs:sequence>
       <xs:element name="props" type="propsType" minOccurs="0" maxOccurs="1"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="feature-pack" type="featurePackDependencyType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature" type="configFeatureType" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
@@ -147,6 +148,25 @@
     </xs:attribute>    
   </xs:complexType>
 
+  <xs:complexType name="featurePackDependencyType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes dependencies on feature groups and feature from another feature-pack
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature" type="configFeatureType" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="dependency" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature-pack dependency
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
   <xs:complexType name="featureGroupDependencyType">
     <xs:annotation>
       <xs:documentation>
@@ -187,7 +207,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="depends" type="dependsType" />
+      <xs:element name="depends" type="featureDependsType" />
       <xs:element name="param" type="paramType" />
     </xs:choice>
     <xs:attribute name="feature-id" type="xs:string" use="optional">
@@ -206,7 +226,7 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="dependsType">
+  <xs:complexType name="featureDependsType">
     <xs:annotation>
       <xs:documentation>
         Describes included feature dependency on another feature
@@ -283,7 +303,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
-      <xs:element name="depends" type="dependsType" />
+      <xs:element name="depends" type="featureDependsType" />
       <xs:element name="param" type="paramType" />
       <xs:element name="feature" type="configFeatureType" />
     </xs:choice>

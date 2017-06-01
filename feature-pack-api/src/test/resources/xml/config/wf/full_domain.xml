@@ -17,7 +17,7 @@
     limitations under the License.
 
 -->
-<feature-group name="full_domain" xmlns="urn:wildfly:pm-feature-group:1.0">
+<feature-group-spec name="full_domain" xmlns="urn:wildfly:pm-feature-group:1.0">
   <features>
     <feature spec="profile">
       <param name="name" value="default"/>
@@ -120,4 +120,4 @@
       <param name="profile" value="ha"/>
     </feature>
   </features>
-</feature-group>
+</feature-group-spec>

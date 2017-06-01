@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.feature.BuilderWithFeatureGroups;
 import org.jboss.provisioning.feature.BuilderWithFeatures;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
@@ -53,10 +54,12 @@ public class FeatureGroupXml {
     public enum Element implements XmlNameProvider {
 
         DEPENDENCIES("dependencies"),
-        DEPENDENCY("depends"),
+        DEPENDS("depends"),
         EXCLUDE("exclude"),
         FEATURE("feature"),
         FEATURE_GROUP("feature-group"),
+        FEATURE_GROUP_SPEC("feature-group-spec"),
+        FEATURE_PACK("feature-pack"),
         FEATURES("features"),
         INCLUDE("include"),
         PARAMETER("param"),
@@ -115,6 +118,7 @@ public class FeatureGroupXml {
 
     protected enum Attribute implements XmlNameProvider {
 
+        DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
         INHERIT_FEATURES("inherit-features"),
@@ -220,8 +224,11 @@ public class FeatureGroupXml {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
-                        case DEPENDENCY:
-                            config.addDependency(readFeatureGroupDependency(reader));
+                        case FEATURE_GROUP:
+                            config.addFeatureGroup(readFeatureGroupDependency(reader, null));
+                            break;
+                        case FEATURE_PACK:
+                            readFeaturePackDependency(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -236,17 +243,53 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static FeatureGroupConfig readFeatureGroupDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String src = null;
+    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, BuilderWithFeatureGroups<?> config) throws XMLStreamException {
+        String dependency = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case DEPENDENCY:
+                    dependency = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if (dependency == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+        }
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName().getLocalPart());
+                    switch (element) {
+                        case FEATURE_GROUP:
+                            config.addFeatureGroup(readFeatureGroupDependency(reader, dependency));
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    public static FeatureGroupConfig readFeatureGroupDependency(XMLExtendedStreamReader reader, String source) throws XMLStreamException {
         String name = null;
         Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case SOURCE:
-                    src = reader.getAttributeValue(i);
-                    break;
                 case NAME:
                     name = reader.getAttributeValue(i);
                     break;
@@ -260,7 +303,7 @@ public class FeatureGroupXml {
         if (name == null && inheritFeatures != null) {
             throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.NAME);
         }
-        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(src, name);
+        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(source, name);
         if(inheritFeatures != null) {
             depBuilder.setInheritFeatures(inheritFeatures);
         }
@@ -338,7 +381,7 @@ public class FeatureGroupXml {
                     }
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
-                        case DEPENDENCY:
+                        case DEPENDS:
                             readFeatureDependency(reader, fc);
                             break;
                         case PARAMETER:
@@ -446,7 +489,7 @@ public class FeatureGroupXml {
                 case XMLStreamConstants.START_ELEMENT:
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
-                        case DEPENDENCY:
+                        case DEPENDS:
                             readFeatureDependency(reader, config);
                             break;
                         case PARAMETER:

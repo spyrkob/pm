@@ -29,7 +29,7 @@ import java.util.Map.Entry;
  *
  * @author Alexey Loubyansky
  */
-public class Config {
+public class Config implements BuilderWithFeatureGroups<Config> {
 
     String name;
     String model;

@@ -38,7 +38,9 @@
     <exclude feature-id="spec8:p1=v1"/>
     <exclude feature-id="spec8:p1=v2"/>
   </feature-group>
-  <feature-group name="group4" source="source4"/>
+  <feature-pack dependency="source4">
+    <feature-group name="group4"/>
+  </feature-pack>
   <feature spec="spec1">
     <depends feature-id="spec2:p1=v1,p2=v2"/>
     <depends feature-id="spec3:p3=v3"/>

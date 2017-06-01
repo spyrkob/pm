@@ -32,6 +32,7 @@
     <xs:sequence>
       <xs:element name="props" type="propsType" minOccurs="0" maxOccurs="1"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="feature-pack" type="featurePackDependencyType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
@@ -83,6 +84,25 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>    
+  </xs:complexType>
+
+  <xs:complexType name="featurePackDependencyType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes dependencies on feature groups and feature from another feature-pack
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="dependency" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature-pack dependency
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="featureGroupDependencyType">

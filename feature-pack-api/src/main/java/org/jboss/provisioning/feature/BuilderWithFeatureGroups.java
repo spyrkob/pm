@@ -14,28 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.xml;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamException;
-
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.staxmapper.XMLExtendedStreamReader;
+package org.jboss.provisioning.feature;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroupSpec.Builder> {
+public interface BuilderWithFeatureGroups<T> {
 
-    public static final QName ROOT_1_0 = new QName(FeatureGroupXml.NAMESPACE_1_0, FeatureGroupXml.Element.FEATURE_GROUP_SPEC.getLocalName());
-
-    public QName getRoot() {
-        return ROOT_1_0;
-    }
-
-    @Override
-    public void readElement(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder builder) throws XMLStreamException {
-        FeatureGroupXml.readConfig(reader, builder, true);
-    }
+    T addFeatureGroup(FeatureGroupConfig group);
 }

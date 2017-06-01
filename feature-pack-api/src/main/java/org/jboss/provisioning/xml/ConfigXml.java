@@ -51,6 +51,7 @@ public class ConfigXml {
         CONFIG("config"),
         FEATURE("feature"),
         FEATURE_GROUP("feature-group"),
+        FEATURE_PACK("feature-pack"),
         PROP("prop"),
         PROPS("props"),
 
@@ -108,6 +109,7 @@ public class ConfigXml {
 
     protected enum Attribute implements XmlNameProvider {
 
+        DEPENDENCY("dependency"),
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         MODEL("model"),
@@ -182,7 +184,10 @@ public class ConfigXml {
                             readProps(reader, config);
                             break;
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader));
+                            config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader, null));
+                            break;
+                        case FEATURE_PACK:
+                            FeatureGroupXml.readFeaturePackDependency(reader, config);
                             break;
                         case FEATURE:
                             final FeatureConfig fc = new FeatureConfig();
