@@ -62,7 +62,7 @@ public class ProvisioningWithConfigTestCase {
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                         .build())
-                                .addFeatureGroup(FeatureGroupConfig.builder("source4", "dep4").build())
+                                .addFeatureGroup("source4", FeatureGroupConfig.builder("dep4").build())
                                 .addFeature(new FeatureConfig("spec1")
                                         .setParam("p1", "v1")
                                         .setParam("p2", "v2"))

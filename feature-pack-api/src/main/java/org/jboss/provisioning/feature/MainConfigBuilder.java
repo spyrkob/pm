@@ -92,8 +92,8 @@ public class MainConfigBuilder {
     }
 
     public MainConfigBuilder addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
-        if(!featureGroup.dependencies.isEmpty()) {
-            for(FeatureGroupConfig dep : featureGroup.dependencies) {
+        if(!featureGroup.localGroups.isEmpty()) {
+            for(FeatureGroupConfig dep : featureGroup.localGroups) {
                 processDependency(dep);
             }
         }
@@ -323,7 +323,7 @@ public class MainConfigBuilder {
             return;
         }
         pushDependency(dep);
-        addFeatureGroup(featureGroupLoader.load(dep.source, dep.featureGroupName));
+        addFeatureGroup(featureGroupLoader.load(null, dep.featureGroupName));
         popDependency();
         if(!dep.includedFeatures.isEmpty()) {
             for(Map.Entry<FeatureId, FeatureConfig> entry : dep.includedFeatures.entrySet()) {

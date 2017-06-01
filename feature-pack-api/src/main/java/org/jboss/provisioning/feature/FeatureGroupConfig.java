@@ -35,7 +35,6 @@ public class FeatureGroupConfig {
 
     public static class Builder {
 
-        private final String source;
         private final String featureGroupName;
         private boolean inheritFeatures = true;
         private Set<String> includedSpecs = Collections.emptySet();
@@ -43,8 +42,7 @@ public class FeatureGroupConfig {
         private Set<String> excludedSpecs = Collections.emptySet();
         private Set<FeatureId> excludedFeatures = Collections.emptySet();
 
-        private Builder(String source, String featureGroupName, boolean inheritFeatures) {
-            this.source = source;
+        private Builder(String featureGroupName, boolean inheritFeatures) {
             this.featureGroupName = featureGroupName;
             this.inheritFeatures = inheritFeatures;
         }
@@ -131,19 +129,10 @@ public class FeatureGroupConfig {
         return builder(featureGroupName, true);
     }
 
-    public static Builder builder(String source, String featureGroupName) {
-        return builder(source, featureGroupName, true);
-    }
-
     public static Builder builder(String featureGroupName, boolean inheritFeatures) {
-        return builder(null, featureGroupName, inheritFeatures);
+        return new Builder(featureGroupName, inheritFeatures);
     }
 
-    public static Builder builder(String source, String configName, boolean inheritFeatures) {
-        return new Builder(source, configName, inheritFeatures);
-    }
-
-    final String source;
     final String featureGroupName;
     final boolean inheritFeatures;
     final Set<String> includedSpecs;
@@ -152,17 +141,12 @@ public class FeatureGroupConfig {
     final Set<FeatureId> excludedFeatures;
 
     private FeatureGroupConfig(Builder builder) {
-        this.source = builder.source;
         this.featureGroupName = builder.featureGroupName;
         this.inheritFeatures = builder.inheritFeatures;
         this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
         this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
         this.includedFeatures = builder.includedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.includedFeatures) : builder.includedFeatures;
         this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
-    }
-
-    public String getConfigSource() {
-        return source;
     }
 
     public String getConfigName() {
@@ -224,7 +208,6 @@ public class FeatureGroupConfig {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((featureGroupName == null) ? 0 : featureGroupName.hashCode());
-        result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
@@ -246,11 +229,6 @@ public class FeatureGroupConfig {
             if (other.featureGroupName != null)
                 return false;
         } else if (!featureGroupName.equals(other.featureGroupName))
-            return false;
-        if (source == null) {
-            if (other.source != null)
-                return false;
-        } else if (!source.equals(other.source))
             return false;
         if (excludedFeatures == null) {
             if (other.excludedFeatures != null)
@@ -283,9 +261,6 @@ public class FeatureGroupConfig {
         buf.append('[');
         if(featureGroupName != null) {
             buf.append(featureGroupName);
-        }
-        if(source != null) {
-            buf.append(" src=").append(source);
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");

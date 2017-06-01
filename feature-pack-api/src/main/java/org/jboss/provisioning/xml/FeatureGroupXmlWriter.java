@@ -53,9 +53,25 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
             addAttribute(configE, Attribute.NAME, featureGroup.getName());
         }
 
-        if(featureGroup.hasDependencies()) {
-            final ElementNode depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
-            for(FeatureGroupConfig dep : featureGroup.getDependencies()) {
+        writeFeatureGroupSpecBody(configE, featureGroup, ns);
+
+        return configE;
+    }
+
+    private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroupSpec featureGroup, String ns) {
+        ElementNode depsE = null;
+        if(featureGroup.hasExternalDependencies()) {
+            depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
+            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
+                writeExternalGroupDependency(depsE, entry.getKey(), entry.getValue(), ns);
+            }
+        }
+
+        if(featureGroup.hasLocalDependencies()) {
+            if(depsE == null) {
+                depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
+            }
+            for(FeatureGroupConfig dep : featureGroup.getLocalDependencies()) {
                 writeFeatureGroupDependency(depsE, dep, ns);
             }
         }
@@ -66,8 +82,12 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
                 addFeatureConfig(featuresE, fc, ns);
             }
         }
+    }
 
-        return configE;
+    private static void writeExternalGroupDependency(ElementNode depsE, String fpDep, FeatureGroupSpec group, String ns) {
+        final ElementNode depE = addElement(depsE, Element.FEATURE_PACK.getLocalName(), ns);
+        addAttribute(depE, Attribute.DEPENDENCY, fpDep);
+        writeFeatureGroupSpecBody(depE, group, ns);
     }
 
     private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroupConfig dep, String ns) {
@@ -76,9 +96,6 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     public static void addFeatureGroupDepBody(FeatureGroupConfig dep, String ns, final ElementNode depE) {
-        if(dep.getConfigSource() != null) {
-            addAttribute(depE, Attribute.SOURCE, dep.getConfigSource());
-        }
         addAttribute(depE, Attribute.NAME, dep.getConfigName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);

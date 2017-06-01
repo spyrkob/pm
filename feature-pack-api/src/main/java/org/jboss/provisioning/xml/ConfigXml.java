@@ -184,7 +184,7 @@ public class ConfigXml {
                             readProps(reader, config);
                             break;
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader, null));
+                            config.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(reader));
                             break;
                         case FEATURE_PACK:
                             FeatureGroupXml.readFeaturePackDependency(reader, config);

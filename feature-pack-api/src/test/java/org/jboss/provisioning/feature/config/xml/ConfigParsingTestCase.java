@@ -62,7 +62,7 @@ public class ConfigParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addFeatureGroup(FeatureGroupConfig.builder("source4", "group4").build())
+                .addFeatureGroup("source4", FeatureGroupConfig.builder("group4").build())
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))

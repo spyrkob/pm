@@ -90,6 +90,12 @@ public class Config implements BuilderWithFeatureGroups<Config> {
         return this;
     }
 
+    @Override
+    public Config addFeatureGroup(String fpDep, FeatureGroupConfig fg) {
+        return this;
+    }
+
+    @Override
     public Config addFeatureGroup(FeatureGroupConfig fg) {
         switch(featureGroups.size()) {
             case 0:

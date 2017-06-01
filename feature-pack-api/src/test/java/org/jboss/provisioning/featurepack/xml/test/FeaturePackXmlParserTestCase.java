@@ -184,7 +184,7 @@ public class FeaturePackXmlParserTestCase  {
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                 .build())
-                        .addFeatureGroup(FeatureGroupConfig.builder("source4", "dep4").build())
+                        .addFeatureGroup("source4", FeatureGroupConfig.builder("dep4").build())
                         .addFeature(new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                         .addDependency(FeatureId.fromString("spec3:p3=v3"))

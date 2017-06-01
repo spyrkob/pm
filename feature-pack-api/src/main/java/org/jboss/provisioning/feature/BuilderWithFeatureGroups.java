@@ -24,4 +24,6 @@ package org.jboss.provisioning.feature;
 public interface BuilderWithFeatureGroups<T> {
 
     T addFeatureGroup(FeatureGroupConfig group);
+
+    T addFeatureGroup(String fpDep, FeatureGroupConfig group);
 }

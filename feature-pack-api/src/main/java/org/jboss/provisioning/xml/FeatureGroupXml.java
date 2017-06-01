@@ -225,7 +225,7 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(readFeatureGroupDependency(reader, null));
+                            config.addFeatureGroup(readFeatureGroupDependency(reader));
                             break;
                         case FEATURE_PACK:
                             readFeaturePackDependency(reader, config);
@@ -268,7 +268,11 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(readFeatureGroupDependency(reader, dependency));
+                            if(dependency == null) {
+                                config.addFeatureGroup(readFeatureGroupDependency(reader));
+                            } else {
+                                config.addFeatureGroup(dependency, readFeatureGroupDependency(reader));
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -283,7 +287,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static FeatureGroupConfig readFeatureGroupDependency(XMLExtendedStreamReader reader, String source) throws XMLStreamException {
+    public static FeatureGroupConfig readFeatureGroupDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
         String name = null;
         Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
@@ -303,7 +307,7 @@ public class FeatureGroupXml {
         if (name == null && inheritFeatures != null) {
             throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.NAME);
         }
-        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(source, name);
+        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name);
         if(inheritFeatures != null) {
             depBuilder.setInheritFeatures(inheritFeatures);
         }
