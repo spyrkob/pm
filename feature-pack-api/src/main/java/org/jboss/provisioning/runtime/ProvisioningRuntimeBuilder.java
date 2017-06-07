@@ -29,9 +29,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.stream.Stream;
-
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
@@ -47,7 +44,6 @@ import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
@@ -76,11 +72,10 @@ public class ProvisioningRuntimeBuilder {
     Path installDir;
     final Path workDir;
     final Path layoutDir;
-    List<ProvisioningPlugin> plugins = Collections.emptyList();
+    Path pluginsDir = null;
 
-    private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new LinkedHashMap<>();
+    private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new LinkedHashMap<>(); // the ordering of this is broken: servlet->core->full
     private Map<ArtifactCoords.Gav, List<FeaturePackConfig>> fpConfigStacks = new HashMap<>();
-    private Path pluginsDir = null;
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
     private ProvisioningRuntimeBuilder() {
@@ -125,35 +120,6 @@ public class ProvisioningRuntimeBuilder {
         }
 
         fpRuntimes = buildFpRuntimes();
-        if(pluginsDir != null) {
-            List<java.net.URL> urls = Collections.emptyList();
-            try(Stream<Path> stream = Files.list(pluginsDir)) {
-                final Iterator<Path> i = stream.iterator();
-                while(i.hasNext()) {
-                    switch(urls.size()) {
-                        case 0:
-                            urls = Collections.singletonList(i.next().toUri().toURL());
-                            break;
-                        case 1:
-                            urls = new ArrayList<>(urls);
-                        default:
-                            urls.add(i.next().toUri().toURL());
-                    }
-                }
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
-            }
-            if(!urls.isEmpty()) {
-                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
-                        new java.net.URL[urls.size()]), Thread.currentThread().getContextClassLoader());
-                final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-                plugins = new ArrayList<>(urls.size());
-                for (ProvisioningPlugin plugin : pluginLoader) {
-                    plugins.add(plugin);
-                }
-                plugins = Collections.unmodifiableList(plugins);
-            }
-        }
 
         return new ProvisioningRuntime(this);
     }
@@ -487,7 +453,6 @@ public class ProvisioningRuntimeBuilder {
                 pluginsDir = workDir.resolve(Constants.PLUGINS);
             }
             try {
-                System.out.println("copying " + fpPlugins.toAbsolutePath() + " -> " + pluginsDir.toAbsolutePath());
                 IoUtils.copy(fpPlugins, pluginsDir);
             } catch (IOException e) {
                 throw new ProvisioningException(Errors.copyFile(fpPlugins, workDir.resolve(Constants.PLUGINS)), e);

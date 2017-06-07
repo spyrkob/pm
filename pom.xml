@@ -74,8 +74,8 @@
     <version.org.jboss.aesh.aesh>0.66.11</version.org.jboss.aesh.aesh>
     <version.org.jboss.aesh.aesh-extensions>0.66</version.org.jboss.aesh.aesh-extensions>
     <version.org.jboss.jandex>2.0.3.Final</version.org.jboss.jandex>
-    <version.org.jboss.modules.jboss-modules>1.5.1.Final</version.org.jboss.modules.jboss-modules>
-    <version.org.wildfly.core.wildfly-core>3.0.0.Alpha12</version.org.wildfly.core.wildfly-core>
+    <version.org.jboss.modules.jboss-modules>1.6.0.Beta9</version.org.jboss.modules.jboss-modules>
+    <version.org.wildfly.core.wildfly-core>3.0.0.Beta25</version.org.wildfly.core.wildfly-core>
 
     <!-- Checkstyle configuration -->
     <linkXRef>false</linkXRef>

@@ -20,10 +20,15 @@ package org.jboss.provisioning.runtime;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -69,9 +74,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
 
         // execute the plug-ins
-        for(ProvisioningPlugin plugin : runtime.plugins) {
-            plugin.postInstall(runtime);
-        }
+        runtime.executePlugins();
 
         // save the config
         try {
@@ -106,14 +109,14 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Path stagedDir;
     private final Path workDir;
     private final Path tmpDir;
-    private final List<ProvisioningPlugin> plugins;
+    private final Path pluginsDir;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
         this.startTime = builder.startTime;
         this.artifactResolver = builder.artifactResolver;
         this.config = builder.config;
-        this.plugins = builder.plugins;
+        this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
 
         this.workDir = builder.workDir;
@@ -226,12 +229,46 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         return artifactResolver.resolve(coords);
     }
 
-    public boolean hasPlugins() {
-        return !plugins.isEmpty();
-    }
-
-    public List<ProvisioningPlugin> getPlugins() {
-        return plugins;
+    private void executePlugins() throws ProvisioningException {
+        if(pluginsDir != null) {
+            List<java.net.URL> urls = Collections.emptyList();
+            try(Stream<Path> stream = Files.list(pluginsDir)) {
+                final Iterator<Path> i = stream.iterator();
+                while(i.hasNext()) {
+                    switch(urls.size()) {
+                        case 0:
+                            urls = Collections.singletonList(i.next().toUri().toURL());
+                            break;
+                        case 1:
+                            urls = new ArrayList<>(urls);
+                        default:
+                            urls.add(i.next().toUri().toURL());
+                    }
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
+            }
+            if(!urls.isEmpty()) {
+                final Thread thread = Thread.currentThread();
+                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
+                        new java.net.URL[urls.size()]), thread.getContextClassLoader());
+                final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, ucl);
+                final Iterator<ProvisioningPlugin> pluginIterator = pluginLoader.iterator();
+                if(pluginIterator.hasNext()) {
+                    final ClassLoader ocl = thread.getContextClassLoader();
+                    try {
+                        thread.setContextClassLoader(ucl);
+                        final ProvisioningPlugin plugin = pluginIterator.next();
+                        plugin.postInstall(this);
+                        while(pluginIterator.hasNext()) {
+                            pluginIterator.next().postInstall(this);
+                        }
+                    } finally {
+                        thread.setContextClassLoader(ocl);
+                    }
+                }
+            }
+        }
     }
 
     @Override

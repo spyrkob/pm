@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -126,7 +126,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.4</version>
+        <version>3.5</version>
         <configuration>
           <!-- see http://jira.codehaus.org/browse/MNG-5346 -->
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
