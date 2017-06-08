@@ -36,7 +36,7 @@ if [[ -n $BUILD ]]; then
 fi
 
 if [[ -n $RUN ]]; then
-#    java "-Dmaven.home=/home/olubyans/maven" "-DwfThinServer" -jar ./tool/target/pm-tool.jar
-#    java "-Dmaven.home=/home/olubyans/maven" "-Dorg.wildfly.logging.skipLogManagerCheck" "-Djava.util.logging.manager=org.jboss.logmanager.LogManager" -jar ./tool/target/pm-tool.jar
-    java "-Dmaven.home=/home/olubyans/maven" -jar ./tool/target/pm-tool.jar
+#    java "-Dmaven.home=/home/olubyans/maven" "-DwfThinServer" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
+#    java "-Dmaven.home=/home/olubyans/maven" "-Dorg.wildfly.logging.skipLogManagerCheck" "-Djava.util.logging.manager=org.jboss.logmanager.LogManager" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
+    java "-Dmaven.home=/home/olubyans/maven" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
 fi
