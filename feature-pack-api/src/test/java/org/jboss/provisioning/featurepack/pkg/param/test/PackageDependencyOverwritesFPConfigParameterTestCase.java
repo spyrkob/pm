@@ -89,10 +89,10 @@ public class PackageDependencyOverwritesFPConfigParameterTestCase extends Provis
                                 .addParameter("param.fp3.a3", "param.fp3.a3.a")
                                 .build())
                         .build())
-                .addFeaturePack(ProvisionedFeaturePack.builder(fp2Gav)
-                        .build())
-                .addFeaturePack(ProvisionedFeaturePack.builder(fp1Gav)
-                        .build())
+                //.addFeaturePack(ProvisionedFeaturePack.builder(fp2Gav)
+                //        .build())
+                //.addFeaturePack(ProvisionedFeaturePack.builder(fp1Gav)
+                //        .build())
                 .build();
     }
 

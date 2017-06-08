@@ -155,20 +155,15 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
     @Override
     public void readElement(XMLExtendedStreamReader reader, ProvisionedState.Builder builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
-        boolean hasFp = false;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasFp) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.INSTALLATION, Element.FEATURE_PACK);
-                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case FEATURE_PACK:
-                            hasFp = true;
                             builder.addFeaturePack(readFeaturePack(reader));
                             break;
                         default:

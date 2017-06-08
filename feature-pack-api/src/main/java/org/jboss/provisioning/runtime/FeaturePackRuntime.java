@@ -55,6 +55,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         final Path dir;
         FeaturePackSpec spec;
         FeaturePackConfig config;
+        boolean ordered;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
