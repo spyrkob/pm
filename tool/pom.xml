@@ -83,25 +83,36 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
+        <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <id>assemble</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>shade</goal>
             </goals>
             <configuration>
-              <finalName>pm-tool</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-              <archive>
-                <manifest>
+              <minimizeJar>true</minimizeJar>
+              <filters>
+                <filter>
+                  <artifact>org.jboss.aesh:aesh</artifact>
+                  <includes>
+                    <include>org/**</include>
+                    <include>*.txt</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.jboss.aesh:aesh-extensions</artifact>
+                  <includes>
+                    <include>org/**</include>
+                    <include>*.txt</include>
+                  </includes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.jboss.provisioning.cli.CliMain</mainClass>
-                </manifest>
-              </archive>
+                </transformer>
+              </transformers>
             </configuration>
           </execution>
         </executions>
