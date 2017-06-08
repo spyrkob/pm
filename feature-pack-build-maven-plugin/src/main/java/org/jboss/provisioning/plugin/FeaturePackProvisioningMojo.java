@@ -16,10 +16,7 @@
  */
 package org.jboss.provisioning.plugin;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;
@@ -39,26 +36,13 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.IOUtil;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.resolution.DependencyRequest;
-import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.resolution.DependencyResult;
-import org.eclipse.aether.resolution.VersionRequest;
-import org.eclipse.aether.resolution.VersionResolutionException;
-import org.eclipse.aether.resolution.VersionResult;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
@@ -152,17 +136,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         //artifactRequest(new DefaultArtifact("org.wildfly.core", "wildfly-cli", "jar", "LATEST"));
         //artifactRequest(new DefaultArtifact("org.wildfly.feature-pack", "wildfly", "zip", "10.1.0.Final-SNAPSHOT"));
     }
-
-    private void collectDependencies(final Artifact artifact) throws MojoExecutionException {
-        CollectResult cRes = null;
-        try {
-            cRes = repoSystem.collectDependencies(repoSession, new CollectRequest(new Dependency(artifact, null), remoteRepos));
-        } catch (DependencyCollectionException e) {
-            throw new MojoExecutionException("Failed to collect", e);
-        }
-        printDeps(cRes.getRoot());
-    }
-
+/*
     private static void printDeps(DependencyNode dep) {
         printDeps(dep, 0);
     }
@@ -181,6 +155,16 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         for(DependencyNode child : dep.getChildren()) {
             printDeps(child, level + 1);
         }
+    }
+
+    private void collectDependencies(final Artifact artifact) throws MojoExecutionException {
+        CollectResult cRes = null;
+        try {
+            cRes = repoSystem.collectDependencies(repoSession, new CollectRequest(new Dependency(artifact, null), remoteRepos));
+        } catch (DependencyCollectionException e) {
+            throw new MojoExecutionException("Failed to collect", e);
+        }
+        printDeps(cRes.getRoot());
     }
 
     private void resolveDependencies(final Artifact artifact) throws MojoExecutionException {
@@ -244,7 +228,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
             IOUtil.close(fis);
         }
     }
-
+*/
     private ArtifactRequest getArtifactRequest(ArtifactCoords coords) {
         final ArtifactRequest req = new ArtifactRequest();
         req.setArtifact(new DefaultArtifact(coords.getGroupId(), coords.getArtifactId(), coords.getClassifier(), coords.getExtension(), coords.getVersion()));

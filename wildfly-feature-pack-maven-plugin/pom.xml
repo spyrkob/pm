@@ -106,7 +106,7 @@
                       maven-plugin-plugin
                     </artifactId>
                     <versionRange>
-                      [3.4,)
+                      [3.5,)
                     </versionRange>
                     <goals>
                       <goal>descriptor</goal>
@@ -126,7 +126,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.5</version>
         <configuration>
           <!-- see http://jira.codehaus.org/browse/MNG-5346 -->
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>

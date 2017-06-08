@@ -128,7 +128,7 @@ class DelegatingCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public Command getPopulatedCommand(String commandLine) throws CommandNotFoundException, CommandException,
+    public Command<?> getPopulatedCommand(String commandLine) throws CommandNotFoundException, CommandException,
             CommandLineParserException, OptionValidatorException {
         return delegate.getPopulatedCommand(commandLine);
     }
