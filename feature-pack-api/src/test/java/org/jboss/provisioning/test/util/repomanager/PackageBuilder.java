@@ -45,11 +45,15 @@ public class PackageBuilder {
     private final FeaturePackBuilder fp;
     private boolean isDefault;
     private final PackageSpec.Builder pkg;
-    private final FsTaskList tasks = FsTaskList.newList();
+    private FsTaskList tasks;
 
     private PackageBuilder(FeaturePackBuilder fp, String name) {
         this.fp = fp;
         pkg = PackageSpec.builder(name);
+    }
+
+    private FsTaskList getTasks() {
+        return tasks == null ? tasks = FsTaskList.newList() : tasks;
     }
 
     public FeaturePackBuilder getFeaturePack() {
@@ -95,17 +99,17 @@ public class PackageBuilder {
     }
 
     public PackageBuilder addPath(String relativeTarget, Path src) {
-        tasks.copy(src, relativeTarget);
+        getTasks().copy(src, relativeTarget);
         return this;
     }
 
     public PackageBuilder addDir(String relativeTarget, Path src, boolean contentOnly) {
-        tasks.copyDir(src, relativeTarget, contentOnly);
+        getTasks().copyDir(src, relativeTarget, contentOnly);
         return this;
     }
 
     public PackageBuilder writeContent(String relativeTarget, String content) {
-        tasks.write(content, relativeTarget);
+        getTasks().write(content, relativeTarget);
         return this;
     }
 
@@ -124,7 +128,7 @@ public class PackageBuilder {
         }
         TestUtils.mkdirs(pkgDir);
         try {
-            if(!tasks.isEmpty()) {
+            if(tasks != null && !tasks.isEmpty()) {
                 tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
             }
             PackageXmlWriter.getInstance().write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));

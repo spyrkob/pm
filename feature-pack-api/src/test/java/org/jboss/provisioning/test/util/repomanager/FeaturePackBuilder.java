@@ -41,6 +41,8 @@ import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
+import org.jboss.provisioning.test.util.fs.FsTaskContext;
+import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.ConfigXmlWriter;
@@ -82,6 +84,8 @@ public class FeaturePackBuilder {
     private String pluginFileName = "plugins.jar";
     private Map<String, Config> configs = Collections.emptyMap();
     private Map<String, FeatureSpec> specs = Collections.emptyMap();
+    private FsTaskList tasks;
+
 
     protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
         this.installer = repo;
@@ -204,7 +208,7 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public FeaturePackBuilder addPlugin(Class<?> pluginCls) {
+    public FeaturePackBuilder addPlugin(Class<? extends ProvisioningPlugin> pluginCls) {
         return addService(ProvisioningPlugin.class, pluginCls);
     }
 
@@ -238,6 +242,14 @@ public class FeaturePackBuilder {
             }
         }
         addClassToPlugin(serviceImpl);
+        return this;
+    }
+
+    public FeaturePackBuilder writeResources(String relativePath, String content) throws ProvisioningDescriptionException {
+        if(tasks == null) {
+            tasks = FsTaskList.newList();
+        }
+        tasks.write(content, relativePath);
         return this;
     }
 
@@ -277,6 +289,10 @@ public class FeaturePackBuilder {
             fpSpec = fpBuilder.build();
             final FeaturePackXmlWriter writer = FeaturePackXmlWriter.getInstance();
             writer.write(fpSpec, fpWorkDir.resolve(Constants.FEATURE_PACK_XML));
+
+            if(tasks != null && !tasks.isEmpty()) {
+                tasks.execute(FsTaskContext.builder().setTargetRoot(fpWorkDir.resolve(Constants.RESOURCES)).build());
+            }
 
             final Path fpZip;
             fpZip = getArtifactPath(repoHome, fpSpec.getGav().toArtifactCoords());
