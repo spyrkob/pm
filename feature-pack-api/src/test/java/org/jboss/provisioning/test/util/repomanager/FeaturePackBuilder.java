@@ -35,13 +35,17 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
+import org.jboss.provisioning.xml.ConfigXmlWriter;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
+import org.jboss.provisioning.xml.FeatureSpecXmlWriter;
 
 /**
  *
@@ -76,6 +80,8 @@ public class FeaturePackBuilder {
     private Set<Class<?>> classes = Collections.emptySet();
     private Map<String, Set<String>> services = Collections.emptyMap();
     private String pluginFileName = "plugins.jar";
+    private Map<String, Config> configs = Collections.emptyMap();
+    private Map<String, FeatureSpec> specs = Collections.emptyMap();
 
     protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
         this.installer = repo;
@@ -131,6 +137,50 @@ public class FeaturePackBuilder {
         }
         addPackage(pkg);
         return pkg;
+    }
+
+    public FeaturePackBuilder addSpec(FeatureSpec spec) throws ProvisioningDescriptionException {
+        if(specs.isEmpty()) {
+            specs = Collections.singletonMap(spec.getName(), spec);
+        } else {
+            if(specs.containsKey(spec.getName())) {
+                throw new ProvisioningDescriptionException("Duplicate spec name " + spec.getName() + " for " + fpBuilder.getGav());
+            }
+            if(specs.size() == 1) {
+                specs = new HashMap<>(specs);
+            }
+            specs.put(spec.getName(), spec);
+        }
+        return this;
+    }
+
+    public FeaturePackBuilder addConfig(Config config) throws ProvisioningDescriptionException {
+        return addConfig(config, false);
+    }
+
+    public FeaturePackBuilder addConfig(Config config, boolean defaultConfig) throws ProvisioningDescriptionException {
+        if(config.getName() == null) {
+            if(defaultConfig) {
+                throw new ProvisioningDescriptionException("default config must have a name");
+            }
+            fpBuilder.setConfig(config);
+            return this;
+        }
+        if(configs.isEmpty()) {
+            configs = Collections.singletonMap(config.getName(), config);
+        } else {
+            if(configs.containsKey(config.getName())) {
+                throw new ProvisioningDescriptionException("Duplicate config name " + config.getName() + " for " + fpBuilder.getGav());
+            }
+            if(configs.size() == 1) {
+                configs = new HashMap<>(configs);
+            }
+            configs.put(config.getName(), config);
+        }
+        if(defaultConfig) {
+            fpBuilder.addDefaultConfig(config.getName());
+        }
+        return this;
     }
 
     public FeaturePackBuilder setPluginFileName(String pluginFileName) {
@@ -201,6 +251,26 @@ public class FeaturePackBuilder {
                     fpBuilder.addDefaultPackage(pkgDescr.getName());
                 }
             }
+
+            if(!specs.isEmpty()) {
+                final Path featuresDir = fpWorkDir.resolve(Constants.FEATURES);
+                final FeatureSpecXmlWriter specWriter = FeatureSpecXmlWriter.getInstance();
+                for(FeatureSpec spec : specs.values()) {
+                    final Path featureDir = featuresDir.resolve(spec.getName());
+                    ensureDir(featureDir);
+                    specWriter.write(spec, featureDir.resolve(Constants.SPEC_XML));
+                }
+            }
+
+            if(!configs.isEmpty()) {
+                final Path configsDir = fpWorkDir.resolve(Constants.CONFIGS);
+                ensureDir(configsDir);
+                final ConfigXmlWriter writer = ConfigXmlWriter.getInstance();
+                for(Config config : configs.values()) {
+                    writer.write(config, configsDir.resolve(config.getName() + Constants.DOT_XML));
+                }
+            }
+
             if(!classes.isEmpty()) {
                 addPlugins(fpWorkDir);
             }

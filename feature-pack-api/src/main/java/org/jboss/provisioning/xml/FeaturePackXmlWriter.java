@@ -16,15 +16,7 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -34,14 +26,13 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
-import org.jboss.provisioning.xml.util.FormattingXmlStreamWriter;
 import org.jboss.provisioning.xml.util.TextNode;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackXmlWriter extends BaseXmlWriter {
+public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
 
     private static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
 
@@ -52,14 +43,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
     private FeaturePackXmlWriter() {
     }
 
-    public void write(FeaturePackSpec fpSpec, Path outputFile) throws XMLStreamException, IOException {
-        ensureParentDir(outputFile);
-        try (Writer writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE)) {
-            write(fpSpec, writer);
-        }
-    }
-
-    public void write(FeaturePackSpec fpSpec, Writer writer) throws XMLStreamException {
+    protected ElementNode toElement(FeaturePackSpec fpSpec) {
         final ElementNode fp = addElement(null, Element.FEATURE_PACK);
         final ArtifactCoords.Gav fpGav = fpSpec.getGav();
         addGAV(fp, fpGav);
@@ -71,21 +55,29 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
             }
         }
 
+        if(fpSpec.hasUnnamedConfig()) {
+            fp.addChild(ConfigXmlWriter.getInstance().toElement(fpSpec.getUnnamedConfig(), FeaturePackXmlParser10.NAMESPACE_1_0));
+        }
+
+        if(fpSpec.hasDefaultConfigs()) {
+            final ElementNode configs = addElement(fp, Element.DEFAULT_CONFIGS);
+            final String[] configNames = fpSpec.getDefaultConfigs().toArray(new String[0]);
+            Arrays.sort(configNames);
+            for (String name : configNames) {
+                writeDefaultConfig(configs, name);
+            }
+        }
+
         if (fpSpec.hasDefaultPackages()) {
             final ElementNode pkgs = addElement(fp, Element.DEFAULT_PACKAGES);
             final String[] pkgNames = fpSpec.getDefaultPackageNames().toArray(new String[0]);
             Arrays.sort(pkgNames);
             for (String name : pkgNames) {
-                write(pkgs, name);
+                writeDefaultPackage(pkgs, name);
             }
         }
 
-        try (FormattingXmlStreamWriter xmlWriter = new FormattingXmlStreamWriter(XMLOutputFactory.newInstance()
-                .createXMLStreamWriter(writer))) {
-            xmlWriter.writeStartDocument();
-            fp.marshall(xmlWriter);
-            xmlWriter.writeEndDocument();
-        }
+        return fp;
     }
 
     private void addGAV(final ElementNode fp, final ArtifactCoords.Gav fpGav) {
@@ -94,7 +86,11 @@ public class FeaturePackXmlWriter extends BaseXmlWriter {
         addAttribute(fp, Attribute.VERSION, fpGav.getVersion());
     }
 
-    private static void write(ElementNode pkgs, String name) {
+    private static void writeDefaultConfig(ElementNode configs, String name) {
+        addAttribute(addElement(configs, Element.CONFIG), Attribute.NAME, name);
+    }
+
+    private static void writeDefaultPackage(ElementNode pkgs, String name) {
         addAttribute(addElement(pkgs, Element.PACKAGE), Attribute.NAME, name);
     }
 

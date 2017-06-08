@@ -45,6 +45,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
+import org.jboss.as.cli.impl.CommandContextConfiguration;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
@@ -79,6 +82,38 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private StandaloneConfigGenerator standaloneGenerator;
     private DomainConfigGenerator domainScriptCollector;
 
+
+    private void testEmbedded(Path installDir) {
+        System.out.println("testing embedded server");
+
+        // JBoss Modules overrides the default providers
+        final String origXmlOutFactory = System.getProperty("javax.xml.stream.XMLOutputFactory");
+        CommandContext ctx = null;
+        try {
+            ctx = CommandContextFactory.getInstance().newCommandContext(
+                    new CommandContextConfiguration.Builder()
+                    .setSilent(true)
+                    .setInitConsole(false)
+                    .build());
+            ctx.handle("embed-server --empty-config --remove-existing --server-config=test.xml --jboss-home=" + installDir.toAbsolutePath());
+            ctx.handle(":read-attribute(name=name)");
+            ctx.handle("stop-embedded-server");
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if(origXmlOutFactory == null) {
+                if(System.getProperty("javax.xml.stream.XMLOutputFactory") != null) {
+                    System.clearProperty("javax.xml.stream.XMLOutputFactory");
+                }
+            } else if(!origXmlOutFactory.equals(System.getProperty("javax.xml.stream.XMLOutputFactory"))) {
+                System.setProperty("javax.xml.stream.XMLOutputFactory", origXmlOutFactory);
+            }
+            if(ctx != null) {
+                ctx.terminateSession();
+            }
+        }
+    }
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -170,6 +205,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(domainScriptCollector != null) {
             domainScriptCollector.run();
         }
+
+        //testEmbedded(runtime.getInstallDir());
     }
 
     private void processPackages(final FeaturePackRuntime fp) throws ProvisioningException {

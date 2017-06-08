@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
 
-    Copyright 2016 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +42,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="1" minOccurs="0">
+      <xs:element name="config" type="configType" />
       <xs:element name="packages" type="packagesType" />
     </xs:choice>
     <xs:attribute name="groupId" type="xs:string" use="required">
@@ -62,6 +63,159 @@
       <xs:annotation>
         <xs:documentation>
           The version of the feature-pack artifact.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="configType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes feature-pack configuration.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="dependencies" type="dependenciesType" />
+      <xs:element name="features" type="featuresType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="dependenciesType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="feature-pack" type="featurePackConfigDependsType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="feature-group" type="configDependsType" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="featurePackConfigDependsType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="feature-group" type="configDependsType"/>
+    </xs:choice>
+    <xs:attribute name="dependency" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature-pack dependency name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="configDependsType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="include" type="configIncludeType"/>
+      <xs:element name="exclude" type="configExcludeType"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Configuration name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="source" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Configuration source
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="inherit-features" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+          Whether to inherit the package set from the dependency as the default
+          package set.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="configIncludeType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="depends" type="featureDependsType"/>
+      <xs:element name="param" type="featureParamType"/>
+      <xs:element name="feature" type="featureType"/>
+    </xs:choice>
+    <xs:attribute name="spec" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Feature specification name.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="feature-id" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Feature ID.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="configExcludeType">
+    <xs:attribute name="spec" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Feature specification name.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="feature-id" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Feature ID.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="featuresType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="feature" type="featureType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="featureType">
+    <xs:annotation>
+      <xs:documentation>
+        Describes feature configuration.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="depends" type="featureDependsType"/>
+      <xs:element name="param" type="featureParamType"/>
+      <xs:element name="feature" type="featureType"/>
+    </xs:choice>
+    <xs:attribute name="spec" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature specification name.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="featureDependsType">
+    <xs:attribute name="feature-id" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Feature ID
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="featureParamType">
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Parameter name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Parameter value
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

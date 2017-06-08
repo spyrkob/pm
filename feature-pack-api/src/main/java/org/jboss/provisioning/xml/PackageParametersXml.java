@@ -35,7 +35,7 @@ import org.jboss.provisioning.xml.util.TextNode;
  *
  * @author Alexey Loubyansky
  */
-class PackageParametersXml extends BaseXmlWriter {
+abstract class PackageParametersXml<T> extends BaseXmlWriter<T> {
 
     static final String NAME = "name";
     static final String PARAMETERS = "parameters";

@@ -19,6 +19,10 @@ package org.jboss.provisioning.featurepack.xml.test;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
@@ -142,4 +146,59 @@ public class FeaturePackXmlParserTestCase  {
         Assert.assertEquals(expected, found);
     }
 
+    @Test
+    public void readDefaultConfigs() throws Exception {
+        FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-default-configs.xml", null, null);
+        FeaturePackSpec expected = FeaturePackSpec.builder()
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
+                .addDefaultConfig("config1")
+                .addDefaultConfig("config2")
+                .addDefaultPackage("package1")
+                .addDefaultPackage("package2")
+                .build();
+        Assert.assertEquals(expected, found);
+    }
+
+    @Test
+    public void readUnnamedConfigs() throws Exception {
+        FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-unnamed-config.xml", null, null);
+        FeaturePackSpec expected = FeaturePackSpec.builder()
+                .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
+                .setConfig(new Config()
+                .setProperty("prop1", "value1")
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep1").build())
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                        .addFeatureGroup(FeatureGroupConfig.builder("dep3")
+                                .setInheritFeatures(false)
+                                .includeSpec("spec1")
+                                .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
+                                .includeFeature(FeatureId.fromString("spec3:p1=v1"), new FeatureConfig("spec3")
+                                .addDependency(FeatureId.fromString("spec4:p1=v1,p2=v2"))
+                                .addDependency(FeatureId.fromString("spec5:p1=v1,p2=v2"))
+                                .setParam("p1", "v1")
+                                .setParam("p2", "v2"))
+                                .excludeSpec("spec6")
+                                .excludeSpec("spec7")
+                                .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
+                                .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
+                                .build())
+                        .addFeatureGroup("source4", FeatureGroupConfig.builder("dep4").build())
+                        .addFeature(new FeatureConfig("spec1")
+                        .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
+                        .addDependency(FeatureId.fromString("spec3:p3=v3"))
+                        .setParam("p1", "v1")
+                        .setParam("p2", "v2"))
+                        .addFeature(new FeatureConfig("spec4")
+                        .setParam("p1", "v1")
+                        .addFeature(new FeatureConfig("spec5")
+                        .addFeature(new FeatureConfig("spec6")
+                        .setParentRef("spec5-ref")
+                        .setParam("p1", "v1")))))
+                .addDefaultPackage("package1")
+                .addDefaultPackage("package2")
+                .build();
+        Assert.assertEquals(expected, found);
+    }
 }

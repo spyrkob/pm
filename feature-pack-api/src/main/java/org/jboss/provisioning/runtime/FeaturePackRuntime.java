@@ -35,11 +35,14 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.MainConfigBuilder;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.util.DefaultFeatureSpecLoader;
 
 /**
  *
@@ -52,9 +55,12 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         final Path dir;
         FeaturePackSpec spec;
         FeaturePackConfig config;
+        boolean ordered;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
+
+        private MainConfigBuilder configBuilder;
 
         private Builder(ArtifactCoords.Gav gav, Path dir) {
             this.gav = gav;
@@ -79,6 +85,13 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             pkgOrder.add(name);
         }
 
+        void addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
+            if(configBuilder == null) {
+                configBuilder = MainConfigBuilder.newInstance(new DefaultFeatureSpecLoader(dir));
+            }
+            configBuilder.addFeatureGroup(featureGroup);
+        }
+
         FeaturePackRuntime build(PackageParameterResolver paramResolver) throws ProvisioningException {
             return new FeaturePackRuntime(this, paramResolver);
         }
@@ -89,14 +102,16 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     }
 
     private final FeaturePackSpec spec;
-    private final FeaturePackConfig config;
     private final Path dir;
     private final Map<String, PackageRuntime> packages;
 
     private FeaturePackRuntime(Builder builder, PackageParameterResolver paramResolver) throws ProvisioningException {
         this.spec = builder.spec;
-        this.config = builder.config;
         this.dir = builder.dir;
+
+        if(builder.configBuilder != null) {
+            builder.configBuilder.build();
+        }
 
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
         for(String pkgName : builder.pkgOrder) {
@@ -123,10 +138,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
     public FeaturePackSpec getSpec() {
         return spec;
-    }
-
-    public FeaturePackConfig getConfig() {
-        return config;
     }
 
     @Override
