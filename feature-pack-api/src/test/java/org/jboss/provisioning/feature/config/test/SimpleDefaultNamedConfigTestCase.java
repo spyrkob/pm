@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.feature.config.test;
 
-import java.nio.file.Path;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -41,7 +40,7 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
-        final Path p = repoManager.installer()
+        repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
@@ -64,13 +63,6 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                 .getFeaturePack()
             .getInstaller()
         .install();
-
-//        try {
-//            IoUtils.copy(p, Paths.get("/home/olubyans/pm-test/repo/" + UUID.randomUUID().toString()));
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
     }
 
     @Override
