@@ -45,9 +45,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.impl.CommandContextConfiguration;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
@@ -83,7 +80,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private DomainConfigGenerator domainScriptCollector;
 
 
-    private void testEmbedded(Path installDir) {
+/*    private static void testEmbedded(Path installDir) {
         System.out.println("testing embedded server");
 
         // JBoss Modules overrides the default providers
@@ -114,7 +111,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
         }
     }
-
+*/
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
      */
