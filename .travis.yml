@@ -9,4 +9,5 @@ cache:
   - $HOME/.m2/repository
   - $HOME/.m2/wrapper
 script:
+- MAVEN_OPTS=-Xmx2g
 - mvn clean verify
