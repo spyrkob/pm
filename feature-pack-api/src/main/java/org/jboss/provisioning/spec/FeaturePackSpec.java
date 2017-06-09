@@ -17,12 +17,14 @@
 package org.jboss.provisioning.spec;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +48,7 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private Set<String> defConfigs = Collections.emptySet();
+        private List<Config> defConfigs = Collections.emptyList();
         private Config unnamedConfig;
 
         protected Builder() {
@@ -80,34 +82,23 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addDefaultConfig(String configName) throws ProvisioningDescriptionException {
-            assert configName != null : "configName is null";
-            if(unnamedConfig != null) {
-                throw new ProvisioningDescriptionException("Feature-pack already has default unnamed config");
+        public Builder addConfig(Config config) throws ProvisioningDescriptionException {
+            assert config != null : "config is null";
+            if(config.getName() == null && config.getModel() == null) {
+                if (unnamedConfig != null) {
+                    throw new ProvisioningDescriptionException("There could be only one unnamed config");
+                }
+                unnamedConfig = config;
             }
             switch(defConfigs.size()) {
                 case 0:
-                    defConfigs = Collections.singleton(configName);
+                    defConfigs = Collections.singletonList(config);
                     break;
                 case 1:
-                    defConfigs = new HashSet<String>(defConfigs);
+                    defConfigs = new ArrayList<Config>(defConfigs);
                 default:
-                    defConfigs.add(configName);
+                    defConfigs.add(config);
             }
-            return this;
-        }
-
-        public Builder setConfig(Config config) throws ProvisioningDescriptionException {
-            if(config.getName() != null) {
-                throw new ProvisioningDescriptionException("Config included into feature-pack spec cannot have a name");
-            }
-            if (!defConfigs.isEmpty()) {
-                throw new ProvisioningDescriptionException("Unnamed config cannot be mixed with named configs");
-            }
-            if (unnamedConfig != null) {
-                throw new ProvisioningDescriptionException("There could be only one unnamed config");
-            }
-            this.unnamedConfig = config;
             return this;
         }
 
@@ -168,35 +159,25 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final Set<String> defConfigs;
-    private final Config unnamedConfig;
+    private final List<Config> defConfigs;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
         this.defPackages = builder.defPackages.size() > 1 ? Collections.unmodifiableSet(builder.defPackages) : builder.defPackages;
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableMap(builder.dependencies) : builder.dependencies;
         this.dependencyByName = builder.dependencyByName.size() > 1 ? Collections.unmodifiableMap(builder.dependencyByName) : builder.dependencyByName;
-        this.defConfigs = builder.defConfigs.size() > 1 ? Collections.unmodifiableSet(builder.defConfigs) : builder.defConfigs;
-        this.unnamedConfig = builder.unnamedConfig;
+        this.defConfigs = builder.defConfigs.size() > 1 ? Collections.unmodifiableList(builder.defConfigs) : builder.defConfigs;
     }
 
     public ArtifactCoords.Gav getGav() {
         return gav;
     }
 
-    public boolean hasUnnamedConfig() {
-        return unnamedConfig != null;
-    }
-
-    public Config getUnnamedConfig() {
-        return unnamedConfig;
-    }
-
-    public boolean hasDefaultConfigs() {
+    public boolean hasConfigs() {
         return !defConfigs.isEmpty();
     }
 
-    public Set<String> getDefaultConfigs() {
+    public List<Config> getConfigs() {
         return defConfigs;
     }
 
@@ -263,7 +244,6 @@ public class FeaturePackSpec {
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
         result = prime * result + ((dependencyByName == null) ? 0 : dependencyByName.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((unnamedConfig == null) ? 0 : unnamedConfig.hashCode());
         return result;
     }
 
@@ -301,11 +281,6 @@ public class FeaturePackSpec {
                 return false;
         } else if (!gav.equals(other.gav))
             return false;
-        if (unnamedConfig == null) {
-            if (other.unnamedConfig != null)
-                return false;
-        } else if (!unnamedConfig.equals(other.unnamedConfig))
-            return false;
         return true;
     }
 
@@ -322,16 +297,11 @@ public class FeaturePackSpec {
                 buf.append(',').append(dependencies.get(array[i]));
             }
         }
-        if(unnamedConfig != null) {
-            buf.append("; config=").append(unnamedConfig);
-        }
         if(!defConfigs.isEmpty()) {
             buf.append("; defaultConfigs: ");
-            final String[] array = defConfigs.toArray(new String[defConfigs.size()]);
-            Arrays.sort(array);
-            buf.append(array[0]);
-            for(int i = 1; i < array.length; ++i) {
-                buf.append(',').append(array[i]);
+            buf.append(defConfigs.get(0));
+            for(int i = 1; i < defConfigs.size(); ++i) {
+                buf.append(',').append(defConfigs.get(i));
             }
         }
         if(!defPackages.isEmpty()) {

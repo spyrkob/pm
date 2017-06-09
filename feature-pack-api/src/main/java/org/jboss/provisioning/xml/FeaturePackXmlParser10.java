@@ -49,7 +49,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
 
         ARTIFACT("artifact"),
         CONFIG("config"),
-        DEFAULT_CONFIGS("default-configs"),
         DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -178,13 +177,10 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             final Config config = new Config();
                             ConfigXml.readConfig(reader, config);
                             try {
-                                fpBuilder.setConfig(config);
+                                fpBuilder.addConfig(config);
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
                             }
-                            break;
-                        case DEFAULT_CONFIGS:
-                            readDefaultConfigs(reader, fpBuilder);
                             break;
                         case DEFAULT_PACKAGES:
                             readDefaultPackages(reader, fpBuilder);
@@ -333,41 +329,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                     switch (element) {
                         case PACKAGE:
                             fpBuilder.addDefaultPackage(parseName(reader));
-                            hasChildren = true;
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        boolean hasChildren = false;
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.PACKAGES, Element.PACKAGE);
-                    }
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case CONFIG:
-                            try {
-                                fpBuilder.addDefaultConfig(parseName(reader));
-                            } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
-                            }
                             hasChildren = true;
                             break;
                         default:

@@ -40,6 +40,10 @@ public class Config implements BuilderWithFeatureGroups<Config> {
     public Config() {
     }
 
+    public Config(String model) {
+        this(null, model);
+    }
+
     public Config(String name, String model) {
         this.name = name;
         this.model = model;
@@ -203,6 +207,14 @@ public class Config implements BuilderWithFeatureGroups<Config> {
             int i = 1;
             while(i < featureGroups.size()) {
                 final FeatureGroupConfig dep = featureGroups.get(i++);
+                buf.append(',').append(dep);
+            }
+        }
+        if(!features.isEmpty()) {
+            buf.append(' ').append(features.get(0));
+            int i = 1;
+            while(i < features.size()) {
+                final FeatureConfig dep = features.get(i++);
                 buf.append(',').append(dep);
             }
         }

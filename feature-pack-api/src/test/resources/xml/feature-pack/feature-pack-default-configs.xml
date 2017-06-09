@@ -19,10 +19,38 @@
 -->
 <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0" groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
 
-  <default-configs>
-    <config name="config1"/>
-    <config name="config2"/>
-  </default-configs>
+  <config name="config1" model="model1">
+    <props>
+      <prop name="prop1" value="value1"/>
+      <prop name="prop2" value="value2"/>
+    </props>
+    <feature-group name="fg1"/>
+    <feature-group name="fg2">
+      <exclude feature-id="spec1:p1=v1"/>
+    </feature-group>
+    <feature spec="spec1">
+      <depends feature-id="spec2:p1=v1,p2=v2"/>
+      <depends feature-id="spec3:p3=v3"/>
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
+    </feature>
+  </config>
+  <config model="model2">
+    <props>
+      <prop name="prop3" value="value3"/>
+      <prop name="prop4" value="value4"/>
+    </props>
+    <feature-group name="fg3"/>
+    <feature-group name="fg4">
+      <exclude feature-id="spec4:p1=v1"/>
+    </feature-group>
+    <feature spec="spec5">
+      <depends feature-id="spec6:p1=v1,p2=v2"/>
+      <depends feature-id="spec7:p3=v3"/>
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
+    </feature>
+  </config>
   
   <default-packages>
     <package name="package1" />

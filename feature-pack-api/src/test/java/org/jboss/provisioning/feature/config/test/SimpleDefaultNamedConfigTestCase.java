@@ -57,7 +57,7 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config2")), true)
+                            .setParam("p1", "config2")))
             .newPackage("p1", true)
                 .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()

@@ -38,7 +38,7 @@ import org.jboss.provisioning.util.IoUtils;
  *
  * @author Alexey Loubyansky
  */
-public class SiblingDependenciesResoucesOverwriteTestCase extends PmInstallFeaturePackTestBase {
+public class ResoucesOverwritesTestCase extends PmInstallFeaturePackTestBase {
 
     public static class ResourcesCopyingPlugin implements ProvisioningPlugin {
         @Override
@@ -64,17 +64,32 @@ public class SiblingDependenciesResoucesOverwriteTestCase extends PmInstallFeatu
                 .addPlugin(ResourcesCopyingPlugin.class)
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final"))
+                .addDependency(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
                 .newPackage("main", true)
                     .getFeaturePack()
                 .writeResources("res1.txt", "fp2")
                 .writeResources("res2.txt", "fp2")
                 .writeResources("res3.txt", "fp2")
+                .writeResources("res4.txt", "fp2")
+                .writeResources("res5.txt", "fp2")
                 .getInstaller()
             .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
+                .addDependency(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
                 .newPackage("main", true)
                     .getFeaturePack()
                 .writeResources("res1.txt", "fp3")
                 .writeResources("res3.txt", "fp3")
+                .writeResources("res4.txt", "fp3")
+                .getInstaller()
+            .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
+                .newPackage("main", true)
+                    .getFeaturePack()
+                .writeResources("res1.txt", "fp4")
+                .writeResources("res2.txt", "fp4")
+                .writeResources("res3.txt", "fp4")
+                .writeResources("res4.txt", "fp4")
+                .writeResources("res5.txt", "fp4")
+                .writeResources("res6.txt", "fp4")
                 .getInstaller()
             .install();
     }
@@ -97,6 +112,9 @@ public class SiblingDependenciesResoucesOverwriteTestCase extends PmInstallFeatu
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp3", "2.0.0.Final"))
                         .addPackage("main")
                         .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp4", "2.0.0.Final"))
+                        .addPackage("main")
+                        .build())
                 .build();
     }
 
@@ -106,6 +124,9 @@ public class SiblingDependenciesResoucesOverwriteTestCase extends PmInstallFeatu
                 .addFile("res1.txt", "fp1")
                 .addFile("res2.txt", "fp2")
                 .addFile("res3.txt", "fp3")
+                .addFile("res4.txt", "fp3")
+                .addFile("res5.txt", "fp2")
+                .addFile("res6.txt", "fp4")
                 .build();
     }
 }
