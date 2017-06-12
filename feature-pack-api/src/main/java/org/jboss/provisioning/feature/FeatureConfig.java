@@ -26,17 +26,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
+
 /**
  *
  * @author Alexey Loubyansky
  */
 public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
 
-    public static FeatureConfig newConfig(String specName) {
+    public static FeatureConfig newConfig(String specName) throws ProvisioningDescriptionException {
         return new FeatureConfig(specName);
     }
 
-    String specName;
+    SpecId specId;
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
     String parentRef;
@@ -45,17 +47,21 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     public FeatureConfig() {
     }
 
-    public FeatureConfig(String specName) {
-        this.specName = specName;
+    public FeatureConfig(String specName) throws ProvisioningDescriptionException {
+        this.specId = SpecId.fromString(specName);
     }
 
-    public FeatureConfig setSpecName(String specName) {
-        this.specName = specName;
+    public FeatureConfig(SpecId specId) throws ProvisioningDescriptionException {
+        this.specId = specId;
+    }
+
+    public FeatureConfig setSpecName(String specName) throws ProvisioningDescriptionException {
+        this.specId = SpecId.fromString(specName);
         return this;
     }
 
-    public String getSpecName() {
-        return this.specName;
+    public SpecId getSpecId() {
+        return this.specId;
     }
 
     public String getParentRef() {
@@ -168,7 +174,7 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
         result = prime * result + ((nested == null) ? 0 : nested.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
-        result = prime * result + ((specName == null) ? 0 : specName.hashCode());
+        result = prime * result + ((specId == null) ? 0 : specId.hashCode());
         return result;
     }
 
@@ -201,10 +207,10 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
                 return false;
         } else if (!parentRef.equals(other.parentRef))
             return false;
-        if (specName == null) {
-            if (other.specName != null)
+        if (specId == null) {
+            if (other.specId != null)
                 return false;
-        } else if (!specName.equals(other.specName))
+        } else if (!specId.equals(other.specId))
             return false;
         return true;
     }
@@ -212,7 +218,7 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[').append(specName);
+        buf.append('[').append(specId);
         if (!params.isEmpty()) {
             buf.append(' ');
             final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();

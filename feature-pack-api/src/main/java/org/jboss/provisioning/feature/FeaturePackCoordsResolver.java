@@ -14,15 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.feature;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeatureSpecLoader {
+interface FeaturePackCoordsResolver {
 
-    FeatureSpec load(SpecId name) throws ProvisioningDescriptionException;
+    ArtifactCoords.Ga getDefaultCoords() throws ProvisioningDescriptionException;
+
+    ArtifactCoords.Ga resolveDependency(String name) throws ProvisioningDescriptionException;
 }

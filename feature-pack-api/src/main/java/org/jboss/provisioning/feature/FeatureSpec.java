@@ -48,7 +48,7 @@ public class FeatureSpec {
             this.name = name;
         }
 
-        public Builder setName(String name) {
+        public Builder setId(String name) {
             this.name = name;
             return this;
         }

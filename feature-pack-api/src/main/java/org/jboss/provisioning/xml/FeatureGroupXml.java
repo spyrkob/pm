@@ -381,7 +381,11 @@ public class FeatureGroupXml {
                     return;
                 case XMLStreamConstants.START_ELEMENT:
                     if(fc == null) {
-                        fc = new FeatureConfig(featureId.getSpec());
+                        try {
+                            fc = new FeatureConfig(featureId.getSpec());
+                        } catch (ProvisioningDescriptionException e) {
+                            throw new XMLStreamException("Failed to parse config", e);
+                        }
                     }
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
@@ -474,7 +478,11 @@ public class FeatureGroupXml {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case SPEC:
-                    config.setSpecName(reader.getAttributeValue(i));
+                    try {
+                        config.setSpecName(reader.getAttributeValue(i));
+                    } catch (ProvisioningDescriptionException e) {
+                        throw new XMLStreamException("Failed to parse config", e);
+                    }
                     break;
                 case PARENT_REF:
                     config.setParentRef(reader.getAttributeValue(i));
@@ -483,7 +491,7 @@ public class FeatureGroupXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (config.getSpecName() == null) {
+        if (config.getSpecId() == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPEC));
         }
         while (reader.hasNext()) {

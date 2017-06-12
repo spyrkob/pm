@@ -37,9 +37,9 @@ public class FeatureGroupConfig {
 
         private final String featureGroupName;
         private boolean inheritFeatures = true;
-        private Set<String> includedSpecs = Collections.emptySet();
+        private Set<SpecId> includedSpecs = Collections.emptySet();
         private Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
-        private Set<String> excludedSpecs = Collections.emptySet();
+        private Set<SpecId> excludedSpecs = Collections.emptySet();
         private Set<FeatureId> excludedFeatures = Collections.emptySet();
 
         private Builder(String featureGroupName, boolean inheritFeatures) {
@@ -53,6 +53,10 @@ public class FeatureGroupConfig {
         }
 
         public Builder includeSpec(String spec) throws ProvisioningDescriptionException {
+            return includeSpec(SpecId.fromString(spec));
+        }
+
+        public Builder includeSpec(SpecId spec) throws ProvisioningDescriptionException {
             if(excludedSpecs.contains(spec)) {
                 throw new ProvisioningDescriptionException(spec + " spec has been explicitly excluded");
             }
@@ -89,6 +93,10 @@ public class FeatureGroupConfig {
         }
 
         public Builder excludeSpec(String spec) throws ProvisioningDescriptionException {
+            return excludeSpec(SpecId.fromString(spec));
+        }
+
+        public Builder excludeSpec(SpecId spec) throws ProvisioningDescriptionException {
             if(includedSpecs.contains(spec)) {
                 throw new ProvisioningDescriptionException(spec + " spec has been inplicitly excluded");
             }
@@ -135,9 +143,9 @@ public class FeatureGroupConfig {
 
     final String featureGroupName;
     final boolean inheritFeatures;
-    final Set<String> includedSpecs;
+    final Set<SpecId> includedSpecs;
     final Map<FeatureId, FeatureConfig> includedFeatures;
-    final Set<String> excludedSpecs;
+    final Set<SpecId> excludedSpecs;
     final Set<FeatureId> excludedFeatures;
 
     private FeatureGroupConfig(Builder builder) {
@@ -161,7 +169,7 @@ public class FeatureGroupConfig {
         return !excludedSpecs.isEmpty();
     }
 
-    public Set<String> getExcludedSpecs() {
+    public Set<SpecId> getExcludedSpecs() {
         return excludedSpecs;
     }
 
@@ -169,7 +177,7 @@ public class FeatureGroupConfig {
         return !includedSpecs.isEmpty();
     }
 
-    public Set<String> getIncludedSpecs() {
+    public Set<SpecId> getIncludedSpecs() {
         return includedSpecs;
     }
 
@@ -189,7 +197,7 @@ public class FeatureGroupConfig {
         return includedFeatures;
     }
 
-    boolean isExcluded(String spec) {
+    boolean isExcluded(SpecId spec) {
         return excludedSpecs.contains(spec);
     }
 
@@ -197,8 +205,8 @@ public class FeatureGroupConfig {
         if (excludedFeatures.contains(featureId)) {
             return true;
         }
-        if (excludedSpecs.contains(featureId.specName)) {
-            return !includedFeatures.containsKey(featureId.specName);
+        if (excludedSpecs.contains(featureId.specId)) {
+            return !includedFeatures.containsKey(featureId);
         }
         return false;
     }
@@ -267,7 +275,7 @@ public class FeatureGroupConfig {
         }
         if(!includedSpecs.isEmpty()) {
             buf.append(" includedSpecs=");
-            final Iterator<String> i = includedSpecs.iterator();
+            final Iterator<SpecId> i = includedSpecs.iterator();
             buf.append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());
@@ -275,7 +283,7 @@ public class FeatureGroupConfig {
         }
         if(!excludedSpecs.isEmpty()) {
             buf.append(" exlcudedSpecs=");
-            final Iterator<String> i = excludedSpecs.iterator();
+            final Iterator<SpecId> i = excludedSpecs.iterator();
             buf.append(i.next());
             while(i.hasNext()) {
                 buf.append(',').append(i.next());

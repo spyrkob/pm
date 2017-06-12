@@ -65,6 +65,6 @@ public class DefaultFeatureConfigLoader implements FeatureConfigLoader {
         if(loadersBySpec == null) {
             return defaultLoader.load(featureId);
         }
-        return loadersBySpec.getOrDefault(featureId.getSpec(), defaultLoader).load(featureId);
+        return loadersBySpec.getOrDefault(featureId.getSpec().toString(), defaultLoader).load(featureId);
     }
 }

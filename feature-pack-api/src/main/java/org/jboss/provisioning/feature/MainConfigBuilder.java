@@ -70,10 +70,10 @@ public class MainConfigBuilder {
     private final FeatureSpecLoader specLoader;
     private final FeatureGroupLoader featureGroupLoader;
     private final FeatureConfigLoader featureLoader;
-    private Map<String, FeatureSpec> featureSpecs = new HashMap<>();
+    private Map<SpecId, FeatureSpec> featureSpecs = new HashMap<>();
     private boolean checkSpecRefs;
     private Map<FeatureId, ConfiguredFeature> featuresById = new HashMap<>();
-    private Map<String, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
+    private Map<SpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
 
     private List<FeatureGroupConfig> dependencyStack = null;
 
@@ -99,7 +99,7 @@ public class MainConfigBuilder {
         }
         if(!featureGroup.features.isEmpty()) {
             for(FeatureConfig feature : featureGroup.features) {
-                if(!isExcluded(feature.specName)) {
+                if(!isExcluded(feature.specId)) {
                     addFeature(feature, ADD);
                 }
             }
@@ -113,7 +113,7 @@ public class MainConfigBuilder {
     }
 
     private void addFeature(FeatureConfig config, int action) throws ProvisioningDescriptionException {
-        final FeatureSpec spec = getSpec(config.specName);
+        final FeatureSpec spec = getSpec(config.specId);
         final FeatureId id = spec.hasId() ? getId(spec.idParams, config) : null;
         if(!spec.params.isEmpty()) {
             // check that non-nillable parameters have values
@@ -127,7 +127,7 @@ public class MainConfigBuilder {
                     if(!spec.params.containsKey(paramName)) {
                         final StringBuilder buf = new StringBuilder();
                         if(id == null) {
-                            buf.append(config.specName).append(" configuration");
+                            buf.append(config.specId).append(" configuration");
                         } else {
                             buf.append(id);
                         }
@@ -159,10 +159,10 @@ public class MainConfigBuilder {
             feature = new ConfiguredFeature(id, spec, config);
             featuresById.put(id, feature);
         }
-        SpecFeatures features = featuresBySpec.get(config.specName);
+        SpecFeatures features = featuresBySpec.get(config.specId);
         if(features == null) {
             features = new SpecFeatures();
-            featuresBySpec.put(config.specName, features);
+            featuresBySpec.put(config.specId, features);
         }
         features.list.add(feature);
         if(!config.nested.isEmpty()) {
@@ -179,8 +179,8 @@ public class MainConfigBuilder {
 
     private void addNested(FeatureId parentId, FeatureConfig parent, int action) throws ProvisioningDescriptionException {
         for(FeatureConfig config : parent.nested) {
-            final FeatureSpec spec = getSpec(config.specName);
-            final String parentRef = config.parentRef == null ? parent.specName : config.parentRef;
+            final FeatureSpec spec = getSpec(config.specId);
+            final String parentRef = config.parentRef == null ? parent.specId.toString() : config.parentRef;
             final FeatureReferenceSpec refSpec = spec.refs.get(parentRef);
             if(refSpec == null) {
                 throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + spec.name);
@@ -261,7 +261,7 @@ public class MainConfigBuilder {
             for(FeatureReferenceSpec refSpec : feature.spec.refs.values()) {
                 final FeatureId refId = getRefId(feature.spec, refSpec, feature.config);
                 if(refId != null) {
-                    final SpecFeatures specFeatures = featuresBySpec.get(refId.specName);
+                    final SpecFeatures specFeatures = featuresBySpec.get(refId.specId);
                     if(!specFeatures.liningUp) {
                         lineUp(specFeatures);
                     } else {
@@ -345,7 +345,7 @@ public class MainConfigBuilder {
         dependencyStack.remove(dependencyStack.size() - 1);
     }
 
-    private boolean isExcluded(String spec) {
+    private boolean isExcluded(SpecId spec) {
         if(dependencyStack == null) {
             return false;
         }
@@ -373,7 +373,7 @@ public class MainConfigBuilder {
         return false;
     }
 
-    private FeatureSpec getSpec(String specName) throws ProvisioningDescriptionException {
+    private FeatureSpec getSpec(SpecId specName) throws ProvisioningDescriptionException {
         FeatureSpec spec = featureSpecs.get(specName);
         if(spec != null) {
             return spec;
@@ -413,9 +413,9 @@ public class MainConfigBuilder {
     private static FeatureId getId(List<FeatureParameterSpec> params, FeatureConfig config) throws ProvisioningDescriptionException {
         if(params.size() == 1) {
             final FeatureParameterSpec param = params.get(0);
-            return FeatureId.create(config.specName, param.name, getParamValue(config, param));
+            return FeatureId.create(config.specId, param.name, getParamValue(config, param));
         }
-        final FeatureId.Builder builder = FeatureId.builder(config.specName);
+        final FeatureId.Builder builder = FeatureId.builder(config.specId);
         for(FeatureParameterSpec param : params) {
             builder.addParam(param.name, getParamValue(config, param));
         }
@@ -426,7 +426,7 @@ public class MainConfigBuilder {
             throws ProvisioningDescriptionException {
         final String value = config.params.getOrDefault(param.name, param.defaultValue);
         if(value == null && (param.featureId || !param.nillable)) {
-            throw new ProvisioningDescriptionException(config.specName + " configuration is missing required parameter " + param.name);
+            throw new ProvisioningDescriptionException(config.specId + " configuration is missing required parameter " + param.name);
         }
         return value;
     }

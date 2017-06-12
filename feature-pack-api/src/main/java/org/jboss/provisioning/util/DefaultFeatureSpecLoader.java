@@ -28,6 +28,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.FeatureSpecLoader;
+import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
@@ -44,12 +45,12 @@ public class DefaultFeatureSpecLoader implements FeatureSpecLoader {
         this.baseDir = baseDir;
     }
 
-    protected Path resolvePath(String spec) {
-        return baseDir.resolve(spec).resolve(SPEC_XML);
+    protected Path resolvePath(SpecId spec) {
+        return baseDir.resolve(spec.getName()).resolve(SPEC_XML);
     }
 
     @Override
-    public FeatureSpec load(String spec) throws ProvisioningDescriptionException {
+    public FeatureSpec load(SpecId spec) throws ProvisioningDescriptionException {
         final Path path = resolvePath(spec);
         if(!Files.exists(path)) {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(path));
