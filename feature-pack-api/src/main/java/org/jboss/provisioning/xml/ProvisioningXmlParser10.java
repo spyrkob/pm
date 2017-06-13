@@ -28,8 +28,9 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.FeaturePackConfig.Builder;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -45,6 +46,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
     enum Element implements XmlNameProvider {
 
         CONFIG("config"),
+        DEFAULT_CONFIGS("default-configs"),
         EXCLUDE("exclude"),
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
@@ -105,6 +107,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
         INHERIT("inherit"),
+        MODEL("model"),
         NAME("name"),
         VERSION("version"),
 
@@ -229,17 +232,24 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
+                        case DEFAULT_CONFIGS:
+                            parseDefaultConfigs(reader, fpBuilder);
+                            break;
+                        case CONFIG:
+                            final Config config = new Config();
+                            ConfigXml.readConfig(reader, config);
+                            try {
+                                fpBuilder.addConfig(config);
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException(e);
+                            }
+                            break;
                         case PACKAGES:
                             try {
                                 FeaturePackPackagesConfigParser10.readPackages(reader, fpBuilder);
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException(e);
                             }
-                            break;
-                        case CONFIG:
-                            final FeatureGroupSpec.Builder configBuilder = FeatureGroupSpec.builder();
-                            FeatureGroupXml.readConfig(reader, configBuilder, false);
-                            fpBuilder.setFeatureGroup(configBuilder.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -252,5 +262,82 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+        boolean inherit = true;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case INHERIT:
+                    inherit = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+
+        fpBuilder.setInheritConfigs(inherit);
+
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case INCLUDE:
+                            parseConfigModelRef(reader, fpBuilder, true);
+                            break;
+                        case EXCLUDE:
+                            parseConfigModelRef(reader, fpBuilder, false);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
+        String name = null;
+        String model = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case MODEL:
+                    model = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        ParsingUtils.parseNoContent(reader);
+
+        try {
+            if (include) {
+                if (name == null) {
+                    fpBuilder.includeModel(model);
+                } else {
+                    fpBuilder.includeDefaultConfig(model, name);
+                }
+            } else if (name == null) {
+                fpBuilder.excludeModel(model);
+            } else {
+                fpBuilder.excludeDefaultConfig(model, name);
+            }
+        } catch(ProvisioningDescriptionException e) {
+            throw new XMLStreamException(e);
+        }
     }
 }

@@ -41,10 +41,11 @@
         with the possibility to exclude and/or include some of its packages.
       </xs:documentation>
     </xs:annotation>
-    <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="config" type="configType" />
-      <xs:element name="packages" type="packagesType" />
-    </xs:choice>
+    <xs:sequence maxOccurs="1" minOccurs="0">
+      <xs:element name="default-configs" type="defaultConfigsType" minOccurs="0"/>
+      <xs:element name="config" type="configType" minOccurs="0"/>
+      <xs:element name="packages" type="packagesType" minOccurs="0"/>
+    </xs:sequence>
     <xs:attribute name="groupId" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
@@ -63,6 +64,37 @@
       <xs:annotation>
         <xs:documentation>
           The version of the feature-pack artifact.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="defaultConfigsType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="include" type="configModelRefType"/>
+      <xs:element name="exclude" type="configModelRefType"/>
+    </xs:choice>
+    <xs:attribute name="inherit" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+          Indicates whether to inherit default configs from the feature-pack spec. 
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="configModelRefType">
+    <xs:attribute name="name" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Config name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="model" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Config model name
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

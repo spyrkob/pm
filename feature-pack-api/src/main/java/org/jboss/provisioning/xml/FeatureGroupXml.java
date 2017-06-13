@@ -167,7 +167,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config, boolean nameRequired) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -180,7 +180,7 @@ public class FeatureGroupXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (name == null && nameRequired) {
+        if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         config.setName(name);
