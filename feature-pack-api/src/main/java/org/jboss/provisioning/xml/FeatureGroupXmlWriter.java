@@ -60,27 +60,21 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroupSpec featureGroup, String ns) {
-        ElementNode depsE = null;
         if(featureGroup.hasExternalDependencies()) {
-            depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
             for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
-                writeExternalGroupDependency(depsE, entry.getKey(), entry.getValue(), ns);
+                writeExternalGroupDependency(configE, entry.getKey(), entry.getValue(), ns);
             }
         }
 
         if(featureGroup.hasLocalDependencies()) {
-            if(depsE == null) {
-                depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
-            }
             for(FeatureGroupConfig dep : featureGroup.getLocalDependencies()) {
-                writeFeatureGroupDependency(depsE, dep, ns);
+                writeFeatureGroupDependency(configE, dep, ns);
             }
         }
 
         if(featureGroup.hasFeatures()) {
-            final ElementNode featuresE = addElement(configE, Element.FEATURES.getLocalName(), ns);
             for(FeatureConfig fc : featureGroup.getFeatures()) {
-                addFeatureConfig(featuresE, fc, ns);
+                addFeatureConfig(configE, fc, ns);
             }
         }
     }

@@ -74,16 +74,10 @@
         Describes feature-pack configuration.
       </xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:element name="dependencies" type="dependenciesType" />
-      <xs:element name="features" type="featuresType" />
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="dependenciesType">
     <xs:choice maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="feature-pack" type="featurePackConfigDependsType" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="feature-group" type="configDependsType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="feature-pack" type="featurePackConfigDependsType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="feature-group" type="configDependsType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="feature" type="featureType" minOccurs="1" maxOccurs="1"/>
     </xs:choice>
   </xs:complexType>
 
@@ -166,12 +160,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-  </xs:complexType>
-
-  <xs:complexType name="featuresType">
-    <xs:choice maxOccurs="unbounded" minOccurs="0">
-      <xs:element name="feature" type="featureType" minOccurs="1" maxOccurs="unbounded"/>
-    </xs:choice>
   </xs:complexType>
 
   <xs:complexType name="featureType">

@@ -45,7 +45,6 @@ import org.jboss.provisioning.test.util.fs.FsTaskContext;
 import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
-import org.jboss.provisioning.xml.ConfigXmlWriter;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.FeatureSpecXmlWriter;
 
@@ -82,7 +81,6 @@ public class FeaturePackBuilder {
     private Set<Class<?>> classes = Collections.emptySet();
     private Map<String, Set<String>> services = Collections.emptyMap();
     private String pluginFileName = "plugins.jar";
-    private Map<String, Config> configs = Collections.emptyMap();
     private Map<String, FeatureSpec> specs = Collections.emptyMap();
     private FsTaskList tasks;
 
@@ -247,15 +245,6 @@ public class FeaturePackBuilder {
                     final Path featureDir = featuresDir.resolve(spec.getName());
                     ensureDir(featureDir);
                     specWriter.write(spec, featureDir.resolve(Constants.SPEC_XML));
-                }
-            }
-
-            if(!configs.isEmpty()) {
-                final Path configsDir = fpWorkDir.resolve(Constants.CONFIGS);
-                ensureDir(configsDir);
-                final ConfigXmlWriter writer = ConfigXmlWriter.getInstance();
-                for(Config config : configs.values()) {
-                    writer.write(config, configsDir.resolve(config.getName() + Constants.DOT_XML));
                 }
             }
 

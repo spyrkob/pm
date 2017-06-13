@@ -160,10 +160,6 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if(fpConfig.hasFeatureGroup()) {
-            fp.addFeatureGroup(fpConfig.getFeatureGroup());
-        }
-
         boolean resolvedPackages = false;
         final List<FeaturePackConfig> fpConfigStack = fpConfigStacks.get(fpConfig.getGav());
         if(fpConfig.isInheritPackages()) {
