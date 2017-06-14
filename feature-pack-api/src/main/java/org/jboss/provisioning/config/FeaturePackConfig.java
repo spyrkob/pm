@@ -313,6 +313,71 @@ public class FeaturePackConfig {
         return gav;
     }
 
+    public boolean isInheritDefaultConfigs() {
+        return this.inheritConfigs;
+    }
+
+    public boolean hasFullModelsIncluded() {
+        return !includedModels.isEmpty();
+    }
+
+    public Set<String> getFullModelsIncluded() {
+        return includedModels;
+    }
+
+    public boolean isFullModelIncluded(String name) {
+        return includedModels.contains(name);
+    }
+
+    public boolean hasFullModelsExcluded() {
+        return !excludedModels.isEmpty();
+    }
+
+    public Set<String> getFullModelsExcluded() {
+        return excludedModels;
+    }
+
+    public boolean isFullModelExcluded(String name) {
+        return excludedModels.contains(name);
+    }
+
+    public boolean hasExcludedConfigs() {
+        return !excludedConfigs.isEmpty();
+    }
+
+    public Set<String> getExcludedModels() {
+        return excludedConfigs.keySet();
+    }
+
+    public Set<String> getExcludedConfigs(String model) {
+        return excludedConfigs.get(model);
+    }
+
+    public boolean hasIncludedConfigs() {
+        return !includedConfigs.isEmpty();
+    }
+
+    public Set<String> getIncludedModels() {
+        return includedConfigs.keySet();
+    }
+
+    public Set<String> getIncludedConfigs(String model) {
+        return includedConfigs.get(model);
+    }
+
+    public boolean hasDefinedConfigs() {
+        return !this.configModels.isEmpty();
+    }
+
+    public Set<String> getConfigModels() {
+        return configModels.keySet();
+    }
+
+    public Collection<Config> getModelConfigs(String model) {
+        final Map<String, Config> configMap = configModels.get(model);
+        return configMap == null ? Collections.emptyList() : configMap.values();
+    }
+
     public boolean isInheritPackages() {
         return inheritPackages;
     }

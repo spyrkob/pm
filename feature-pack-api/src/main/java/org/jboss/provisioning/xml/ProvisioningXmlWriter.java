@@ -16,9 +16,12 @@
  */
 package org.jboss.provisioning.xml;
 
+import java.util.Arrays;
+
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -30,6 +33,8 @@ import org.jboss.provisioning.xml.util.ElementNode;
 public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
 
     private static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
+
+    private static final String[] EMPTY_ARRAY = new String[0];
 
     public static ProvisioningXmlWriter getInstance() {
         return INSTANCE;
@@ -57,6 +62,77 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {
             addAttribute(fp, Attribute.VERSION, featurePack.getGav().getVersion());
+        }
+
+        ElementNode defConfigsE = null;
+        if(!featurePack.isInheritDefaultConfigs()) {
+            defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+            addAttribute(defConfigsE, Attribute.INHERIT, "false");
+        }
+        if(featurePack.hasFullModelsExcluded()) {
+            if(defConfigsE == null) {
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+            }
+            final String[] array = featurePack.getFullModelsExcluded().toArray(new String[featurePack.getFullModelsExcluded().size()]);
+            Arrays.sort(array);
+            for(String name : array) {
+                final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE);
+                addAttribute(excluded, Attribute.MODEL, name);
+            }
+        }
+        if(featurePack.hasFullModelsIncluded()) {
+            if(defConfigsE == null) {
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+            }
+            final String[] array = featurePack.getFullModelsIncluded().toArray(new String[featurePack.getFullModelsIncluded().size()]);
+            Arrays.sort(array);
+            for(String name : array) {
+                final ElementNode included = addElement(defConfigsE, Element.INCLUDE);
+                addAttribute(included, Attribute.MODEL, name);
+            }
+        }
+        if(featurePack.hasExcludedConfigs()) {
+            if(defConfigsE == null) {
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+            }
+            String[] models = featurePack.getExcludedModels().toArray(EMPTY_ARRAY);
+            Arrays.sort(models);
+            for(String modelName : models) {
+                String[] configs = featurePack.getExcludedConfigs(modelName).toArray(EMPTY_ARRAY);
+                Arrays.sort(configs);
+                for(String configName : configs) {
+                    final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE);
+                    addAttribute(excluded, Attribute.MODEL, modelName);
+                    addAttribute(excluded, Attribute.NAME, configName);
+                }
+            }
+        }
+        if(featurePack.hasIncludedConfigs()) {
+            if(defConfigsE == null) {
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+            }
+            String[] models = featurePack.getIncludedModels().toArray(EMPTY_ARRAY);
+            Arrays.sort(models);
+            for(String modelName : models) {
+                String[] configs = featurePack.getIncludedConfigs(modelName).toArray(EMPTY_ARRAY);
+                Arrays.sort(configs);
+                for(String configName : configs) {
+                    final ElementNode excluded = addElement(defConfigsE, Element.INCLUDE);
+                    addAttribute(excluded, Attribute.MODEL, modelName);
+                    addAttribute(excluded, Attribute.NAME, configName);
+                }
+            }
+        }
+
+        if(featurePack.hasDefinedConfigs()) {
+            String[] models = featurePack.getConfigModels().toArray(EMPTY_ARRAY);
+            Arrays.sort(models);
+            for(String model : models) {
+                for(Config config : featurePack.getModelConfigs(model)) {
+                    fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
+                }
+            }
+
         }
 
         ElementNode packages = null;
