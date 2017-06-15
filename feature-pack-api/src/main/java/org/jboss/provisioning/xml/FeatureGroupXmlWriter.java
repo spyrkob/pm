@@ -91,7 +91,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     public static void addFeatureGroupDepBody(FeatureGroupConfig dep, String ns, final ElementNode depE) {
-        addAttribute(depE, Attribute.NAME, dep.getConfigName());
+        addAttribute(depE, Attribute.NAME, dep.getName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
         }

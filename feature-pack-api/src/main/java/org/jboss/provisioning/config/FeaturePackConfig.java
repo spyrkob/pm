@@ -313,7 +313,7 @@ public class FeaturePackConfig {
         return gav;
     }
 
-    public boolean isInheritDefaultConfigs() {
+    public boolean isInheritConfigs() {
         return this.inheritConfigs;
     }
 
@@ -345,6 +345,11 @@ public class FeaturePackConfig {
         return !excludedConfigs.isEmpty();
     }
 
+    public boolean isConfigExcluded(String model, String name) {
+        final Set<String> names = excludedConfigs.get(model);
+        return names == null ? false : names.contains(name);
+    }
+
     public Set<String> getExcludedModels() {
         return excludedConfigs.keySet();
     }
@@ -355,6 +360,11 @@ public class FeaturePackConfig {
 
     public boolean hasIncludedConfigs() {
         return !includedConfigs.isEmpty();
+    }
+
+    public boolean isConfigIncluded(String model, String name) {
+        final Set<String> names = includedConfigs.get(model);
+        return names == null ? false : names.contains(name);
     }
 
     public Set<String> getIncludedModels() {
@@ -369,11 +379,11 @@ public class FeaturePackConfig {
         return !this.configModels.isEmpty();
     }
 
-    public Set<String> getConfigModels() {
+    public Set<String> getDefinedConfigModels() {
         return configModels.keySet();
     }
 
-    public Collection<Config> getModelConfigs(String model) {
+    public Collection<Config> getDefinedConfigs(String model) {
         final Map<String, Config> configMap = configModels.get(model);
         return configMap == null ? Collections.emptyList() : configMap.values();
     }

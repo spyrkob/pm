@@ -141,31 +141,6 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
         return nested;
     }
 
-    void merge(FeatureConfig config) {
-        if (!config.params.isEmpty()) {
-            if (params.isEmpty()) {
-                params = config.params;
-            } else {
-                if (params.size() == 1) {
-                    params = new HashMap<>(params);
-                }
-                for (Map.Entry<String, String> param : config.params.entrySet()) {
-                    params.put(param.getKey(), param.getValue());
-                }
-            }
-        }
-        if (!config.dependencies.isEmpty()) {
-            if (dependencies.isEmpty()) {
-                dependencies = config.dependencies;
-            } else {
-                if (dependencies.size() == 1) {
-                    dependencies = new LinkedHashSet<>(dependencies);
-                }
-                dependencies.addAll(config.dependencies);
-            }
-        }
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;

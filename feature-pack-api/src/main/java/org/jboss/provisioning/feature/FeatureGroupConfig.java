@@ -157,7 +157,7 @@ public class FeatureGroupConfig {
         this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
     }
 
-    public String getConfigName() {
+    public String getName() {
         return featureGroupName;
     }
 

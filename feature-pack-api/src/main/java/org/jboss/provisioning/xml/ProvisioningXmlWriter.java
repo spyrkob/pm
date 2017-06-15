@@ -65,7 +65,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         }
 
         ElementNode defConfigsE = null;
-        if(!featurePack.isInheritDefaultConfigs()) {
+        if(!featurePack.isInheritConfigs()) {
             defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
             addAttribute(defConfigsE, Attribute.INHERIT, "false");
         }
@@ -125,14 +125,13 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         }
 
         if(featurePack.hasDefinedConfigs()) {
-            String[] models = featurePack.getConfigModels().toArray(EMPTY_ARRAY);
+            String[] models = featurePack.getDefinedConfigModels().toArray(EMPTY_ARRAY);
             Arrays.sort(models);
             for(String model : models) {
-                for(Config config : featurePack.getModelConfigs(model)) {
+                for(Config config : featurePack.getDefinedConfigs(model)) {
                     fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
                 }
             }
-
         }
 
         ElementNode packages = null;

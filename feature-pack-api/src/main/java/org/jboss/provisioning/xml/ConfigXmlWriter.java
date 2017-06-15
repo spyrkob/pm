@@ -62,8 +62,18 @@ public class ConfigXmlWriter extends BaseXmlWriter<Config> {
             }
         }
 
-        if(config.hasFeatureGroups()) {
-            for(FeatureGroupConfig fg : config.getFeatureGroups()) {
+        if(config.hasExternalFeatureGroups()) {
+            for(String fpDep : config.getExternalFeatureGroupSources()) {
+                final ElementNode fpE = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
+                addAttribute(fpE, Attribute.DEPENDENCY, fpDep);
+                for(FeatureGroupConfig fg : config.getExternalFeatureGroups(fpDep)) {
+                    FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
+                }
+            }
+        }
+
+        if(config.hasLocalFeatureGroups()) {
+            for(FeatureGroupConfig fg : config.getLocalFeatureGroups()) {
                 FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(configE, Element.FEATURE_GROUP.getLocalName(), ns));
             }
         }

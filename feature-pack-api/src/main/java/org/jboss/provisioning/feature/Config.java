@@ -18,12 +18,15 @@
 package org.jboss.provisioning.feature;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  *
@@ -34,7 +37,8 @@ public class Config implements BuilderWithFeatureGroups<Config> {
     String name;
     String model;
     Map<String, String> props = Collections.emptyMap();
-    List<FeatureGroupConfig> featureGroups = Collections.emptyList();
+    Map<String, Map<String, FeatureGroupConfig>> externalFgs = Collections.emptyMap();
+    Map<String, FeatureGroupConfig> localFgs = Collections.emptyMap();
     List<FeatureConfig> features = Collections.emptyList();
 
     public Config() {
@@ -65,12 +69,25 @@ public class Config implements BuilderWithFeatureGroups<Config> {
         return model;
     }
 
-    public boolean hasFeatureGroups() {
-        return !featureGroups.isEmpty();
+    public boolean hasExternalFeatureGroups() {
+        return !externalFgs.isEmpty();
     }
 
-    public List<FeatureGroupConfig> getFeatureGroups() {
-        return featureGroups;
+    public Set<String> getExternalFeatureGroupSources() {
+        return externalFgs.keySet();
+    }
+
+    public Collection<FeatureGroupConfig> getExternalFeatureGroups(String fpDep) {
+        final Map<String, FeatureGroupConfig> fgs = externalFgs.get(fpDep);
+        return fgs == null ? Collections.emptyList() : fgs.values();
+    }
+
+    public boolean hasLocalFeatureGroups() {
+        return !localFgs.isEmpty();
+    }
+
+    public Collection<FeatureGroupConfig> getLocalFeatureGroups() {
+        return localFgs.values();
     }
 
     public boolean hasFeatures() {
@@ -96,19 +113,48 @@ public class Config implements BuilderWithFeatureGroups<Config> {
 
     @Override
     public Config addFeatureGroup(String fpDep, FeatureGroupConfig fg) {
+        if(externalFgs.isEmpty()) {
+            externalFgs = Collections.singletonMap(fpDep, Collections.singletonMap(fg.getName(), fg));
+            return this;
+        }
+        Map<String, FeatureGroupConfig> fpGroups = externalFgs.get(fpDep);
+        if(fpGroups == null) {
+            if(externalFgs.size() == 1) {
+                externalFgs = new HashMap<>(externalFgs);
+            }
+            externalFgs.put(fpDep, Collections.singletonMap(fg.getName(), fg));
+        } else {
+            FeatureGroupConfig existingFg = fpGroups.get(fg.getName());
+            if(existingFg == null) {
+                if(fpGroups.size() == 1) {
+                    fpGroups = new HashMap<>(fpGroups);
+                    if(externalFgs.size() == 1) {
+                        externalFgs = Collections.singletonMap(fpDep, fpGroups);
+                    }
+                }
+                fpGroups.put(fg.getName(), fg);
+            } else {
+                throw new IllegalArgumentException("Duplicate feature-group " + fg.getName() + " for feature-pack dependency " + fpDep);
+            }
+        }
         return this;
     }
 
     @Override
-    public Config addFeatureGroup(FeatureGroupConfig fg) {
-        switch(featureGroups.size()) {
-            case 0:
-                featureGroups = Collections.singletonList(fg);
-                break;
-            case 1:
-                featureGroups = new ArrayList<>(featureGroups);
-            default:
-                featureGroups.add(fg);
+    public Config addFeatureGroup(FeatureGroupConfig fgConfig) {
+        if(localFgs.isEmpty()) {
+            localFgs = Collections.singletonMap(fgConfig.getName(), fgConfig);
+            return this;
+        }
+        final FeatureGroupConfig existingFgConfig = localFgs.get(fgConfig.getName());
+        if(existingFgConfig == null) {
+            if(localFgs.size() == 1) {
+                localFgs = new LinkedHashMap<>(localFgs);
+            }
+            localFgs.put(fgConfig.getName(), fgConfig);
+        } else {
+            // TODO merge
+            throw new IllegalArgumentException("Duplicate feature-group " + fgConfig.getName());
         }
         return this;
     }
@@ -138,7 +184,7 @@ public class Config implements BuilderWithFeatureGroups<Config> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((featureGroups == null) ? 0 : featureGroups.hashCode());
+        result = prime * result + ((localFgs == null) ? 0 : localFgs.hashCode());
         result = prime * result + ((features == null) ? 0 : features.hashCode());
         result = prime * result + ((model == null) ? 0 : model.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -155,10 +201,10 @@ public class Config implements BuilderWithFeatureGroups<Config> {
         if (getClass() != obj.getClass())
             return false;
         Config other = (Config) obj;
-        if (featureGroups == null) {
-            if (other.featureGroups != null)
+        if (localFgs == null) {
+            if (other.localFgs != null)
                 return false;
-        } else if (!featureGroups.equals(other.featureGroups))
+        } else if (!localFgs.equals(other.localFgs))
             return false;
         if (features == null) {
             if (other.features != null)
@@ -202,11 +248,11 @@ public class Config implements BuilderWithFeatureGroups<Config> {
                 buf.append(',').append(next.getKey()).append('=').append(next.getValue());
             }
         }
-        if(!featureGroups.isEmpty()) {
-            buf.append(' ').append(featureGroups.get(0));
+        if(!localFgs.isEmpty()) {
+            buf.append(' ').append(localFgs.get(0));
             int i = 1;
-            while(i < featureGroups.size()) {
-                final FeatureGroupConfig dep = featureGroups.get(i++);
+            while(i < localFgs.size()) {
+                final FeatureGroupConfig dep = localFgs.get(i++);
                 buf.append(',').append(dep);
             }
         }
