@@ -25,9 +25,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -47,6 +49,7 @@ import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.SpecId;
@@ -310,10 +313,94 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private void processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
-        modelBuilder.pushConfig(fp.gav.toGa(), fgConfig);
+        modelBuilder.pushConfig(fp.gav.toGa(), resolveFeatureGroupConfig(fp, fgConfig));
         FeatureGroupSpec fgSpec = fp.getFeatureGroupSpec(fgConfig.getName());
         processFeatureGroupSpec(modelBuilder, fp, fgSpec);
         modelBuilder.popConfig(fp.gav.toGa());
+    }
+
+    private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig();
+        resolvedFgc.inheritFeatures = fpConfig.isInheritFeatures();
+        if(fpConfig.hasExcludedSpecs()) {
+            resolvedFgc.excludedSpecs = resolveSpecs(fp, fpConfig.getExcludedSpecs());
+        }
+        if(fpConfig.hasIncludedSpecs()) {
+            resolvedFgc.includedSpecs = resolveSpecs(fp, fpConfig.getIncludedSpecs());
+        }
+        if(fpConfig.hasExcludedFeatures()) {
+            resolvedFgc.excludedFeatures = resolveFeatureSet(fp, fpConfig.getExcludedFeatures());
+        }
+        if(fpConfig.hasIncludedFeatures()) {
+            resolvedFgc.includedFeatures = resolveFeatureMap(fp, fpConfig.getIncludedFeatures());
+        }
+        return resolvedFgc;
+    }
+
+    private Map<ResolvedFeatureId, FeatureConfig> resolveFeatureMap(FeaturePackRuntime.Builder fp, Map<FeatureId, FeatureConfig> features) throws ProvisioningException {
+        if (features.size() == 1) {
+            final Map.Entry<FeatureId, FeatureConfig> excluded = features.entrySet().iterator().next();
+            return Collections.singletonMap(resolveFeatureId(fp, excluded.getKey()), excluded.getValue());
+        }
+        final Map<ResolvedFeatureId, FeatureConfig> tmp = new HashMap<>(features.size());
+        for (Map.Entry<FeatureId, FeatureConfig> excluded : features.entrySet()) {
+            tmp.put(resolveFeatureId(fp, excluded.getKey()), excluded.getValue());
+        }
+        return tmp;
+    }
+
+    private Set<ResolvedFeatureId> resolveFeatureSet(FeaturePackRuntime.Builder fp, Set<FeatureId> features) throws ProvisioningException {
+        if (features.size() == 1) {
+            final FeatureId excludedId = features.iterator().next();
+            return Collections.singleton(resolveFeatureId(fp, excludedId));
+        }
+        final Set<ResolvedFeatureId> tmp = new HashSet<>(features.size());
+        for (FeatureId excludedId : features) {
+            tmp.add(resolveFeatureId(fp, excludedId));
+        }
+        return tmp;
+    }
+
+    private ResolvedFeatureId resolveFeatureId(FeaturePackRuntime.Builder fp, final FeatureId featureId)
+            throws ProvisioningException {
+        final SpecId specId = featureId.getSpec();
+        FeaturePackRuntime.Builder targetFp = fp;
+        if (specId.getFpDepName() != null) {
+            final FeaturePackDependencySpec fpDep = fp.spec.getDependency(specId.getFpDepName());
+            if (fpDep == null) {
+                throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, specId.getFpDepName()));
+            }
+            targetFp = getRtBuilder(fpDep.getTarget().getGav());
+        }
+        return new ResolvedFeatureId(new ResolvedSpecId(targetFp.gav.toGa(), specId.getName()), featureId.getParams());
+    }
+
+    private Set<ResolvedSpecId> resolveSpecs(FeaturePackRuntime.Builder fp, Set<SpecId> specs) throws ProvisioningException {
+        if(specs.size() == 1) {
+            final SpecId excludedSpecId = specs.iterator().next();
+            FeaturePackRuntime.Builder targetFp = fp;
+            if(excludedSpecId.getFpDepName() != null) {
+                final FeaturePackDependencySpec fpDep = fp.spec.getDependency(excludedSpecId.getFpDepName());
+                if(fpDep == null) {
+                    throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, excludedSpecId.getFpDepName()));
+                }
+                targetFp = getRtBuilder(fpDep.getTarget().getGav());
+            }
+            return Collections.singleton(new ResolvedSpecId(targetFp.gav.toGa(), excludedSpecId.getName()));
+        }
+        final Set<ResolvedSpecId> tmp = new HashSet<>(specs.size());
+        FeaturePackRuntime.Builder targetFp = fp;
+        for (SpecId excludedSpecId : specs) {
+            if (excludedSpecId.getFpDepName() != null) {
+                final FeaturePackDependencySpec fpDep = fp.spec.getDependency(excludedSpecId.getFpDepName());
+                if (fpDep == null) {
+                    throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, excludedSpecId.getFpDepName()));
+                }
+                targetFp = getRtBuilder(fpDep.getTarget().getGav());
+            }
+            tmp.add(new ResolvedSpecId(targetFp.gav.toGa(), excludedSpecId.getName()));
+        }
+        return tmp;
     }
 
     private void processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, AbstractFeatureGroup fgSpec) throws ProvisioningException {
@@ -349,10 +436,10 @@ public class ProvisioningRuntimeBuilder {
             }
             targetFp = getRtBuilder(fpDep.getTarget().getGav());
         }
-        final FeatureSpec featureSpec = targetFp.getFeatureSpec(specId.getName());
+        final FeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
         final ResolvedSpecId resolvedSpecId = new ResolvedSpecId(targetFp.gav.toGa(), specId.getName());
-        final ResolvedFeatureId resolvedFeatureId = featureSpec.hasId() ? getFeatureId(resolvedSpecId, featureSpec.getIdParams(), fc.getParams()) : null;
-        modelBuilder.processFeature(resolvedFeatureId, fc, featureSpec);
+        final ResolvedFeatureId resolvedFeatureId = spec.hasId() ? getFeatureId(resolvedSpecId, spec.getIdParams(), fc.getParams()) : null;
+        modelBuilder.processFeature(resolvedFeatureId, fc);
 
         if(fc.hasNested()) {
             for(FeatureConfig nested : fc.getNested()) {

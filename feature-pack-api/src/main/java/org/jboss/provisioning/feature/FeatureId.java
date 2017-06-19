@@ -165,6 +165,10 @@ public class FeatureId {
         return params.get(name);
     }
 
+    public Map<String, String> getParams() {
+        return params;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

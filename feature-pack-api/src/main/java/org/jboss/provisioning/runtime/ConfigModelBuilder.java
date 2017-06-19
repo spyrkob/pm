@@ -25,8 +25,6 @@ import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureSpec;
 
 /**
  *
@@ -53,15 +51,15 @@ public class ConfigModelBuilder {
     final String model;
     final String name;
 
-    private Map<ArtifactCoords.Ga, List<FeatureGroupConfig>> fgConfigStacks = new HashMap<>();
+    private Map<ArtifactCoords.Ga, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
     private ConfigModelBuilder(String model, String name) {
         this.model = model;
         this.name = name;
     }
 
-    public void pushConfig(ArtifactCoords.Ga ga, FeatureGroupConfig fgConfig) {
-        List<FeatureGroupConfig> fgConfigStack = fgConfigStacks.get(ga);
+    public void pushConfig(ArtifactCoords.Ga ga, ResolvedFeatureGroupConfig fgConfig) {
+        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(ga);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
             fgConfigStacks.put(ga, fgConfigStack);
@@ -70,7 +68,7 @@ public class ConfigModelBuilder {
     }
 
     public void popConfig(ArtifactCoords.Ga ga) {
-        final List<FeatureGroupConfig> stack = fgConfigStacks.get(ga);
+        final List<ResolvedFeatureGroupConfig> stack = fgConfigStacks.get(ga);
         if(stack == null) {
             throw new IllegalStateException("Feature group stack is null for " + ga);
         }
@@ -80,21 +78,34 @@ public class ConfigModelBuilder {
         stack.remove(stack.size() - 1);
     }
 
-    public void processFeature(ResolvedFeatureId id, FeatureConfig config, FeatureSpec spec) {
-
-//        final List<FeatureGroupConfig> fgConfigStack = fgConfigStacks.get(id.specId.ga);
-//        int i = fgConfigStack.size() - 1;
-//        while(i >= 0) {
-//            final FeatureGroupConfig fgConfig = fgConfigStack.get(i--);
-//            if(fgConfig.isInheritFeatures()) {
-//                if(fgConfig.hasExcludedSpecs()) {
-//
-//                } else {
-//
-//                }
-//            }
-//        }
-//
-//        System.out.println(model + ':' + name + "> " + id);
+    public void processFeature(ResolvedFeatureId id, FeatureConfig config) {
+        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(id.specId.ga);
+        if (fgConfigStack != null) {
+            int i = fgConfigStack.size() - 1;
+            while (i >= 0) {
+                final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
+                if (fgConfig.inheritFeatures) {
+                    if(fgConfig.excludedFeatures.contains(id)) {
+                        return;
+                    }
+                    if (fgConfig.excludedSpecs.contains(id.specId)) {
+                        if(fgConfig.includedFeatures.containsKey(id)) {
+                            continue;
+                        }
+                        return;
+                    }
+                } else {
+                    if(fgConfig.includedFeatures.containsKey(id)) {
+                        continue;
+                    }
+                    if(fgConfig.includedSpecs.contains(id.specId)) {
+                        if(fgConfig.excludedFeatures.contains(id)) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println(model + ':' + name + "> " + id);
     }
 }
