@@ -174,10 +174,10 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             }
                             break;
                         case CONFIG:
-                            final Config config = new Config();
+                            final Config.Builder config = Config.builder();
                             ConfigXml.readConfig(reader, config);
                             try {
-                                fpBuilder.addConfig(config);
+                                fpBuilder.addConfig(config.build());
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
                             }

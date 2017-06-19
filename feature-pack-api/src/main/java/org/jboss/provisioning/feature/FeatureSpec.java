@@ -124,6 +124,10 @@ public class FeatureSpec {
         return !idParams.isEmpty();
     }
 
+    public List<FeatureParameterSpec> getIdParams() {
+        return idParams;
+    }
+
     public boolean hasRefs() {
         return !refs.isEmpty();
     }

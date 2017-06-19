@@ -14,31 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.provisioning.runtime;
 
-package org.jboss.provisioning.feature;
-
-import java.util.Map;
+import org.jboss.provisioning.ArtifactCoords;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class ResolvedFeatureId {
+class ResolvedSpecId {
+    final ArtifactCoords.Ga ga;
+    final String name;
 
-    final ResolvedSpecId specId;
-    final Map<String, String> params;
-
-    ResolvedFeatureId(ResolvedSpecId specId, Map<String, String> params) {
-        this.specId = specId;
-        this.params = params;
+    ResolvedSpecId(ArtifactCoords.Ga ga, String name) {
+        this.ga = ga;
+        this.name = name;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
-        result = prime * result + ((specId == null) ? 0 : specId.hashCode());
+        result = prime * result + ((ga == null) ? 0 : ga.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
 
@@ -50,17 +48,22 @@ class ResolvedFeatureId {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ResolvedFeatureId other = (ResolvedFeatureId) obj;
-        if (params == null) {
-            if (other.params != null)
+        ResolvedSpecId other = (ResolvedSpecId) obj;
+        if (ga == null) {
+            if (other.ga != null)
                 return false;
-        } else if (!params.equals(other.params))
+        } else if (!ga.equals(other.ga))
             return false;
-        if (specId == null) {
-            if (other.specId != null)
+        if (name == null) {
+            if (other.name != null)
                 return false;
-        } else if (!specId.equals(other.specId))
+        } else if (!name.equals(other.name))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return ga + "#" + name;
     }
 }

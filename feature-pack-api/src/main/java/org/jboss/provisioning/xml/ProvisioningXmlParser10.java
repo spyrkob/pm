@@ -236,10 +236,10 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                             parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final Config config = new Config();
-                            ConfigXml.readConfig(reader, config);
+                            final Config.Builder configBuilder = Config.builder();
+                            ConfigXml.readConfig(reader, configBuilder);
                             try {
-                                fpBuilder.addConfig(config);
+                                fpBuilder.addConfig(configBuilder.build());
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException(e);
                             }

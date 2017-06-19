@@ -18,10 +18,13 @@
 package org.jboss.provisioning.feature;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
@@ -38,6 +41,46 @@ public class MainConfigBuilder {
     private static class SpecFeatures {
         List<ConfiguredFeature> list = new ArrayList<>();
         boolean liningUp;
+    }
+
+    private static class ConfiguredFeature {
+        final FeatureId id;
+        final FeatureSpec spec;
+        Map<String, String> params = Collections.emptyMap();
+        Set<FeatureId> dependencies = Collections.emptySet();
+        boolean liningUp;
+
+        ConfiguredFeature(FeatureId id, FeatureSpec spec, FeatureConfig config) {
+            this.id = id;
+            this.spec = spec;
+            this.params = config.params;
+            this.dependencies = config.dependencies;
+        }
+
+        void merge(FeatureConfig config) {
+            if (!config.params.isEmpty()) {
+                if (params.isEmpty()) {
+                    params = config.params;
+                } else {
+                    if (params.size() == 1) {
+                        params = new HashMap<>(params);
+                    }
+                    for (Map.Entry<String, String> param : config.params.entrySet()) {
+                        params.put(param.getKey(), param.getValue());
+                    }
+                }
+            }
+            if (!config.dependencies.isEmpty()) {
+                if (dependencies.isEmpty()) {
+                    dependencies = config.dependencies;
+                } else {
+                    if (dependencies.size() == 1) {
+                        dependencies = new LinkedHashSet<>(dependencies);
+                    }
+                    dependencies.addAll(config.dependencies);
+                }
+            }
+        }
     }
 
     public static MainConfigBuilder newInstance(FeatureSpecLoader specLoader) {
@@ -78,7 +121,7 @@ public class MainConfigBuilder {
         return addFeatureGroup(featureGroupLoader.load(fgSource, fgName));
     }
 
-    public MainConfigBuilder addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
+    public MainConfigBuilder addFeatureGroup(AbstractFeatureGroup featureGroup) throws ProvisioningDescriptionException {
         if(!featureGroup.localGroups.isEmpty()) {
             for(FeatureGroupConfig dep : featureGroup.localGroups) {
                 processDependency(dep);

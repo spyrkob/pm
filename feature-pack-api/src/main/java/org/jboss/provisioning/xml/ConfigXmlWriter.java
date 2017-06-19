@@ -21,6 +21,7 @@ import java.util.Map;
 import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.xml.ConfigXml.Attribute;
 import org.jboss.provisioning.xml.ConfigXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -62,18 +63,18 @@ public class ConfigXmlWriter extends BaseXmlWriter<Config> {
             }
         }
 
-        if(config.hasExternalFeatureGroups()) {
-            for(String fpDep : config.getExternalFeatureGroupSources()) {
+        if(config.hasExternalDependencies()) {
+            for(Map.Entry<String, FeatureGroupSpec> entry : config.getExternalDependencies().entrySet()) {
                 final ElementNode fpE = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
-                addAttribute(fpE, Attribute.DEPENDENCY, fpDep);
-                for(FeatureGroupConfig fg : config.getExternalFeatureGroups(fpDep)) {
+                addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
+                for(FeatureGroupConfig fg : entry.getValue().getLocalDependencies()) {
                     FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
                 }
             }
         }
 
-        if(config.hasLocalFeatureGroups()) {
-            for(FeatureGroupConfig fg : config.getLocalFeatureGroups()) {
+        if(config.hasLocalDependencies()) {
+            for(FeatureGroupConfig fg : config.getLocalDependencies()) {
                 FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(configE, Element.FEATURE_GROUP.getLocalName(), ns));
             }
         }

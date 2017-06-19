@@ -26,8 +26,8 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupLoader;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 
 /**

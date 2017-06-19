@@ -157,7 +157,7 @@ public class ConfigXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -207,7 +207,7 @@ public class ConfigXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProps(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
+    private static void readProps(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -233,7 +233,7 @@ public class ConfigXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProp(XMLExtendedStreamReader reader, Config config) throws XMLStreamException {
+    private static void readProp(XMLExtendedStreamReader reader, Config.Builder config) throws XMLStreamException {
         String name = null;
         String value = null;
         final int count = reader.getAttributeCount();

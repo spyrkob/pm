@@ -17,6 +17,8 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,13 +35,16 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.xml.FeatureGroupXmlParser;
+import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
  *
@@ -51,8 +56,9 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         final ArtifactCoords.Gav gav;
         final Path dir;
         FeaturePackSpec spec;
-        FeaturePackConfig config;
         boolean ordered;
+        private Map<String, FeatureSpec> featureSpecs = null;
+        private Map<String, FeatureGroupSpec> fgSpecs = null;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
@@ -78,6 +84,50 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         void addPackage(String name) {
             pkgOrder.add(name);
+        }
+
+        FeatureGroupSpec getFeatureGroupSpec(String name) throws ProvisioningException {
+            FeatureGroupSpec fgSpec = null;
+            if(fgSpecs == null) {
+                fgSpecs = new HashMap<>();
+            } else {
+                fgSpec = fgSpecs.get(name);
+            }
+            if(fgSpec == null) {
+                final Path specXml = dir.resolve(Constants.FEATURE_GROUPS).resolve(name + ".xml");
+                if(!Files.exists(specXml)) {
+                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+                }
+                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
+                    fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
+                } catch (Exception e) {
+                    throw new ProvisioningException(Errors.parseXml(specXml));
+                }
+                fgSpecs.put(name, fgSpec);
+            }
+            return fgSpec;
+        }
+
+        FeatureSpec getFeatureSpec(String name) throws ProvisioningException {
+            FeatureSpec spec = null;
+            if(featureSpecs == null) {
+                featureSpecs = new HashMap<>();
+            } else {
+                spec = featureSpecs.get(name);
+            }
+            if(spec == null) {
+                final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
+                if(!Files.exists(specXml)) {
+                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+                }
+                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
+                    spec = FeatureSpecXmlParser.getInstance().parse(reader);
+                } catch (Exception e) {
+                    throw new ProvisioningException(Errors.parseXml(specXml));
+                }
+                featureSpecs.put(name, spec);
+            }
+            return spec;
         }
 
         FeaturePackRuntime build(PackageParameterResolver paramResolver) throws ProvisioningException {

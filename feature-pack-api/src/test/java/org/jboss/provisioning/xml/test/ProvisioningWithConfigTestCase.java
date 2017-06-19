@@ -50,7 +50,7 @@ public class ProvisioningWithConfigTestCase {
                         .excludeModel("model2")
                         .excludeDefaultConfig("model1", "name1")
                         .includeDefaultConfig("model2", "name2")
-                        .addConfig(new Config()
+                        .addConfig(Config.builder()
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
@@ -75,7 +75,8 @@ public class ProvisioningWithConfigTestCase {
                                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                                         .addDependency(FeatureId.fromString("spec3:p3=v3"))
                                         .setParam("p1", "v3")
-                                        .setParam("p2", "v4")))
+                                        .setParam("p2", "v4"))
+                                .build())
                         .build())
                 .build();
         Assert.assertEquals(expected, found);
