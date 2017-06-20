@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.config.test;
+package org.jboss.provisioning.config.model.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -28,8 +28,6 @@ import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 
 /**
@@ -54,7 +52,6 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
                             .setParam("p1", "config1"))
                     .build())
             .newPackage("p1", true)
-                .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -71,13 +68,6 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")
                         .build())
-                .build();
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("fp1/p1.txt", "p1")
                 .build();
     }
 }

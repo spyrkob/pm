@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.config.wf;
+package org.jboss.provisioning.config.wf;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

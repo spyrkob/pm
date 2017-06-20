@@ -141,12 +141,25 @@ public class FeatureGroupConfig {
         return new Builder(featureGroupName, inheritFeatures);
     }
 
+    public static FeatureGroupConfig forGroup(String featureGroupName) {
+        return new FeatureGroupConfig(featureGroupName);
+    }
+
     final String featureGroupName;
     final boolean inheritFeatures;
     final Set<SpecId> includedSpecs;
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<SpecId> excludedSpecs;
     final Set<FeatureId> excludedFeatures;
+
+    private FeatureGroupConfig(String name) {
+        this.featureGroupName = name;
+        this.inheritFeatures = true;
+        this.includedSpecs = Collections.emptySet();
+        this.includedFeatures = Collections.emptyMap();
+        this.excludedSpecs = Collections.emptySet();
+        this.excludedFeatures = Collections.emptySet();
+    }
 
     private FeatureGroupConfig(Builder builder) {
         this.featureGroupName = builder.featureGroupName;

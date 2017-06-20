@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.config.xml;
+package org.jboss.provisioning.config.xml;
 
 import static org.junit.Assert.assertEquals;
 

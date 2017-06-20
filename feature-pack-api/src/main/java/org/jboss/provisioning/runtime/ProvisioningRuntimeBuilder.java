@@ -134,6 +134,7 @@ public class ProvisioningRuntimeBuilder {
         for (FeaturePackConfig fpConfig : fpConfigs) {
             processFpConfig(fpConfig);
         }
+        buildConfigs();
 
         switch(fpRtBuildersOrdered.size()) {
             case 0: {
@@ -157,6 +158,38 @@ public class ProvisioningRuntimeBuilder {
         }
 
         return new ProvisioningRuntime(this);
+    }
+
+    private void buildConfigs() throws ProvisioningException {
+        if(!anonymousConfigs.isEmpty()) {
+            for(ConfigModelBuilder config : anonymousConfigs) {
+                config.lineUp();
+            }
+        }
+        if(!noModelNamedConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> entry : noModelNamedConfigs.entrySet()) {
+                entry.getValue().lineUp();
+            }
+        }
+
+        if(!noNameModelConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> entry : noNameModelConfigs.entrySet()) {
+                final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
+                if(targetConfigs == null) {
+                    entry.getValue().lineUp();
+                    continue;
+                }
+                for(Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                    throw new IllegalStateException("model-based config merging is not implemented yet"); //TODO
+                }
+            }
+        }
+
+        for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
+            for(Map.Entry<String, ConfigModelBuilder> configEntry : configMap.entrySet()) {
+                configEntry.getValue().lineUp();
+            }
+        }
     }
 
     private void processFpConfig(FeaturePackConfig fpConfig) throws ProvisioningException {
@@ -439,11 +472,11 @@ public class ProvisioningRuntimeBuilder {
         final FeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
         final ResolvedSpecId resolvedSpecId = new ResolvedSpecId(targetFp.gav.toGa(), specId.getName());
         final ResolvedFeatureId resolvedFeatureId = spec.hasId() ? getFeatureId(resolvedSpecId, spec.getIdParams(), fc.getParams()) : null;
-        modelBuilder.processFeature(resolvedFeatureId, fc);
-
-        if(fc.hasNested()) {
-            for(FeatureConfig nested : fc.getNested()) {
-                processFeature(modelBuilder, targetFp, nested);
+        if(modelBuilder.processFeature(resolvedFeatureId, resolvedSpecId, spec, fc)) {
+            if (fc.hasNested()) {
+                for (FeatureConfig nested : fc.getNested()) {
+                    processFeature(modelBuilder, targetFp, nested);
+                }
             }
         }
     }
