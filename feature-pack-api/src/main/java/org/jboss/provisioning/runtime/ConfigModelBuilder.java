@@ -29,6 +29,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 
 
@@ -39,8 +40,13 @@ import org.jboss.provisioning.feature.FeatureSpec;
 public class ConfigModelBuilder {
 
     private static class SpecFeatures {
+        final FeatureSpec spec;
         List<ConfiguredFeature> list = new ArrayList<>();
         boolean liningUp;
+
+        private SpecFeatures(FeatureSpec spec) {
+            this.spec = spec;
+        }
     }
 
     private static class ConfiguredFeature {
@@ -76,6 +82,7 @@ public class ConfigModelBuilder {
     final String name;
     private Map<ResolvedFeatureId, ConfiguredFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
+    private boolean checkRefs;
 
     private Map<ArtifactCoords.Ga, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
@@ -104,7 +111,7 @@ public class ConfigModelBuilder {
         stack.remove(stack.size() - 1);
     }
 
-    public boolean processFeature(ResolvedFeatureId id, ResolvedSpecId specId,FeatureSpec spec, FeatureConfig config) {
+    public boolean processFeature(ResolvedFeatureId id, ResolvedSpecId specId, FeatureSpec spec, FeatureConfig config) {
         if(id != null && featuresById.containsKey(id)) {
             return false;
         }
@@ -141,10 +148,11 @@ public class ConfigModelBuilder {
         }
         SpecFeatures features = featuresBySpec.get(specId);
         if(features == null) {
-            features = new SpecFeatures();
+            features = new SpecFeatures(spec);
             featuresBySpec.put(specId, features);
         }
         features.list.add(feature);
+        checkRefs = spec.hasRefs();
 
         System.out.println(model + ':' + name + "> added " + id);
 
@@ -153,5 +161,42 @@ public class ConfigModelBuilder {
 
     public void lineUp() throws ProvisioningException {
         System.out.println(model + ':' + name + "> line up");
+
+        if(checkRefs) {
+            for(SpecFeatures specFeatures : featuresBySpec.values()) {
+                final FeatureSpec spec = specFeatures.spec;
+                if(!spec.hasRefs()) {
+                    continue;
+                }
+                for(FeatureReferenceSpec refSpec : spec.getRefs()) {
+/*                    final FeatureSpec targetSpec = featuresBySpec.get(refSpec.getFeature());
+                    if(targetSpec == null) {
+                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
+                    }
+                    if(!targetSpec.hasId()) {
+                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
+                                + refSpec.name + " which targets feature " + refSpec.feature + " that has no ID parameters");
+                    }
+                    if(targetSpec.idParams.size() != refSpec.localParams.length) {
+                        throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.name + " of feature " + spec.name +
+                                " must correspond to the ID parameters of the target feature " + refSpec.feature);
+                    }
+                    for(int i = 0; i < refSpec.localParams.length; ++i) {
+                        if(!spec.params.containsKey(refSpec.localParams[i])) {
+                            throw new ProvisioningDescriptionException(spec.name
+                                    + " feature does not include parameter " + refSpec.localParams[i] + " mapped in "
+                                    + refSpec.name + " reference");
+                        }
+                        if(!targetSpec.params.containsKey(refSpec.targetParams[i])) {
+                            throw new ProvisioningDescriptionException(targetSpec.name
+                                    + " feature does not include parameter '" + refSpec.targetParams[i] + "' targeted from "
+                                    + spec.name + " through " + refSpec.name + " reference");
+                        }
+                    }
+*/                }
+            }
+        }
+
     }
 }
