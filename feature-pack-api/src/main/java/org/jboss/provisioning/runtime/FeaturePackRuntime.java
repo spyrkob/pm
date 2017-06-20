@@ -65,7 +65,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
 
-        private List<FeaturePackConfig> stack = Collections.emptyList();
+        List<FeaturePackConfig> stack = Collections.emptyList();
         private FeaturePackConfig blockedPackageInheritance;
         private FeaturePackConfig blockedConfigInheritance;
 
