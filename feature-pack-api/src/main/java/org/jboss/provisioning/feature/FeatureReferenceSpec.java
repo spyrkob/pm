@@ -82,6 +82,14 @@ public class FeatureReferenceSpec {
         return new Builder(feature);
     }
 
+    public static FeatureReferenceSpec create(String str) throws ProvisioningDescriptionException {
+        return create(SpecId.fromString(str));
+    }
+
+    public static FeatureReferenceSpec create(String str, boolean nillable) throws ProvisioningDescriptionException {
+        return create(SpecId.fromString(str), nillable);
+    }
+
     public static FeatureReferenceSpec create(SpecId feature) throws ProvisioningDescriptionException {
         return create(feature.toString(), feature, false);
     }

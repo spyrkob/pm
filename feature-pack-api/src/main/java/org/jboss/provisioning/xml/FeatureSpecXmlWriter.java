@@ -82,7 +82,7 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                 if(paramSpec.isFeatureId()) {
                     addAttribute(paramE, Attribute.FEATURE_ID, TRUE);
                 } else if(paramSpec.isNillable()) {
-                    addAttribute(paramE, Attribute.NILLABLE, FALSE);
+                    addAttribute(paramE, Attribute.NILLABLE, TRUE);
                 }
                 if(paramSpec.hasDefaultValue()) {
                     addAttribute(paramE, Attribute.DEFAULT, paramSpec.getDefaultValue());

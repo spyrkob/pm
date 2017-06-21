@@ -27,8 +27,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 
@@ -39,26 +41,82 @@ import org.jboss.provisioning.feature.FeatureSpec;
  */
 public class ConfigModelBuilder {
 
-    private static class SpecFeatures {
+    private class SpecFeatures {
         final FeatureSpec spec;
+        private Map<String, ResolvedSpecId> featureRefTargets = Collections.emptyMap();
         List<ConfiguredFeature> list = new ArrayList<>();
         boolean liningUp;
 
         private SpecFeatures(FeatureSpec spec) {
             this.spec = spec;
         }
+
+        void setRefTarget(String name, ResolvedSpecId targetSpec) throws ProvisioningDescriptionException {
+            if(featureRefTargets.containsKey(name)) {
+                return;
+            }
+            switch(featureRefTargets.size()) {
+                case 0:
+                    featureRefTargets = Collections.singletonMap(name, targetSpec);
+                    break;
+                case 1:
+                    final Map.Entry<String, ResolvedSpecId> entry = featureRefTargets.entrySet().iterator().next();
+                    featureRefTargets = new HashMap<>(2);
+                    featureRefTargets.put(entry.getKey(), entry.getValue());
+                default:
+                    if(featureRefTargets.put(name, targetSpec) != null) {
+                        throw new ProvisioningDescriptionException("Duplicate feature reference name '" + name + "'");
+                    }
+            }
+        }
+
+        void checkRefs() throws ProvisioningDescriptionException {
+            if (featureRefTargets.isEmpty()) {
+                return;
+            }
+            for (Map.Entry<String, ResolvedSpecId> entry : featureRefTargets.entrySet()) {
+                final FeatureReferenceSpec refSpec = spec.getRef(entry.getKey());
+                final SpecFeatures targetSpec = featuresBySpec.get(entry.getValue());
+                if(targetSpec == null) {
+                    throw new ProvisioningDescriptionException(spec.getName() + " feature declares reference "
+                            + refSpec.getName() + " which targets unknown feature " + entry.getValue());
+                }
+                if (!targetSpec.spec.hasId()) {
+                    throw new ProvisioningDescriptionException(spec.getName() + " feature declares reference "
+                            + refSpec.getName() + " which targets feature " + targetSpec.spec.getName()
+                            + " that has no ID parameters");
+                }
+                if (targetSpec.spec.getIdParams().size() != refSpec.getParamsMapped()) {
+                    throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.getName() + " of feature "
+                            + spec.getName() + " must correspond to the ID parameters of the target feature "
+                            + targetSpec.spec.getName());
+                }
+                for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                    if (!spec.hasParam(refSpec.getLocalParam(i))) {
+                        throw new ProvisioningDescriptionException(spec.getName() + " feature does not include parameter "
+                                + refSpec.getLocalParam(i) + " mapped in reference " + refSpec.getName());
+                    }
+                    if (!targetSpec.spec.hasParam(refSpec.getTargetParam(i))) {
+                        throw new ProvisioningDescriptionException(targetSpec.spec.getName()
+                                + " feature does not include parameter '" + refSpec.getTargetParam(i) + "' targeted from "
+                                + spec.getName() + " through reference " + refSpec.getName());
+                    }
+                }
+            }
+        }
     }
 
     private static class ConfiguredFeature {
         final ResolvedFeatureId id;
         final FeatureSpec spec;
-        Map<String, String> params = Collections.emptyMap();
+        Map<String, String> params;
         Set<ResolvedFeatureId> dependencies = Collections.emptySet();
         boolean liningUp;
 
-        ConfiguredFeature(ResolvedFeatureId id, FeatureSpec spec) {
+        ConfiguredFeature(ResolvedFeatureId id, FeatureSpec spec, Map<String, String> params) {
             this.id = id;
             this.spec = spec;
+            this.params = params;
         }
     }
 
@@ -142,7 +200,7 @@ public class ConfigModelBuilder {
                 }
             }
         }
-        ConfiguredFeature feature = new ConfiguredFeature(id, spec);
+        ConfiguredFeature feature = new ConfiguredFeature(id, spec, config.getParams());
         if(id != null) {
             featuresById.put(id, feature);
         }
@@ -152,51 +210,151 @@ public class ConfigModelBuilder {
             featuresBySpec.put(specId, features);
         }
         features.list.add(feature);
-        checkRefs = spec.hasRefs();
 
-        System.out.println(model + ':' + name + "> added " + id);
+        System.out.println(model + ':' + name + "> processed " + id);
 
         return true;
     }
 
-    public void lineUp() throws ProvisioningException {
-        System.out.println(model + ':' + name + "> line up");
+    void setFeatureRefTarget(ResolvedSpecId srcSpecId, String refName, ResolvedSpecId targetSpecId) throws ProvisioningDescriptionException {
+        featuresBySpec.get(srcSpecId).setRefTarget(refName, targetSpecId);
+        checkRefs = true;
+    }
 
+    public void lineUp() throws ProvisioningException {
+        System.out.println(model + ':' + name + "> lining up");
         if(checkRefs) {
             for(SpecFeatures specFeatures : featuresBySpec.values()) {
-                final FeatureSpec spec = specFeatures.spec;
-                if(!spec.hasRefs()) {
-                    continue;
+                specFeatures.checkRefs();
+            }
+        }
+        for(SpecFeatures features : featuresBySpec.values()) {
+            lineUp(features);
+        }
+    }
+
+    private void lineUp(SpecFeatures features) throws ProvisioningDescriptionException {
+        if(features.liningUp) {
+            return;
+        }
+        features.liningUp = true;
+        for(ConfiguredFeature feature : features.list) {
+            lineUp(features, feature);
+        }
+    }
+
+    private void lineUp(SpecFeatures specFeatures, ConfiguredFeature feature) throws ProvisioningDescriptionException {
+        if(feature.liningUp) {
+            return;
+        }
+        feature.liningUp = true;
+
+        if(!specFeatures.featureRefTargets.isEmpty()) {
+            for(Map.Entry<String, ResolvedSpecId> refEntry : specFeatures.featureRefTargets.entrySet()) {
+                final FeatureReferenceSpec refSpec = specFeatures.spec.getRef(refEntry.getKey());
+                final ResolvedFeatureId refId = getRefId(feature, refSpec, refEntry.getValue());
+                if(refId != null) {
+                    final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
+                    if(!targetSpecFeatures.liningUp) {
+                        lineUp(targetSpecFeatures);
+                    } else {
+                        final ConfiguredFeature dep = featuresById.get(refId);
+                        if(dep == null) {
+                            throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved reference ").append(refId).toString());
+                        }
+                        lineUp(targetSpecFeatures, dep);
+                    }
                 }
-                for(FeatureReferenceSpec refSpec : spec.getRefs()) {
-/*                    final FeatureSpec targetSpec = featuresBySpec.get(refSpec.getFeature());
-                    if(targetSpec == null) {
-                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
-                                + refSpec.name + " which targets unknown " + refSpec.feature + " feature");
-                    }
-                    if(!targetSpec.hasId()) {
-                        throw new ProvisioningDescriptionException(spec.name + " feature declares reference "
-                                + refSpec.name + " which targets feature " + refSpec.feature + " that has no ID parameters");
-                    }
-                    if(targetSpec.idParams.size() != refSpec.localParams.length) {
-                        throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.name + " of feature " + spec.name +
-                                " must correspond to the ID parameters of the target feature " + refSpec.feature);
-                    }
-                    for(int i = 0; i < refSpec.localParams.length; ++i) {
-                        if(!spec.params.containsKey(refSpec.localParams[i])) {
-                            throw new ProvisioningDescriptionException(spec.name
-                                    + " feature does not include parameter " + refSpec.localParams[i] + " mapped in "
-                                    + refSpec.name + " reference");
-                        }
-                        if(!targetSpec.params.containsKey(refSpec.targetParams[i])) {
-                            throw new ProvisioningDescriptionException(targetSpec.name
-                                    + " feature does not include parameter '" + refSpec.targetParams[i] + "' targeted from "
-                                    + spec.name + " through " + refSpec.name + " reference");
-                        }
-                    }
-*/                }
+            }
+        }
+        if(!feature.dependencies.isEmpty()) {
+            for(ResolvedFeatureId depId : feature.dependencies) {
+                final ConfiguredFeature dependency = featuresById.get(depId);
+                if(dependency == null) {
+                    throw new ProvisioningDescriptionException(errorFor(feature).append(" has unsatisfied dependency on ").append(depId).toString());
+                }
+                lineUp(featuresBySpec.get(depId.specId), dependency);
             }
         }
 
+        final StringBuilder buf = errorFor(feature);
+        System.out.println(buf.toString());
+    }
+
+    private StringBuilder errorFor(ConfiguredFeature feature) {
+        final StringBuilder buf = new StringBuilder();
+        if (feature.id != null) {
+            buf.append(feature.id);
+        } else {
+            buf.append(feature.spec.getName()).append(" configuration");
+        }
+        return buf;
+    }
+
+    private static ResolvedFeatureId getRefId(ConfiguredFeature feature, FeatureReferenceSpec refSpec, ResolvedSpecId specId) throws ProvisioningDescriptionException {
+        if(refSpec.getParamsMapped() == 1) {
+            final FeatureParameterSpec param = feature.spec.getParam(refSpec.getLocalParam(0));
+            final String paramValue = getParamValue(feature.id.specId, feature.params, param);
+            if(paramValue == null) {
+                if (!refSpec.isNillable()) {
+                    final StringBuilder buf = new StringBuilder();
+                    buf.append("Reference ").append(refSpec).append(" of ");
+                    if (feature.spec.hasId()) {
+                        buf.append(getFeatureId(feature.id.specId, feature.spec.getIdParams(), feature.params));
+                    } else {
+                        buf.append(feature.spec.getName()).append(" configuration ");
+                    }
+                    buf.append(" cannot be null");
+                    throw new ProvisioningDescriptionException(buf.toString());
+                }
+                return null;
+            }
+            return new ResolvedFeatureId(specId, Collections.singletonMap(refSpec.getTargetParam(0), paramValue));
+        }
+        Map<String, String> params = new HashMap<>(refSpec.getParamsMapped());
+        for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
+            final FeatureParameterSpec param = feature.spec.getParam(refSpec.getLocalParam(i));
+            final String paramValue = getParamValue(feature.id.specId, feature.params, param);
+            if(paramValue == null) {
+                if (!refSpec.isNillable()) {
+                    final StringBuilder buf = new StringBuilder();
+                    buf.append("Reference ").append(refSpec).append(" of ");
+                    if (feature.spec.hasId()) {
+                        buf.append(getFeatureId(feature.id.specId, feature.spec.getIdParams(), feature.params));
+                    } else {
+                        buf.append(feature.spec.getName()).append(" configuration ");
+                    }
+                    buf.append(" cannot be null");
+                    throw new ProvisioningDescriptionException(buf.toString());
+                }
+                return null;
+            }
+            params.put(refSpec.getTargetParam(i), paramValue);
+        }
+        return new ResolvedFeatureId(specId, params);
+    }
+
+    private static String getParamValue(ResolvedSpecId specId, Map<String, String> params, final FeatureParameterSpec param)
+            throws ProvisioningDescriptionException {
+        String value = params.get(param.getName());
+        if(value == null) {
+            value = param.getDefaultValue();
+        }
+        if(value == null && (param.isFeatureId() || !param.isNillable())) {
+            throw new ProvisioningDescriptionException(specId + " configuration is missing required parameter " + param.getName());
+        }
+        return value;
+    }
+
+    private static ResolvedFeatureId getFeatureId(ResolvedSpecId specId, List<FeatureParameterSpec> idSpecs, Map<String, String> params) throws ProvisioningDescriptionException {
+        if(idSpecs.size() == 1) {
+            final FeatureParameterSpec idSpec = idSpecs.get(0);
+            return new ResolvedFeatureId(specId, Collections.singletonMap(idSpec.getName(), getParamValue(specId, params, idSpec)));
+        }
+        final Map<String, String> resolvedParams = new HashMap<>(idSpecs.size());
+        for(FeatureParameterSpec param : idSpecs) {
+            resolvedParams.put(param.getName(), getParamValue(specId, params, param));
+        }
+        return new ResolvedFeatureId(specId, resolvedParams);
     }
 }

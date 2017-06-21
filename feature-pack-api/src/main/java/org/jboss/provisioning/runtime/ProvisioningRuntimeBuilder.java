@@ -51,6 +51,7 @@ import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
@@ -477,6 +478,19 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
+        if(spec.hasRefs()) {
+            for(FeatureReferenceSpec refSpec : spec.getRefs()) {
+                final SpecId refSpecId = refSpec.getFeature();
+                final ArtifactCoords.Gav refGav;
+                if(refSpecId.getFpDepName() == null) {
+                    refGav = targetFp.gav;
+                } else {
+                    refGav = targetFp.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+                }
+                // TODO do it only once per ref spec
+                modelBuilder.setFeatureRefTarget(resolvedSpecId, refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
+            }
+        }
     }
 
     private static ResolvedFeatureId getFeatureId(ResolvedSpecId specId, List<FeatureParameterSpec> idSpecs, Map<String, String> params) throws ProvisioningDescriptionException {
@@ -523,7 +537,8 @@ public class ProvisioningRuntimeBuilder {
     private void pushFpConfig(List<FeaturePackConfig> pushed, FeaturePackConfig fpConfig)
             throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
         final FeaturePackRuntime.Builder fp = getRtBuilder(fpConfig.getGav());
-        if(fp.stack.isEmpty()) {
+
+        if(fp.isStackEmpty()) {
             fp.push(fpConfig);
             pushed.add(fpConfig);
             return;
@@ -563,27 +578,27 @@ public class ProvisioningRuntimeBuilder {
             ProvisioningException, ArtifactResolutionException {
         FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
         if(fp == null) {
-            fp = FeaturePackRuntime.builder(gav, LayoutUtils.getFeaturePackDir(layoutDir, gav, false));
-            mkdirs(fp.dir);
-            fpRtBuilders.put(fp.gav.toGa(), fp);
+            final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
+            mkdirs(fpDir);
 
-            final Path artifactPath = artifactResolver.resolve(fp.gav.toArtifactCoords());
+            final Path artifactPath = artifactResolver.resolve(gav.toArtifactCoords());
             try {
-                ZipUtils.unzip(artifactPath, fp.dir);
+                ZipUtils.unzip(artifactPath, fpDir);
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
             }
 
-            final Path fpXml = fp.dir.resolve(Constants.FEATURE_PACK_XML);
+            final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
             if(!Files.exists(fpXml)) {
                 throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
             }
 
             try(BufferedReader reader = Files.newBufferedReader(fpXml)) {
-                fp.spec = FeaturePackXmlParser.getInstance().parse(reader);
+                fp = FeaturePackRuntime.builder(gav, FeaturePackXmlParser.getInstance().parse(reader), fpDir);
             } catch (IOException | XMLStreamException e) {
                 throw new ProvisioningException(Errors.parseXml(fpXml), e);
             }
+            fpRtBuilders.put(gav.toGa(), fp);
         } else if(!fp.gav.equals(gav)) {
             throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, gav));
         }

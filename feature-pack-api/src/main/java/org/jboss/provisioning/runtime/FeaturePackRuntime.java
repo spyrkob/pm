@@ -57,7 +57,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     static class Builder {
         final ArtifactCoords.Gav gav;
         final Path dir;
-        FeaturePackSpec spec;
+        final FeaturePackSpec spec;
         boolean ordered;
         private Map<String, FeatureSpec> featureSpecs = null;
         private Map<String, FeatureGroupSpec> fgSpecs = null;
@@ -65,13 +65,14 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
 
-        List<FeaturePackConfig> stack = Collections.emptyList();
+        private List<FeaturePackConfig> stack = Collections.emptyList();
         private FeaturePackConfig blockedPackageInheritance;
         private FeaturePackConfig blockedConfigInheritance;
 
-        private Builder(ArtifactCoords.Gav gav, Path dir) {
+        private Builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
             this.gav = gav;
             this.dir = dir;
+            this.spec = spec;
         }
 
         PackageRuntime.Builder newPackage(String name, Path dir) {
@@ -136,6 +137,18 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return spec;
         }
 
+        boolean isInheritPackages() {
+            return blockedPackageInheritance == null;
+        }
+
+        boolean isInheritConfigs() {
+            return blockedConfigInheritance == null;
+        }
+
+        boolean isStackEmpty() {
+            return stack.isEmpty();
+        }
+
         void push(FeaturePackConfig fpConfig) {
             if(stack.isEmpty()) {
                 stack = Collections.singletonList(fpConfig);
@@ -153,14 +166,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             if(blockedConfigInheritance == null && !fpConfig.isInheritConfigs()) {
                 blockedConfigInheritance = fpConfig;
             }
-        }
-
-        boolean isInheritPackages() {
-            return blockedPackageInheritance == null;
-        }
-
-        boolean isInheritConfigs() {
-            return blockedConfigInheritance == null;
         }
 
         FeaturePackConfig pop() {
@@ -257,8 +262,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
     }
 
-    static Builder builder(ArtifactCoords.Gav gav, Path dir) {
-        return new Builder(gav, dir);
+    static Builder builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
+        return new Builder(gav, spec, dir);
     }
 
     private final FeaturePackSpec spec;

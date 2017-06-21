@@ -136,12 +136,28 @@ public class FeatureSpec {
         return refs.values();
     }
 
+    public FeatureReferenceSpec getRef(String name) throws ProvisioningDescriptionException {
+        final FeatureReferenceSpec ref = refs.get(name);
+        if(ref == null) {
+            throw new ProvisioningDescriptionException("Feature reference '" + name + "' not found in feature spec " + name);
+        }
+        return ref;
+    }
+
     public boolean hasParams() {
         return !params.isEmpty();
     }
 
     public Collection<FeatureParameterSpec> getParams() {
         return params.values();
+    }
+
+    public boolean hasParam(String name) {
+        return params.containsKey(name);
+    }
+
+    public FeatureParameterSpec getParam(String name) {
+        return params.get(name);
     }
 
     @Override
