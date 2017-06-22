@@ -39,7 +39,9 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
@@ -59,7 +61,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         final Path dir;
         final FeaturePackSpec spec;
         boolean ordered;
-        private Map<String, FeatureSpec> featureSpecs = null;
+        private Map<String, ResolvedFeatureSpec> featureSpecs = null;
         private Map<String, FeatureGroupSpec> fgSpecs = null;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
@@ -115,26 +117,56 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return fgSpec;
         }
 
-        FeatureSpec getFeatureSpec(String name) throws ProvisioningException {
-            FeatureSpec spec = null;
+        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
+            ResolvedFeatureSpec resolvedSpec = null;
             if(featureSpecs == null) {
                 featureSpecs = new HashMap<>();
             } else {
-                spec = featureSpecs.get(name);
+                resolvedSpec = featureSpecs.get(name);
             }
-            if(spec == null) {
+            if(resolvedSpec == null) {
                 final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
                 if(!Files.exists(specXml)) {
                     throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
                 }
+                final FeatureSpec xmlSpec;
                 try(BufferedReader reader = Files.newBufferedReader(specXml)) {
-                    spec = FeatureSpecXmlParser.getInstance().parse(reader);
+                    xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
                 } catch (Exception e) {
                     throw new ProvisioningException(Errors.parseXml(specXml));
                 }
-                featureSpecs.put(name, spec);
+                Map<String, ResolvedSpecId> resolvedRefTargets = Collections.emptyMap();
+                if (xmlSpec.hasRefs()) {
+                    Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
+                    if(refs.size() == 1) {
+                        final FeatureReferenceSpec refSpec = refs.iterator().next();
+                        final SpecId refSpecId = refSpec.getFeature();
+                        final ArtifactCoords.Gav refGav;
+                        if (refSpecId.getFpDepName() == null) {
+                            refGav = gav;
+                        } else {
+                            refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+                        }
+                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
+                    } else {
+                        resolvedRefTargets = new HashMap<>(refs.size());
+                        for (FeatureReferenceSpec refSpec : refs) {
+                            final SpecId refSpecId = refSpec.getFeature();
+                            final ArtifactCoords.Gav refGav;
+                            if (refSpecId.getFpDepName() == null) {
+                                refGav = gav;
+                            } else {
+                                refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+                            }
+                            resolvedRefTargets.put(refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
+                        }
+                        resolvedRefTargets = Collections.unmodifiableMap(resolvedRefTargets);
+                    }
+                }
+                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav.toGa(), xmlSpec.getName()), xmlSpec, resolvedRefTargets);
+                featureSpecs.put(name, resolvedSpec);
             }
-            return spec;
+            return resolvedSpec;
         }
 
         boolean isInheritPackages() {

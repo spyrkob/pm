@@ -51,8 +51,6 @@ import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
@@ -468,27 +466,13 @@ public class ProvisioningRuntimeBuilder {
             }
             targetFp = getRtBuilder(fpDep.getTarget().getGav());
         }
-        final FeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
-        final ResolvedSpecId resolvedSpecId = new ResolvedSpecId(targetFp.gav.toGa(), specId.getName());
-        final ResolvedFeatureId resolvedFeatureId = spec.hasId() ? getFeatureId(resolvedSpecId, spec.getIdParams(), fc.getParams()) : null;
-        if(modelBuilder.processFeature(resolvedFeatureId, resolvedSpecId, spec, fc)) {
+        final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
+        final ResolvedFeatureId resolvedFeatureId = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), fc.getParams()) : null;
+        if(modelBuilder.processFeature(resolvedFeatureId, spec, fc)) {
             if (fc.hasNested()) {
                 for (FeatureConfig nested : fc.getNested()) {
                     processFeature(modelBuilder, targetFp, nested);
                 }
-            }
-        }
-        if(spec.hasRefs()) {
-            for(FeatureReferenceSpec refSpec : spec.getRefs()) {
-                final SpecId refSpecId = refSpec.getFeature();
-                final ArtifactCoords.Gav refGav;
-                if(refSpecId.getFpDepName() == null) {
-                    refGav = targetFp.gav;
-                } else {
-                    refGav = targetFp.spec.getDependency(refSpecId.getName()).getTarget().getGav();
-                }
-                // TODO do it only once per ref spec
-                modelBuilder.setFeatureRefTarget(resolvedSpecId, refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
             }
         }
     }
