@@ -22,6 +22,8 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -39,5 +41,10 @@ public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         pm.install(featurePackConfig());
+    }
+
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.build();
     }
 }

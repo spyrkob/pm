@@ -31,6 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -174,7 +175,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if (specName == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
-        featureBuilder.setName(specName);
+        featureBuilder.setId(specName);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -255,7 +256,12 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if(name == null) {
             name = feature;
         }
-        final FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setName(name).setNillable(nillable);
+        FeatureReferenceSpec.Builder refBuilder;
+        try {
+            refBuilder = FeatureReferenceSpec.builder(SpecId.fromString(feature)).setName(name).setNillable(nillable);
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to parse feature reference", e);
+        }
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

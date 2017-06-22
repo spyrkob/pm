@@ -33,21 +33,50 @@ public class FeatureId {
 
     public static FeatureId fromString(String str) throws ProvisioningDescriptionException {
 
-        final int colonIndex = str.indexOf(':');
-        if(colonIndex < 1) {
+        final int length = str.length();
+        if(length == 0) {
             formatException();
         }
-        int endIndex = str.indexOf(',', colonIndex + 4);
+
+        int nextIndex = 0;
+        char c = str.charAt(nextIndex++);
+        final StringBuilder buf = new StringBuilder(length);
+        SpecId specId = null;
+        String fpDepName = null;
+        while(nextIndex < length) {
+            if(c == SpecId.SEPARATOR) {
+                if(nextIndex == 1) {
+                    formatException();
+                }
+                fpDepName = buf.toString();
+                buf.setLength(0);
+            } else if(c == ':') {
+                if(buf.length() == 0) {
+                    formatException();
+                }
+                specId = SpecId.create(fpDepName, buf.toString());
+                break;
+            } else {
+                buf.append(c);
+            }
+            c = str.charAt(nextIndex++);
+        }
+
+        if(specId == null) {
+            formatException();
+        }
+
+        int endIndex = str.indexOf(',', nextIndex + 3);
         if(endIndex < 0) {
-            final int equals = str.indexOf('=', colonIndex + 2);
+            final int equals = str.indexOf('=', nextIndex + 1);
             if(equals < 0 || equals == str.length() - 1) {
                 formatException();
             }
-            return FeatureId.create(str.substring(0, colonIndex), str.substring(colonIndex + 1, equals), str.substring(equals + 1));
+            return FeatureId.create(specId.toString(), str.substring(nextIndex, equals), str.substring(equals + 1));
         }
 
-        final Builder builder = FeatureId.builder(str.substring(0, colonIndex));
-        int lastComma = colonIndex;
+        final Builder builder = FeatureId.builder(specId.toString());
+        int lastComma = nextIndex - 1;
         while(endIndex > 0) {
             int equals = str.indexOf('=', lastComma + 2);
             if(equals < 0 || equals == str.length() - 1) {
@@ -67,16 +96,16 @@ public class FeatureId {
     }
 
     private static void formatException() throws ProvisioningDescriptionException {
-        throw new ProvisioningDescriptionException("The string does not follow format spec_name:param_name=value(,param_name=value)*");
+        throw new ProvisioningDescriptionException("The string does not follow format fp_dep_name#spec_name:param_name=value(,param_name=value)*");
     }
 
     public static class Builder {
 
-        private final String specName;
+        private final SpecId specId;
         private Map<String, String> params = Collections.emptyMap();
 
-        private Builder(String specName) {
-            this.specName = specName;
+        private Builder(SpecId specId) throws ProvisioningDescriptionException {
+            this.specId = specId;
         }
 
         public Builder addParam(String name, String value) {
@@ -93,31 +122,39 @@ public class FeatureId {
         }
 
         public FeatureId build() throws ProvisioningDescriptionException {
-            return new FeatureId(specName, params);
+            return new FeatureId(specId, params);
         }
     }
 
-    public static Builder builder(String specName) {
-        return new Builder(specName);
+    public static Builder builder(String specId) throws ProvisioningDescriptionException {
+        return builder(SpecId.fromString(specId));
     }
 
-    public static FeatureId create(String specName, String name, String value) throws ProvisioningDescriptionException {
-        return new FeatureId(specName, Collections.singletonMap(name, value));
+    public static Builder builder(SpecId specId) throws ProvisioningDescriptionException {
+        return new Builder(specId);
     }
 
-    final String specName;
+    public static FeatureId create(String specId, String name, String value) throws ProvisioningDescriptionException {
+        return create(SpecId.fromString(specId), name, value);
+    }
+
+    public static FeatureId create(SpecId specId, String name, String value) throws ProvisioningDescriptionException {
+        return new FeatureId(specId, Collections.singletonMap(name, value));
+    }
+
+    final SpecId specId;
     final Map<String, String> params;
 
-    public FeatureId(String specName, Map<String, String> params) throws ProvisioningDescriptionException {
+    public FeatureId(SpecId specName, Map<String, String> params) throws ProvisioningDescriptionException {
         if(params.isEmpty()) {
             throw new ProvisioningDescriptionException("ID paramaters are missing");
         }
-        this.specName = specName;
+        this.specId = specName;
         this.params = params.size() == 1 ? params : Collections.unmodifiableMap(params);
     }
 
-    public String getSpec() {
-        return specName;
+    public SpecId getSpec() {
+        return specId;
     }
 
     public Collection<String> getParamNames() {
@@ -128,12 +165,16 @@ public class FeatureId {
         return params.get(name);
     }
 
+    public Map<String, String> getParams() {
+        return params;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((params == null) ? 0 : params.hashCode());
-        result = prime * result + ((specName == null) ? 0 : specName.hashCode());
+        result = prime * result + ((specId == null) ? 0 : specId.hashCode());
         return result;
     }
 
@@ -151,10 +192,10 @@ public class FeatureId {
                 return false;
         } else if (!params.equals(other.params))
             return false;
-        if (specName == null) {
-            if (other.specName != null)
+        if (specId == null) {
+            if (other.specId != null)
                 return false;
-        } else if (!specName.equals(other.specName))
+        } else if (!specId.equals(other.specId))
             return false;
         return true;
     }
@@ -162,7 +203,7 @@ public class FeatureId {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append(specName);
+        buf.append(specId);
         if (!params.isEmpty()) {
             buf.append(':');
             final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();

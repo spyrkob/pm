@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature.config.test;
+package org.jboss.provisioning.config.model.test;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -28,8 +28,6 @@ import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 
 /**
@@ -46,20 +44,21 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(new Config("config1", "model1")
+            .addConfig(Config.builder().setName("config1").setModel("model1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config1")))
-            .addConfig(new Config("config2", "model2")
+                            .setParam("p1", "config1"))
+                    .build())
+            .addConfig(Config.builder().setName("config2").setModel("model2")
                     .setProperty("prop1", "value3")
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config2")))
+                            .setParam("p1", "config2"))
+                    .build())
             .newPackage("p1", true)
-                .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -76,13 +75,6 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")
                         .build())
-                .build();
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
-                .addFile("fp1/p1.txt", "p1")
                 .build();
     }
 }

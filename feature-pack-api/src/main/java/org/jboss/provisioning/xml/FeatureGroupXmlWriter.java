@@ -22,6 +22,7 @@ import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.xml.FeatureGroupXml.Attribute;
 import org.jboss.provisioning.xml.FeatureGroupXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -59,27 +60,21 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroupSpec featureGroup, String ns) {
-        ElementNode depsE = null;
         if(featureGroup.hasExternalDependencies()) {
-            depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
             for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
-                writeExternalGroupDependency(depsE, entry.getKey(), entry.getValue(), ns);
+                writeExternalGroupDependency(configE, entry.getKey(), entry.getValue(), ns);
             }
         }
 
         if(featureGroup.hasLocalDependencies()) {
-            if(depsE == null) {
-                depsE = addElement(configE, Element.DEPENDENCIES.getLocalName(), ns);
-            }
             for(FeatureGroupConfig dep : featureGroup.getLocalDependencies()) {
-                writeFeatureGroupDependency(depsE, dep, ns);
+                writeFeatureGroupDependency(configE, dep, ns);
             }
         }
 
         if(featureGroup.hasFeatures()) {
-            final ElementNode featuresE = addElement(configE, Element.FEATURES.getLocalName(), ns);
             for(FeatureConfig fc : featureGroup.getFeatures()) {
-                addFeatureConfig(featuresE, fc, ns);
+                addFeatureConfig(configE, fc, ns);
             }
         }
     }
@@ -96,14 +91,14 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     public static void addFeatureGroupDepBody(FeatureGroupConfig dep, String ns, final ElementNode depE) {
-        addAttribute(depE, Attribute.NAME, dep.getConfigName());
+        addAttribute(depE, Attribute.NAME, dep.getName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
         }
         if(dep.hasExcludedSpecs()) {
-            for(String spec : dep.getExcludedSpecs()) {
+            for(SpecId spec : dep.getExcludedSpecs()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);
-                addAttribute(excludeE, Attribute.SPEC, spec);
+                addAttribute(excludeE, Attribute.SPEC, spec.toString());
             }
         }
         if(dep.hasExcludedFeatures()) {
@@ -113,9 +108,9 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
             }
         }
         if(dep.hasIncludedSpecs()) {
-            for(String spec : dep.getIncludedSpecs()) {
+            for(SpecId spec : dep.getIncludedSpecs()) {
                 final ElementNode includeE = addElement(depE, Element.INCLUDE.getLocalName(), ns);
-                addAttribute(includeE, Attribute.SPEC, spec);
+                addAttribute(includeE, Attribute.SPEC, spec.toString());
             }
         }
         if(dep.hasIncludedFeatures()) {
@@ -153,7 +148,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
 
     public static void addFeatureConfig(ElementNode parentE, FeatureConfig fc, String ns) {
         final ElementNode fcE = addElement(parentE, Element.FEATURE.getLocalName(), ns);
-        addAttribute(fcE, Attribute.SPEC, fc.getSpecName());
+        addAttribute(fcE, Attribute.SPEC, fc.getSpecId().toString());
         if(fc.getParentRef() != null) {
             addAttribute(fcE, Attribute.PARENT_REF, fc.getParentRef());
         }

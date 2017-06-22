@@ -44,7 +44,7 @@ public abstract class FeatureConfigLoaderBase implements FeatureConfigLoader {
     }
 
     protected Path getBaseDir(FeatureId featureId) {
-        return baseDir.resolve(featureId.getSpec());
+        return baseDir.resolve(featureId.getSpec().getName());
     }
 
     protected abstract Path resolvePath(FeatureId featureId) throws ProvisioningDescriptionException;

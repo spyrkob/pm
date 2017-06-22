@@ -29,7 +29,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.BuilderWithFeatureGroups;
-import org.jboss.provisioning.feature.BuilderWithFeatures;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
@@ -53,14 +52,12 @@ public class FeatureGroupXml {
 
     public enum Element implements XmlNameProvider {
 
-        DEPENDENCIES("dependencies"),
         DEPENDS("depends"),
         EXCLUDE("exclude"),
         FEATURE("feature"),
         FEATURE_GROUP("feature-group"),
         FEATURE_GROUP_SPEC("feature-group-spec"),
         FEATURE_PACK("feature-pack"),
-        FEATURES("features"),
         INCLUDE("include"),
         PARAMETER("param"),
 
@@ -170,7 +167,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config, boolean nameRequired) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -183,39 +180,10 @@ public class FeatureGroupXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (name == null && nameRequired) {
+        if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         config.setName(name);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case DEPENDENCIES:
-                            readConfigDependencies(reader, config);
-                            break;
-                        case FEATURES:
-                            readFeatures(reader, config);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readConfigDependencies(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -229,6 +197,11 @@ public class FeatureGroupXml {
                             break;
                         case FEATURE_PACK:
                             readFeaturePackDependency(reader, config);
+                            break;
+                        case FEATURE:
+                            final FeatureConfig nested = new FeatureConfig();
+                            readFeatureConfig(reader, nested);
+                            config.addFeature(nested);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -381,7 +354,11 @@ public class FeatureGroupXml {
                     return;
                 case XMLStreamConstants.START_ELEMENT:
                     if(fc == null) {
-                        fc = new FeatureConfig(featureId.getSpec());
+                        try {
+                            fc = new FeatureConfig(featureId.getSpec());
+                        } catch (ProvisioningDescriptionException e) {
+                            throw new XMLStreamException("Failed to parse config", e);
+                        }
                     }
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
@@ -391,8 +368,10 @@ public class FeatureGroupXml {
                         case PARAMETER:
                             readParameter(reader, fc);
                             break;
-                        case FEATURES:
-                            readFeatures(reader, fc);
+                        case FEATURE:
+                            final FeatureConfig nested = new FeatureConfig();
+                            readFeatureConfig(reader, nested);
+                            fc.addFeature(nested);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -444,37 +423,16 @@ public class FeatureGroupXml {
         ParsingUtils.parseNoContent(reader);
     }
 
-    private static void readFeatures(XMLExtendedStreamReader reader, BuilderWithFeatures<?> config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT:
-                    return;
-                case XMLStreamConstants.START_ELEMENT:
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case FEATURE:
-                            final FeatureConfig fc = new FeatureConfig();
-                            readFeatureConfig(reader, fc);
-                            config.addFeature(fc);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
     public static void readFeatureConfig(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case SPEC:
-                    config.setSpecName(reader.getAttributeValue(i));
+                    try {
+                        config.setSpecName(reader.getAttributeValue(i));
+                    } catch (ProvisioningDescriptionException e) {
+                        throw new XMLStreamException("Failed to parse config", e);
+                    }
                     break;
                 case PARENT_REF:
                     config.setParentRef(reader.getAttributeValue(i));
@@ -483,7 +441,7 @@ public class FeatureGroupXml {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (config.getSpecName() == null) {
+        if (config.getSpecId() == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SPEC));
         }
         while (reader.hasNext()) {

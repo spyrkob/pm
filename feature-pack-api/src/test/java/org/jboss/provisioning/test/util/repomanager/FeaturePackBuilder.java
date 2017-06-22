@@ -36,6 +36,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -45,7 +46,7 @@ import org.jboss.provisioning.test.util.fs.FsTaskContext;
 import org.jboss.provisioning.test.util.fs.FsTaskList;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
-import org.jboss.provisioning.xml.ConfigXmlWriter;
+import org.jboss.provisioning.xml.FeatureGroupXmlWriter;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
 import org.jboss.provisioning.xml.FeatureSpecXmlWriter;
 
@@ -82,8 +83,8 @@ public class FeaturePackBuilder {
     private Set<Class<?>> classes = Collections.emptySet();
     private Map<String, Set<String>> services = Collections.emptyMap();
     private String pluginFileName = "plugins.jar";
-    private Map<String, Config> configs = Collections.emptyMap();
     private Map<String, FeatureSpec> specs = Collections.emptyMap();
+    private Map<String, FeatureGroupSpec> featureGroups = Collections.emptyMap();
     private FsTaskList tasks;
 
 
@@ -154,6 +155,21 @@ public class FeaturePackBuilder {
                 specs = new HashMap<>(specs);
             }
             specs.put(spec.getName(), spec);
+        }
+        return this;
+    }
+
+    public FeaturePackBuilder addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
+        if(featureGroups.isEmpty()) {
+            featureGroups = Collections.singletonMap(featureGroup.getName(), featureGroup);
+        } else {
+            if(featureGroups.containsKey(featureGroup.getName())) {
+                throw new ProvisioningDescriptionException("Duplicate feature-group name " + featureGroup.getName() + " for " + fpBuilder.getGav());
+            }
+            if(featureGroups.size() == 1) {
+                featureGroups = new HashMap<>(featureGroups);
+            }
+            featureGroups.put(featureGroup.getName(), featureGroup);
         }
         return this;
     }
@@ -250,12 +266,12 @@ public class FeaturePackBuilder {
                 }
             }
 
-            if(!configs.isEmpty()) {
-                final Path configsDir = fpWorkDir.resolve(Constants.CONFIGS);
-                ensureDir(configsDir);
-                final ConfigXmlWriter writer = ConfigXmlWriter.getInstance();
-                for(Config config : configs.values()) {
-                    writer.write(config, configsDir.resolve(config.getName() + Constants.DOT_XML));
+            if(!featureGroups.isEmpty()) {
+                final Path fgsDir = fpWorkDir.resolve(Constants.FEATURE_GROUPS);
+                ensureDir(fgsDir);
+                final FeatureGroupXmlWriter fgWriter = FeatureGroupXmlWriter.getInstance();
+                for(FeatureGroupSpec fg : featureGroups.values()) {
+                    fgWriter.write(fg, fgsDir.resolve(fg.getName() + ".xml"));
                 }
             }
 

@@ -34,14 +34,14 @@ public class FeatureReferenceSpec {
 
     public static class Builder {
 
-        private final String feature;
+        private final SpecId feature;
         private String name;
         private boolean nillable;
         private Map<String, String> paramMapping = null;
 
-        private Builder(String feature) {
+        private Builder(SpecId feature) {
             this.feature = feature;
-            this.name = feature;
+            this.name = feature.toString();
         }
 
         public Builder setName(String name) {
@@ -68,39 +68,55 @@ public class FeatureReferenceSpec {
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
             if(paramMapping == null) {
-                paramMapping = Collections.singletonMap(feature, NAME);
+                paramMapping = Collections.singletonMap(feature.getName(), NAME);
             }
             return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
         }
     }
 
-    public static Builder builder(String feature) {
+    public static Builder builder(String feature) throws ProvisioningDescriptionException {
+        return builder(SpecId.fromString(feature));
+    }
+
+    public static Builder builder(SpecId feature) {
         return new Builder(feature);
     }
 
-    public static FeatureReferenceSpec create(String feature) throws ProvisioningDescriptionException {
-        return create(feature, feature, false);
+    public static FeatureReferenceSpec create(String str) throws ProvisioningDescriptionException {
+        return create(SpecId.fromString(str));
     }
 
-    public static FeatureReferenceSpec create(String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return create(feature, feature, nillable);
+    public static FeatureReferenceSpec create(String str, boolean nillable) throws ProvisioningDescriptionException {
+        return create(SpecId.fromString(str), nillable);
     }
 
-    public static FeatureReferenceSpec create(String name, String feature) throws ProvisioningDescriptionException {
+    public static FeatureReferenceSpec create(SpecId feature) throws ProvisioningDescriptionException {
+        return create(feature.toString(), feature, false);
+    }
+
+    public static FeatureReferenceSpec create(SpecId feature, boolean nillable) throws ProvisioningDescriptionException {
+        return create(feature.toString(), feature, nillable);
+    }
+
+    public static FeatureReferenceSpec create(String name, SpecId feature) throws ProvisioningDescriptionException {
         return create(name, feature, false);
     }
 
     public static FeatureReferenceSpec create(String name, String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(name, feature, nillable, Collections.singletonMap(feature, NAME));
+        return create(name, SpecId.fromString(feature), nillable);
+    }
+
+    public static FeatureReferenceSpec create(String name, SpecId feature, boolean nillable) throws ProvisioningDescriptionException {
+        return new FeatureReferenceSpec(name, feature, nillable, Collections.singletonMap(feature.getName(), NAME));
     }
 
     final String name;
-    final String feature;
+    final SpecId feature;
     final boolean nillable;
     final String[] localParams;
     final String[] targetParams;
 
-    private FeatureReferenceSpec(String name, String feature, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
+    private FeatureReferenceSpec(String name, SpecId feature, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
         this.name = name;
         this.feature = feature;
         this.nillable = nillable;
@@ -121,7 +137,7 @@ public class FeatureReferenceSpec {
         return name;
     }
 
-    public String getFeature() {
+    public SpecId getFeature() {
         return feature;
     }
 

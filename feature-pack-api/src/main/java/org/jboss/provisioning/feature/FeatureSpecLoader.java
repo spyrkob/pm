@@ -24,5 +24,5 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public interface FeatureSpecLoader {
 
-    FeatureSpec load(String name) throws ProvisioningDescriptionException;
+    FeatureSpec load(SpecId name) throws ProvisioningDescriptionException;
 }

@@ -17,6 +17,8 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,14 +37,18 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.MainConfigBuilder;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
+import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePack;
-import org.jboss.provisioning.util.DefaultFeatureSpecLoader;
+import org.jboss.provisioning.xml.FeatureGroupXmlParser;
+import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
  *
@@ -53,18 +59,22 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     static class Builder {
         final ArtifactCoords.Gav gav;
         final Path dir;
-        FeaturePackSpec spec;
-        FeaturePackConfig config;
+        final FeaturePackSpec spec;
         boolean ordered;
+        private Map<String, ResolvedFeatureSpec> featureSpecs = null;
+        private Map<String, FeatureGroupSpec> fgSpecs = null;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
 
-        private MainConfigBuilder configBuilder;
+        private List<FeaturePackConfig> stack = Collections.emptyList();
+        private FeaturePackConfig blockedPackageInheritance;
+        private FeaturePackConfig blockedConfigInheritance;
 
-        private Builder(ArtifactCoords.Gav gav, Path dir) {
+        private Builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
             this.gav = gav;
             this.dir = dir;
+            this.spec = spec;
         }
 
         PackageRuntime.Builder newPackage(String name, Path dir) {
@@ -85,11 +95,196 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             pkgOrder.add(name);
         }
 
-        void addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
-            if(configBuilder == null) {
-                configBuilder = MainConfigBuilder.newInstance(new DefaultFeatureSpecLoader(dir));
+        FeatureGroupSpec getFeatureGroupSpec(String name) throws ProvisioningException {
+            FeatureGroupSpec fgSpec = null;
+            if(fgSpecs == null) {
+                fgSpecs = new HashMap<>();
+            } else {
+                fgSpec = fgSpecs.get(name);
             }
-            configBuilder.addFeatureGroup(featureGroup);
+            if(fgSpec == null) {
+                final Path specXml = dir.resolve(Constants.FEATURE_GROUPS).resolve(name + ".xml");
+                if(!Files.exists(specXml)) {
+                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+                }
+                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
+                    fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
+                } catch (Exception e) {
+                    throw new ProvisioningException(Errors.parseXml(specXml));
+                }
+                fgSpecs.put(name, fgSpec);
+            }
+            return fgSpec;
+        }
+
+        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
+            ResolvedFeatureSpec resolvedSpec = null;
+            if(featureSpecs == null) {
+                featureSpecs = new HashMap<>();
+            } else {
+                resolvedSpec = featureSpecs.get(name);
+            }
+            if(resolvedSpec == null) {
+                final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
+                if(!Files.exists(specXml)) {
+                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+                }
+                final FeatureSpec xmlSpec;
+                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
+                    xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
+                } catch (Exception e) {
+                    throw new ProvisioningException(Errors.parseXml(specXml));
+                }
+                Map<String, ResolvedSpecId> resolvedRefTargets = Collections.emptyMap();
+                if (xmlSpec.hasRefs()) {
+                    Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
+                    if(refs.size() == 1) {
+                        final FeatureReferenceSpec refSpec = refs.iterator().next();
+                        final SpecId refSpecId = refSpec.getFeature();
+                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolveSpecId(refSpecId));
+                    } else {
+                        resolvedRefTargets = new HashMap<>(refs.size());
+                        for (FeatureReferenceSpec refSpec : refs) {
+                            final SpecId refSpecId = refSpec.getFeature();
+                            resolvedRefTargets.put(refSpec.getName(), resolveSpecId(refSpecId));
+                        }
+                        resolvedRefTargets = Collections.unmodifiableMap(resolvedRefTargets);
+                    }
+                }
+                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), xmlSpec, resolvedRefTargets);
+                featureSpecs.put(name, resolvedSpec);
+            }
+            return resolvedSpec;
+        }
+
+        private ResolvedSpecId resolveSpecId(final SpecId refSpecId) {
+            final ArtifactCoords.Gav refGav;
+            if (refSpecId.getFpDepName() == null) {
+                refGav = gav;
+            } else {
+                refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+            }
+            return new ResolvedSpecId(refGav, refSpecId.getName());
+        }
+
+        boolean isInheritPackages() {
+            return blockedPackageInheritance == null;
+        }
+
+        boolean isInheritConfigs() {
+            return blockedConfigInheritance == null;
+        }
+
+        boolean isStackEmpty() {
+            return stack.isEmpty();
+        }
+
+        void push(FeaturePackConfig fpConfig) {
+            if(stack.isEmpty()) {
+                stack = Collections.singletonList(fpConfig);
+            } else {
+                if(stack.size() == 1) {
+                    final FeaturePackConfig first = stack.get(0);
+                    stack = new ArrayList<>(2);
+                    stack.add(first);
+                }
+                stack.add(fpConfig);
+            }
+            if(blockedPackageInheritance == null && !fpConfig.isInheritPackages()) {
+                blockedPackageInheritance = fpConfig;
+            }
+            if(blockedConfigInheritance == null && !fpConfig.isInheritConfigs()) {
+                blockedConfigInheritance = fpConfig;
+            }
+        }
+
+        FeaturePackConfig pop() {
+            final FeaturePackConfig popped;
+            if (stack.size() == 1) {
+                popped = stack.get(0);
+                stack = Collections.emptyList();
+            } else {
+                popped = stack.remove(stack.size() - 1);
+                if (stack.size() == 1) {
+                    stack = Collections.singletonList(stack.get(0));
+                }
+            }
+            if(popped == blockedPackageInheritance) {
+                blockedPackageInheritance = null;
+            }
+            if(popped == blockedConfigInheritance) {
+                blockedConfigInheritance = null;
+            }
+            return popped;
+        }
+
+        boolean isPackageIncluded(String packageName, Collection<PackageParameter> params) {
+            int i = stack.size() - 1;
+            while(i >= 0) {
+                final FeaturePackConfig fpConfig = stack.get(i--);
+                final PackageConfig stackedPkg = fpConfig.getIncludedPackage(packageName);
+                if(stackedPkg != null) {
+                    if(!params.isEmpty()) {
+                        boolean allParamsOverwritten = true;
+                        for(PackageParameter param : params) {
+                            if(stackedPkg.getParameter(param.getName()) == null) {
+                                allParamsOverwritten = false;
+                                break;
+                            }
+                        }
+                        if(allParamsOverwritten) {
+                            return true;
+                        }
+                    } else {
+                       return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        boolean isPackageExcluded(String packageName) {
+            int i = stack.size() - 1;
+            while(i >= 0) {
+                if(stack.get(i--).isExcluded(packageName)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        boolean isConfigExcluded(Config config) {
+            int i = stack.size() - 1;
+            while(i >= 0) {
+                final FeaturePackConfig fpConfig = stack.get(i--);
+                if (fpConfig.isConfigExcluded(config.getModel(), config.getName())) {
+                    return true;
+                }
+                if(fpConfig.isFullModelExcluded(config.getModel())) {
+                    return !fpConfig.isConfigIncluded(config.getModel(), config.getName());
+                }
+                if (!fpConfig.isInheritConfigs()) {
+                    return !fpConfig.isFullModelIncluded(config.getModel()) && !fpConfig.isConfigIncluded(config.getModel(), config.getName());
+                }
+            }
+            return false;
+        }
+
+        boolean isConfigIncluded(Config config) {
+            int i = stack.size() - 1;
+            while(i >= 0) {
+                final FeaturePackConfig fpConfig = stack.get(i--);
+                if(fpConfig.isConfigIncluded(config.getModel(), config.getName())) {
+                    return true;
+                }
+                if(fpConfig.isFullModelIncluded(config.getModel())) {
+                    return !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                }
+                if(fpConfig.isInheritConfigs()) {
+                    return !fpConfig.isFullModelExcluded(config.getModel()) && !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                }
+            }
+            return false;
         }
 
         FeaturePackRuntime build(PackageParameterResolver paramResolver) throws ProvisioningException {
@@ -97,8 +292,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
     }
 
-    static Builder builder(ArtifactCoords.Gav gav, Path dir) {
-        return new Builder(gav, dir);
+    static Builder builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
+        return new Builder(gav, spec, dir);
     }
 
     private final FeaturePackSpec spec;
@@ -108,10 +303,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     private FeaturePackRuntime(Builder builder, PackageParameterResolver paramResolver) throws ProvisioningException {
         this.spec = builder.spec;
         this.dir = builder.dir;
-
-        if(builder.configBuilder != null) {
-            builder.configBuilder.build();
-        }
 
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
         for(String pkgName : builder.pkgOrder) {

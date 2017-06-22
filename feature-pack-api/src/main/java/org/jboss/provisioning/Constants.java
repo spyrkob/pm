@@ -28,7 +28,6 @@ public interface Constants {
     String PM_TOOL_HOME_DIR = "pm.tool.home";
 
     String DOT_XML = ".xml";
-    String CONFIGS = "configs";
     String CONTENT = "content";
     String FEATURE_GROUPS = "feature_groups";
     String FEATURES = "features";
