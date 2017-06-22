@@ -81,12 +81,16 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
         return params;
     }
 
+    public String getParam(String name) {
+        return params.get(name);
+    }
+
     public FeatureConfig setParam(String name, String value) {
         putParam(name, value);
         return this;
     }
 
-    String putParam(String name, String value) {
+    public String putParam(String name, String value) {
         switch(params.size()) {
             case 0:
                 params = Collections.singletonMap(name, value);
@@ -134,7 +138,7 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     }
 
     public boolean hasNested() {
-        return nested.isEmpty();
+        return !nested.isEmpty();
     }
 
     public List<FeatureConfig> getNested() {

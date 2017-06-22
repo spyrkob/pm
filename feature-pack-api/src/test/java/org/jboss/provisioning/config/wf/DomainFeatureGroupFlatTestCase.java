@@ -37,7 +37,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  *
  * @author Alexey Loubyansky
  */
-public class DomainFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+public class DomainFeatureGroupFlatTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {

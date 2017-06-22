@@ -50,7 +50,7 @@ import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureId;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
@@ -343,10 +343,10 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private void processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
-        modelBuilder.pushConfig(fp.gav.toGa(), resolveFeatureGroupConfig(fp, fgConfig));
+        modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig));
         FeatureGroupSpec fgSpec = fp.getFeatureGroupSpec(fgConfig.getName());
         processFeatureGroupSpec(modelBuilder, fp, fgSpec);
-        modelBuilder.popConfig(fp.gav.toGa());
+        modelBuilder.popConfig(fp.gav);
     }
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {
@@ -394,41 +394,17 @@ public class ProvisioningRuntimeBuilder {
     private ResolvedFeatureId resolveFeatureId(FeaturePackRuntime.Builder fp, final FeatureId featureId)
             throws ProvisioningException {
         final SpecId specId = featureId.getSpec();
-        FeaturePackRuntime.Builder targetFp = fp;
-        if (specId.getFpDepName() != null) {
-            final FeaturePackDependencySpec fpDep = fp.spec.getDependency(specId.getFpDepName());
-            if (fpDep == null) {
-                throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, specId.getFpDepName()));
-            }
-            targetFp = getRtBuilder(fpDep.getTarget().getGav());
-        }
-        return new ResolvedFeatureId(new ResolvedSpecId(targetFp.gav.toGa(), specId.getName()), featureId.getParams());
+        return new ResolvedFeatureId(resolveSpecId(specId, fp), featureId.getParams());
     }
 
     private Set<ResolvedSpecId> resolveSpecs(FeaturePackRuntime.Builder fp, Set<SpecId> specs) throws ProvisioningException {
         if(specs.size() == 1) {
             final SpecId excludedSpecId = specs.iterator().next();
-            FeaturePackRuntime.Builder targetFp = fp;
-            if(excludedSpecId.getFpDepName() != null) {
-                final FeaturePackDependencySpec fpDep = fp.spec.getDependency(excludedSpecId.getFpDepName());
-                if(fpDep == null) {
-                    throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, excludedSpecId.getFpDepName()));
-                }
-                targetFp = getRtBuilder(fpDep.getTarget().getGav());
-            }
-            return Collections.singleton(new ResolvedSpecId(targetFp.gav.toGa(), excludedSpecId.getName()));
+            return Collections.singleton(resolveSpecId(excludedSpecId, fp));
         }
         final Set<ResolvedSpecId> tmp = new HashSet<>(specs.size());
-        FeaturePackRuntime.Builder targetFp = fp;
         for (SpecId excludedSpecId : specs) {
-            if (excludedSpecId.getFpDepName() != null) {
-                final FeaturePackDependencySpec fpDep = fp.spec.getDependency(excludedSpecId.getFpDepName());
-                if (fpDep == null) {
-                    throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, excludedSpecId.getFpDepName()));
-                }
-                targetFp = getRtBuilder(fpDep.getTarget().getGav());
-            }
-            tmp.add(new ResolvedSpecId(targetFp.gav.toGa(), excludedSpecId.getName()));
+            tmp.add(resolveSpecId(excludedSpecId, fp));
         }
         return tmp;
     }
@@ -458,47 +434,36 @@ public class ProvisioningRuntimeBuilder {
     private void processFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
 
         final SpecId specId = fc.getSpecId();
-        FeaturePackRuntime.Builder targetFp = fp;
-        if(specId.getFpDepName() != null) {
-            final FeaturePackDependencySpec fpDep = fp.spec.getDependency(specId.getFpDepName());
-            if(fpDep == null) {
-                throw new ProvisioningException(Errors.unknownDependencyName(fp.gav, specId.getFpDepName()));
-            }
-            targetFp = getRtBuilder(fpDep.getTarget().getGav());
-        }
+        FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
-        final ResolvedFeatureId resolvedFeatureId = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), fc.getParams()) : null;
-        if(modelBuilder.processFeature(resolvedFeatureId, spec, fc)) {
+        if(modelBuilder.processFeature(spec, fc)) {
             if (fc.hasNested()) {
                 for (FeatureConfig nested : fc.getNested()) {
-                    processFeature(modelBuilder, targetFp, nested);
+                    final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
+                    final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
+                    final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
+                    final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
+                    if(refSpec == null) {
+                        throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + nestedSpec.id);
+                    }
+                    for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                        final String paramValue = fc.getParam(refSpec.getTargetParam(i));
+                        if (paramValue == null) {
+                            throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
+                                    + " for " + nestedSpec.id);
+                        }
+                        final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
+                        if (prevValue != null && !prevValue.equals(paramValue)) {
+                            throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
+                                    + refSpec.getLocalParam(i) + " of " + nestedSpec.id
+                                    + " conflicts with the corresponding parent ID value " + paramValue);
+                        }
+                    }
+
+                    processFeature(modelBuilder, nestedFp, nested);
                 }
             }
         }
-    }
-
-    private static ResolvedFeatureId getFeatureId(ResolvedSpecId specId, List<FeatureParameterSpec> idSpecs, Map<String, String> params) throws ProvisioningDescriptionException {
-        if(idSpecs.size() == 1) {
-            final FeatureParameterSpec idSpec = idSpecs.get(0);
-            return new ResolvedFeatureId(specId, Collections.singletonMap(idSpec.getName(), getParamValue(specId, params, idSpec)));
-        }
-        final Map<String, String> resolvedParams = new HashMap<>(idSpecs.size());
-        for(FeatureParameterSpec param : idSpecs) {
-            resolvedParams.put(param.getName(), getParamValue(specId, params, param));
-        }
-        return new ResolvedFeatureId(specId, resolvedParams);
-    }
-
-    private static String getParamValue(ResolvedSpecId specId, Map<String, String> params, final FeatureParameterSpec param)
-            throws ProvisioningDescriptionException {
-        String value = params.get(param.getName());
-        if(value == null) {
-            value = param.getDefaultValue();
-        }
-        if(value == null && (param.isFeatureId() || !param.isNillable())) {
-            throw new ProvisioningDescriptionException(specId + " configuration is missing required parameter " + param.getName());
-        }
-        return value;
     }
 
     private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {
@@ -556,6 +521,24 @@ public class ProvisioningRuntimeBuilder {
             pushed.add(fpConfig);
             fp.push(fpConfig);
         }
+    }
+
+    private ResolvedSpecId resolveSpecId(final SpecId specId, FeaturePackRuntime.Builder defaultFp)
+            throws ProvisioningException, ProvisioningDescriptionException, ArtifactResolutionException {
+        return new ResolvedSpecId(getRtBuilder(specId, defaultFp).gav, specId.getName());
+    }
+
+    private FeaturePackRuntime.Builder getRtBuilder(final SpecId specId, FeaturePackRuntime.Builder originFp)
+            throws ProvisioningException, ProvisioningDescriptionException, ArtifactResolutionException {
+        FeaturePackRuntime.Builder targetFp = originFp;
+        if (specId.getFpDepName() != null) {
+            final FeaturePackDependencySpec fpDep = originFp.spec.getDependency(specId.getFpDepName());
+            if (fpDep == null) {
+                throw new ProvisioningException(Errors.unknownDependencyName(originFp.gav, specId.getFpDepName()));
+            }
+            targetFp = getRtBuilder(fpDep.getTarget().getGav());
+        }
+        return targetFp;
     }
 
     private FeaturePackRuntime.Builder getRtBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException,

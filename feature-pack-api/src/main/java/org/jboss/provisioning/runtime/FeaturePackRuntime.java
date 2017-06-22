@@ -141,32 +141,30 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                     if(refs.size() == 1) {
                         final FeatureReferenceSpec refSpec = refs.iterator().next();
                         final SpecId refSpecId = refSpec.getFeature();
-                        final ArtifactCoords.Gav refGav;
-                        if (refSpecId.getFpDepName() == null) {
-                            refGav = gav;
-                        } else {
-                            refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
-                        }
-                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
+                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolveSpecId(refSpecId));
                     } else {
                         resolvedRefTargets = new HashMap<>(refs.size());
                         for (FeatureReferenceSpec refSpec : refs) {
                             final SpecId refSpecId = refSpec.getFeature();
-                            final ArtifactCoords.Gav refGav;
-                            if (refSpecId.getFpDepName() == null) {
-                                refGav = gav;
-                            } else {
-                                refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
-                            }
-                            resolvedRefTargets.put(refSpec.getName(), new ResolvedSpecId(refGav.toGa(), refSpecId.getName()));
+                            resolvedRefTargets.put(refSpec.getName(), resolveSpecId(refSpecId));
                         }
                         resolvedRefTargets = Collections.unmodifiableMap(resolvedRefTargets);
                     }
                 }
-                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav.toGa(), xmlSpec.getName()), xmlSpec, resolvedRefTargets);
+                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), xmlSpec, resolvedRefTargets);
                 featureSpecs.put(name, resolvedSpec);
             }
             return resolvedSpec;
+        }
+
+        private ResolvedSpecId resolveSpecId(final SpecId refSpecId) {
+            final ArtifactCoords.Gav refGav;
+            if (refSpecId.getFpDepName() == null) {
+                refGav = gav;
+            } else {
+                refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+            }
+            return new ResolvedSpecId(refGav, refSpecId.getName());
         }
 
         boolean isInheritPackages() {

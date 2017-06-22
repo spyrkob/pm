@@ -121,38 +121,39 @@ public class ConfigModelBuilder {
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
     private boolean checkRefs;
 
-    private Map<ArtifactCoords.Ga, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
+    private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
     private ConfigModelBuilder(String model, String name) {
         this.model = model;
         this.name = name;
     }
 
-    public void pushConfig(ArtifactCoords.Ga ga, ResolvedFeatureGroupConfig fgConfig) {
-        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(ga);
+    public void pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
+        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(gav);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
-            fgConfigStacks.put(ga, fgConfigStack);
+            fgConfigStacks.put(gav, fgConfigStack);
         }
         fgConfigStack.add(fgConfig);
     }
 
-    public void popConfig(ArtifactCoords.Ga ga) {
-        final List<ResolvedFeatureGroupConfig> stack = fgConfigStacks.get(ga);
+    public void popConfig(ArtifactCoords.Gav gav) {
+        final List<ResolvedFeatureGroupConfig> stack = fgConfigStacks.get(gav);
         if(stack == null) {
-            throw new IllegalStateException("Feature group stack is null for " + ga);
+            throw new IllegalStateException("Feature group stack is null for " + gav);
         }
         if(stack.isEmpty()) {
-            throw new IllegalStateException("Feature group stack is empty for " + ga);
+            throw new IllegalStateException("Feature group stack is empty for " + gav);
         }
         stack.remove(stack.size() - 1);
     }
 
-    public boolean processFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config) {
+    public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config) throws ProvisioningDescriptionException {
+        final ResolvedFeatureId id = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
         if(id != null && featuresById.containsKey(id)) {
             return false;
         }
-        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.ga);
+        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
         if (fgConfigStack != null) {
             int i = fgConfigStack.size() - 1;
             while (i >= 0) {

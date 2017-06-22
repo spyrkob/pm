@@ -23,11 +23,11 @@ import org.jboss.provisioning.ArtifactCoords;
  * @author Alexey Loubyansky
  */
 class ResolvedSpecId {
-    final ArtifactCoords.Ga ga;
+    final ArtifactCoords.Gav gav;
     final String name;
 
-    ResolvedSpecId(ArtifactCoords.Ga ga, String name) {
-        this.ga = ga;
+    ResolvedSpecId(ArtifactCoords.Gav gav, String name) {
+        this.gav = gav;
         this.name = name;
     }
 
@@ -35,7 +35,7 @@ class ResolvedSpecId {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((ga == null) ? 0 : ga.hashCode());
+        result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -49,10 +49,10 @@ class ResolvedSpecId {
         if (getClass() != obj.getClass())
             return false;
         ResolvedSpecId other = (ResolvedSpecId) obj;
-        if (ga == null) {
-            if (other.ga != null)
+        if (gav == null) {
+            if (other.gav != null)
                 return false;
-        } else if (!ga.equals(other.ga))
+        } else if (!gav.equals(other.gav))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -64,6 +64,6 @@ class ResolvedSpecId {
 
     @Override
     public String toString() {
-        return ga + "#" + name;
+        return gav + "#" + name;
     }
 }
