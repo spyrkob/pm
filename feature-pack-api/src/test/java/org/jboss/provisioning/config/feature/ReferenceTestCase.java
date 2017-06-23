@@ -48,7 +48,7 @@ public class ReferenceTestCase extends PmInstallFeaturePackTestBase {
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("b", false))
-                    .addParam(FeatureParameterSpec.create("a"))
+                    .addParam(FeatureParameterSpec.create("a", true))
                     .addRef(FeatureReferenceSpec.builder("specA")
                             .setName("specA")
                             .setNillable(false)
