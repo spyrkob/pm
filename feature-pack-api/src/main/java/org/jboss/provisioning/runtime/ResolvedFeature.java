@@ -32,7 +32,7 @@ import org.jboss.provisioning.feature.FeatureReferenceSpec;
  *
  * @author Alexey Loubyansky
  */
-class ResolvedFeature {
+public class ResolvedFeature {
 
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
@@ -45,6 +45,30 @@ class ResolvedFeature {
         this.spec = spec;
         this.params = params;
         this.dependencies = resolvedDeps;
+    }
+
+    public boolean hasId() {
+        return id != null;
+    }
+
+    public ResolvedFeatureId getId() {
+        return id;
+    }
+
+    public ResolvedSpecId getSpecId() {
+        return spec.id;
+    }
+
+    public boolean hasParams() {
+        return !params.isEmpty();
+    }
+
+    public Set<String> getParamNames() {
+        return params.keySet();
+    }
+
+    public String getParamValue(String name) {
+        return params.get(name);
     }
 
     List<ResolvedFeatureId> resolveRefs() throws ProvisioningDescriptionException {

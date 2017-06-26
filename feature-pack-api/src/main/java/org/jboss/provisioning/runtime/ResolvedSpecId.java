@@ -22,7 +22,7 @@ import org.jboss.provisioning.ArtifactCoords;
  *
  * @author Alexey Loubyansky
  */
-class ResolvedSpecId {
+public class ResolvedSpecId {
     final ArtifactCoords.Gav gav;
     final String name;
 

@@ -14,21 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.provisioning.plugin;
 
-package org.jboss.provisioning.state;
-
-import java.util.Collections;
-import java.util.Map;
+import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ResolvedFeature;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedConfig {
+public interface ProvisioningConfigHandler {
 
-    private final Map<String, String> props = Collections.emptyMap();
+    default void prepare() throws ProvisioningException {};
 
+    default void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {};
 
+    default void nextSpec(ResolvedSpecId specId) throws ProvisioningException {};
 
+    default void nextFeature(ResolvedFeature feature) throws ProvisioningException {};
+
+    default void done() throws ProvisioningException {};
 }

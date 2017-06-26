@@ -105,6 +105,7 @@ public class ConfigModelBuilder {
     final String name;
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
+    private ResolvedConfig config;
     private boolean checkRefs;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
@@ -183,7 +184,11 @@ public class ConfigModelBuilder {
         return true;
     }
 
-    public void lineUp() throws ProvisioningException {
+    public ResolvedConfig lineUp() throws ProvisioningException {
+        config = new ResolvedConfig();
+        if(featuresById.isEmpty()) {
+            return config;
+        }
         System.out.println(model + ':' + name + "> lining up");
         if(checkRefs) {
             for(SpecFeatures specFeatures : featuresBySpec.values()) {
@@ -193,6 +198,8 @@ public class ConfigModelBuilder {
         for(SpecFeatures features : featuresBySpec.values()) {
             lineUp(features);
         }
+        config.complete();
+        return config;
     }
 
     private void lineUp(SpecFeatures features) throws ProvisioningDescriptionException {
@@ -200,12 +207,14 @@ public class ConfigModelBuilder {
             return;
         }
         features.liningUp = true;
-        for(ResolvedFeature feature : features.list) {
-            lineUp(features, feature);
+        lineUp(features.list.get(0), true);
+        int i = 1;
+        while(i < features.list.size()) {
+            lineUp(features.list.get(i++), false);
         }
     }
 
-    private void lineUp(SpecFeatures specFeatures, ResolvedFeature feature) throws ProvisioningDescriptionException {
+    private void lineUp(ResolvedFeature feature, boolean newBatch) throws ProvisioningDescriptionException {
         if(feature.liningUp) {
             return;
         }
@@ -214,30 +223,41 @@ public class ConfigModelBuilder {
         List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
             for(ResolvedFeatureId refId : refIds) {
-                final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
-                if(!targetSpecFeatures.liningUp) {
-                    lineUp(targetSpecFeatures);
-                } else {
-                    final ResolvedFeature dep = featuresById.get(refId);
-                    if(dep == null) {
-                        throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved reference ").append(refId).toString());
-                    }
-                    lineUp(targetSpecFeatures, dep);
-                }
+                lineUpRef(feature, refId, newBatch);
             }
         }
         if(!feature.dependencies.isEmpty()) {
             for(ResolvedFeatureId depId : feature.dependencies) {
-                final ResolvedFeature dependency = featuresById.get(depId);
-                if(dependency == null) {
-                    throw new ProvisioningDescriptionException(errorFor(feature).append(" has unsatisfied dependency on ").append(depId).toString());
-                }
-                lineUp(featuresBySpec.get(depId.specId), dependency);
+                lineUpRef(feature, depId, newBatch);
             }
         }
+        if(newBatch) {
+            config.newBatch(feature.spec.id);
+        }
+        config.add(feature);
+    }
 
-        final StringBuilder buf = errorFor(feature);
-        System.out.println(buf.toString());
+    private void lineUpRef(ResolvedFeature feature, ResolvedFeatureId refId, boolean newBatch) throws ProvisioningDescriptionException {
+        if (!feature.spec.id.equals(refId.specId)) {
+            final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
+            if (!targetSpecFeatures.liningUp) {
+                lineUp(targetSpecFeatures);
+            } else {
+                final ResolvedFeature dep = featuresById.get(refId);
+                if (dep == null) {
+                    throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
+                }
+                if(!dep.liningUp) {
+                    lineUp(dep, true);
+                }
+            }
+        } else {
+            final ResolvedFeature dep = featuresById.get(refId);
+            if (dep == null) {
+                throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
+            }
+            lineUp(dep, newBatch);
+        }
     }
 
     private StringBuilder errorFor(ResolvedFeature feature) {
