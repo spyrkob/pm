@@ -40,15 +40,12 @@ class ResolvedFeature {
     Set<ResolvedFeatureId> dependencies = Collections.emptySet();
     boolean liningUp;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params) {
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) {
         this.id = id;
         this.spec = spec;
         this.params = params;
+        this.dependencies = resolvedDeps;
     }
-
-//    List<ResolvedFeatureId> resolveDependencies() throws ProvisioningDescriptionException {
-//
-//    }
 
     List<ResolvedFeatureId> resolveRefs() throws ProvisioningDescriptionException {
         if(spec.resolvedRefTargets.isEmpty()) {

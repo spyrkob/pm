@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -133,10 +134,10 @@ public class ConfigModelBuilder {
         stack.remove(stack.size() - 1);
     }
 
-    public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config) throws ProvisioningDescriptionException {
+    public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         final ResolvedFeatureId id = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
         if(id != null && featuresById.containsKey(id)) {
-            // TODO overwrite params
+            // TODO overwrite params and merge resolved deps
             return false;
         }
         final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
@@ -166,7 +167,7 @@ public class ConfigModelBuilder {
                 }
             }
         }
-        final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams());
+        final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps);
         if(id != null) {
             featuresById.put(id, feature);
         }

@@ -436,7 +436,21 @@ public class ProvisioningRuntimeBuilder {
         final SpecId specId = fc.getSpecId();
         FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
-        if(modelBuilder.processFeature(spec, fc)) {
+        final Set<ResolvedFeatureId> resolvedDeps;
+        if(fc.hasDependencies()) {
+            final Set<FeatureId> userDeps = fc.getDependencies();
+            if(userDeps.size() == 1) {
+                resolvedDeps = Collections.singleton(resolveFeatureId(targetFp, userDeps.iterator().next()));
+            } else {
+                resolvedDeps = new HashSet<>(userDeps.size());
+                for(FeatureId featureId : userDeps) {
+                    resolvedDeps.add(resolveFeatureId(targetFp, featureId));
+                }
+            }
+        } else {
+            resolvedDeps = Collections.emptySet();
+        }
+        if(modelBuilder.processFeature(spec, fc, resolvedDeps)) {
             if (fc.hasNested()) {
                 for (FeatureConfig nested : fc.getNested()) {
                     final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
