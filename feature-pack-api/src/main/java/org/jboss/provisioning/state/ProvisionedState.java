@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
 
     public static class Builder {
         private Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
+        private List<ProvisionedConfig> configs = Collections.emptyList();
 
         private Builder() {
         }
@@ -45,7 +47,9 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
                     featurePacks = Collections.singletonMap(fp.getGav(), fp);
                     break;
                 case 1:
-                    featurePacks = new LinkedHashMap<>(featurePacks);
+                    final Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePack> first = featurePacks.entrySet().iterator().next();
+                    featurePacks = new LinkedHashMap<>(2);
+                    featurePacks.put(first.getKey(), first.getValue());
                 default:
                     featurePacks.put(fp.getGav(), fp);
             }
@@ -53,7 +57,7 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         }
 
         public ProvisionedState build() {
-            return new ProvisionedState(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
+            return new ProvisionedState(this);
         }
     }
 
@@ -62,9 +66,11 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     }
 
     private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
+    private final List<ProvisionedConfig> configs;
 
-    ProvisionedState(Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks) {
-        this.featurePacks = featurePacks;
+    ProvisionedState(Builder builder) {
+        this.featurePacks = builder.featurePacks.size() > 1 ? Collections.unmodifiableMap(builder.featurePacks) : builder.featurePacks;
+        this.configs = builder.configs.size() > 1 ? Collections.unmodifiableList(builder.configs) : builder.configs;
     }
 
     @Override
@@ -88,9 +94,20 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     }
 
     @Override
+    public boolean hasConfigs() {
+        return !configs.isEmpty();
+    }
+
+    @Override
+    public List<ProvisionedConfig> getConfigs() {
+        return configs;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((configs == null) ? 0 : configs.hashCode());
         result = prime * result + ((featurePacks == null) ? 0 : featurePacks.hashCode());
         return result;
     }
@@ -104,6 +121,11 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         if (getClass() != obj.getClass())
             return false;
         ProvisionedState other = (ProvisionedState) obj;
+        if (configs == null) {
+            if (other.configs != null)
+                return false;
+        } else if (!configs.equals(other.configs))
+            return false;
         if (featurePacks == null) {
             if (other.featurePacks != null)
                 return false;

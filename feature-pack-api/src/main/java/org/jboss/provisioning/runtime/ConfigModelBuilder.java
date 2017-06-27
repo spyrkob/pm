@@ -32,13 +32,15 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.state.ProvisionedConfig;
 
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ConfigModelBuilder {
+public class ConfigModelBuilder implements ProvisionedConfig {
 
     private class SpecFeatures {
         final ResolvedFeatureSpec spec;
@@ -105,7 +107,6 @@ public class ConfigModelBuilder {
     final String name;
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
-    private ResolvedConfig config;
     private boolean checkRefs;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
@@ -184,10 +185,15 @@ public class ConfigModelBuilder {
         return true;
     }
 
-    public ResolvedConfig lineUp() throws ProvisioningException {
-        config = new ResolvedConfig();
+    @Override
+    public boolean isEmpty() {
+        return featuresById.isEmpty();
+    }
+
+    @Override
+    public void handle(ProvisionedConfigHandler handler) throws ProvisioningException {
         if(featuresById.isEmpty()) {
-            return config;
+            return;
         }
         System.out.println(model + ':' + name + "> lining up");
         if(checkRefs) {
@@ -196,25 +202,28 @@ public class ConfigModelBuilder {
             }
         }
         for(SpecFeatures features : featuresBySpec.values()) {
-            lineUp(features);
+            handleSpec(features, handler);
         }
-        config.complete();
-        return config;
+        handler.done();
     }
 
-    private void lineUp(SpecFeatures features) throws ProvisioningDescriptionException {
+    public ProvisionedConfig build() throws ProvisioningException {
+        return this;
+    }
+
+    private void handleSpec(SpecFeatures features, ProvisionedConfigHandler handler) throws ProvisioningException {
         if(features.liningUp) {
             return;
         }
         features.liningUp = true;
-        lineUp(features.list.get(0), true);
+        handleFeature(features.list.get(0), true, handler);
         int i = 1;
         while(i < features.list.size()) {
-            lineUp(features.list.get(i++), false);
+            handleFeature(features.list.get(i++), false, handler);
         }
     }
 
-    private void lineUp(ResolvedFeature feature, boolean newBatch) throws ProvisioningDescriptionException {
+    private void handleFeature(ResolvedFeature feature, boolean newBatch, ProvisionedConfigHandler handler) throws ProvisioningException {
         if(feature.liningUp) {
             return;
         }
@@ -223,32 +232,32 @@ public class ConfigModelBuilder {
         List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
             for(ResolvedFeatureId refId : refIds) {
-                lineUpRef(feature, refId, newBatch);
+                handleRef(feature, refId, newBatch, handler);
             }
         }
         if(!feature.dependencies.isEmpty()) {
             for(ResolvedFeatureId depId : feature.dependencies) {
-                lineUpRef(feature, depId, newBatch);
+                handleRef(feature, depId, newBatch, handler);
             }
         }
         if(newBatch) {
-            config.newBatch(feature.spec.id);
+            handler.nextSpec(feature.spec.id);
         }
-        config.add(feature);
+        handler.nextFeature(feature);
     }
 
-    private void lineUpRef(ResolvedFeature feature, ResolvedFeatureId refId, boolean newBatch) throws ProvisioningDescriptionException {
+    private void handleRef(ResolvedFeature feature, ResolvedFeatureId refId, boolean newBatch, ProvisionedConfigHandler handler) throws ProvisioningException {
         if (!feature.spec.id.equals(refId.specId)) {
             final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
             if (!targetSpecFeatures.liningUp) {
-                lineUp(targetSpecFeatures);
+                handleSpec(targetSpecFeatures, handler);
             } else {
                 final ResolvedFeature dep = featuresById.get(refId);
                 if (dep == null) {
                     throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
                 }
                 if(!dep.liningUp) {
-                    lineUp(dep, true);
+                    handleFeature(dep, true, handler);
                 }
             }
         } else {
@@ -256,7 +265,7 @@ public class ConfigModelBuilder {
             if (dep == null) {
                 throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
             }
-            lineUp(dep, newBatch);
+            handleFeature(dep, newBatch, handler);
         }
     }
 

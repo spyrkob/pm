@@ -86,10 +86,10 @@ public class ProvisioningRuntimeBuilder {
 
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
-    private List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
-    private Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
+    List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
+    Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
     private Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
-    private Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
+    Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
     private ProvisioningRuntimeBuilder() {
@@ -161,12 +161,12 @@ public class ProvisioningRuntimeBuilder {
     private void buildConfigs() throws ProvisioningException {
         if(!anonymousConfigs.isEmpty()) {
             for(ConfigModelBuilder config : anonymousConfigs) {
-                config.lineUp();
+                config.build();
             }
         }
         if(!noModelNamedConfigs.isEmpty()) {
             for(Map.Entry<String, ConfigModelBuilder> entry : noModelNamedConfigs.entrySet()) {
-                entry.getValue().lineUp();
+                entry.getValue().build();
             }
         }
 
@@ -174,7 +174,7 @@ public class ProvisioningRuntimeBuilder {
             for(Map.Entry<String, ConfigModelBuilder> entry : noNameModelConfigs.entrySet()) {
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
                 if(targetConfigs == null) {
-                    entry.getValue().lineUp();
+                    entry.getValue().build();
                     continue;
                 }
                 for(Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
@@ -185,7 +185,7 @@ public class ProvisioningRuntimeBuilder {
 
         for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
             for(Map.Entry<String, ConfigModelBuilder> configEntry : configMap.entrySet()) {
-                configEntry.getValue().lineUp();
+                configEntry.getValue().build();
             }
         }
     }

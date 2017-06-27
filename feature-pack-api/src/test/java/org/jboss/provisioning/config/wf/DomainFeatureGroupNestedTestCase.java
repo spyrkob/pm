@@ -28,6 +28,12 @@ import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.runtime.ResolvedFeature;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -38,6 +44,35 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  * @author Alexey Loubyansky
  */
 public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBase {
+
+    public static class TestConfigPlugin implements ProvisioningPlugin {
+        private static final TestConfigHandler configHandler = new TestConfigHandler();
+        @Override
+        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
+            if(ctx.hasConfigs()) {
+                for(ProvisionedConfig config : ctx.getConfigs()) {
+                    config.handle(configHandler);
+                }
+            }
+        }
+    }
+
+    public static class TestConfigHandler implements ProvisionedConfigHandler {
+
+        @Override
+        public void nextFeaturePack(ArtifactCoords.Gav fpGav) {
+            System.out.println("Feature-pack " + fpGav);
+        }
+        @Override
+        public void nextSpec(ResolvedSpecId specId) {
+            System.out.println(" spec " + specId);
+        }
+
+        @Override
+        public void nextFeature(ResolvedFeature feature) {
+            System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
+        }
+    }
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -197,8 +232,10 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
                     .addFeatureGroup(FeatureGroupConfig.forGroup("domain"))
                     .build())
             .newPackage("p1", true)
-                .getFeaturePack()
-            .getInstaller()
+        .getFeaturePack()
+        .addPlugin(TestConfigPlugin.class)
+        .addClassToPlugin(TestConfigHandler.class)
+        .getInstaller()
         .install();
     }
 
