@@ -18,6 +18,7 @@
 package org.jboss.provisioning.config.wf;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -31,19 +32,24 @@ import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.runtime.ResolvedFeature;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.state.ProvisionedConfig;
+import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBase {
+
+    private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
     public static class TestConfigPlugin implements ProvisioningPlugin {
         private static final TestConfigHandler configHandler = new TestConfigHandler();
@@ -69,7 +75,7 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
         }
 
         @Override
-        public void nextFeature(ResolvedFeature feature) {
+        public void nextFeature(ProvisionedFeature feature) {
             System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
         }
     }
@@ -77,7 +83,7 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+        .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("extension")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .build())
@@ -241,14 +247,135 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
 
     @Override
     protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"));
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
                         .addPackage("p1")
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "extension", "name", "org.jboss.as.logging")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "default")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "ha")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", "default"))
+//                                .setParam("extension", "org.jboss.as.logging")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", "ha"))
+//                                 .setParam("extension", "org.jboss.as.logging")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                                .setParam("profile", "default")
+                                .setParam("name", "PATTERN")
+                                .build())
+                                .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                                .setParam("profile", "default")
+                                .setParam("name", "COLOR-PATTERN").build())
+                                .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logging-console-handler")
+                                .setParam("profile", "default")
+                                .setParam("name", "CONSOLE").build())
+//                                .setParam("level", "INFO")
+//                                .setParam("formatters", "COLOR_PATTERN")
+//                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
+                                .setParam("profile", "default")
+                                .setParam("name", "FILE").build())
+//                                .setParam("level", "DEBUG")
+//                                .setParam("formatters", "PATTERN")
+//                                .setParam("relative-to", "jboss.server.log.dir")
+//                                .setParam("path", "server.log")
+//                                .setParam("suffix", ".yyyy-MM-dd")
+//                                .setParam("append", "true")
+//                                .setParam("autoflush", "true")
+//                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logger")
+                                .setParam("profile", "default")
+                                .setParam("category", "com.arjuna").build())
+                                .setParam("level", "WARN")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logger")
+                                .setParam("profile", "default")
+                                .setParam("category", "org.jboss.as.config").build())
+                                .setParam("level", "DEBUG")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logger")
+                                .setParam("profile", "default")
+                                .setParam("category", "sun.rmi").build())
+                                .setParam("level", "WARN")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logger")
+                                .setParam("profile", "ha")
+                                .setParam("category", "org.jboss.pm").build())
+                                .setParam("level", "DEBUG")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "logger")
+                                .setParam("profile", "ha")
+                                .setParam("category", "java.util").build())
+                                .setParam("level", "INFO")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "root-logger", "profile", "default"))
+//                                .setParam("level", "INFO")
+//                                .setParam("console-handler", "CONSOLE")
+//                                .setParam("periodic-rotating-file-handler", "FILE")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "interface", "name", "public")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "socket-binding-group", "name", "standard-sockets"))
+                                .setParam("default-interface", "public")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "socket-binding-group", "name", "ha-sockets"))
+                                .setParam("default-interface", "public")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                                .setParam("socket-binding-group", "standard-sockets")
+                                .setParam("name", "http")
+                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                                .setParam("socket-binding-group", "standard-sockets")
+                                .setParam("name", "https")
+                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                                .setParam("socket-binding-group", "ha-sockets")
+                                .setParam("name", "http")
+                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                                .setParam("socket-binding-group", "ha-sockets")
+                                .setParam("name", "https")
+                                .build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "server-group", "name", "main-server-group"))
+                                .setParam("socket-binding-group", "standard-sockets")
+                                .setParam("profile", "default")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "server-group", "name", "other-server-group"))
+                                .setParam("socket-binding-group", "ha-sockets")
+                                .setParam("profile", "ha")
+                                .build())
                         .build())
                 .build();
     }

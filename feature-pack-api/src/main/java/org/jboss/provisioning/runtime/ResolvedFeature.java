@@ -27,18 +27,19 @@ import java.util.Set;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
+import org.jboss.provisioning.state.ProvisionedFeature;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedFeature {
+public class ResolvedFeature implements ProvisionedFeature {
 
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
     Set<ResolvedFeatureId> dependencies = Collections.emptySet();
-    boolean liningUp;
+    boolean beingHandled;
 
     ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) {
         this.id = id;
@@ -47,20 +48,29 @@ public class ResolvedFeature {
         this.dependencies = resolvedDeps;
     }
 
+    @Override
     public boolean hasId() {
         return id != null;
     }
 
+    @Override
     public ResolvedFeatureId getId() {
         return id;
     }
 
+    @Override
     public ResolvedSpecId getSpecId() {
         return spec.id;
     }
 
+    @Override
     public boolean hasParams() {
         return !params.isEmpty();
+    }
+
+    @Override
+    public Map<String, String> getParams() {
+        return params;
     }
 
     public Set<String> getParamNames() {

@@ -271,6 +271,7 @@ public class ProvisioningRuntimeBuilder {
         if(config.getModel() == null) {
             if(config.getName() == null) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.anonymous();
+                modelBuilder.overwriteProps(config.getProperties());
                 switch(anonymousConfigs.size()) {
                     case 0:
                         anonymousConfigs = Collections.singletonList(modelBuilder);
@@ -284,6 +285,7 @@ public class ProvisioningRuntimeBuilder {
             }
             if (noModelNamedConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forName(config.getName());
+                modelBuilder.overwriteProps(config.getProperties());
                 noModelNamedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
                 return modelBuilder;
             }
@@ -291,15 +293,17 @@ public class ProvisioningRuntimeBuilder {
             if (modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forName(config.getName());
                 if (noModelNamedConfigs.size() == 1) {
-                    noModelNamedConfigs = new HashMap<>(noModelNamedConfigs);
+                    noModelNamedConfigs = new LinkedHashMap<>(noModelNamedConfigs);
                 }
                 noModelNamedConfigs.put(config.getName(), modelBuilder);
             }
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if(config.getName() == null) {
             if(noNameModelConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forModel(config.getModel());
+                modelBuilder.overwriteProps(config.getProperties());
                 noNameModelConfigs = Collections.singletonMap(config.getModel(), modelBuilder);
                 return modelBuilder;
             }
@@ -307,25 +311,27 @@ public class ProvisioningRuntimeBuilder {
             if (modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forModel(config.getModel());
                 if (noNameModelConfigs.size() == 1) {
-                    noNameModelConfigs = new HashMap<>(noNameModelConfigs);
+                    noNameModelConfigs = new LinkedHashMap<>(noNameModelConfigs);
                 }
                 noNameModelConfigs.put(config.getModel(), modelBuilder);
             }
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if (modelConfigs.isEmpty()) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
-            modelConfigs = Collections
-                    .singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
+            modelBuilder.overwriteProps(config.getProperties());
+            modelConfigs = Collections.singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
             return modelBuilder;
         }
         Map<String, ConfigModelBuilder> namedConfigs = modelConfigs.get(config.getModel());
         if (namedConfigs == null) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             if (modelConfigs.size() == 1) {
-                modelConfigs = new HashMap<>(modelConfigs);
+                modelConfigs = new LinkedHashMap<>(modelConfigs);
             }
             modelConfigs.put(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         final ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
@@ -333,12 +339,13 @@ public class ProvisioningRuntimeBuilder {
             if (namedConfigs.size() == 1) {
                 namedConfigs = new HashMap<>(namedConfigs);
                 if (modelConfigs.size() == 1) {
-                    modelConfigs = new HashMap<>(modelConfigs);
+                    modelConfigs = new LinkedHashMap<>(modelConfigs);
                 }
                 modelConfigs.put(config.getModel(), namedConfigs);
             }
             namedConfigs.put(config.getName(), modelBuilder);
         }
+        modelBuilder.overwriteProps(config.getProperties());
         return modelBuilder;
     }
 

@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.state;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -52,6 +53,21 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
                     featurePacks.put(first.getKey(), first.getValue());
                 default:
                     featurePacks.put(fp.getGav(), fp);
+            }
+            return this;
+        }
+
+        public Builder addConfig(ProvisionedConfig config) {
+            switch(configs.size()) {
+                case 0:
+                    configs = Collections.singletonList(config);
+                    break;
+                case 1:
+                    final ProvisionedConfig first = configs.get(0);
+                    configs = new ArrayList<>(2);
+                    configs.add(first);
+                default:
+                    configs.add(config);
             }
             return this;
         }

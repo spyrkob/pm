@@ -19,24 +19,22 @@ package org.jboss.provisioning.state;
 
 import java.util.Map;
 
-import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedConfig {
+public interface ProvisionedFeature {
 
-    String getName();
+    boolean hasId();
 
-    String getModel();
+    ResolvedFeatureId getId();
 
-    boolean hasProperties();
+    ResolvedSpecId getSpecId();
 
-    Map<String, String> getProperties();
+    boolean hasParams();
 
-    boolean hasFeatures();
-
-    void handle(ProvisionedConfigHandler handler) throws ProvisioningException;
+    Map<String, String> getParams();
 }

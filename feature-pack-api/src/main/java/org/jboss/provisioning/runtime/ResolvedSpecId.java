@@ -26,9 +26,17 @@ public class ResolvedSpecId {
     final ArtifactCoords.Gav gav;
     final String name;
 
-    ResolvedSpecId(ArtifactCoords.Gav gav, String name) {
+    public ResolvedSpecId(ArtifactCoords.Gav gav, String name) {
         this.gav = gav;
         this.name = name;
+    }
+
+    public ArtifactCoords.Gav getGav() {
+        return gav;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override
