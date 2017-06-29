@@ -41,11 +41,38 @@ public class ResolvedFeature implements ProvisionedFeature {
     Set<ResolvedFeatureId> dependencies = Collections.emptySet();
     boolean beingHandled;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) {
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         this.id = id;
         this.spec = spec;
-        this.params = params;
         this.dependencies = resolvedDeps;
+        if (!params.isEmpty()) {
+            if (!spec.xmlSpec.hasParams()) {
+                throw new ProvisioningDescriptionException("Features of type " + spec.id + " don't accept any parameters: " + params);
+            }
+            if(params.size() > spec.xmlSpec.getParamsTotal()) {
+                throw new ProvisioningDescriptionException("Provided parameters " + params.keySet() + " do not match " + spec.id + " parameters " + spec.xmlSpec.getParamNames());
+            }
+            if(spec.xmlSpec.getParamsTotal() == 1) {
+                final Entry<String, String> param = params.entrySet().iterator().next();
+                final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(param.getKey());
+                if(paramSpec == null) {
+                    throw new ProvisioningDescriptionException("Provided parameters " + params.keySet() + " do not match " + spec.id + " parameters " + spec.xmlSpec.getParamNames());
+                }
+                this.params = Collections.singletonMap(param.getKey(), param.getValue());
+            } else {
+                this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
+                if(params.size() != spec.xmlSpec.getParamsTotal()) {
+                    for(FeatureParameterSpec pSpec : spec.xmlSpec.getParams()) {
+                        if(pSpec.hasDefaultValue()) {
+                            this.params.put(pSpec.getName(), pSpec.getDefaultValue());
+                        }
+                    }
+                }
+                for(Map.Entry<String, String> param : params.entrySet()) {
+                    this.params.put(param.getKey(), param.getValue());
+                }
+            }
+        }
     }
 
     @Override

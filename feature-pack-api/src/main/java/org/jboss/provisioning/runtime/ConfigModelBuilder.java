@@ -150,9 +150,12 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         final ResolvedFeatureId id = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
-        if(id != null && featuresById.containsKey(id)) {
-            // TODO overwrite params and merge resolved deps
-            return false;
+        if(id != null) {
+            final ResolvedFeature feature = featuresById.get(id);
+            if(feature != null) {
+                // TODO overwrite params and merge resolved deps
+                return false;
+            }
         }
         final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
         if (fgConfigStack != null) {
