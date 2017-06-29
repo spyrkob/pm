@@ -17,21 +17,158 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class ResolvedFeatureId {
+public class ResolvedFeatureId {
+
+    public static class Builder {
+        private final ResolvedSpecId specId;
+        private Map<String, String> params = Collections.emptyMap();
+
+        private Builder(ArtifactCoords.Gav gav, String spec) {
+            this.specId = new ResolvedSpecId(gav, spec);
+        }
+
+        public Builder setParam(String name, String value) {
+            if(params.isEmpty()) {
+                params = Collections.singletonMap(name, value);
+                return this;
+            }
+            if(params.size() == 1) {
+                if(params.containsKey(name)) {
+                    params = Collections.singletonMap(name, value);
+                    return this;
+                }
+                final Map.Entry<String, String> entry = params.entrySet().iterator().next();
+                params = new HashMap<>(2);
+                params.put(entry.getKey(), entry.getValue());
+            }
+            params.put(name, value);
+            return this;
+        }
+
+        public ResolvedFeatureId build() throws ProvisioningDescriptionException {
+            if(params.isEmpty()) {
+                throw new ProvisioningDescriptionException("ResolvedFeatureId must have params");
+            }
+            return new ResolvedFeatureId(specId, params);
+        }
+    }
+
+    public static Builder builder(ArtifactCoords.Gav gav, String spec) {
+        return new Builder(gav, spec);
+    }
+
+    public static ResolvedFeatureId fromString(String str) throws ProvisioningDescriptionException {
+        final int length = str.length();
+        if(length == 0) {
+            formatException(str);
+        }
+
+        int nextIndex = 0;
+        char c = str.charAt(nextIndex++);
+        final StringBuilder buf = new StringBuilder(length);
+        ResolvedSpecId specId = null;
+        String groupId = null;
+        String artifactId = null;
+        String version = null;
+        while(nextIndex < length) {
+            if(c == '#') {
+                if(artifactId == null || version != null || buf.length() == 0) {
+                    formatException(str);
+                }
+                version = buf.toString();
+                buf.setLength(0);
+            } else if(c == ':') {
+                if(buf.length() == 0) {
+                    formatException(str);
+                }
+                if(groupId == null) {
+                    groupId = buf.toString();
+                } else if(artifactId == null) {
+                    artifactId = buf.toString();
+                } else if(version == null) {
+                    formatException(str);
+                } else {
+                    specId = new ResolvedSpecId(ArtifactCoords.newGav(groupId, artifactId, version), buf.toString());
+                    break;
+                }
+                buf.setLength(0);
+            } else {
+                buf.append(c);
+            }
+            c = str.charAt(nextIndex++);
+        }
+
+        if(specId == null) {
+            formatException(str);
+        }
+
+        int endIndex = str.indexOf(',', nextIndex + 3);
+        if(endIndex < 0) {
+            final int equals = str.indexOf('=', nextIndex + 1);
+            if(equals < 0 || equals == str.length() - 1) {
+                formatException(str);
+            }
+            return new ResolvedFeatureId(specId, Collections.singletonMap(str.substring(nextIndex, equals), str.substring(equals + 1)));
+        }
+
+        final Map<String, String> params = new HashMap<>(2);
+        int lastComma = nextIndex - 1;
+        while(endIndex > 0) {
+            int equals = str.indexOf('=', lastComma + 2);
+            if(equals < 0 || equals == str.length() - 1) {
+                formatException(str);
+            }
+            params.put(str.substring(lastComma + 1, equals),  str.substring(equals + 1, endIndex));
+            lastComma = endIndex;
+            endIndex = str.indexOf(',', endIndex + 1);
+        }
+
+        int equals = str.indexOf('=', lastComma + 2);
+        if(equals < 0 || equals == str.length() - 1) {
+            formatException(str);
+        }
+        params.put(str.substring(lastComma + 1, equals),  str.substring(equals + 1));
+        return new ResolvedFeatureId(specId, params);
+    }
+
+    private static void formatException(String str) throws ProvisioningDescriptionException {
+        throw new ProvisioningDescriptionException("'" + str + "' does not follow format group_id:artifact_id:version#spec_name:param_name=value(,param_name=value)*");
+    }
+
+    public static ResolvedFeatureId create(ArtifactCoords.Gav gav, String spec, String param, String value) {
+        return new ResolvedFeatureId(new ResolvedSpecId(gav, spec), Collections.singletonMap(param, value));
+    }
+
+    public static ResolvedFeatureId create(ResolvedSpecId specId, String param, String value) {
+        return new ResolvedFeatureId(specId, Collections.singletonMap(param, value));
+    }
 
     final ResolvedSpecId specId;
     final Map<String, String> params;
 
     ResolvedFeatureId(ResolvedSpecId specId, Map<String, String> params) {
         this.specId = specId;
-        this.params = params;
+        this.params = params.size() > 1 ? Collections.unmodifiableMap(params) : params;
+    }
+
+    public ResolvedSpecId getSpecId() {
+        return specId;
+    }
+
+    public Map<String, String> getParams() {
+        return params;
     }
 
     @Override

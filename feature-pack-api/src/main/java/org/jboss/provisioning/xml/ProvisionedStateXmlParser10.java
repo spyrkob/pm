@@ -43,11 +43,17 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
 
     enum Element implements XmlNameProvider {
 
+        CONFIG("config"),
+        FEATURE("feature"),
         FEATURE_PACK("feature-pack"),
         INSTALLATION("installation"),
         PACKAGES("packages"),
         PACKAGE("package"),
         PARAMETERS(PackageParametersXml.PARAMETERS),
+        PARAM("param"),
+        PROP("prop"),
+        PROPS("props"),
+        SPEC("spec"),
 
         // default unknown element
         UNKNOWN(null);
@@ -102,7 +108,10 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
 
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
+        ID("id"),
+        MODEL("model"),
         NAME("name"),
+        VALUE("value"),
         VERSION("version"),
 
         // default unknown attribute
@@ -165,6 +174,9 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
                     switch (element) {
                         case FEATURE_PACK:
                             builder.addFeaturePack(readFeaturePack(reader));
+                            break;
+                        case CONFIG:
+                            builder.addConfig(ProvisionedConfigXmlUtil.readConfig(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

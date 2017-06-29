@@ -86,10 +86,10 @@ public class ProvisioningRuntimeBuilder {
 
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
-    private List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
-    private Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
+    List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
+    Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
     private Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
-    private Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
+    Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
     private ProvisioningRuntimeBuilder() {
@@ -161,12 +161,12 @@ public class ProvisioningRuntimeBuilder {
     private void buildConfigs() throws ProvisioningException {
         if(!anonymousConfigs.isEmpty()) {
             for(ConfigModelBuilder config : anonymousConfigs) {
-                config.lineUp();
+                config.build();
             }
         }
         if(!noModelNamedConfigs.isEmpty()) {
             for(Map.Entry<String, ConfigModelBuilder> entry : noModelNamedConfigs.entrySet()) {
-                entry.getValue().lineUp();
+                entry.getValue().build();
             }
         }
 
@@ -174,7 +174,7 @@ public class ProvisioningRuntimeBuilder {
             for(Map.Entry<String, ConfigModelBuilder> entry : noNameModelConfigs.entrySet()) {
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
                 if(targetConfigs == null) {
-                    entry.getValue().lineUp();
+                    entry.getValue().build();
                     continue;
                 }
                 for(Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
@@ -185,7 +185,7 @@ public class ProvisioningRuntimeBuilder {
 
         for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
             for(Map.Entry<String, ConfigModelBuilder> configEntry : configMap.entrySet()) {
-                configEntry.getValue().lineUp();
+                configEntry.getValue().build();
             }
         }
     }
@@ -271,6 +271,7 @@ public class ProvisioningRuntimeBuilder {
         if(config.getModel() == null) {
             if(config.getName() == null) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.anonymous();
+                modelBuilder.overwriteProps(config.getProperties());
                 switch(anonymousConfigs.size()) {
                     case 0:
                         anonymousConfigs = Collections.singletonList(modelBuilder);
@@ -284,6 +285,7 @@ public class ProvisioningRuntimeBuilder {
             }
             if (noModelNamedConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forName(config.getName());
+                modelBuilder.overwriteProps(config.getProperties());
                 noModelNamedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
                 return modelBuilder;
             }
@@ -291,15 +293,17 @@ public class ProvisioningRuntimeBuilder {
             if (modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forName(config.getName());
                 if (noModelNamedConfigs.size() == 1) {
-                    noModelNamedConfigs = new HashMap<>(noModelNamedConfigs);
+                    noModelNamedConfigs = new LinkedHashMap<>(noModelNamedConfigs);
                 }
                 noModelNamedConfigs.put(config.getName(), modelBuilder);
             }
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if(config.getName() == null) {
             if(noNameModelConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forModel(config.getModel());
+                modelBuilder.overwriteProps(config.getProperties());
                 noNameModelConfigs = Collections.singletonMap(config.getModel(), modelBuilder);
                 return modelBuilder;
             }
@@ -307,25 +311,27 @@ public class ProvisioningRuntimeBuilder {
             if (modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forModel(config.getModel());
                 if (noNameModelConfigs.size() == 1) {
-                    noNameModelConfigs = new HashMap<>(noNameModelConfigs);
+                    noNameModelConfigs = new LinkedHashMap<>(noNameModelConfigs);
                 }
                 noNameModelConfigs.put(config.getModel(), modelBuilder);
             }
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if (modelConfigs.isEmpty()) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
-            modelConfigs = Collections
-                    .singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
+            modelBuilder.overwriteProps(config.getProperties());
+            modelConfigs = Collections.singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
             return modelBuilder;
         }
         Map<String, ConfigModelBuilder> namedConfigs = modelConfigs.get(config.getModel());
         if (namedConfigs == null) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             if (modelConfigs.size() == 1) {
-                modelConfigs = new HashMap<>(modelConfigs);
+                modelConfigs = new LinkedHashMap<>(modelConfigs);
             }
             modelConfigs.put(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
+            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         final ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
@@ -333,12 +339,13 @@ public class ProvisioningRuntimeBuilder {
             if (namedConfigs.size() == 1) {
                 namedConfigs = new HashMap<>(namedConfigs);
                 if (modelConfigs.size() == 1) {
-                    modelConfigs = new HashMap<>(modelConfigs);
+                    modelConfigs = new LinkedHashMap<>(modelConfigs);
                 }
                 modelConfigs.put(config.getModel(), namedConfigs);
             }
             namedConfigs.put(config.getName(), modelBuilder);
         }
+        modelBuilder.overwriteProps(config.getProperties());
         return modelBuilder;
     }
 
@@ -436,7 +443,21 @@ public class ProvisioningRuntimeBuilder {
         final SpecId specId = fc.getSpecId();
         FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
-        if(modelBuilder.processFeature(spec, fc)) {
+        final Set<ResolvedFeatureId> resolvedDeps;
+        if(fc.hasDependencies()) {
+            final Set<FeatureId> userDeps = fc.getDependencies();
+            if(userDeps.size() == 1) {
+                resolvedDeps = Collections.singleton(resolveFeatureId(targetFp, userDeps.iterator().next()));
+            } else {
+                resolvedDeps = new HashSet<>(userDeps.size());
+                for(FeatureId featureId : userDeps) {
+                    resolvedDeps.add(resolveFeatureId(targetFp, featureId));
+                }
+            }
+        } else {
+            resolvedDeps = Collections.emptySet();
+        }
+        if(modelBuilder.processFeature(spec, fc, resolvedDeps)) {
             if (fc.hasNested()) {
                 for (FeatureConfig nested : fc.getNested()) {
                     final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);

@@ -14,30 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.jboss.provisioning.state;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+package org.jboss.provisioning.plugin;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.state.ProvisionedFeature;
+
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackSet<F extends FeaturePack<?>> {
+public interface ProvisionedConfigHandler {
 
-    boolean hasFeaturePacks();
+    default void prepare() throws ProvisioningException {};
 
-    Set<ArtifactCoords.Gav> getFeaturePackGavs();
+    default void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {};
 
-    Collection<F> getFeaturePacks();
+    default void nextSpec(ResolvedSpecId specId) throws ProvisioningException {};
 
-    F getFeaturePack(ArtifactCoords.Gav gav);
+    default void nextFeature(ProvisionedFeature feature) throws ProvisioningException {};
 
-    boolean hasConfigs();
-
-    List<ProvisionedConfig> getConfigs();
+    default void done() throws ProvisioningException {};
 }

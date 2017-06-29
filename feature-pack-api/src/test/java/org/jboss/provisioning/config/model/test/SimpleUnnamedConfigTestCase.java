@@ -18,6 +18,7 @@
 package org.jboss.provisioning.config.model.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -25,10 +26,13 @@ import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
@@ -36,10 +40,12 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
  */
 public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
 
+    private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+        .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
@@ -59,14 +65,21 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
 
     @Override
     protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"));
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
                         .addPackage("p1")
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
+                                .setParam("p1", "config1")
+                                .build())
                         .build())
                 .build();
     }

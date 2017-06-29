@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
@@ -146,6 +147,14 @@ public class FeatureSpec {
 
     public boolean hasParams() {
         return !params.isEmpty();
+    }
+
+    public int getParamsTotal() {
+        return params.size();
+    }
+
+    public Set<String> getParamNames() {
+        return params.keySet();
     }
 
     public Collection<FeatureParameterSpec> getParams() {

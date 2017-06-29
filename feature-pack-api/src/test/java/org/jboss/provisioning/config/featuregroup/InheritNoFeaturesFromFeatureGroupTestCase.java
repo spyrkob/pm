@@ -31,6 +31,7 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 
 /**
  *
@@ -91,6 +92,10 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
                         .addPackage("p1")
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
                         .build())
                 .build();
     }

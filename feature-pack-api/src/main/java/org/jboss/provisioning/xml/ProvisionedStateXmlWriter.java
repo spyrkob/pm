@@ -16,9 +16,12 @@
  */
 package org.jboss.provisioning.xml;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.state.FeaturePack;
 import org.jboss.provisioning.state.FeaturePackPackage;
 import org.jboss.provisioning.state.FeaturePackSet;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -38,7 +41,8 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter<FeaturePackSet<?>> 
     private ProvisionedStateXmlWriter() {
     }
 
-    protected ElementNode toElement(FeaturePackSet<?> provisionedState) {
+    @Override
+    protected ElementNode toElement(FeaturePackSet<?> provisionedState) throws XMLStreamException {
 
         final ElementNode pkg = addElement(null, Element.INSTALLATION);
 
@@ -46,6 +50,12 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter<FeaturePackSet<?>> 
             for(FeaturePack<?> fp : provisionedState.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
                 writeFeaturePack(fpElement, fp);
+            }
+        }
+
+        if(provisionedState.hasConfigs()) {
+            for(ProvisionedConfig config : provisionedState.getConfigs()) {
+                pkg.addChild(ProvisionedConfigXmlWriter.getInstance().toElement(config));
             }
         }
 

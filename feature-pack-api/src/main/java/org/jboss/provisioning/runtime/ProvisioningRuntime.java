@@ -43,6 +43,7 @@ import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePackSet;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -111,6 +112,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Path tmpDir;
     private final Path pluginsDir;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
+    private List<ProvisionedConfig> configs = Collections.emptyList();
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
         this.startTime = builder.startTime;
@@ -118,6 +120,27 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.config = builder.config;
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
+
+        if(!builder.anonymousConfigs.isEmpty()) {
+            for(ProvisionedConfig config : builder.anonymousConfigs) {
+                addConfig(config);
+            }
+        }
+        if(!builder.noModelNamedConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> config : builder.noModelNamedConfigs.entrySet()) {
+                addConfig(config.getValue());
+            }
+        }
+        if(!builder.modelConfigs.isEmpty()) {
+            for(Map.Entry<String, Map<String, ConfigModelBuilder>> namedConfigs : builder.modelConfigs.entrySet()) {
+                for(Map.Entry<String, ConfigModelBuilder> config : namedConfigs.getValue().entrySet()) {
+                    addConfig(config.getValue());
+                }
+            }
+        }
+        if(configs.size() > 1) {
+            configs = Collections.unmodifiableList(configs);
+        }
 
         this.workDir = builder.workDir;
         this.installDir = builder.installDir;
@@ -131,6 +154,19 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.tmpDir = workDir.resolve("tmp");
     }
 
+    private void addConfig(ProvisionedConfig config) {
+        switch(configs.size()) {
+            case 0:
+                configs = Collections.singletonList(config);
+                break;
+            case 1:
+                final ProvisionedConfig tmp = configs.get(0);
+                configs = new ArrayList<>(2);
+                configs.add(tmp);
+            default:
+                configs.add(config);
+        }
+    }
     /**
      * The target installation location
      *
@@ -227,6 +263,16 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      */
     public Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException {
         return artifactResolver.resolve(coords);
+    }
+
+    @Override
+    public boolean hasConfigs() {
+        return !configs.isEmpty();
+    }
+
+    @Override
+    public List<ProvisionedConfig> getConfigs() {
+        return configs;
     }
 
     private void executePlugins() throws ProvisioningException {

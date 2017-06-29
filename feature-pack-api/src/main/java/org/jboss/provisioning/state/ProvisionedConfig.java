@@ -17,27 +17,26 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackSet<F extends FeaturePack<?>> {
+public interface ProvisionedConfig {
 
-    boolean hasFeaturePacks();
+    String getName();
 
-    Set<ArtifactCoords.Gav> getFeaturePackGavs();
+    String getModel();
 
-    Collection<F> getFeaturePacks();
+    boolean hasProperties();
 
-    F getFeaturePack(ArtifactCoords.Gav gav);
+    Map<String, String> getProperties();
 
-    boolean hasConfigs();
+    boolean hasFeatures();
 
-    List<ProvisionedConfig> getConfigs();
+    void handle(ProvisionedConfigHandler handler) throws ProvisioningException;
 }

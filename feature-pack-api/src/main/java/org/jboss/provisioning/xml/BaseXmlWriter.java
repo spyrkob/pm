@@ -71,5 +71,5 @@ abstract class BaseXmlWriter<T> {
         }
     }
 
-    protected abstract ElementNode toElement(T type);
+    protected abstract ElementNode toElement(T type) throws XMLStreamException;
 }

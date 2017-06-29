@@ -17,27 +17,24 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeaturePackSet<F extends FeaturePack<?>> {
+public interface ProvisionedFeature {
 
-    boolean hasFeaturePacks();
+    boolean hasId();
 
-    Set<ArtifactCoords.Gav> getFeaturePackGavs();
+    ResolvedFeatureId getId();
 
-    Collection<F> getFeaturePacks();
+    ResolvedSpecId getSpecId();
 
-    F getFeaturePack(ArtifactCoords.Gav gav);
+    boolean hasParams();
 
-    boolean hasConfigs();
-
-    List<ProvisionedConfig> getConfigs();
+    Map<String, String> getParams();
 }
