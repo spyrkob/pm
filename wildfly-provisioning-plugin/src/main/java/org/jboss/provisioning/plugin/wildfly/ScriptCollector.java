@@ -173,9 +173,9 @@ abstract class ScriptCollector {
             throws ProvisioningException {
 
         final PackageSpec pkgSpec = pkg.getSpec();
-        if(pkgSpec.hasExternalDependencies()) {
-            for(String fpDep : pkgSpec.getExternalDependencyNames()) {
-                final PackageDependencyGroupSpec externalDeps = pkgSpec.getExternalDependencies(fpDep);
+        if(pkgSpec.dependsOnExternalPackages()) {
+            for(String fpDep : pkgSpec.getPackageDependencySources()) {
+                final PackageDependencyGroupSpec externalDeps = pkgSpec.getExternalPackageDependencies(fpDep);
                 final ArtifactCoords.Gav externalGav = fp.getSpec().getDependency(externalDeps.getGroupName()).getTarget().getGav();
                 final FeaturePackRuntime externalFp = runtime.getFeaturePack(externalGav);
                 final Set<String> externalProcessed = getProcessedPackages(externalGav);
@@ -188,8 +188,8 @@ abstract class ScriptCollector {
             }
         }
 
-        if(pkgSpec.hasLocalDependencies()) {
-            for(String depPkgName : pkgSpec.getLocalDependencies().getPackageNames()) {
+        if(pkgSpec.dependsOnLocalPackages()) {
+            for(String depPkgName : pkgSpec.getLocalPackageDependencies().getPackageNames()) {
                 final PackageRuntime depPkg = fp.getPackage(depPkgName);
                 if(depPkg != null && processedPackages.add(depPkgName)) {
                     collectScripts(fp, depPkg, processedPackages);

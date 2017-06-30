@@ -16,8 +16,6 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
-
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -48,22 +46,18 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
         addAttribute(pkg, Attribute.NAME, pkgSpec.getName());
 
         ElementNode deps = null;
-        if(pkgSpec.hasLocalDependencies()) {
+        if(pkgSpec.dependsOnLocalPackages()) {
             deps = addElement(pkg, Element.DEPENDENCIES);
-            final PackageDependencySpec[] pkgDeps = pkgSpec.getLocalDependencies().getDescriptions().toArray(new PackageDependencySpec[0]);
-            Arrays.sort(pkgDeps);
-            for(PackageDependencySpec depSpec : pkgDeps) {
+            for(PackageDependencySpec depSpec : pkgSpec.getLocalPackageDependencies().getDescriptions()) {
                 writePackageDependency(deps, depSpec);
             }
         }
-        if(pkgSpec.hasExternalDependencies()) {
+        if(pkgSpec.dependsOnExternalPackages()) {
             if(deps == null) {
                 deps = addElement(pkg, Element.DEPENDENCIES);
             }
-            final String[] names = pkgSpec.getExternalDependencyNames().toArray(new String[0]);
-            Arrays.sort(names);
-            for(String name : names) {
-                writeFeaturePackDependency(deps, pkgSpec.getExternalDependencies(name));
+            for(String name : pkgSpec.getPackageDependencySources()) {
+                writeFeaturePackDependency(deps, pkgSpec.getExternalPackageDependencies(name));
             }
         }
         if(pkgSpec.hasParameters()) {
@@ -76,9 +70,7 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
     private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec) {
         final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK);
         addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
-        final PackageDependencySpec[] pkgDeps = depGroupSpec.getDescriptions().toArray(new PackageDependencySpec[0]);
-        Arrays.sort(pkgDeps);
-        for(PackageDependencySpec depSpec : pkgDeps) {
+        for(PackageDependencySpec depSpec : depGroupSpec.getDescriptions()) {
             writePackageDependency(fpElement, depSpec);
         }
     }

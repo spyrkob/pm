@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 
 /**
  *
@@ -111,12 +112,20 @@ public interface Errors {
         return "Feature-pack " + fpGav + " package " + packageName + " has unsatisfied dependencies on packages " + unsatisfiedDeps;
     }
 
-    static String unsatisfiedPackageDependency(ArtifactCoords.Gav fpGav, String srcPackage, String targetPackage) {
-        return "Feature-pack " + fpGav + " package " + srcPackage + " has unsatisfied dependency on package " + targetPackage;
+    static String unsatisfiedPackageDependency(ArtifactCoords.Gav fpGav, String targetPackage) {
+        return "Unsatisfied dependency on feature-pack " + fpGav + " package " + targetPackage;
     }
 
     static String unsatisfiedExternalPackageDependency(ArtifactCoords.Gav srcGav, String srcPackage, ArtifactCoords.Gav targetGav, String targetPackage) {
         return "Feature-pack " + srcGav + " package " + srcPackage + " has unsatisfied dependency on feature-pack " + targetGav + " package " + targetPackage;
+    }
+
+    static String resolvePackage(ArtifactCoords.Gav fpGav, String packageName) {
+        return "Failed to resolve feature-pack " + fpGav + " package " + packageName;
+    }
+
+    static String resolveFeature(ResolvedSpecId specId) {
+        return "Failed to resolve feature spec " + specId;
     }
 
     static String packageExcludeInclude(String packageName) {
