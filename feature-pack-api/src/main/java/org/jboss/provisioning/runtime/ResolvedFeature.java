@@ -19,6 +19,7 @@ package org.jboss.provisioning.runtime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -73,6 +74,22 @@ public class ResolvedFeature implements ProvisionedFeature {
                 }
             }
         }
+    }
+
+    public void addDependency(ResolvedFeatureId id) {
+        if(dependencies.isEmpty()) {
+            dependencies = Collections.singleton(id);
+            return;
+        }
+        if(dependencies.contains(id)) {
+            return;
+        }
+        if(dependencies.size() == 1) {
+            final ResolvedFeatureId first = dependencies.iterator().next();
+            dependencies = new LinkedHashSet<>();
+            dependencies.add(first);
+        }
+        dependencies.add(id);
     }
 
     @Override

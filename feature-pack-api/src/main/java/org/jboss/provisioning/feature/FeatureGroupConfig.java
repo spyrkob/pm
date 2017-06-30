@@ -85,7 +85,9 @@ public class FeatureGroupConfig {
                     includedFeatures = Collections.singletonMap(featureId, feature);
                     break;
                 case 1:
-                    includedFeatures = new LinkedHashMap<>(includedFeatures);
+                    final Map.Entry<FeatureId, FeatureConfig> entry = includedFeatures.entrySet().iterator().next();
+                    includedFeatures = new LinkedHashMap<>(2);
+                    includedFeatures.put(entry.getKey(), entry.getValue());
                 default:
                     includedFeatures.put(featureId, feature);
             }
