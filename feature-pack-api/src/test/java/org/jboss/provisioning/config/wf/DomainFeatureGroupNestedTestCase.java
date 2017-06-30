@@ -289,7 +289,7 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
-                                  .setParam("profile", "default")
+                                .setParam("profile", "default")
                                 .setParam("name", "FILE").build())
                                 .setParam("level", "DEBUG")
                                 .setParam("formatters", "PATTERN")

@@ -351,9 +351,15 @@ public class ProvisioningRuntimeBuilder {
 
     private void processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
         modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig));
-        FeatureGroupSpec fgSpec = fp.getFeatureGroupSpec(fgConfig.getName());
-        processFeatureGroupSpec(modelBuilder, fp, fgSpec);
-        modelBuilder.popConfig(fp.gav);
+        processFeatureGroupSpec(modelBuilder, fp, fp.getFeatureGroupSpec(fgConfig.getName()));
+        final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(fp.gav);
+        if(!popped.includedFeatures.isEmpty()) {
+            for(Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
+                if(feature.getValue() != null) {
+                    processFeature(modelBuilder, fp, feature.getValue());
+                }
+            }
+        }
     }
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {

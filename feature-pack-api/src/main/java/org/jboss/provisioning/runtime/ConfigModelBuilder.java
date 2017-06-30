@@ -137,7 +137,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         fgConfigStack.add(fgConfig);
     }
 
-    public void popConfig(ArtifactCoords.Gav gav) {
+    public ResolvedFeatureGroupConfig popConfig(ArtifactCoords.Gav gav) {
         final List<ResolvedFeatureGroupConfig> stack = fgConfigStacks.get(gav);
         if(stack == null) {
             throw new IllegalStateException("Feature group stack is null for " + gav);
@@ -145,7 +145,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(stack.isEmpty()) {
             throw new IllegalStateException("Feature group stack is empty for " + gav);
         }
-        stack.remove(stack.size() - 1);
+        return stack.remove(stack.size() - 1);
     }
 
     public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
@@ -153,8 +153,17 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                // TODO overwrite params and merge resolved deps
-                return false;
+                if(config.hasParams()) {
+                    for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
+                        feature.params.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                if(!resolvedDeps.isEmpty()) {
+                    for(ResolvedFeatureId depId : feature.dependencies) {
+                        feature.addDependency(depId);
+                    }
+                }
+                return true;
             }
         }
         final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
