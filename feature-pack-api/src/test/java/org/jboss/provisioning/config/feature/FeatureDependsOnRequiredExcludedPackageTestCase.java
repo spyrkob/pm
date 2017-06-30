@@ -15,18 +15,22 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.featurepack.pkg.external.test;
-
+package org.jboss.provisioning.config.feature;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.state.ProvisionedState;
-import org.jboss.provisioning.test.PmProvisionConfigTestBase;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -36,54 +40,52 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConfigTestBase {
+public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFeaturePackTestBase {
+
+    private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
-            .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
-                    .excludePackage("p2")
+        .newFeaturePack(FP_GAV)
+            .addSpec(FeatureSpec.builder("specA")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("a", true))
+                    .addPackageDependency("specA.pkg")
+                    .build())
+            .addConfig(Config.builder()
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a"))
                     .build())
             .newPackage("p1", true)
-                .addDependency("fp2-dep", "p2")
-                .writeContent("fp1/p1.txt", "p1")
                 .getFeaturePack()
-            .getInstaller()
-        .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))
-            .newPackage("p1", true)
-                //.addDependency("p2")
-                .writeContent("fp2/p1.txt", "p1")
-                .getFeaturePack()
-            .newPackage("p2")
-                .writeContent("fp2/p2.txt", "p2")
+            .newPackage("specA.pkg")
                 .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig.builder(FP_GAV).excludePackage("specA.pkg").build();
+    }
+
+    @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         try {
             super.testPmMethod(pm);
+            Assert.fail();
         } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
+            Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), e.getLocalizedMessage());
             Assert.assertNotNull(e.getCause());
-            Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
-            Assert.assertEquals(Errors.unsatisfiedPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"), e.getCause().getLocalizedMessage());
+            Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "specA.pkg"), e.getCause().getLocalizedMessage());
         }
     }
 
     @Override
     protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
         assertProvisioningConfig(pm, null);
-    }
-
-    @Override
-    protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
-        return ProvisioningConfig.builder()
-                .addFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
-                .build();
     }
 
     @Override

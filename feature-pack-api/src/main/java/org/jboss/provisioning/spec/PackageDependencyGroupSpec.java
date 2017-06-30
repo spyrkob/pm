@@ -32,6 +32,8 @@ import java.util.Set;
  */
 public class PackageDependencyGroupSpec {
 
+    public static PackageDependencyGroupSpec EMPTY_LOCAL = new PackageDependencyGroupSpec();
+
     public static class Builder {
 
         private final String groupName;
@@ -62,6 +64,10 @@ public class PackageDependencyGroupSpec {
             return this;
         }
 
+        public boolean isEmpty() {
+            return dependencies.isEmpty();
+        }
+
         public PackageDependencyGroupSpec build() {
             return new PackageDependencyGroupSpec(this);
         }
@@ -77,6 +83,11 @@ public class PackageDependencyGroupSpec {
 
     private final String groupName;
     private final Map<String, PackageDependencySpec> dependencies;
+
+    private PackageDependencyGroupSpec() {
+        this.groupName = null;
+        this.dependencies = Collections.emptyMap();
+    }
 
     private PackageDependencyGroupSpec(Builder builder) {
         this.groupName = builder.groupName;

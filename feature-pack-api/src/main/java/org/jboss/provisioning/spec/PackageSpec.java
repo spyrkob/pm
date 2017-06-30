@@ -32,7 +32,7 @@ import org.jboss.provisioning.util.DescrFormatter;
  *
  * @author Alexey Loubyansky
  */
-public class PackageSpec {
+public class PackageSpec implements PackageDependencies {
 
     public static PackageSpec forName(String name) {
         return new PackageSpec(name);
@@ -41,7 +41,7 @@ public class PackageSpec {
     public static class Builder implements BuilderWithParameters<Builder> {
 
         private String name;
-        private PackageDependencyGroupSpec.Builder localDeps = PackageDependencyGroupSpec.builder();
+        private PackageDependencyGroupSpec.Builder localDeps;
         private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
         private Map<String, PackageParameter> params = Collections.emptyMap();
 
@@ -59,17 +59,17 @@ public class PackageSpec {
         }
 
         public Builder addDependency(String packageName) {
-            localDeps.addDependency(packageName);
+            getLocalGroupBuilder().addDependency(packageName);
             return this;
         }
 
         public Builder addDependency(String packageName, boolean optional) {
-            localDeps.addDependency(packageName, optional);
+            getLocalGroupBuilder().addDependency(packageName, optional);
             return this;
         }
 
         public Builder addDependency(PackageDependencySpec dep) {
-            localDeps.addDependency(dep);
+            getLocalGroupBuilder().addDependency(dep);
             return this;
         }
 
@@ -89,7 +89,7 @@ public class PackageSpec {
         }
 
         public boolean hasDependencies() {
-            return !localDeps.dependencies.isEmpty() || !externalDeps.isEmpty();
+            return localDeps != null || !externalDeps.isEmpty();
         }
 
         @Override
@@ -104,6 +104,13 @@ public class PackageSpec {
                     params.put(param.getName(), param);
             }
             return this;
+        }
+
+        private PackageDependencyGroupSpec.Builder getLocalGroupBuilder() {
+            if(localDeps == null) {
+                localDeps = PackageDependencyGroupSpec.builder();
+            }
+            return localDeps;
         }
 
         private PackageDependencyGroupSpec.Builder getExternalGroupBuilder(String groupName) {
@@ -143,14 +150,14 @@ public class PackageSpec {
 
     protected PackageSpec(String name) {
         this.name = name;
-        localDeps = PackageDependencyGroupSpec.builder().build();
+        localDeps = PackageDependencyGroupSpec.EMPTY_LOCAL;
         externalDeps = Collections.emptyMap();
         params = Collections.emptyMap();
     }
 
     protected PackageSpec(Builder builder) {
         this.name = builder.name;
-        this.localDeps = builder.localDeps.build();
+        this.localDeps = builder.localDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localDeps.build();
         if(builder.externalDeps.isEmpty()) {
             externalDeps = Collections.emptyMap();
         } else {
@@ -173,23 +180,33 @@ public class PackageSpec {
         return name;
     }
 
-    public boolean hasLocalDependencies() {
+    @Override
+    public boolean dependsOnPackages() {
+        return !(localDeps.isEmpty() && externalDeps.isEmpty());
+    }
+
+    @Override
+    public boolean dependsOnLocalPackages() {
         return !localDeps.isEmpty();
     }
 
-    public PackageDependencyGroupSpec getLocalDependencies() {
+    @Override
+    public PackageDependencyGroupSpec getLocalPackageDependencies() {
         return localDeps;
     }
 
-    public boolean hasExternalDependencies() {
+    @Override
+    public boolean dependsOnExternalPackages() {
         return !externalDeps.isEmpty();
     }
 
-    public Collection<String> getExternalDependencyNames() {
+    @Override
+    public Collection<String> getPackageDependencySources() {
         return externalDeps.keySet();
     }
 
-    public PackageDependencyGroupSpec getExternalDependencies(String groupName) {
+    @Override
+    public PackageDependencyGroupSpec getExternalPackageDependencies(String groupName) {
         return externalDeps.get(groupName);
     }
 

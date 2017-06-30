@@ -59,6 +59,10 @@ public class FeatureSpecXmlParsingTestCase {
                 .addParam(FeatureParameterSpec.create("id2", true, false, null))
                 .addParam(FeatureParameterSpec.create("b", false, false, "bb"))
                 .addParam(FeatureParameterSpec.create("c", false, true, null))
+                .addPackageDependency("pkg1")
+                .addPackageDependency("fp-dep", "pkg2")
+                .addPackageDependency("fp-dep", "pkg3")
+                .addPackageDependency("pkg4")
                 .build(), parseFeature("full-spec.xml"));
     }
 
