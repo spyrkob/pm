@@ -459,13 +459,13 @@ abstract class ScriptCollector {
                     System.out.println(errorWriter.getBuffer());
                 }
                 final StringBuilder buf = new StringBuilder("CLI configuration scripts failed");
-                try {
-                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
-                    IoUtils.copy(script, scriptCopy);
-                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
+//                    IoUtils.copy(script, scriptCopy);
+//                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
+//                } catch(IOException e) {
+//                    e.printStackTrace();
+//                }
                 throw new ProvisioningException(buf.toString());
             }
         } catch (IOException e) {
