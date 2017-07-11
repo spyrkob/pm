@@ -16,19 +16,40 @@
 # limitations under the License.
 #
 
-
+echo=on
 BUILD=package
 RUN=run
+DEBUG_MODE="${DEBUG:-false}"
+DEBUG_PORT="${DEBUG_PORT:-8787}"
 
-if [ $# -gt 0 ]; then
-    ARGS=("$@")
-    for (( i = 0; i < ${#ARGS[@]}; ++i)); do
-        if [ ${ARGS[$i]} = "build" ]; then
-            unset RUN
-        elif [ ${ARGS[$i]} = "run" ]; then
-            unset BUILD
-        fi
-    done
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+      --debug)
+          DEBUG_MODE=true
+          if [ -n "$2" ] && [ "$2" = `echo "$2" | sed 's/-//'` ]; then
+              DEBUG_PORT=$2
+              shift
+          fi
+          ;;
+    build)
+          unset RUN
+          ;;
+     run)
+          unset BUILD
+          ;;
+    esac
+    shift
+done
+
+# Set debug settings if not already set
+if [ "$DEBUG_MODE" = "true" ]; then
+    DEBUG_OPT=`echo $JAVA_OPTS | $GREP "\-agentlib:jdwp"`
+    if [ "x$DEBUG_OPT" = "x" ]; then
+        JAVA_OPTS="$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,address=$DEBUG_PORT,server=y,suspend=n"
+    else
+        echo "Debug already enabled in JAVA_OPTS, ignoring --debug argument"
+    fi
 fi
 
 if [[ -n $BUILD ]]; then
@@ -38,5 +59,5 @@ fi
 if [[ -n $RUN ]]; then
 #    java "-Dmaven.home=/home/olubyans/maven" "-DwfThinServer" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
 #    java "-Dmaven.home=/home/olubyans/maven" "-Dorg.wildfly.logging.skipLogManagerCheck" "-Djava.util.logging.manager=org.jboss.logmanager.LogManager" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
-    java "-Dmaven.home=/home/olubyans/maven" -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
+    java $JAVA_OPTS -jar ./tool/target/tool-1.0.0.Alpha-SNAPSHOT.jar
 fi
