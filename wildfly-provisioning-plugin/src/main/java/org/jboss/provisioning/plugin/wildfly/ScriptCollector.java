@@ -253,14 +253,14 @@ abstract class ScriptCollector {
         }
     }
 
-    protected abstract void collect(final PackageScripts scripts,
-            final FeaturePackRuntime fp,
-            final PackageRuntime pkg,
-            final Path wfDir,
-            final boolean includeStatic) throws ProvisioningException;
+    protected abstract void collect(PackageScripts scripts,
+            FeaturePackRuntime fp,
+            PackageRuntime pkg,
+            Path wfDir,
+            boolean includeStatic) throws ProvisioningException;
 
-    protected void addScripts(final FeaturePackRuntime fp, final PackageRuntime pkg, final Path wfDir,
-            final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
+    protected void addScripts(FeaturePackRuntime fp, PackageRuntime pkg, Path wfDir,
+            boolean includeStatic, List<Script> scripts) throws ProvisioningException {
         for(Script script : scripts) {
             if(!includeStatic && !script.isCollectAgain()) {
                 continue;

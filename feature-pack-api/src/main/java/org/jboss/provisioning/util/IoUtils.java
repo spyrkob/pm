@@ -16,12 +16,10 @@
  */
 package org.jboss.provisioning.util;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -30,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -115,27 +114,20 @@ public class IoUtils {
     }
 
     public static String readFile(Path file) throws IOException {
-        try(BufferedReader reader = Files.newBufferedReader(file)) {
-            final StringWriter buf = new StringWriter();
-            String line = reader.readLine();
-            if(line != null) {
-                try (final BufferedWriter bw = new BufferedWriter(buf)) {
-                    bw.append(line);
-                    line = reader.readLine();
-                    while (line != null) {
-                        bw.newLine();
-                        bw.append(line);
-                        line = reader.readLine();
-                    }
-                }
-            }
-            return buf.toString();
+        final StringWriter buf = new StringWriter();
+        try (BufferedWriter bw = new BufferedWriter(buf)) {
+        Files.readAllLines(file).forEach(line -> {
+            try {
+             bw.newLine();
+             bw.append(line);
+            }catch(IOException ioex) {
+                throw new RuntimeException(ioex);
+            }});
         }
+        return buf.toString();
     }
 
     public static void writeFile(Path file, String content) throws IOException {
-        try(final FileOutputStream fos = new FileOutputStream(file.toFile())) {
-            fos.write(content.getBytes(Charset.forName("UTF-8")));
-        }
+        Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
     }
 }

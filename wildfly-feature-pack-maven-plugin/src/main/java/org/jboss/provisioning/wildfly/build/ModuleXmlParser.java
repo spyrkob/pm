@@ -41,7 +41,7 @@ class ModuleXmlParser {
     }
 
     static ModuleParseResult parse(final Path file, String encoding) throws IOException, XMLStreamException {
-        try(final Reader is = Files.newBufferedReader(file, Charset.forName(encoding))) {
+        try(Reader is = Files.newBufferedReader(file, Charset.forName(encoding))) {
             return parse(is);
         }
     }

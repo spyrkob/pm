@@ -411,7 +411,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private void extractSchemas(Path moduleArtifact) throws IOException {
         final Path targetSchemasDir = this.runtime.getInstallDir().resolve(WfConstants.DOCS).resolve(WfConstants.SCHEMA);
         Files.createDirectories(targetSchemasDir);
-        try (final FileSystem jarFS = FileSystems.newFileSystem(moduleArtifact, null)) {
+        try (FileSystem jarFS = FileSystems.newFileSystem(moduleArtifact, null)) {
             final Path schemaSrc = jarFS.getPath(WfConstants.SCHEMA);
             if (Files.exists(schemaSrc)) {
                 ZipUtils.copyFromZip(schemaSrc.toAbsolutePath(), targetSchemasDir);

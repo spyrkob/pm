@@ -23,5 +23,5 @@ package org.jboss.provisioning.plugin.wildfly;
  */
 public interface PropertyResolver {
 
-    String resolveProperty(final String property);
+    String resolveProperty(String property);
 }
