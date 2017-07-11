@@ -384,12 +384,12 @@ abstract class ScriptCollector {
         this.lastLoggedPackage = null;
 
         final CliCommandBuilder builder = CliCommandBuilder
-                .of(runtime.getInstallDir())
+                .of(runtime.getStagedDir())
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
-        processBuilder.environment().put("JBOSS_HOME", runtime.getInstallDir().toString());
+        processBuilder.environment().put("JBOSS_HOME", runtime.getStagedDir().toString());
 
         final Process cliProcess;
         try {

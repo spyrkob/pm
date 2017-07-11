@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePackSet;
@@ -103,6 +105,11 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
     }
 
+    public static void exportDiff(ProvisioningRuntime runtime, Path target, Path customizedInstallation) throws ProvisioningException {
+        // execute the plug-ins
+        runtime.executeDiffPlugins(target, customizedInstallation);
+    }
+
     private final long startTime;
     private final ArtifactResolver artifactResolver;
     private final ProvisioningConfig config;
@@ -112,6 +119,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Path tmpDir;
     private final Path pluginsDir;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
+    private final Map<String, String> parameters = new HashMap<>();
     private List<ProvisionedConfig> configs = Collections.emptyList();
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
@@ -143,6 +151,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
                 }
             }
         }
+        if(!builder.parameters.isEmpty()) {
+            this.parameters.putAll(builder.parameters);
+        }
         if(configs.size() > 1) {
             configs = Collections.unmodifiableList(configs);
         }
@@ -173,12 +184,20 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
     }
     /**
+     * The target staged location
+     *
+     * @return the staged location
+     */
+    public Path getStagedDir() {
+        return stagedDir;
+    }
+/**
      * The target installation location
      *
-     * @return  installation location
+     * @return the installation location
      */
     public Path getInstallDir() {
-        return stagedDir;
+        return installDir;
     }
 
     /**
@@ -213,6 +232,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     /**
      * Returns feature-pack specification for the given GAV.
      *
+     * @param fpGav the GAV of which the specification is returned.
      * @return  feature-pack specification
      */
     public FeaturePackSpec getFeaturePackSpec(ArtifactCoords.Gav fpGav) {
@@ -223,6 +243,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     /**
      * Returns a resource path for the provisioning setup.
      *
+     * @param path
      * @return  file-system path for the resource
      */
     public Path getResource(String... path) {
@@ -256,6 +277,10 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             p = p.resolve(name);
         }
         return p;
+    }
+
+    public String getParameter(String name) {
+        return parameters.get(name);
     }
 
     /**
@@ -328,5 +353,47 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         final long time = System.currentTimeMillis() - startTime;
         final long seconds = time / 1000;
         System.out.println(new StringBuilder("Done in ").append(seconds).append('.').append(time - seconds*1000).append(" seconds").toString());
+    }
+
+    private void executeDiffPlugins(Path target, Path customizedInstallation) throws ProvisioningException {
+        if(pluginsDir != null) {
+            List<java.net.URL> urls = Collections.emptyList();
+            try(Stream<Path> stream = Files.list(pluginsDir)) {
+                final Iterator<Path> i = stream.iterator();
+                while(i.hasNext()) {
+                    switch(urls.size()) {
+                        case 0:
+                            urls = Collections.singletonList(i.next().toUri().toURL());
+                            break;
+                        case 1:
+                            urls = new ArrayList<>(urls);
+                        default:
+                            urls.add(i.next().toUri().toURL());
+                    }
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
+            }
+            if(!urls.isEmpty()) {
+                final Thread thread = Thread.currentThread();
+                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
+                        new java.net.URL[urls.size()]), thread.getContextClassLoader());
+                final ServiceLoader<DiffPlugin> pluginLoader = ServiceLoader.load(DiffPlugin.class, ucl);
+                final Iterator<DiffPlugin> pluginIterator = pluginLoader.iterator();
+                if(pluginIterator.hasNext()) {
+                    final ClassLoader ocl = thread.getContextClassLoader();
+                    try {
+                        thread.setContextClassLoader(ucl);
+                        final DiffPlugin plugin = pluginIterator.next();
+                        plugin.calculateConfiguationChanges(this, customizedInstallation, target);
+                        while(pluginIterator.hasNext()) {
+                            pluginIterator.next().calculateConfiguationChanges(this, customizedInstallation, target);
+                        }
+                    } finally {
+                        thread.setContextClassLoader(ocl);
+                    }
+                }
+            }
+        }
     }
 }

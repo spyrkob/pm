@@ -223,6 +223,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
 */
         //testEmbedded(runtime.getInstallDir());
+
     }
 
     private void processPackages(final FeaturePackRuntime fp) throws ProvisioningException {
@@ -246,10 +247,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     copyPaths(pkgTasks, pmWfDir);
                 }
                 if(pkgTasks.hasMkDirs()) {
-                    mkdirs(pkgTasks, this.runtime.getInstallDir());
+                    mkdirs(pkgTasks, this.runtime.getStagedDir());
                 }
                 if (pkgTasks.hasFilePermissions() && !PropertyUtils.isWindows()) {
-                    processFeaturePackFilePermissions(pkgTasks, this.runtime.getInstallDir());
+                    processFeaturePackFilePermissions(pkgTasks, this.runtime.getStagedDir());
                 }
                 final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
                 if(genConfig != null) {
@@ -274,7 +275,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private void processModules(ArtifactCoords.Gav fp, String pkgName, Path fpModuleDir) throws ProvisioningException {
         try {
-            final Path installDir = runtime.getInstallDir();
+            final Path installDir = runtime.getStagedDir();
             Files.walkFileTree(fpModuleDir, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
@@ -409,7 +410,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     }
 
     private void extractSchemas(Path moduleArtifact) throws IOException {
-        final Path targetSchemasDir = this.runtime.getInstallDir().resolve(WfConstants.DOCS).resolve(WfConstants.SCHEMA);
+        final Path targetSchemasDir = this.runtime.getStagedDir().resolve(WfConstants.DOCS).resolve(WfConstants.SCHEMA);
         Files.createDirectories(targetSchemasDir);
         try (FileSystem jarFS = FileSystems.newFileSystem(moduleArtifact, null)) {
             final Path schemaSrc = jarFS.getPath(WfConstants.SCHEMA);
@@ -432,7 +433,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     location += jarSrc.getFileName();
                 }
 
-                final Path jarTarget = runtime.getInstallDir().resolve(location);
+                final Path jarTarget = runtime.getStagedDir().resolve(location);
 
                 Files.createDirectories(jarTarget.getParent());
                 if (copyArtifact.isExtract()) {
@@ -455,7 +456,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             if (!Files.exists(src)) {
                 throw new ProvisioningException(Errors.pathDoesNotExist(src));
             }
-            final Path target = copyPath.getTarget() == null ? runtime.getInstallDir() : runtime.getInstallDir().resolve(copyPath.getTarget());
+            final Path target = copyPath.getTarget() == null ? runtime.getStagedDir() : runtime.getStagedDir().resolve(copyPath.getTarget());
             if (copyPath.isReplaceProperties()) {
                 if (!Files.exists(target.getParent())) {
                     try {

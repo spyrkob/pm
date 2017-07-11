@@ -45,7 +45,7 @@ public class ResoucesOverwritesTestCase extends PmInstallFeaturePackTestBase {
         public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
             final Path resources = runtime.getResource(".");
             try {
-                IoUtils.copy(resources, runtime.getInstallDir());
+                IoUtils.copy(resources, runtime.getStagedDir());
             } catch (IOException e1) {
                 throw new ProvisioningException("Failed to copy resources");
             }
