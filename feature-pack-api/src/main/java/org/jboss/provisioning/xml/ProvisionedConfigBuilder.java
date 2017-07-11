@@ -20,8 +20,10 @@ package org.jboss.provisioning.xml;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
@@ -170,5 +172,38 @@ public class ProvisionedConfigBuilder implements ProvisionedConfig {
         } else if (!props.equals(other.props))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append('[');
+        if(model != null) {
+            buf.append("model=").append(model).append(' ');
+        }
+        if(name != null) {
+            buf.append("name=").append(name).append(' ');
+        }
+        if(!props.isEmpty()) {
+            buf.append("props={");
+            final Iterator<Map.Entry<String, String>> i = props.entrySet().iterator();
+            Entry<String, String> entry = i.next();
+            buf.append(entry.getKey()).append('=').append(entry.getValue());
+            while(i.hasNext()) {
+                entry = i.next();
+                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
+            }
+            buf.append("} ");
+        }
+        if(!features.isEmpty()) {
+            buf.append("features={");
+            final Iterator<ProvisionedFeature> i = features.iterator();
+            buf.append(i.next());
+            while(i.hasNext()) {
+                buf.append(',').append(i.next());
+            }
+            buf.append('}');
+        }
+        return buf.append(']').toString();
     }
 }

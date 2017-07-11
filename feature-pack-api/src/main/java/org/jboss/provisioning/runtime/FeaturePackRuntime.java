@@ -67,7 +67,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
 
-        private List<FeaturePackConfig> stack = Collections.emptyList();
+        private List<FeaturePackConfig> fpConfigStack = Collections.emptyList();
         private FeaturePackConfig blockedPackageInheritance;
         private FeaturePackConfig blockedConfigInheritance;
 
@@ -176,19 +176,19 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         boolean isStackEmpty() {
-            return stack.isEmpty();
+            return fpConfigStack.isEmpty();
         }
 
         void push(FeaturePackConfig fpConfig) {
-            if(stack.isEmpty()) {
-                stack = Collections.singletonList(fpConfig);
+            if(fpConfigStack.isEmpty()) {
+                fpConfigStack = Collections.singletonList(fpConfig);
             } else {
-                if(stack.size() == 1) {
-                    final FeaturePackConfig first = stack.get(0);
-                    stack = new ArrayList<>(2);
-                    stack.add(first);
+                if(fpConfigStack.size() == 1) {
+                    final FeaturePackConfig first = fpConfigStack.get(0);
+                    fpConfigStack = new ArrayList<>(2);
+                    fpConfigStack.add(first);
                 }
-                stack.add(fpConfig);
+                fpConfigStack.add(fpConfig);
             }
             if(blockedPackageInheritance == null && !fpConfig.isInheritPackages()) {
                 blockedPackageInheritance = fpConfig;
@@ -200,13 +200,13 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         FeaturePackConfig pop() {
             final FeaturePackConfig popped;
-            if (stack.size() == 1) {
-                popped = stack.get(0);
-                stack = Collections.emptyList();
+            if (fpConfigStack.size() == 1) {
+                popped = fpConfigStack.get(0);
+                fpConfigStack = Collections.emptyList();
             } else {
-                popped = stack.remove(stack.size() - 1);
-                if (stack.size() == 1) {
-                    stack = Collections.singletonList(stack.get(0));
+                popped = fpConfigStack.remove(fpConfigStack.size() - 1);
+                if (fpConfigStack.size() == 1) {
+                    fpConfigStack = Collections.singletonList(fpConfigStack.get(0));
                 }
             }
             if(popped == blockedPackageInheritance) {
@@ -219,9 +219,9 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         boolean isPackageIncluded(String packageName, Collection<PackageParameter> params) {
-            int i = stack.size() - 1;
+            int i = fpConfigStack.size() - 1;
             while(i >= 0) {
-                final FeaturePackConfig fpConfig = stack.get(i--);
+                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
                 final PackageConfig stackedPkg = fpConfig.getIncludedPackage(packageName);
                 if(stackedPkg != null) {
                     if(!params.isEmpty()) {
@@ -244,9 +244,9 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         boolean isPackageExcluded(String packageName) {
-            int i = stack.size() - 1;
+            int i = fpConfigStack.size() - 1;
             while(i >= 0) {
-                if(stack.get(i--).isExcluded(packageName)) {
+                if(fpConfigStack.get(i--).isExcluded(packageName)) {
                     return true;
                 }
             }
@@ -254,9 +254,9 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         boolean isConfigExcluded(Config config) {
-            int i = stack.size() - 1;
+            int i = fpConfigStack.size() - 1;
             while(i >= 0) {
-                final FeaturePackConfig fpConfig = stack.get(i--);
+                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
                 if (fpConfig.isConfigExcluded(config.getModel(), config.getName())) {
                     return true;
                 }
@@ -271,9 +271,9 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         boolean isConfigIncluded(Config config) {
-            int i = stack.size() - 1;
+            int i = fpConfigStack.size() - 1;
             while(i >= 0) {
-                final FeaturePackConfig fpConfig = stack.get(i--);
+                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
                 if(fpConfig.isConfigIncluded(config.getModel(), config.getName())) {
                     return true;
                 }

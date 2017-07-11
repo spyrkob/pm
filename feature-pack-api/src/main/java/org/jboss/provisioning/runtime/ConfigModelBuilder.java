@@ -128,13 +128,27 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         this.props.putAll(props);
     }
 
-    public void pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
+    public boolean pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
         List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(gav);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
             fgConfigStacks.put(gav, fgConfigStack);
+            fgConfigStack.add(fgConfig);
+            return true;
+        }
+        int i = fgConfigStack.size() - 1;
+        while(i >= 0) {
+            final ResolvedFeatureGroupConfig pushedFgConfig = fgConfigStack.get(i--);
+            if(pushedFgConfig.name.equals(fgConfig.name)) {
+                if(fgConfig.isSubsetOf(pushedFgConfig)) {
+                    return false;
+                } else {
+                    break;
+                }
+            }
         }
         fgConfigStack.add(fgConfig);
+        return true;
     }
 
     public ResolvedFeatureGroupConfig popConfig(ArtifactCoords.Gav gav) {
@@ -148,8 +162,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
-        final ResolvedFeatureId id = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
+    void includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
@@ -163,34 +176,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         feature.addDependency(depId);
                     }
                 }
-                return true;
-            }
-        }
-        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
-        if (fgConfigStack != null) {
-            int i = fgConfigStack.size() - 1;
-            while (i >= 0) {
-                final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
-                if (fgConfig.inheritFeatures) {
-                    if(id != null && fgConfig.excludedFeatures.contains(id)) {
-                        return false;
-                    }
-                    if (fgConfig.excludedSpecs.contains(id.specId)) {
-                        if(id != null && fgConfig.includedFeatures.containsKey(id)) {
-                            continue;
-                        }
-                        return false;
-                    }
-                } else {
-                    if(id != null && fgConfig.includedFeatures.containsKey(id)) {
-                        continue;
-                    }
-                    if(!fgConfig.includedSpecs.contains(id.specId)) {
-                        return false;
-                    } else if(id != null && fgConfig.excludedFeatures.contains(id)) {
-                        return false;
-                    }
-                }
+                return;
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps);
@@ -205,8 +191,43 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         features.list.add(feature);
 
         System.out.println(model + ':' + name + "> processed " + id);
+    }
 
-        return true;
+    boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
+        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(specId.gav);
+        if (fgConfigStack == null) {
+            return false;
+        }
+        int i = fgConfigStack.size() - 1;
+        while (i >= 0) {
+            final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
+            if (fgConfig.inheritFeatures) {
+                if (id != null && fgConfig.excludedFeatures.contains(id)) {
+                    return true;
+                }
+                if (fgConfig.excludedSpecs.contains(id.specId)) {
+                    if (id != null && fgConfig.includedFeatures.containsKey(id)) {
+                        continue;
+                    }
+                    return true;
+                }
+            } else {
+                if (id != null && fgConfig.includedFeatures.containsKey(id)) {
+                    continue;
+                }
+                if (!fgConfig.includedSpecs.contains(id.specId)) {
+                    return true;
+                } else if (id != null && fgConfig.excludedFeatures.contains(id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    ResolvedFeatureId resolveFeatureId(ResolvedFeatureSpec spec, FeatureConfig config)
+            throws ProvisioningDescriptionException {
+        return spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
     }
 
     @Override

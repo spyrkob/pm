@@ -282,7 +282,7 @@ public class FeatureGroupXml {
         }
         final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name);
         if(inheritFeatures != null) {
-            depBuilder.setInheritFeatures(inheritFeatures);
+            depBuilder.inheritFeatures(inheritFeatures);
         }
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

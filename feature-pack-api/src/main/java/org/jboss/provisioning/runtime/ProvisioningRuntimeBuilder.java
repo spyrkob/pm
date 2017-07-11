@@ -351,7 +351,9 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private void processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
-        modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig));
+        if(!modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
+            return;
+        }
         processFeatureGroupSpec(modelBuilder, fp, fp.getFeatureGroupSpec(fgConfig.getName()));
         final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(fp.gav);
         if(!popped.includedFeatures.isEmpty()) {
@@ -364,7 +366,7 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig();
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(fpConfig.getName());
         resolvedFgc.inheritFeatures = fpConfig.isInheritFeatures();
         if(fpConfig.hasExcludedSpecs()) {
             resolvedFgc.excludedSpecs = resolveSpecs(fp, fpConfig.getExcludedSpecs());
@@ -448,8 +450,13 @@ public class ProvisioningRuntimeBuilder {
     private void resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
 
         final SpecId specId = fc.getSpecId();
-        FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
+        final FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
+
+        final ResolvedFeatureId resolvedId = modelBuilder.resolveFeatureId(spec, fc);
+        if(modelBuilder.isFilteredOut(spec.id, resolvedId)) {
+            return;
+        }
 
         if(spec.xmlSpec.dependsOnPackages()) {
             try {
@@ -473,32 +480,32 @@ public class ProvisioningRuntimeBuilder {
         } else {
             resolvedDeps = Collections.emptySet();
         }
-        if(modelBuilder.processFeature(spec, fc, resolvedDeps)) {
-            if (fc.hasNested()) {
-                for (FeatureConfig nested : fc.getNested()) {
-                    final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
-                    final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
-                    final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
-                    final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
-                    if(refSpec == null) {
-                        throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + nestedSpec.id);
-                    }
-                    for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-                        final String paramValue = fc.getParam(refSpec.getTargetParam(i));
-                        if (paramValue == null) {
-                            throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
-                                    + " for " + nestedSpec.id);
-                        }
-                        final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
-                        if (prevValue != null && !prevValue.equals(paramValue)) {
-                            throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
-                                    + refSpec.getLocalParam(i) + " of " + nestedSpec.id
-                                    + " conflicts with the corresponding parent ID value " + paramValue);
-                        }
-                    }
-
-                    resolveFeature(modelBuilder, nestedFp, nested);
+        modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
+        if (fc.hasNested()) {
+            for (FeatureConfig nested : fc.getNested()) {
+                final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
+                final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
+                final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
+                final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
+                if (refSpec == null) {
+                    throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in "
+                            + nestedSpec.id);
                 }
+                for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                    final String paramValue = fc.getParam(refSpec.getTargetParam(i));
+                    if (paramValue == null) {
+                        throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
+                                + " for " + nestedSpec.id);
+                    }
+                    final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
+                    if (prevValue != null && !prevValue.equals(paramValue)) {
+                        throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
+                                + refSpec.getLocalParam(i) + " of " + nestedSpec.id
+                                + " conflicts with the corresponding parent ID value " + paramValue);
+                    }
+                }
+
+                resolveFeature(modelBuilder, nestedFp, nested);
             }
         }
     }

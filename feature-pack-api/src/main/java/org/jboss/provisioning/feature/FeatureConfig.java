@@ -34,6 +34,14 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
 
+    public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
+        final FeatureConfig config = new FeatureConfig(id.specId.name);
+        for(Map.Entry<String, String> param : id.params.entrySet()) {
+            config.setParam(param.getKey(), param.getValue());
+        }
+        return config;
+    }
+
     public static FeatureConfig newConfig(String specName) throws ProvisioningDescriptionException {
         return new FeatureConfig(specName);
     }
