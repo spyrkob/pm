@@ -86,8 +86,6 @@ public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeatur
                     .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -101,7 +99,6 @@ public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeatur
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")

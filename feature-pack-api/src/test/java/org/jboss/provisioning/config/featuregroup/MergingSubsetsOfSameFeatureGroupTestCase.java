@@ -173,8 +173,8 @@ public class MergingSubsetsOfSameFeatureGroupTestCase extends PmInstallFeaturePa
                     .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .addFeature(new FeatureConfig("specC").setParam("name", "fg3c1").setParam("p1", "config"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
+//            .newPackage("p1", true)
+//                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -188,7 +188,7 @@ public class MergingSubsetsOfSameFeatureGroupTestCase extends PmInstallFeaturePa
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
+//                        .addPackage("p1")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
