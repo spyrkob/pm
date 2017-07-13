@@ -183,14 +183,64 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(id != null) {
             featuresById.put(id, feature);
         }
-        SpecFeatures features = featuresBySpec.get(spec.id);
+        addToSpecFeatures(feature);
+
+        //System.out.println(model + ':' + name + "> processed " + id);
+    }
+
+    private void addToSpecFeatures(final ResolvedFeature feature) {
+        SpecFeatures features = featuresBySpec.get(feature.spec.id);
         if(features == null) {
-            features = new SpecFeatures(spec);
-            featuresBySpec.put(spec.id, features);
+            features = new SpecFeatures(feature.spec);
+            featuresBySpec.put(feature.spec.id, features);
         }
         features.list.add(feature);
+    }
 
-        System.out.println(model + ':' + name + "> processed " + id);
+    void merge(ConfigModelBuilder other) throws ProvisioningException {
+        if(!other.props.isEmpty()) {
+            if(props.isEmpty()) {
+                props = other.props;
+            } else {
+                for(Map.Entry<String, String> prop : other.props.entrySet()) {
+                    if(!props.containsKey(prop.getKey())) {
+                        props.put(prop.getKey(), prop.getValue());
+                    }
+                }
+            }
+        }
+        if(!other.featuresBySpec.isEmpty()) {
+            for(Map.Entry<ResolvedSpecId, SpecFeatures> entry : other.featuresBySpec.entrySet()) {
+                for(ResolvedFeature feature : entry.getValue().list) {
+                    merge(feature);
+                }
+            }
+        }
+    }
+
+    private void merge(ResolvedFeature feature) throws ProvisioningException {
+        if(feature.id == null) {
+            addToSpecFeatures(feature);
+            return;
+        }
+        final ResolvedFeature localFeature = featuresById.get(feature.id);
+        if(localFeature == null) {
+            featuresById.put(feature.id, feature);
+            addToSpecFeatures(feature);
+            return;
+        }
+        if(feature.hasParams()) {
+            for(Map.Entry<String, String> entry : feature.params.entrySet()) {
+                if(!localFeature.params.containsKey(entry.getKey())) {
+                    localFeature.params.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if(!feature.dependencies.isEmpty()) {
+            for(ResolvedFeatureId depId : feature.dependencies) {
+                localFeature.addDependency(depId);
+            }
+        }
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
@@ -260,7 +310,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(featuresById.isEmpty()) {
             return;
         }
-        System.out.println(model + ':' + name + "> handle");
+        //System.out.println(model + ':' + name + "> handle");
         if(checkRefs) {
             for(SpecFeatures specFeatures : featuresBySpec.values()) {
                 specFeatures.checkRefs();

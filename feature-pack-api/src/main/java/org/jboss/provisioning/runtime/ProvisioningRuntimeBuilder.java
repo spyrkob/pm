@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,7 @@ public class ProvisioningRuntimeBuilder {
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
     List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
     Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
-    private Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
+    Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
     Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
@@ -172,14 +173,30 @@ public class ProvisioningRuntimeBuilder {
         }
 
         if(!noNameModelConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> entry : noNameModelConfigs.entrySet()) {
+            final Iterator<Map.Entry<String, ConfigModelBuilder>> i = noNameModelConfigs.entrySet().iterator();
+            if(noNameModelConfigs.size() == 1) {
+                final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
-                if(targetConfigs == null) {
+                if (targetConfigs == null) {
                     entry.getValue().build();
-                    continue;
+                } else {
+                    noNameModelConfigs = Collections.emptyMap();
+                    for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                        targetConfig.getValue().merge(entry.getValue());
+                    }
                 }
-                for(Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
-                    throw new IllegalStateException("model-based config merging is not implemented yet"); //TODO
+            } else {
+                while (i.hasNext()) {
+                    final Map.Entry<String, ConfigModelBuilder> entry = i.next();
+                    final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
+                    if (targetConfigs == null) {
+                        entry.getValue().build();
+                        continue;
+                    }
+                    i.remove();
+                    for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                        targetConfig.getValue().merge(entry.getValue());
+                    }
                 }
             }
         }

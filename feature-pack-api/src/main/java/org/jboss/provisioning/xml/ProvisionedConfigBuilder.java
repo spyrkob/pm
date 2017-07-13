@@ -149,8 +149,6 @@ public class ProvisionedConfigBuilder implements ProvisionedConfig {
         if (getClass() != obj.getClass())
             return false;
         ProvisionedConfigBuilder other = (ProvisionedConfigBuilder) obj;
-        System.out.println("ProvisionedConfigBuilder.equals " + features + " " + other.features);
-
         if (features == null) {
             if (other.features != null)
                 return false;

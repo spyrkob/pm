@@ -38,7 +38,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleUnnamedModelConfigsTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,14 +50,14 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(Config.builder().setName("config1")
+            .addConfig(Config.builder().setModel("config1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(Config.builder().setName("config2")
+            .addConfig(Config.builder().setModel("config2")
                     .setProperty("prop1", "value3")
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -78,7 +78,7 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config1")
+                        .setModel("config1")
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
@@ -86,7 +86,7 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
                                 .build())
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config2")
+                        .setModel("config2")
                         .setProperty("prop1", "value3")
                         .setProperty("prop2", "value4")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
