@@ -51,10 +51,10 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         FEATURE_SPEC("feature-spec"),
         PACKAGE("package"),
         PACKAGES("packages"),
-        PARAMETERS("parameters"),
-        PARAMETER("parameter"),
-        REFERENCES("references"),
-        REFERENCE("reference"),
+        PARAMETERS("params"),
+        PARAMETER("param"),
+        REFERENCES("refs"),
+        REFERENCE("ref"),
 
         // default unknown element
         UNKNOWN(null);

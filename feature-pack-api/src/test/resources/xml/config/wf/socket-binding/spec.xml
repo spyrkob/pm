@@ -18,13 +18,13 @@
 
 -->
 <feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="socket-binding-group"/>
-    <reference feature="interface" nillable="true"/>
-  </references>
-  <parameters>
-    <parameter name="name" feature-id="true"/>
-    <parameter name="socket-binding-group" feature-id="true"/>
-    <parameter name="interface" nillable="true"/>
-  </parameters>
+  <refs>
+    <ref feature="socket-binding-group"/>
+    <ref feature="interface" nillable="true"/>
+  </refs>
+  <params>
+    <param name="name" feature-id="true"/>
+    <param name="socket-binding-group" feature-id="true"/>
+    <param name="interface" nillable="true"/>
+  </params>
 </feature-spec>

@@ -18,19 +18,19 @@
 
 -->
 <feature-spec name="logging-console-handler" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="logging">
-      <parameter name="profile" maps-to="profile"/>
-    </reference>
-    <reference feature="logging-formatter">
-      <parameter name="profile" maps-to="profile"/>
-      <parameter name="formatters" maps-to="name"/>
-    </reference>
-  </references>
-  <parameters>
-    <parameter name="profile" feature-id="true"/>
-    <parameter name="name" feature-id="true" default="CONSOLE"/>
-    <parameter name="level" default="INFO"/>
-    <parameter name="formatters" default="COLOR_PATTERN"/>
-  </parameters>
+  <refs>
+    <ref feature="logging">
+      <param name="profile" maps-to="profile"/>
+    </ref>
+    <ref feature="logging-formatter">
+      <param name="profile" maps-to="profile"/>
+      <param name="formatters" maps-to="name"/>
+    </ref>
+  </refs>
+  <params>
+    <param name="profile" feature-id="true"/>
+    <param name="name" feature-id="true" default="CONSOLE"/>
+    <param name="level" default="INFO"/>
+    <param name="formatters" default="COLOR_PATTERN"/>
+  </params>
 </feature-spec>

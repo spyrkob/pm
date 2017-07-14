@@ -18,7 +18,7 @@
 
 -->
 <feature-spec name="extension" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <parameters>
-    <parameter name="name" feature-id="true"/>
-  </parameters>
+  <params>
+    <param name="name" feature-id="true"/>
+  </params>
 </feature-spec>

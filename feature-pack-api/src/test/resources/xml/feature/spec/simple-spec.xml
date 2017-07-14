@@ -18,8 +18,8 @@
 
 -->
 <feature-spec name="simple" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <parameters>
-    <parameter name="name"/>
-    <parameter name="other"/>
-  </parameters>
+  <params>
+    <param name="name"/>
+    <param name="other"/>
+  </params>
 </feature-spec>

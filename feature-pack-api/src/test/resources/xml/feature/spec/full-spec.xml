@@ -18,21 +18,21 @@
 
 -->
 <feature-spec name="full" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="spec1"/>
-    <reference feature="spec1" name="spec1-ref"/>
-    <reference feature="spec2" name="spec2-ref" nillable="true">
-      <parameter name="localParam1" maps-to="targetParam1"/>
-      <parameter name="localParam2" maps-to="targetParam2"/>
-    </reference>
-  </references>
-  <parameters>
-    <parameter name="a"/>
-    <parameter name="id1" feature-id="true"/>
-    <parameter name="id2" feature-id="true"/>
-    <parameter name="b" default="bb"/>
-    <parameter name="c" nillable="true"/>
-  </parameters>
+  <refs>
+    <ref feature="spec1"/>
+    <ref feature="spec1" name="spec1-ref"/>
+    <ref feature="spec2" name="spec2-ref" nillable="true">
+      <param name="localParam1" maps-to="targetParam1"/>
+      <param name="localParam2" maps-to="targetParam2"/>
+    </ref>
+  </refs>
+  <params>
+    <param name="a"/>
+    <param name="id1" feature-id="true"/>
+    <param name="id2" feature-id="true"/>
+    <param name="b" default="bb"/>
+    <param name="c" nillable="true"/>
+  </params>
   <packages>
     <package name="pkg1" />
     <feature-pack dependency="fp-dep">
