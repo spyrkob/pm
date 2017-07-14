@@ -59,6 +59,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
@@ -246,6 +247,16 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
+        if(wfFpConfig.hasConfigs()) {
+            for(Config config : wfFpConfig.getConfigs()) {
+                try {
+                    fpBuilder.getSpecBuilder().addConfig(config);
+                } catch (ProvisioningDescriptionException e) {
+                    throw new MojoExecutionException("Failed to add config to the feature-pack", e);
+                }
+            }
+        }
+
         final FeaturePackLayout fpLayout;
         try {
             fpLayout = fpBuilder.build();
@@ -254,6 +265,14 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.writeFile(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
 
+        final Path featuresDir = targetResources.resolve(Constants.FEATURES);
+        if(Files.exists(featuresDir)) {
+            try {
+                IoUtils.copy(featuresDir, fpDir.resolve(Constants.FEATURES));
+            } catch (IOException e) {
+                throw new MojoExecutionException(Errors.copyFile(featuresDir, fpDir.resolve(Constants.FEATURES)), e);
+            }
+        }
         addWildFlyPlugin(fpDir);
 
         // collect feature-pack resources

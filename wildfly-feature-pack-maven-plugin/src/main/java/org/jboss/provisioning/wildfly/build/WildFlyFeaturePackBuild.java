@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 
 /**
@@ -38,13 +39,24 @@ public class WildFlyFeaturePackBuild {
 
         private List<FeaturePackDependencySpec> dependencies = Collections.emptyList();
         private Set<String> schemaGroups = Collections.emptySet();
-        private Set<String> defaultPackages = new HashSet<>();
+        private Set<String> defaultPackages = Collections.emptySet();
+        private List<Config> configs = Collections.emptyList();
 
         private Builder() {
         }
 
         public Builder addDefaultPackage(String packageName) {
-            defaultPackages.add(packageName);
+            switch(defaultPackages.size()) {
+                case 0:
+                    defaultPackages = Collections.singleton(packageName);
+                    break;
+                case 1:
+                    final String first = defaultPackages.iterator().next();
+                    defaultPackages = new HashSet<>();
+                    defaultPackages.add(first);
+                default:
+                    defaultPackages.add(packageName);
+            }
             return this;
         }
 
@@ -54,7 +66,9 @@ public class WildFlyFeaturePackBuild {
                     dependencies = Collections.singletonList(dependency);
                     break;
                 case 1:
-                    dependencies = new ArrayList<FeaturePackDependencySpec>(dependencies);
+                    final FeaturePackDependencySpec first = dependencies.get(0);
+                    dependencies = new ArrayList<FeaturePackDependencySpec>(2);
+                    dependencies.add(first);
                 default:
                     dependencies.add(dependency);
             }
@@ -67,9 +81,26 @@ public class WildFlyFeaturePackBuild {
                     schemaGroups = Collections.singleton(groupId);
                     break;
                 case 1:
-                    schemaGroups = new HashSet<String>(schemaGroups);
+                    final String first = schemaGroups.iterator().next();
+                    schemaGroups = new HashSet<>();
+                    schemaGroups.add(first);
                 default:
                     schemaGroups.add(groupId);
+            }
+            return this;
+        }
+
+        public Builder addConfig(Config config) {
+            switch(configs.size()) {
+                case 0:
+                    configs = Collections.singletonList(config);
+                    break;
+                case 1:
+                    final Config first = configs.get(0);
+                    configs = new ArrayList<>();
+                    configs.add(first);
+                default:
+                    configs.add(config);
             }
             return this;
         }
@@ -86,11 +117,13 @@ public class WildFlyFeaturePackBuild {
     private final List<FeaturePackDependencySpec> dependencies;
     private final Set<String> schemaGroups;
     private final Set<String> defaultPackages;
+    private final List<Config> configs;
 
     private WildFlyFeaturePackBuild(Builder builder) {
-        this.dependencies = Collections.unmodifiableList(builder.dependencies);
-        this.schemaGroups = Collections.unmodifiableSet(builder.schemaGroups);
-        this.defaultPackages = Collections.unmodifiableSet(builder.defaultPackages);
+        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableList(builder.dependencies) : builder.dependencies;
+        this.schemaGroups = builder.schemaGroups.size() > 1 ? Collections.unmodifiableSet(builder.schemaGroups) : builder.schemaGroups;
+        this.defaultPackages = builder.defaultPackages.size() > 1 ? Collections.unmodifiableSet(builder.defaultPackages) : builder.defaultPackages;
+        this.configs = builder.configs.size() > 1 ? Collections.unmodifiableList(builder.configs) : builder.configs;
     }
 
     public Collection<String> getDefaultPackages() {
@@ -111,5 +144,13 @@ public class WildFlyFeaturePackBuild {
 
     public Set<String> getSchemaGroups() {
         return schemaGroups;
+    }
+
+    public boolean hasConfigs() {
+        return !configs.isEmpty();
+    }
+
+    public List<Config> getConfigs() {
+        return configs;
     }
 }

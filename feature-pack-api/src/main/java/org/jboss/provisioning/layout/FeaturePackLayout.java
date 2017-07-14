@@ -56,7 +56,9 @@ public class FeaturePackLayout {
                     packages = Collections.singletonMap(pkg.getName(), pkg);
                     break;
                 case 1:
-                    packages = new HashMap<>(packages);
+                    final Map.Entry<String, PackageSpec> first = packages.entrySet().iterator().next();
+                    packages = new HashMap<>();
+                    packages.put(first.getKey(), first.getValue());
                 default:
                     packages.put(pkg.getName(), pkg);
             }

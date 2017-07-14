@@ -127,7 +127,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             if(resolvedSpec == null) {
                 final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
                 if(!Files.exists(specXml)) {
-                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+                    throw new ProvisioningDescriptionException("Failed to locate feature spec '" + name + "' in " + gav);
                 }
                 final FeatureSpec xmlSpec;
                 try(BufferedReader reader = Files.newBufferedReader(specXml)) {

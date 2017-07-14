@@ -19,8 +19,10 @@ package org.jboss.provisioning.wildfly.build;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
+import org.jboss.provisioning.xml.ConfigXml;
 import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
@@ -52,6 +54,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
 
         ARTIFACT("artifact"),
         BUILD("build"),
+        CONFIG("config"),
         DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -70,6 +73,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
             elementsMap.put(new QName(NAMESPACE_2_0, Element.ARTIFACT.getLocalName()), Element.ARTIFACT);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.BUILD.getLocalName()), Element.BUILD);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG.getLocalName()), Element.CONFIG);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEFAULT_PACKAGES.getLocalName()), Element.DEFAULT_PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
@@ -187,6 +191,11 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             break;
                         case PACKAGE_SCHEMAS:
                             parsePackageSchemas(reader, builder);
+                            break;
+                        case CONFIG:
+                            final Config.Builder config = Config.builder();
+                            ConfigXml.readConfig(reader, config);
+                            builder.addConfig(config.build());
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

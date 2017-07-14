@@ -438,7 +438,7 @@ public class FeatureGroupXml {
                     config.setParentRef(reader.getAttributeValue(i));
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (config.getSpecId() == null) {
