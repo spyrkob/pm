@@ -47,7 +47,7 @@ public class FeatureGroupConfig {
             this.inheritFeatures = inheritFeatures;
         }
 
-        public Builder setInheritFeatures(boolean inheritFeatures) {
+        public Builder inheritFeatures(boolean inheritFeatures) {
             this.inheritFeatures = inheritFeatures;
             return this;
         }

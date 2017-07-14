@@ -71,6 +71,10 @@ public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
         return new Builder(gav);
     }
 
+    public static ProvisionedFeaturePack forGav(ArtifactCoords.Gav gav) {
+        return new ProvisionedFeaturePack(gav, Collections.emptyMap());
+    }
+
     private final ArtifactCoords.Gav gav;
     private final Map<String, ProvisionedPackage> packages;
 

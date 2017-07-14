@@ -79,7 +79,7 @@ public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg1")
-                            .setInheritFeatures(false)
+                            .inheritFeatures(false)
                             .includeFeature(FeatureId.create("specA", "name", "aTwo"))
                             .includeSpec("specB")
                             .excludeFeature(FeatureId.create("specB", "name", "bOne"))

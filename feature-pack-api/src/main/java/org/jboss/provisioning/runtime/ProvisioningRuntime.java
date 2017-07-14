@@ -131,6 +131,11 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
                 addConfig(config.getValue());
             }
         }
+        if(!builder.noNameModelConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> config : builder.noNameModelConfigs.entrySet()) {
+                addConfig(config.getValue());
+            }
+        }
         if(!builder.modelConfigs.isEmpty()) {
             for(Map.Entry<String, Map<String, ConfigModelBuilder>> namedConfigs : builder.modelConfigs.entrySet()) {
                 for(Map.Entry<String, ConfigModelBuilder> config : namedConfigs.getValue().entrySet()) {

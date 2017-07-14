@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,7 @@ public class ProvisioningRuntimeBuilder {
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
     List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
     Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
-    private Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
+    Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
     Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
 
@@ -172,14 +173,30 @@ public class ProvisioningRuntimeBuilder {
         }
 
         if(!noNameModelConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> entry : noNameModelConfigs.entrySet()) {
+            final Iterator<Map.Entry<String, ConfigModelBuilder>> i = noNameModelConfigs.entrySet().iterator();
+            if(noNameModelConfigs.size() == 1) {
+                final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
-                if(targetConfigs == null) {
+                if (targetConfigs == null) {
                     entry.getValue().build();
-                    continue;
+                } else {
+                    noNameModelConfigs = Collections.emptyMap();
+                    for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                        targetConfig.getValue().merge(entry.getValue());
+                    }
                 }
-                for(Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
-                    throw new IllegalStateException("model-based config merging is not implemented yet"); //TODO
+            } else {
+                while (i.hasNext()) {
+                    final Map.Entry<String, ConfigModelBuilder> entry = i.next();
+                    final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
+                    if (targetConfigs == null) {
+                        entry.getValue().build();
+                        continue;
+                    }
+                    i.remove();
+                    for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                        targetConfig.getValue().merge(entry.getValue());
+                    }
                 }
             }
         }
@@ -208,19 +225,19 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        boolean resolvedPackages = false;
+        boolean contributed = false;
 
         if(fpConfig.isInheritConfigs()) {
             for(Config config : fp.spec.getConfigs()) {
                 if(fp.isConfigExcluded(config)) {
                     continue;
                 }
-                includeConfig(fp, config);
+                contributed |= includeConfig(fp, config);
             }
         } else {
             for(Config config : fp.spec.getConfigs()) {
                 if(fp.isConfigIncluded(config)) {
-                    includeConfig(fp, config);
+                    contributed |= includeConfig(fp, config);
                 }
             }
         }
@@ -229,7 +246,7 @@ public class ProvisioningRuntimeBuilder {
             for(String packageName : fp.spec.getDefaultPackageNames()) {
                 if(!fp.isPackageExcluded(packageName)) {
                     resolvePackage(fp, packageName, Collections.emptyList());
-                    resolvedPackages = true;
+                    contributed = true;
                 }
             }
         }
@@ -237,7 +254,7 @@ public class ProvisioningRuntimeBuilder {
             for (PackageConfig pkgConfig : fpConfig.getIncludedPackages()) {
                 if (!fp.isPackageExcluded(pkgConfig.getName())) {
                     resolvePackage(fp, pkgConfig.getName(), pkgConfig.getParameters());
-                    resolvedPackages = true;
+                    contributed = true;
                 } else {
                     throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, pkgConfig.getName()));
                 }
@@ -254,18 +271,18 @@ public class ProvisioningRuntimeBuilder {
                     if (fp.isConfigExcluded(config)) {
                         continue;
                     }
-                    includeConfig(fp, config);
+                    contributed |= includeConfig(fp, config);
                 }
             }
         }
 
-        if(resolvedPackages && !fp.ordered) {
+        if(!fp.ordered && contributed) {
             orderFpRtBuilder(fp);
         }
     }
 
-    private void includeConfig(FeaturePackRuntime.Builder fp, Config config) throws ProvisioningException {
-        processFeatureGroupSpec(getConfigModelBuilder(config), fp, config);
+    private boolean includeConfig(FeaturePackRuntime.Builder fp, Config config) throws ProvisioningException {
+        return processFeatureGroupSpec(getConfigModelBuilder(config), fp, config);
     }
 
     private ConfigModelBuilder getConfigModelBuilder(Config config) {
@@ -350,21 +367,24 @@ public class ProvisioningRuntimeBuilder {
         return modelBuilder;
     }
 
-    private void processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
-        modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig));
-        processFeatureGroupSpec(modelBuilder, fp, fp.getFeatureGroupSpec(fgConfig.getName()));
+    private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
+        if(!modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
+            return false;
+        }
+        boolean resolvedFeatures = processFeatureGroupSpec(modelBuilder, fp, fp.getFeatureGroupSpec(fgConfig.getName()));
         final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(fp.gav);
         if(!popped.includedFeatures.isEmpty()) {
             for(Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
                 if(feature.getValue() != null) {
-                    resolveFeature(modelBuilder, fp, feature.getValue());
+                    resolvedFeatures |= resolveFeature(modelBuilder, fp, feature.getValue());
                 }
             }
         }
+        return resolvedFeatures;
     }
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig();
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(fpConfig.getName());
         resolvedFgc.inheritFeatures = fpConfig.isInheritFeatures();
         if(fpConfig.hasExcludedSpecs()) {
             resolvedFgc.excludedSpecs = resolveSpecs(fp, fpConfig.getExcludedSpecs());
@@ -423,33 +443,40 @@ public class ProvisioningRuntimeBuilder {
         return tmp;
     }
 
-    private void processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, AbstractFeatureGroup fgSpec) throws ProvisioningException {
+    private boolean processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, AbstractFeatureGroup fgSpec) throws ProvisioningException {
+        boolean resolvedFeatures = false;
         if(fgSpec.hasExternalDependencies()) {
             for(Map.Entry<String, FeatureGroupSpec> entry : fgSpec.getExternalDependencies().entrySet()) {
                 final FeaturePackDependencySpec fpDep = fp.spec.getDependency(entry.getKey());
                 if(fpDep == null) {
                     throw new ProvisioningDescriptionException("Unknown feature-pack dependency " + entry.getKey());
                 }
-                processFeatureGroupSpec(modelBuilder, getRtBuilder(fpDep.getTarget().getGav()), entry.getValue());
+                resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getRtBuilder(fpDep.getTarget().getGav()), entry.getValue());
             }
         }
         if(fgSpec.hasLocalDependencies()) {
             for(FeatureGroupConfig nestedFg : fgSpec.getLocalDependencies()) {
-                processFeatureGroupConfig(modelBuilder, fp, nestedFg);
+                resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg);
             }
         }
         if(fgSpec.hasFeatures()) {
             for(FeatureConfig fc : fgSpec.getFeatures()) {
-                resolveFeature(modelBuilder, fp, fc);
+                resolvedFeatures |= resolveFeature(modelBuilder, fp, fc);
             }
         }
+        return resolvedFeatures;
     }
 
-    private void resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
+    private boolean resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
 
         final SpecId specId = fc.getSpecId();
-        FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
+        final FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
+
+        final ResolvedFeatureId resolvedId = modelBuilder.resolveFeatureId(spec, fc);
+        if(modelBuilder.isFilteredOut(spec.id, resolvedId)) {
+            return false;
+        }
 
         if(spec.xmlSpec.dependsOnPackages()) {
             try {
@@ -473,34 +500,35 @@ public class ProvisioningRuntimeBuilder {
         } else {
             resolvedDeps = Collections.emptySet();
         }
-        if(modelBuilder.processFeature(spec, fc, resolvedDeps)) {
-            if (fc.hasNested()) {
-                for (FeatureConfig nested : fc.getNested()) {
-                    final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
-                    final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
-                    final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
-                    final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
-                    if(refSpec == null) {
-                        throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + nestedSpec.id);
-                    }
-                    for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-                        final String paramValue = fc.getParam(refSpec.getTargetParam(i));
-                        if (paramValue == null) {
-                            throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
-                                    + " for " + nestedSpec.id);
-                        }
-                        final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
-                        if (prevValue != null && !prevValue.equals(paramValue)) {
-                            throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
-                                    + refSpec.getLocalParam(i) + " of " + nestedSpec.id
-                                    + " conflicts with the corresponding parent ID value " + paramValue);
-                        }
-                    }
-
-                    resolveFeature(modelBuilder, nestedFp, nested);
+        modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
+        if (fc.hasNested()) {
+            for (FeatureConfig nested : fc.getNested()) {
+                final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
+                final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
+                final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
+                final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
+                if (refSpec == null) {
+                    throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in "
+                            + nestedSpec.id);
                 }
+                for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                    final String paramValue = fc.getParam(refSpec.getTargetParam(i));
+                    if (paramValue == null) {
+                        throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
+                                + " for " + nestedSpec.id);
+                    }
+                    final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
+                    if (prevValue != null && !prevValue.equals(paramValue)) {
+                        throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
+                                + refSpec.getLocalParam(i) + " of " + nestedSpec.id
+                                + " conflicts with the corresponding parent ID value " + paramValue);
+                    }
+                }
+
+                resolveFeature(modelBuilder, nestedFp, nested);
             }
         }
+        return true;
     }
 
     private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {
@@ -551,7 +579,7 @@ public class ProvisioningRuntimeBuilder {
         }
 
         if(!pushDep && fpConfig.hasDefinedConfigs() && fp.isInheritConfigs()) {
-            // TODO
+            pushDep = true;
         }
 
         if(pushDep) {

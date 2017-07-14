@@ -248,8 +248,12 @@ public class FeatureSpec implements PackageDependencies {
         return params.containsKey(name);
     }
 
-    public FeatureParameterSpec getParam(String name) {
-        return params.get(name);
+    public FeatureParameterSpec getParam(String name) throws ProvisioningDescriptionException {
+        final FeatureParameterSpec paramSpec = params.get(name);
+        if(paramSpec == null) {
+            throw new ProvisioningDescriptionException("Feature spec " + this.getName() + " does not contain parameter " + name);
+        }
+        return paramSpec;
     }
 
     @Override

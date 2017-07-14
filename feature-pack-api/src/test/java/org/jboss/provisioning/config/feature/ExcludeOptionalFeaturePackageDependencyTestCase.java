@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.model.test;
+package org.jboss.provisioning.config.feature;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -25,6 +25,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -38,7 +39,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBase {
+public class ExcludeOptionalFeaturePackageDependencyTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -48,49 +49,62 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("p1", true))
+                    .addParam(FeatureParameterSpec.create("a", true))
+                    .addPackageDependency("specA.pkg", true)
                     .build())
-            .addConfig(Config.builder().setName("config1")
+            .addSpec(FeatureSpec.builder("specB")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("b", false))
+                    .addParam(FeatureParameterSpec.create("a", true))
+                    .addRef(FeatureReferenceSpec.builder("specA")
+                            .setName("specA")
+                            .setNillable(false)
+                            .mapParam("a", "name")
+                            .build())
+                    .addPackageDependency("specB.pkg", true)
+                    .build())
+            .addConfig(Config.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a1")
-                            .setParam("p1", "config1"))
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("name", "b")
+                            .setParam("a", "a"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a"))
                     .build())
-            .addConfig(Config.builder().setName("config2")
-                    .setProperty("prop1", "value3")
-                    .setProperty("prop2", "value4")
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a1")
-                            .setParam("p1", "config2"))
-                    .build())
+            .newPackage("specA.pkg")
+                .getFeaturePack()
+            .newPackage("specB.pkg")
+                .addDependency("p2")
+                .getFeaturePack()
+            .newPackage("p2")
+                .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(FP_GAV);
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig.builder(FP_GAV)
+                .excludePackage("specA.pkg")
+                .build();
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config1")
-                        .setProperty("prop1", "value1")
-                        .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
-                                .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("specB.pkg")
+                        .addPackage("p2")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config2")
-                        .setProperty("prop1", "value3")
-                        .setProperty("prop2", "value4")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config2")
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
+                                .setParam("a", "a")
                                 .build())
                         .build())
                 .build();

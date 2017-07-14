@@ -51,10 +51,10 @@ public class ProvisioningWithConfigTestCase {
                         .excludeDefaultConfig("model1", "name1")
                         .includeDefaultConfig("model2", "name2")
                         .addConfig(Config.builder()
-                                .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
-                                .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                                .addFeatureGroup(FeatureGroupConfig.builder("dep1").inheritFeatures(true).build())
+                                .addFeatureGroup(FeatureGroupConfig.builder("dep2").inheritFeatures(false).build())
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
-                                        .setInheritFeatures(false)
+                                        .inheritFeatures(false)
                                         .includeSpec("spec1")
                                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                                         .includeFeature(FeatureId.fromString("spec3:p1=v1"),

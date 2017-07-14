@@ -29,13 +29,15 @@ import org.jboss.provisioning.feature.FeatureConfig;
  */
 public class ResolvedFeatureGroupConfig {
 
+    final String name;
     boolean inheritFeatures = true;
     Set<ResolvedSpecId> includedSpecs = Collections.emptySet();
     Map<ResolvedFeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
     Set<ResolvedSpecId> excludedSpecs = Collections.emptySet();
     Set<ResolvedFeatureId> excludedFeatures = Collections.emptySet();
 
-    ResolvedFeatureGroupConfig() {
+    ResolvedFeatureGroupConfig(String name) {
+        this.name = name;
     }
 
     ResolvedFeatureGroupConfig setInheritFeatures(boolean inheritFeatures) {
@@ -51,4 +53,72 @@ public class ResolvedFeatureGroupConfig {
         return !excludedFeatures.isEmpty();
     }
 
+    boolean isSubsetOf(ResolvedFeatureGroupConfig other) {
+        if(!this.name.equals(other.name)) {
+            throw new IllegalArgumentException("Can't compare group " + this.name + " to " + other.name);
+        }
+        if(inheritFeatures) {
+            if(other.inheritFeatures) {
+                if(!excludedSpecs.containsAll(other.excludedSpecs)) {
+                    return false;
+                }
+                if(!excludedFeatures.containsAll(other.excludedFeatures)) {
+                    return false;
+                }
+                if(!includedFeatures.isEmpty()) {
+                    if(other.includedFeatures.isEmpty()) {
+                        return false;
+                    }
+                    for(Map.Entry<ResolvedFeatureId, FeatureConfig> entry : includedFeatures.entrySet()) {
+                        final FeatureConfig otherFc = other.includedFeatures.get(entry.getKey());
+                        if(otherFc == null) {
+                            return false;
+                        }
+                        if(!otherFc.equals(entry.getValue())) {
+                            return false;
+                        }
+                    }
+                }
+            } else {
+                return false;
+            }
+        } else if(other.inheritFeatures) {
+            if(!includedSpecs.isEmpty() && !other.excludedSpecs.isEmpty()) {
+                for (ResolvedSpecId specId : includedSpecs) {
+                    if (excludedSpecs.contains(specId)) {
+                        return false;
+                    }
+                }
+            }
+            if(!includedFeatures.isEmpty() && !other.excludedFeatures.isEmpty()) {
+                for (Map.Entry<ResolvedFeatureId, FeatureConfig> entry : includedFeatures.entrySet()) {
+                    if (other.excludedFeatures.contains(entry.getKey())) {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            if(!other.includedSpecs.containsAll(includedSpecs)) {
+                return false;
+            }
+            if(!includedFeatures.isEmpty()) {
+                if(other.includedFeatures.isEmpty()) {
+                    return false;
+                }
+                for(Map.Entry<ResolvedFeatureId, FeatureConfig> entry : includedFeatures.entrySet()) {
+                    final FeatureConfig otherFc = other.includedFeatures.get(entry.getKey());
+                    if(otherFc == null) {
+                        return false;
+                    }
+                    if(!otherFc.equals(entry.getValue())) {
+                        return false;
+                    }
+                }
+            }
+            if(!excludedFeatures.containsAll(other.excludedFeatures)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

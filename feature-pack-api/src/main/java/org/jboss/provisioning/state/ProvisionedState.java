@@ -153,14 +153,24 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append("[state [");
+        buf.append("[state");
         if(!featurePacks.isEmpty()) {
+            buf.append(" feature-packs=[");
             final Iterator<ProvisionedFeaturePack> i = featurePacks.values().iterator();
             buf.append(i.next());
             while(i.hasNext()) {
                 buf.append(", ").append(i.next());
             }
+            buf.append(']');
         }
-        return buf.append("]]").toString();
+        if(!configs.isEmpty()) {
+            buf.append(" configs=[");
+            buf.append(configs.get(0));
+            for(int i = 1; i < configs.size(); ++i) {
+                buf.append(',').append(configs.get(i));
+            }
+            buf.append(']');
+        }
+        return buf.append(']').toString();
     }
 }

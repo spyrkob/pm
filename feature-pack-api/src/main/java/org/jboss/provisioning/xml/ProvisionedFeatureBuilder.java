@@ -19,7 +19,9 @@ package org.jboss.provisioning.xml;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
@@ -143,5 +145,27 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         } else if (!specId.equals(other.specId))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append('[');
+        if(id != null) {
+            buf.append(id);
+        } else {
+            buf.append(specId);
+        }
+        if(!params.isEmpty()) {
+            buf.append(' ');
+            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
+            Entry<String, String> entry = i.next();
+            buf.append(entry.getKey()).append('=').append(entry.getValue());
+            while(i.hasNext()) {
+                entry = i.next();
+                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
+            }
+        }
+        return buf.append(']').toString();
     }
 }

@@ -57,8 +57,6 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -71,9 +69,7 @@ public class SimpleUnnamedConfigTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")

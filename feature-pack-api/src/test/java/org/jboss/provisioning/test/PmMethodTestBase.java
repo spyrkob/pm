@@ -23,6 +23,7 @@ import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Test;
 
@@ -38,9 +39,11 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
 
     protected abstract ProvisionedState provisionedState() throws ProvisioningException;
 
-    protected abstract DirState provisionedHomeDir(DirState.DirBuilder builder);
-
     protected abstract void testPmMethod(ProvisioningManager pm) throws ProvisioningException;
+
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.build();
+    }
 
     @Override
     protected void doBefore() throws Exception {

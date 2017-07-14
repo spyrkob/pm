@@ -42,10 +42,10 @@ public class FeatureGroupParsingTestCase {
     public void testMain() throws Exception {
         final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
         final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
-                .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
-                .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep1").inheritFeatures(true).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep2").inheritFeatures(false).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
-                        .setInheritFeatures(false)
+                        .inheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                         .includeFeature(

@@ -128,13 +128,27 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         this.props.putAll(props);
     }
 
-    public void pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
+    public boolean pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
         List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(gav);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
             fgConfigStacks.put(gav, fgConfigStack);
+            fgConfigStack.add(fgConfig);
+            return true;
+        }
+        int i = fgConfigStack.size() - 1;
+        while(i >= 0) {
+            final ResolvedFeatureGroupConfig pushedFgConfig = fgConfigStack.get(i--);
+            if(pushedFgConfig.name.equals(fgConfig.name)) {
+                if(fgConfig.isSubsetOf(pushedFgConfig)) {
+                    return false;
+                } else {
+                    break;
+                }
+            }
         }
         fgConfigStack.add(fgConfig);
+        return true;
     }
 
     public ResolvedFeatureGroupConfig popConfig(ArtifactCoords.Gav gav) {
@@ -148,8 +162,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    public boolean processFeature(ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
-        final ResolvedFeatureId id = spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
+    void includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
@@ -163,50 +176,108 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         feature.addDependency(depId);
                     }
                 }
-                return true;
-            }
-        }
-        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(spec.id.gav);
-        if (fgConfigStack != null) {
-            int i = fgConfigStack.size() - 1;
-            while (i >= 0) {
-                final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
-                if (fgConfig.inheritFeatures) {
-                    if(id != null && fgConfig.excludedFeatures.contains(id)) {
-                        return false;
-                    }
-                    if (fgConfig.excludedSpecs.contains(id.specId)) {
-                        if(id != null && fgConfig.includedFeatures.containsKey(id)) {
-                            continue;
-                        }
-                        return false;
-                    }
-                } else {
-                    if(id != null && fgConfig.includedFeatures.containsKey(id)) {
-                        continue;
-                    }
-                    if(!fgConfig.includedSpecs.contains(id.specId)) {
-                        return false;
-                    } else if(id != null && fgConfig.excludedFeatures.contains(id)) {
-                        return false;
-                    }
-                }
+                return;
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps);
         if(id != null) {
             featuresById.put(id, feature);
         }
-        SpecFeatures features = featuresBySpec.get(spec.id);
+        addToSpecFeatures(feature);
+
+        //System.out.println(model + ':' + name + "> processed " + id);
+    }
+
+    private void addToSpecFeatures(final ResolvedFeature feature) {
+        SpecFeatures features = featuresBySpec.get(feature.spec.id);
         if(features == null) {
-            features = new SpecFeatures(spec);
-            featuresBySpec.put(spec.id, features);
+            features = new SpecFeatures(feature.spec);
+            featuresBySpec.put(feature.spec.id, features);
         }
         features.list.add(feature);
+    }
 
-        System.out.println(model + ':' + name + "> processed " + id);
+    void merge(ConfigModelBuilder other) throws ProvisioningException {
+        if(!other.props.isEmpty()) {
+            if(props.isEmpty()) {
+                props = other.props;
+            } else {
+                for(Map.Entry<String, String> prop : other.props.entrySet()) {
+                    if(!props.containsKey(prop.getKey())) {
+                        props.put(prop.getKey(), prop.getValue());
+                    }
+                }
+            }
+        }
+        if(!other.featuresBySpec.isEmpty()) {
+            for(Map.Entry<ResolvedSpecId, SpecFeatures> entry : other.featuresBySpec.entrySet()) {
+                for(ResolvedFeature feature : entry.getValue().list) {
+                    merge(feature);
+                }
+            }
+        }
+    }
 
-        return true;
+    private void merge(ResolvedFeature feature) throws ProvisioningException {
+        if(feature.id == null) {
+            addToSpecFeatures(feature);
+            return;
+        }
+        final ResolvedFeature localFeature = featuresById.get(feature.id);
+        if(localFeature == null) {
+            featuresById.put(feature.id, feature);
+            addToSpecFeatures(feature);
+            return;
+        }
+        if(feature.hasParams()) {
+            for(Map.Entry<String, String> entry : feature.params.entrySet()) {
+                if(!localFeature.params.containsKey(entry.getKey())) {
+                    localFeature.params.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if(!feature.dependencies.isEmpty()) {
+            for(ResolvedFeatureId depId : feature.dependencies) {
+                localFeature.addDependency(depId);
+            }
+        }
+    }
+
+    boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
+        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(specId.gav);
+        if (fgConfigStack == null) {
+            return false;
+        }
+        int i = fgConfigStack.size() - 1;
+        while (i >= 0) {
+            final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
+            if (fgConfig.inheritFeatures) {
+                if (id != null && fgConfig.excludedFeatures.contains(id)) {
+                    return true;
+                }
+                if (fgConfig.excludedSpecs.contains(id.specId)) {
+                    if (id != null && fgConfig.includedFeatures.containsKey(id)) {
+                        continue;
+                    }
+                    return true;
+                }
+            } else {
+                if (id != null && fgConfig.includedFeatures.containsKey(id)) {
+                    continue;
+                }
+                if (!fgConfig.includedSpecs.contains(id.specId)) {
+                    return true;
+                } else if (id != null && fgConfig.excludedFeatures.contains(id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    ResolvedFeatureId resolveFeatureId(ResolvedFeatureSpec spec, FeatureConfig config)
+            throws ProvisioningDescriptionException {
+        return spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
     }
 
     @Override
@@ -239,7 +310,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(featuresById.isEmpty()) {
             return;
         }
-        System.out.println(model + ':' + name + "> handle");
+        //System.out.println(model + ':' + name + "> handle");
         if(checkRefs) {
             for(SpecFeatures specFeatures : featuresBySpec.values()) {
                 specFeatures.checkRefs();

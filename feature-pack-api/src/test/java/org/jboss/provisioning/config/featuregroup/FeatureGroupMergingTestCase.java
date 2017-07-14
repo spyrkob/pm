@@ -63,7 +63,7 @@ public class FeatureGroupMergingTestCase extends PmInstallFeaturePackTestBase {
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .setInheritFeatures(false)
+                            .inheritFeatures(false)
                             .includeSpec("specA")
                             .build())
                     .addFeature(
@@ -77,7 +77,7 @@ public class FeatureGroupMergingTestCase extends PmInstallFeaturePackTestBase {
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .setInheritFeatures(true)
+                            .inheritFeatures(true)
                             .excludeSpec("specA")
                             .excludeFeature(FeatureId.create("specC", "name", "cThree"))
                             .build())

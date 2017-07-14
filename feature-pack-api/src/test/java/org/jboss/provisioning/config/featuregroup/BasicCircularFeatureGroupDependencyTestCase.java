@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.model.test;
+package org.jboss.provisioning.config.featuregroup;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -24,6 +24,8 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
@@ -38,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBase {
+public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -48,21 +50,41 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("p1", true))
+                    .addParam(FeatureParameterSpec.create("a", true))
                     .build())
-            .addConfig(Config.builder().setName("config1")
+            .addSpec(FeatureSpec.builder("specB")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("b", false))
+                    .build())
+            .addSpec(FeatureSpec.builder("specC")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("c", false))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "aOne")
+                            .setParam("a", "a1"))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg3"))
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("name", "bOne")
+                            .setParam("b", "b1"))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg3")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
+                    .addFeature(
+                            new FeatureConfig("specC")
+                            .setParam("name", "cOne")
+                            .setParam("c", "c1"))
+                    .build())
+            .addConfig(Config.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a1")
-                            .setParam("p1", "config1"))
-                    .build())
-            .addConfig(Config.builder().setName("config2")
-                    .setProperty("prop1", "value3")
-                    .setProperty("prop2", "value4")
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a1")
-                            .setParam("p1", "config2"))
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .build())
             .getInstaller()
         .install();
@@ -76,21 +98,19 @@ public class SimpleDefaultNamedConfigTestCase extends PmInstallFeaturePackTestBa
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config1")
-                        .setProperty("prop1", "value1")
-                        .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
-                                .build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config2")
-                        .setProperty("prop1", "value3")
-                        .setProperty("prop2", "value4")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config2")
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specC", "name", "cOne"))
+                                .setParam("c", "c1")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bOne"))
+                                .setParam("b", "b1")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
+                                .setParam("a", "a1")
                                 .build())
                         .build())
                 .build();
