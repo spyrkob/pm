@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -186,13 +188,16 @@ public class ProvisioningManager {
         }
     }
 
+    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
+        provision(provisioningConfig, true);
+    }
     /**
      * (Re-)provisions the current installation to the desired specification.
      *
      * @param provisioningConfig  the desired installation specification
      * @throws ProvisioningException  in case the re-provisioning fails
      */
-    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
+    public void provision(ProvisioningConfig provisioningConfig, boolean trace) throws ProvisioningException {
 
         if(Files.exists(installationHome)) {
             if(!Files.isDirectory(installationHome)) {
@@ -234,12 +239,13 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        try(final ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance()
+        try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance()
                 .setArtifactResolver(artifactResolver)
                 .setConfig(provisioningConfig)
                 .setEncoding(encoding)
                 .setParameterResolver(paramResolver)
                 .setInstallDir(installationHome)
+                .setTrace(trace)
                 .build()) {
             // install the software
             ProvisioningRuntime.install(runtime);
@@ -268,14 +274,50 @@ public class ProvisioningManager {
      * @throws IOException  in case writing to the specified file fails
      */
     public void exportProvisioningConfig(Path location) throws ProvisioningException, IOException {
+        Path exportPath = location;
         final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
         if(!Files.exists(userProvisionedXml)) {
             throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
         }
-        if(Files.isDirectory(location)) {
-            location = location.resolve(userProvisionedXml.getFileName());
+        if(Files.isDirectory(exportPath)) {
+            exportPath = exportPath.resolve(userProvisionedXml.getFileName());
         }
-        IoUtils.copy(userProvisionedXml, location);
+        IoUtils.copy(userProvisionedXml, exportPath);
+    }
+
+    public void exportConfigurationChanges(Path location, Map<String, String> parameters) throws ProvisioningException, IOException {
+        ProvisioningConfig configuration = this.getProvisioningConfig();
+        if (configuration == null) {
+            final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
+            if (!Files.exists(userProvisionedXml)) {
+                throw new ProvisioningException("Provisioned state record is missing for " + installationHome);
+            }
+            Path xmlTarget = location;
+            if (Files.isDirectory(xmlTarget)) {
+                xmlTarget = xmlTarget.resolve(userProvisionedXml.getFileName());
+            }
+            Files.copy(userProvisionedXml, xmlTarget, StandardCopyOption.REPLACE_EXISTING);
+        }
+        Path tempInstallationDir = IoUtils.createRandomTmpDir();
+        ProvisioningManager reference = new ProvisioningManager(ProvisioningManager.builder()
+                .setArtifactResolver(this.getArtifactResolver())
+                .setEncoding(this.getEncoding())
+                .setInstallationHome(tempInstallationDir)
+                .setPackageParameterResolver(this.getPackageParameterResolver()));
+        reference.provision(configuration, false);
+        final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance()
+                .setArtifactResolver(this.getArtifactResolver())
+                .setConfig(configuration)
+                .setEncoding(this.getEncoding())
+                .setParameterResolver(this.getPackageParameterResolver())
+                .setInstallDir(tempInstallationDir);
+        parameters.entrySet().forEach(entry -> builder.addParameter(entry.getKey(), entry.getValue()));
+        try (ProvisioningRuntime runtime = builder.build()) {
+            // install the software
+            ProvisioningRuntime.exportDiff(runtime, location, installationHome);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     String getEncoding() {

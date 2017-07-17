@@ -54,7 +54,7 @@ public class MultiplePluginsTestCase extends PmProvisionConfigTestBase {
         }
 
         protected void writeFile(ProvisioningRuntime ctx, final String path, final String content) throws IOException {
-            IoUtils.writeFile(ctx.getInstallDir().resolve(path), content);
+            IoUtils.writeFile(ctx.getStagedDir().resolve(path), content);
         }
     }
 

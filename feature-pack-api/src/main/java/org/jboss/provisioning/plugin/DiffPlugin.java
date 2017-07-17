@@ -14,14 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.plugin.wildfly;
+package org.jboss.provisioning.plugin;
+
+import java.nio.file.Path;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
- * Property resolver abstract
+ * Diff plug-in can be referenced from a feature-pack configuration.
  *
- * @author Stuart Douglas
+ * Examples of such diff-provisioning tasks could be:
+ * - adjust the configuration;
+ *
+ * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
-public interface PropertyResolver {
+public interface DiffPlugin {
 
-    String resolveProperty(String property);
+    void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException;
+
 }

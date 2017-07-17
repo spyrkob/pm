@@ -53,11 +53,11 @@ public abstract class BasicFileWritingPlugin implements ProvisioningPlugin {
     }
 
     private Path getTargetPath(ProvisioningRuntime ctx, final String pathBase) {
-        Path p = ctx.getInstallDir().resolve(pathBase);
+        Path p = ctx.getStagedDir().resolve(pathBase);
         if (Files.exists(p)) {
             int i = 1;
             while (Files.exists(p)) {
-                p = ctx.getInstallDir().resolve(pathBase + i++);
+                p = ctx.getStagedDir().resolve(pathBase + i++);
             }
         }
         return p;

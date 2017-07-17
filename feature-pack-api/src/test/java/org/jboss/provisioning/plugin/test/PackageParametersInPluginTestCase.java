@@ -57,7 +57,7 @@ public class PackageParametersInPluginTestCase extends PmProvisionConfigTestBase
             for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
                 for(PackageRuntime pkg : fp.getPackages()) {
                     if(pkg.hasParameters()) {
-                        final Path dir = runtime.getInstallDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
+                        final Path dir = runtime.getStagedDir().resolve(fp.getGav().getArtifactId()).resolve(pkg.getName());
                         if(!Files.exists(dir)) {
                             try {
                                 Files.createDirectories(dir);

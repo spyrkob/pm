@@ -155,7 +155,9 @@ abstract class ScriptCollector {
             buf.append(" for profile ").append(profile);
         }
         buf.append(" from feature-pack ").append(fp.getGav().toString()).append(" package ").append(pkg.getName());
-        System.out.println(buf);
+        if(this.runtime.trace()) {
+            System.out.println(buf);
+        }
         if(profile != null) {
             addCommand("set profile=" + profile);
             addCommand("/profile=$profile:add");
@@ -253,14 +255,14 @@ abstract class ScriptCollector {
         }
     }
 
-    protected abstract void collect(final PackageScripts scripts,
-            final FeaturePackRuntime fp,
-            final PackageRuntime pkg,
-            final Path wfDir,
-            final boolean includeStatic) throws ProvisioningException;
+    protected abstract void collect(PackageScripts scripts,
+            FeaturePackRuntime fp,
+            PackageRuntime pkg,
+            Path wfDir,
+            boolean includeStatic) throws ProvisioningException;
 
-    protected void addScripts(final FeaturePackRuntime fp, final PackageRuntime pkg, final Path wfDir,
-            final boolean includeStatic, List<Script> scripts) throws ProvisioningException {
+    protected void addScripts(FeaturePackRuntime fp, PackageRuntime pkg, Path wfDir,
+            boolean includeStatic, List<Script> scripts) throws ProvisioningException {
         for(Script script : scripts) {
             if(!includeStatic && !script.isCollectAgain()) {
                 continue;
@@ -355,21 +357,29 @@ abstract class ScriptCollector {
 
     protected void logScript(final FeaturePackRuntime fp, String pkgName, Path script) {
         if(!fp.getGav().equals(lastLoggedGav)) {
-            System.out.println("  " + fp.getGav());
+            if(this.runtime.trace()) {
+                System.out.println("  " + fp.getGav());
+            }
             lastLoggedGav = fp.getGav();
             lastLoggedPackage = null;
         }
         if(!pkgName.equals(lastLoggedPackage)) {
-            System.out.println("    " + pkgName);
+            if(this.runtime.trace()) {
+                System.out.println("    " + pkgName);
+            }
             lastLoggedPackage = pkgName;
         }
-        System.out.println("      - " + script.getFileName());
+        if (this.runtime.trace()) {
+            System.out.println("      - " + script.getFileName());
+        }
     }
 
     void run() throws ProvisioningException {
-        System.out.print(" Generating ");
-        System.out.print(configName);
-        System.out.println(" configuration");
+        if (this.runtime.trace()) {
+            System.out.print(" Generating ");
+            System.out.print(configName);
+            System.out.println(" configuration");
+        }
         try {
             scriptWriter.flush();
             scriptWriter.close();
@@ -384,12 +394,12 @@ abstract class ScriptCollector {
         this.lastLoggedPackage = null;
 
         final CliCommandBuilder builder = CliCommandBuilder
-                .of(runtime.getInstallDir())
+                .of(runtime.getStagedDir())
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
-        processBuilder.environment().put("JBOSS_HOME", runtime.getInstallDir().toString());
+        processBuilder.environment().put("JBOSS_HOME", runtime.getStagedDir().toString());
 
         final Process cliProcess;
         try {

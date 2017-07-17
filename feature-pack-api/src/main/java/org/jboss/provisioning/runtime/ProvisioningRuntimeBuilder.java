@@ -93,6 +93,8 @@ public class ProvisioningRuntimeBuilder {
     Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
     Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
+    Map<String, String> parameters = new HashMap<>();
+    boolean trace = true;
 
     private ProvisioningRuntimeBuilder() {
         startTime = System.currentTimeMillis();
@@ -122,6 +124,11 @@ public class ProvisioningRuntimeBuilder {
 
     public ProvisioningRuntimeBuilder setInstallDir(Path installDir) {
         this.installDir = installDir;
+        return this;
+    }
+
+    public ProvisioningRuntimeBuilder setTrace(boolean trace) {
+        this.trace = trace;
         return this;
     }
 
@@ -786,5 +793,10 @@ public class ProvisioningRuntimeBuilder {
                 throw new ProvisioningException(Errors.copyFile(fpPlugins, workDir.resolve(Constants.PLUGINS)), e);
             }
         }
+    }
+
+    public ProvisioningRuntimeBuilder addParameter(String name, String param) {
+        this.parameters.put(name, param);
+        return this;
     }
 }

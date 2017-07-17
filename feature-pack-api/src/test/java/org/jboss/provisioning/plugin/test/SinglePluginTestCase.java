@@ -43,7 +43,7 @@ public class SinglePluginTestCase extends PmProvisionConfigTestBase {
         @Override
         public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
             try {
-                IoUtils.writeFile(ctx.getInstallDir().resolve("plugin1.txt"), "plugin1");
+                IoUtils.writeFile(ctx.getStagedDir().resolve("plugin1.txt"), "plugin1");
             } catch (IOException e) {
                 throw new ProvisioningException("Failed to write a file");
             }

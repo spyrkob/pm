@@ -17,6 +17,7 @@
 package org.jboss.provisioning.featurepack.xml.test;
 
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
@@ -27,7 +28,9 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.ArtifactCoords;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -37,6 +40,17 @@ public class FeaturePackXmlParserTestCase  {
 
     private static final XmlParserValidator<FeaturePackSpec> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-feature-pack-1_0.xsd"), FeaturePackXmlParser.getInstance());
+
+    private static final Locale defaultLocale = Locale.getDefault();
+
+    @BeforeClass
+    public static void setLocale() {
+        Locale.setDefault(Locale.US);
+    }
+    @AfterClass
+    public static void resetLocale() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void readBadNamespace() throws Exception {
