@@ -155,7 +155,9 @@ abstract class ScriptCollector {
             buf.append(" for profile ").append(profile);
         }
         buf.append(" from feature-pack ").append(fp.getGav().toString()).append(" package ").append(pkg.getName());
-        System.out.println(buf);
+        if(this.runtime.trace()) {
+            System.out.println(buf);
+        }
         if(profile != null) {
             addCommand("set profile=" + profile);
             addCommand("/profile=$profile:add");
@@ -355,21 +357,29 @@ abstract class ScriptCollector {
 
     protected void logScript(final FeaturePackRuntime fp, String pkgName, Path script) {
         if(!fp.getGav().equals(lastLoggedGav)) {
-            System.out.println("  " + fp.getGav());
+            if(this.runtime.trace()) {
+                System.out.println("  " + fp.getGav());
+            }
             lastLoggedGav = fp.getGav();
             lastLoggedPackage = null;
         }
         if(!pkgName.equals(lastLoggedPackage)) {
-            System.out.println("    " + pkgName);
+            if(this.runtime.trace()) {
+                System.out.println("    " + pkgName);
+            }
             lastLoggedPackage = pkgName;
         }
-        System.out.println("      - " + script.getFileName());
+        if (this.runtime.trace()) {
+            System.out.println("      - " + script.getFileName());
+        }
     }
 
     void run() throws ProvisioningException {
-        System.out.print(" Generating ");
-        System.out.print(configName);
-        System.out.println(" configuration");
+        if (this.runtime.trace()) {
+            System.out.print(" Generating ");
+            System.out.print(configName);
+            System.out.println(" configuration");
+        }
         try {
             scriptWriter.flush();
             scriptWriter.close();

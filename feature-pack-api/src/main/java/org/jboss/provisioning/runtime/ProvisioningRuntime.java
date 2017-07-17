@@ -59,11 +59,12 @@ import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, java.io.Closeable {
 
     public static void install(ProvisioningRuntime runtime) throws ProvisioningException {
-
         // copy package content
         for(FeaturePackRuntime fp : runtime.fpRuntimes.values()) {
             final ArtifactCoords.Gav fpGav = fp.getGav();
-            System.out.println("Installing " + fpGav);
+            if (runtime.trace()) {
+                System.out.println("Installing " + fpGav);
+            }
             for(PackageRuntime pkg : fp.getPackages()) {
                 final Path pkgSrcDir = pkg.getContentDir();
                 if (Files.exists(pkgSrcDir)) {
@@ -92,8 +93,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisionedStateXml(runtime.stagedDir)), e);
         }
-
-        System.out.println("Moving provisioned installation from staged directory to " + runtime.installDir);
+        if (runtime.trace()) {
+            System.out.println("Moving provisioned installation from staged directory to " + runtime.installDir);
+        }
         // copy from the staged to the target installation directory
         if (Files.exists(runtime.installDir)) {
             IoUtils.recursiveDelete(runtime.installDir);
@@ -122,12 +124,15 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Map<String, String> parameters = new HashMap<>();
     private List<ProvisionedConfig> configs = Collections.emptyList();
 
+    private final boolean trace;
+
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder) throws ProvisioningException {
         this.startTime = builder.startTime;
         this.artifactResolver = builder.artifactResolver;
         this.config = builder.config;
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
+        this.trace = builder.trace;
 
         if(!builder.anonymousConfigs.isEmpty()) {
             for(ProvisionedConfig config : builder.anonymousConfigs) {
@@ -227,6 +232,10 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     @Override
     public FeaturePackRuntime getFeaturePack(Gav gav) {
         return fpRuntimes.get(gav);
+    }
+
+    public boolean trace() {
+        return trace;
     }
 
     /**

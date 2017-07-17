@@ -188,13 +188,16 @@ public class ProvisioningManager {
         }
     }
 
+    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
+        provision(provisioningConfig, true);
+    }
     /**
      * (Re-)provisions the current installation to the desired specification.
      *
      * @param provisioningConfig  the desired installation specification
      * @throws ProvisioningException  in case the re-provisioning fails
      */
-    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
+    public void provision(ProvisioningConfig provisioningConfig, boolean trace) throws ProvisioningException {
 
         if(Files.exists(installationHome)) {
             if(!Files.isDirectory(installationHome)) {
@@ -242,6 +245,7 @@ public class ProvisioningManager {
                 .setEncoding(encoding)
                 .setParameterResolver(paramResolver)
                 .setInstallDir(installationHome)
+                .setTrace(trace)
                 .build()) {
             // install the software
             ProvisioningRuntime.install(runtime);
@@ -300,7 +304,7 @@ public class ProvisioningManager {
                 .setEncoding(this.getEncoding())
                 .setInstallationHome(tempInstallationDir)
                 .setPackageParameterResolver(this.getPackageParameterResolver()));
-        reference.provision(configuration);
+        reference.provision(configuration, false);
         final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance()
                 .setArtifactResolver(this.getArtifactResolver())
                 .setConfig(configuration)
