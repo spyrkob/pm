@@ -19,20 +19,34 @@ package org.jboss.provisioning.featurepack.pkg.xml.test;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.PackageXmlParser;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
-public class PackageXmlParserTestCase  {
+public class PackageXmlParserTestCase {
 
     private static final XmlParserValidator<PackageSpec> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-package-1_0.xsd"), PackageXmlParser.getInstance());
+
+    private static final Locale defaultLocale = Locale.getDefault();
+
+    @BeforeClass
+    public static void setLocale() {
+        Locale.setDefault(Locale.US);
+    }
+    @AfterClass
+    public static void resetLocale() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void readBadNamespace() throws Exception {

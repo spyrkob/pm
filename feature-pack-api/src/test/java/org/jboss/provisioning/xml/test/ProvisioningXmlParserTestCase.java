@@ -17,13 +17,16 @@
 package org.jboss.provisioning.xml.test;
 
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -33,6 +36,17 @@ public class ProvisioningXmlParserTestCase {
 
     private static final XmlParserValidator<ProvisioningConfig> validator = new XmlParserValidator<>(
             Paths.get("src/main/resources/schema/pm-provisioning-1_0.xsd"), ProvisioningXmlParser.getInstance());
+
+    private static final Locale defaultLocale = Locale.getDefault();
+
+    @BeforeClass
+    public static void setLocale() {
+        Locale.setDefault(Locale.US);
+    }
+    @AfterClass
+    public static void resetLocale() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void readBadNamespace() throws Exception {
