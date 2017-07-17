@@ -18,14 +18,14 @@
 
 -->
 <feature-spec name="logger" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="logging">
-      <parameter name="profile" maps-to="profile"/>
-    </reference>
-  </references>
-  <parameters>
-    <parameter name="profile" feature-id="true"/>
-    <parameter name="category" feature-id="true"/>
-    <parameter name="level" nillable="false"/>
-  </parameters>
+  <refs>
+    <ref feature="logging">
+      <param name="profile" maps-to="profile"/>
+    </ref>
+  </refs>
+  <params>
+    <param name="profile" feature-id="true"/>
+    <param name="category" feature-id="true"/>
+    <param name="level" nillable="false"/>
+  </params>
 </feature-spec>

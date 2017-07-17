@@ -18,12 +18,12 @@
 
 -->
 <feature-spec name="logging" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="extension"/>
-    <reference feature="profile"/>
-  </references>
-  <parameters>
-    <parameter name="profile" feature-id="true"/>
-    <parameter name="extension" default="org.jboss.as.logging"/>
-  </parameters>
+  <refs>
+    <ref feature="extension"/>
+    <ref feature="profile"/>
+  </refs>
+  <params>
+    <param name="profile" feature-id="true"/>
+    <param name="extension" default="org.jboss.as.logging"/>
+  </params>
 </feature-spec>

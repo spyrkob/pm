@@ -18,23 +18,23 @@
 
 -->
 <feature-spec name="root-logger" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <references>
-    <reference feature="logging">
-      <parameter name="profile" maps-to="profile"/>
-    </reference>
-    <reference feature="logging-console-handler" nillable="true">
-      <parameter name="profile" maps-to="profile"/>
-      <parameter name="console-handler" maps-to="name"/>
-    </reference>
-    <reference feature="logging-rotating-file-handler" nillable="true">
-      <parameter name="profile" maps-to="profile"/>
-      <parameter name="periodic-rotating-file-handler" maps-to="name"/>
-    </reference>
-  </references>
-  <parameters>
-    <parameter name="profile" feature-id="true"/>
-    <parameter name="level" default="INFO"/>
-    <parameter name="console-handler" nillable="true" default="CONSOLE"/>
-    <parameter name="periodic-rotating-file-handler" nillable="true" default="FILE"/>
-  </parameters>
+  <refs>
+    <ref feature="logging">
+      <param name="profile" maps-to="profile"/>
+    </ref>
+    <ref feature="logging-console-handler" nillable="true">
+      <param name="profile" maps-to="profile"/>
+      <param name="console-handler" maps-to="name"/>
+    </ref>
+    <ref feature="logging-rotating-file-handler" nillable="true">
+      <param name="profile" maps-to="profile"/>
+      <param name="periodic-rotating-file-handler" maps-to="name"/>
+    </ref>
+  </refs>
+  <params>
+    <param name="profile" feature-id="true"/>
+    <param name="level" default="INFO"/>
+    <param name="console-handler" nillable="true" default="CONSOLE"/>
+    <param name="periodic-rotating-file-handler" nillable="true" default="FILE"/>
+  </params>
 </feature-spec>
