@@ -16,8 +16,15 @@
  */
 package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jboss.provisioning.ProvisioningException;
@@ -36,20 +43,45 @@ public class WfDiffPlugin implements DiffPlugin {
 
     @Override
     public void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
-        System.out.println("WildFly diff plug-in");
+        if(runtime.trace()) {
+            System.out.println("WildFly diff plug-in");
+        }
+//         JBoss Modules overrides the default providers
         Process process = null;
         Process embeddedServer = null;
         try {
-            process = launchServer(customizedInstallation.toAbsolutePath());
+            process = launchServer(customizedInstallation.toAbsolutePath(), runtime.trace());
             String host = getParameter(runtime, "host", "127.0.0.1");
             String port = getParameter(runtime, "port", "9990");
             String protocol = getParameter(runtime, "protocol", "remote+http");
             String username = getParameter(runtime, "username", "admin");
             String password = getParameter(runtime, "password", "passw0rd!");
-            embeddedServer = launchEmbeddedServer(runtime.getInstallDir(),
-                    "embed-server --server-config=standalone.xml --jboss-home=" + runtime.getInstallDir().toAbsolutePath(),
-                    String.format("/synchronization=simple:add(host=%s, port=%s, protocol=%s, username=%s, password=%s)", host, port, protocol, username, password),
-                    "attachment save --operation=/synchronization=simple:export-diff --file=" + target.toAbsolutePath());
+            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), runtime.trace());
+            Path logFile = runtime.getInstallDir().resolve("standalone").resolve("log").resolve("synchronization.log");
+            Files.deleteIfExists(logFile);
+            try(BufferedWriter out = new BufferedWriter(new OutputStreamWriter(embeddedServer.getOutputStream(), StandardCharsets.UTF_8));
+                    BufferedWriter log = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(logFile, StandardOpenOption.CREATE), StandardCharsets.UTF_8));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(embeddedServer.getInputStream(), StandardCharsets.UTF_8))) {
+                log.write(reader.readLine());log.newLine();
+                out.write("embed-server --admin-only --server-config=standalone.xml");
+                out.newLine();
+                out.flush();
+                log.write(reader.readLine());log.newLine();
+                out.write(String.format("/synchronization=simple:add(host=%s, port=%s, protocol=%s, username=%s, password=%s)", host, port, protocol, username, password));
+                out.newLine();
+                out.flush();
+                log.write(reader.readLine());log.newLine();
+                log.write(reader.readLine());log.newLine();
+                out.write(("attachment save --operation=/synchronization=simple:export-diff --file=" + target.toAbsolutePath()));
+                out.newLine();
+                out.flush();
+                log.write(reader.readLine());log.newLine();
+                String lastLine = reader.readLine();
+                log.write(lastLine);log.newLine();
+                if (runtime.trace()) {
+                    System.out.println(lastLine);
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
             Logger.getLogger(WfDiffPlugin.class.getName()).log(Level.SEVERE, null, ex);
@@ -71,16 +103,20 @@ public class WfDiffPlugin implements DiffPlugin {
         return defaultValue;
     }
 
-    private static Process launchEmbeddedServer(Path installDir, String ... commands) throws IOException {
-        System.out.println("Starting full server for " + installDir);
-        Launcher launcher = new Launcher(CliCommandBuilder.of(installDir).setCommands(commands))
+    private static Process launchEmbeddedServerProcess(Path installDir, boolean trace) throws IOException {
+        if (trace) {
+            System.out.println("Starting embeded admin-only server for " + installDir);
+        }
+        Launcher launcher = new Launcher(CliCommandBuilder.of(installDir))
                 .setRedirectErrorStream(true)
+                .setDirectory(installDir.resolve("bin"))
                 .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
         return launcher.launch();
     }
-
-    private static Process launchServer(Path installDir) throws IOException {
-        System.out.println("Starting full server for " + installDir);
+    private static Process launchServer(Path installDir, boolean trace) throws IOException {
+        if (trace) {
+            System.out.println("Starting full server for " + installDir);
+        }
         Launcher launcher = new Launcher(StandaloneCommandBuilder.of(installDir))
                 .setRedirectErrorStream(true)
                 .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
