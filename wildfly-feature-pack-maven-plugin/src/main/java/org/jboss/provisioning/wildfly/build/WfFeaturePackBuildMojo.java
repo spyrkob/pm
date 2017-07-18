@@ -265,14 +265,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             throw new MojoExecutionException(Errors.writeFile(fpDir.resolve(Constants.FEATURE_PACK_XML)), e);
         }
 
-        final Path featuresDir = targetResources.resolve(Constants.FEATURES);
-        if(Files.exists(featuresDir)) {
-            try {
-                IoUtils.copy(featuresDir, fpDir.resolve(Constants.FEATURES));
-            } catch (IOException e) {
-                throw new MojoExecutionException(Errors.copyFile(featuresDir, fpDir.resolve(Constants.FEATURES)), e);
-            }
-        }
+        copyDirIfExists(targetResources.resolve(Constants.FEATURES), fpDir.resolve(Constants.FEATURES));
+        copyDirIfExists(targetResources.resolve(Constants.FEATURE_GROUPS), fpDir.resolve(Constants.FEATURE_GROUPS));
         addWildFlyPlugin(fpDir);
 
         // collect feature-pack resources
@@ -310,6 +304,16 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
+        }
+    }
+
+    private void copyDirIfExists(final Path srcDir, final Path targetDir) throws MojoExecutionException {
+        if(Files.exists(srcDir)) {
+            try {
+                IoUtils.copy(srcDir, targetDir);
+            } catch (IOException e) {
+                throw new MojoExecutionException(Errors.copyFile(srcDir, targetDir), e);
+            }
         }
     }
 

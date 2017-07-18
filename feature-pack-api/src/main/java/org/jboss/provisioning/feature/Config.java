@@ -27,9 +27,9 @@ import java.util.Map.Entry;
  *
  * @author Alexey Loubyansky
  */
-public class Config extends AbstractFeatureGroup {
+public class Config extends FeatureGroupSupport {
 
-    public static class Builder extends AbstractFeatureGroup.Builder<Config, Builder> {
+    public static class Builder extends FeatureGroupSupport.Builder<Config, Builder> {
 
         private String model;
         private Map<String, String> props = Collections.emptyMap();

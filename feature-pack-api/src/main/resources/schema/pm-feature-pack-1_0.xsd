@@ -94,8 +94,8 @@
       <xs:element name="props" type="propsType" minOccurs="0" maxOccurs="1"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="feature-pack" type="featurePackDependencyType" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="feature" type="configFeatureType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature-group" type="featureGroupType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="optional">
@@ -154,8 +154,8 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element name="feature-group" type="featureGroupDependencyType" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="feature" type="configFeatureType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature-group" type="featureGroupType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
     </xs:choice>
     <xs:attribute name="dependency" type="xs:string" use="required">
       <xs:annotation>
@@ -166,7 +166,7 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="featureGroupDependencyType">
+  <xs:complexType name="featureGroupType">
     <xs:annotation>
       <xs:documentation>
         Describes feature-group configuration
@@ -190,13 +190,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="source" type="xs:string" use="optional">
-      <xs:annotation>
-        <xs:documentation>
-          The source of feature group
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>    
   </xs:complexType>
 
   <xs:complexType name="includeType">
@@ -284,18 +277,7 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="configFeaturesType">
-    <xs:annotation>
-      <xs:documentation>
-        Describes config features
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice minOccurs="1" maxOccurs="unbounded">
-      <xs:element name="feature" type="configFeatureType" />
-    </xs:choice>
-  </xs:complexType>
-
-  <xs:complexType name="configFeatureType">
+  <xs:complexType name="featureType">
     <xs:annotation>
       <xs:documentation>
         Describes a feature
@@ -304,7 +286,9 @@
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="depends" type="featureDependsType" />
       <xs:element name="param" type="paramType" />
-      <xs:element name="feature" type="configFeatureType" />
+      <xs:element name="feature" type="featureType" />
+      <xs:element name="feature-group" type="featureGroupType" />
+      <xs:element name="feature-pack" type="featurePackDependencyType"/>
     </xs:choice>
     <xs:attribute name="spec" type="xs:string" use="required">
       <xs:annotation>

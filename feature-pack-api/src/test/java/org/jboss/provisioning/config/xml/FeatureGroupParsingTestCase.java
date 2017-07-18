@@ -67,7 +67,13 @@ public class FeatureGroupParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addFeatureGroup("source4", FeatureGroupConfig.builder("dep4").build())
+                .addFeatureGroup("source4", FeatureGroupConfig.forGroup("dep4"))
+                .addFeature("source4",
+                        new FeatureConfig("spec1")
+                        .setParam("p1", "v1")
+                        .setParam("p2", "v2")
+                        .addDependency(FeatureId.builder("spec2").addParam("p1", "v1").addParam("p2", "v2").build())
+                        .addDependency(FeatureId.create("spec3", "p3", "v3")))
                 .addFeature(
                         new FeatureConfig("spec1")
                         .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))

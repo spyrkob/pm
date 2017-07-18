@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.junit.Assert;
@@ -56,9 +57,36 @@ public class FeatureConfigXmlParsingTestCase {
                         .setParam("param3", "value3")
                         .addFeature(FeatureConfig.newConfig("grandchild-spec")
                                 .setParam("param4", "value4")))
+                .addFeatureGroup(FeatureGroupConfig.builder("group1")
+                        .includeFeature(FeatureId.create("spec3", "p1", "v1"),
+                                new FeatureConfig("spec3")
+                                .setParam("p1", "v1")
+                                .setParam("p2", "v2")
+                                .addDependency(FeatureId.builder("spec4").addParam("p1", "v1").addParam("p2", "v2").build())
+                                .addDependency(FeatureId.builder("spec5").addParam("p1", "v1").addParam("p2", "v2").build())
+                                .addFeature(
+                                        new FeatureConfig("spec9")
+                                        .setParam("p1", "v1")
+                                        .addFeature(
+                                                new FeatureConfig("spec10")
+                                                .addFeature(new FeatureConfig("spec11").setParentRef("spec10-ref").setParam("p1", "v1")))))
+                        .excludeSpec("spec6")
+                        .excludeFeature(FeatureId.create("spec8", "p1", "v1"))
+                        .build())
                 .addFeature(FeatureConfig.newConfig("child-spec")
                         .setParentRef("feature-spec-ref")
                         .setParam("param5", "value5"))
+                .addFeatureGroup("fp2", FeatureGroupConfig.builder("group2")
+                        .includeFeature(FeatureId.create("spec1", "p1", "v1"),
+                                new FeatureConfig("spec1")
+                                .setParam("p1", "v1")
+                                .setParam("p2", "v2")
+                                .addDependency(FeatureId.builder("spec4").addParam("p1", "v1").addParam("p2", "v2").build()))
+                        .excludeFeature(FeatureId.create("spec2", "p1", "v1"))
+                        .build())
+                .addFeature("fp2", new FeatureConfig("spec2")
+                                .setParam("p1", "v1")
+                                .setParam("p2", "v2"))
                 .addFeature(FeatureConfig.newConfig("another-spec")
                         .setParam("param6", "value6")), parseFeature("full-feature.xml"));
     }

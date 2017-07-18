@@ -1,0 +1,399 @@
+/*
+ * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.jboss.provisioning.config.wf;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
+
+import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.feature.FeatureReferenceSpec;
+import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.state.ProvisionedConfig;
+import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
+import org.jboss.provisioning.state.ProvisionedState;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
+import org.jboss.provisioning.util.IoUtils;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
+import org.junit.Ignore;
+
+/**
+ *
+ * @author Alexey Loubyansky
+ */
+@Ignore
+public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeaturePackTestBase {
+
+    private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
+    public static class TestConfigPlugin implements ProvisioningPlugin {
+        private static final TestConfigHandler configHandler = new TestConfigHandler();
+        @Override
+        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
+            if(ctx.hasConfigs()) {
+                for(ProvisionedConfig config : ctx.getConfigs()) {
+                    config.handle(configHandler);
+                }
+            }
+        }
+    }
+
+    public static class TestConfigHandler implements ProvisionedConfigHandler {
+
+        @Override
+        public void nextFeaturePack(ArtifactCoords.Gav fpGav) {
+            System.out.println("Feature-pack " + fpGav);
+        }
+        @Override
+        public void nextSpec(ResolvedSpecId specId) {
+            System.out.println(" spec " + specId);
+        }
+
+        @Override
+        public void nextFeature(ProvisionedFeature feature) {
+            System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
+        }
+    }
+
+    @Override
+    protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
+        final Path p = repoManager.installer()
+        .newFeaturePack(FP_GAV)
+            .addSpec(FeatureSpec.builder("extension")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .build())
+            .addSpec(FeatureSpec.builder("interface")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("inet-address", true))
+                    .build())
+            .addSpec(FeatureSpec.builder("logger")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.createId("category"))
+                    .addParam(FeatureParameterSpec.create("level", false))
+                    .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
+                    .build())
+            .addSpec(FeatureSpec.builder("logging")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.create("extension", "org.jboss.as.logging"))
+                    .addRef(FeatureReferenceSpec.create("extension"))
+                    .addRef(FeatureReferenceSpec.create("profile"))
+                    .build())
+            .addSpec(FeatureSpec.builder("logging-console-handler")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.create("name", true, false, "CONSOLE"))
+                    .addParam(FeatureParameterSpec.create("level", "INFO"))
+                    .addParam(FeatureParameterSpec.create("formatters", "COLOR_PATTERN"))
+                    .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
+                    .addRef(FeatureReferenceSpec.builder("logging-formatter").mapParam("profile", "profile").mapParam("formatters", "name").build())
+                    .build())
+            .addSpec(FeatureSpec.builder("logging-formatter")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("pattern"))
+                    .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
+                    .build())
+            .addSpec(FeatureSpec.builder("logging-rotating-file-handler")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.create("name", true, false, "FILE"))
+                    .addParam(FeatureParameterSpec.create("level", "DEBUG"))
+                    .addParam(FeatureParameterSpec.create("formatters", "PATTERN"))
+                    .addParam(FeatureParameterSpec.create("relative-to", "jboss.server.log.dir"))
+                    .addParam(FeatureParameterSpec.create("path", "server.log"))
+                    .addParam(FeatureParameterSpec.create("suffix", ".yyyy-MM-dd"))
+                    .addParam(FeatureParameterSpec.create("append", "true"))
+                    .addParam(FeatureParameterSpec.create("autoflush", "true"))
+                    .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
+                    .addRef(FeatureReferenceSpec.builder("logging-formatter").mapParam("profile", "profile").mapParam("formatters", "name").build())
+                    .build())
+            .addSpec(FeatureSpec.builder("profile")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .build())
+            .addSpec(FeatureSpec.builder("root-logger")
+                    .addParam(FeatureParameterSpec.createId("profile"))
+                    .addParam(FeatureParameterSpec.create("level", "INFO"))
+                    .addParam(FeatureParameterSpec.create("console-handler", false, true, "CONSOLE"))
+                    .addParam(FeatureParameterSpec.create("periodic-rotating-file-handler", false, true, "FILE"))
+                    .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
+                    .addRef(FeatureReferenceSpec.builder("logging-console-handler").mapParam("profile", "profile").mapParam("console-handler", "name").build())
+                    .addRef(FeatureReferenceSpec.builder("logging-rotating-file-handler").mapParam("profile", "profile").mapParam("periodic-rotating-file-handler", "name").build())
+                    .build())
+            .addSpec(FeatureSpec.builder("server-group")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("profile", false))
+                    .addParam(FeatureParameterSpec.create("socket-binding-group", false))
+                    .addRef(FeatureReferenceSpec.create("socket-binding-group"))
+                    .addRef(FeatureReferenceSpec.create("profile"))
+                    .build())
+            .addSpec(FeatureSpec.builder("socket-binding")
+                    .addParam(FeatureParameterSpec.createId("socket-binding-group"))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("interface", true))
+                    .addRef(FeatureReferenceSpec.create("socket-binding-group"))
+                    .addRef(FeatureReferenceSpec.create("interface", true))
+                    .build())
+            .addSpec(FeatureSpec.builder("socket-binding-group")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("default-interface", false))
+                    .addRef(FeatureReferenceSpec.builder("interface").mapParam("default-interface", "name").build())
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("logging")
+                    .addFeature(
+                            new FeatureConfig("logging")
+                            .addFeature(new FeatureConfig("logging-console-handler"))
+                            .addFeature(new FeatureConfig("logging-rotating-file-handler"))
+                            .addFeature(
+                                    new FeatureConfig("logger")
+                                    .setParam("category", "com.arjuna")
+                                    .setParam("level", "WARN"))
+                            .addFeature(
+                                    new FeatureConfig("logger")
+                                    .setParam("category", "org.jboss.as.config")
+                                    .setParam("level", "DEBUG"))
+                            .addFeature(
+                                    new FeatureConfig("logger")
+                                    .setParam("category", "sun.rmi")
+                                    .setParam("level", "WARN"))
+                            .addFeature(new FeatureConfig("root-logger"))
+                            .addFeature(
+                                    new FeatureConfig("logging-formatter")
+                                    .setParam("name", "PATTERN")
+                                    .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n"))
+                            .addFeature(
+                                    new FeatureConfig("logging-formatter")
+                                    .setParam("name", "COLOR-PATTERN")
+                                    .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")))
+                    .build())
+            .addConfig(Config.builder()
+                    .setProperty("prop1", "value1")
+                    .setProperty("prop2", "value2")
+                    .addFeature(
+                            new FeatureConfig("extension")
+                            .setParam("name", "org.jboss.as.logging"))
+                    .addFeature(
+                            new FeatureConfig("profile")
+                            .setParam("name", "default")
+                            .addFeatureGroup(FeatureGroupConfig.forGroup("logging")))
+                    .addFeature(
+                            new FeatureConfig("profile")
+                            .setParam("name", "ha")
+                            .addFeatureGroup(FeatureGroupConfig.forGroup("logging"))
+                            .addFeature(
+                                    new FeatureConfig("logging")
+                                    .addFeature(
+                                            new FeatureConfig("logger")
+                                            .setParam("category", "org.jboss.pm")
+                                            .setParam("level", "DEBUG"))
+                                    .addFeature(
+                                            new FeatureConfig("logger")
+                                            .setParam("category", "java.util")
+                                            .setParam("level", "INFO"))))
+                    .addFeature(
+                            new FeatureConfig("interface")
+                            .setParam("name", "public"))
+                    .addFeature(
+                            new FeatureConfig("socket-binding-group")
+                            .setParam("name", "standard-sockets")
+                            .setParam("default-interface", "public")
+                            .addFeature(new FeatureConfig("socket-binding").setParam("name", "http"))
+                            .addFeature(new FeatureConfig("socket-binding").setParam("name", "https")))
+                    .addFeature(
+                            new FeatureConfig("socket-binding-group")
+                            .setParam("name", "ha-sockets")
+                            .setParam("default-interface", "public")
+                            .addFeature(new FeatureConfig("socket-binding").setParam("name", "http"))
+                            .addFeature(new FeatureConfig("socket-binding").setParam("name", "https")))
+                    .addFeature(
+                            new FeatureConfig("server-group")
+                            .setParam("name", "main-server-group")
+                            .setParam("socket-binding-group", "standard-sockets")
+                            .setParam("profile", "default"))
+                    .addFeature(
+                            new FeatureConfig("server-group")
+                            .setParam("name", "other-server-group")
+                            .setParam("socket-binding-group", "ha-sockets")
+                            .setParam("profile", "ha"))
+                    .build())
+            .newPackage("p1", true)
+        .getFeaturePack()
+        .addPlugin(TestConfigPlugin.class)
+        .addClassToPlugin(TestConfigHandler.class)
+        .getInstaller()
+        .install();
+
+        try {
+            IoUtils.copy(p, Paths.get("/home/olubyans/pm-test/" + UUID.randomUUID()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected FeaturePackConfig featurePackConfig() {
+        return FeaturePackConfig.forGav(FP_GAV);
+    }
+
+    @Override
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        final ProvisionedConfigBuilder config1 = ProvisionedConfigBuilder.builder()
+        .setProperty("prop1", "value1")
+        .setProperty("prop2", "value2")
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "extension", "name", "org.jboss.as.logging")).build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "default")).build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "ha")).build());
+
+        addDefaultLoggingState(config1, "default");
+        addDefaultLoggingState(config1, "ha");
+
+        config1.addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "ha")
+                .setParam("category", "org.jboss.pm").build())
+                .setParam("level", "DEBUG")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "ha")
+                .setParam("category", "java.util").build())
+                .setParam("level", "INFO")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "root-logger", "profile", "default"))
+                .setParam("level", "INFO")
+                .setParam("console-handler", "CONSOLE")
+                .setParam("periodic-rotating-file-handler", "FILE")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "interface", "name", "public")).build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "socket-binding-group", "name", "standard-sockets"))
+                .setParam("default-interface", "public")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "socket-binding-group", "name", "ha-sockets"))
+                .setParam("default-interface", "public")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                .setParam("socket-binding-group", "standard-sockets")
+                .setParam("name", "http")
+                .build())
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                .setParam("socket-binding-group", "standard-sockets")
+                .setParam("name", "https")
+                .build())
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                .setParam("socket-binding-group", "ha-sockets")
+                .setParam("name", "http")
+                .build())
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "socket-binding")
+                .setParam("socket-binding-group", "ha-sockets")
+                .setParam("name", "https")
+                .build())
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "server-group", "name", "main-server-group"))
+                .setParam("socket-binding-group", "standard-sockets")
+                .setParam("profile", "default")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "server-group", "name", "other-server-group"))
+                .setParam("socket-binding-group", "ha-sockets")
+                .setParam("profile", "ha")
+                .build());
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("p1")
+                        .build())
+                .addConfig(config1.build())
+                .build();
+    }
+
+    private void addDefaultLoggingState(ProvisionedConfigBuilder builder, String profile) throws ProvisioningDescriptionException {
+        builder.addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", profile))
+                .setParam("extension", "org.jboss.as.logging")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", profile)
+                .setParam("name", "PATTERN").build())
+                .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", profile)
+                .setParam("name", "COLOR-PATTERN").build())
+                .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-console-handler")
+                .setParam("profile", profile)
+                .setParam("name", "CONSOLE").build())
+                .setParam("level", "INFO")
+                .setParam("formatters", "COLOR_PATTERN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
+                .setParam("profile", profile)
+                .setParam("name", "FILE").build())
+                .setParam("level", "DEBUG")
+                .setParam("formatters", "PATTERN")
+                .setParam("relative-to", "jboss.server.log.dir")
+                .setParam("path", "server.log")
+                .setParam("suffix", ".yyyy-MM-dd")
+                .setParam("append", "true")
+                .setParam("autoflush", "true")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", profile)
+                .setParam("category", "com.arjuna").build())
+                .setParam("level", "WARN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", profile)
+                .setParam("category", "org.jboss.as.config").build())
+                .setParam("level", "DEBUG")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", profile)
+                .setParam("category", "sun.rmi").build())
+                .setParam("level", "WARN")
+                .build());
+    }
+}

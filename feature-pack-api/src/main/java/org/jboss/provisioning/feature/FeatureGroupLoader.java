@@ -27,10 +27,10 @@ public interface FeatureGroupLoader {
 
     FeatureGroupLoader NOT_CONFIGURED = new FeatureGroupLoader() {
         @Override
-        public AbstractFeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException {
+        public FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException {
             throw new ProvisioningDescriptionException("Failed to load feature group " + fgName + " from " + fgSource + ". Feature group loading has not been setup.");
         }
     };
 
-    AbstractFeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException;
+    FeatureGroup load(String fgSource, String fgName) throws ProvisioningDescriptionException;
 }

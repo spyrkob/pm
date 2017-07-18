@@ -44,6 +44,12 @@
   </feature-group>
   <feature-pack dependency="source4">
     <feature-group name="dep4"/>
+    <feature spec="spec1">
+      <depends feature-id="spec2:p1=v1,p2=v2"/>
+      <depends feature-id="spec3:p3=v3"/>
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
+    </feature>
   </feature-pack>
 
   <feature spec="spec1">

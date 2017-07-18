@@ -18,6 +18,7 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
+import org.jboss.provisioning.feature.FeatureGroup;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
@@ -59,7 +60,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         return configE;
     }
 
-    private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroupSpec featureGroup, String ns) {
+    private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroup featureGroup, String ns) {
         if(featureGroup.hasExternalDependencies()) {
             for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
                 writeExternalGroupDependency(configE, entry.getKey(), entry.getValue(), ns);
@@ -139,11 +140,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
                 addAttribute(paramE, Attribute.VALUE, param.getValue());
             }
         }
-        if(fc.hasNested()) {
-            for(FeatureConfig nested : fc.getNested()) {
-                addFeatureConfig(fcE, nested, ns);
-            }
-        }
+        writeFeatureGroupSpecBody(fcE, fc, ns);
     }
 
     public static void addFeatureConfig(ElementNode parentE, FeatureConfig fc, String ns) {

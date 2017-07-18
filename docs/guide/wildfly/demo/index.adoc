@@ -47,7 +47,7 @@ Here is how you can install the core:
 
 [options="nowrap"]
  ./do.sh run
- [pm]$ install org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta9-SNAPSHOT --dir=<installation-home>
+ [pm]$ install org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta29-SNAPSHOT --dir=<installation-home>
 
 NOTE: Tab-completion should work for the feature-pack coords.
 
@@ -57,8 +57,8 @@ Prompt `[pm]$` indicates that the current file-system directory is `pm`.
 
 Servlet and Full distributions can be installed with the same command but using the corresponding feature-pack coordinates, i.e.
 
- * `org.wildfly:wildfly-servlet-feature-pack-new:11.0.0.Alpha1-SNAPSHOT` for the Servlet distribution;
- * `org.wildfly:wildfly-feature-pack-new:11.0.0.Alpha1-SNAPSHOT` for the Full distribution.
+ * `org.wildfly:wildfly-servlet-feature-pack-new:11.0.0.Beta1-SNAPSHOT` for the Servlet distribution;
+ * `org.wildfly:wildfly-feature-pack-new:11.0.0.Beta1-SNAPSHOT` for the Full distribution.
 
 NOTE: Since Full feature-pack depends on Servlet feature-pack and Servlet feature-pack depends on Core feature-pack, installing Full feature-pack will implicitly install Servlet and Core feature-packs.
 
@@ -67,7 +67,7 @@ NOTE: Since Full feature-pack depends on Servlet feature-pack and Servlet featur
 Using the Core as an example:
 
 [options="nowrap"]
- [pm]$ uninstall org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta9-SNAPSHOT --dir=<installation-home>
+ [pm]$ uninstall org.wildfly.core:wildfly-core-feature-pack-new:3.0.0.Beta29-SNAPSHOT --dir=<installation-home>
 
 #### Exporting Current Provisioning Specification
 
@@ -88,7 +88,7 @@ Each feature-pack has a package called `dist.standalone`. If this package is sel
 2) Modfiy the feature-pack config (let's use Core as an example) to
 
 [options="nowrap"]
-    <feature-pack groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack-new" version="3.0.0.Beta9-SNAPSHOT">
+    <feature-pack groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack-new" version="3.0.0.Beta29-SNAPSHOT">
         <packages inherit="false">
             <include name="dist.standalone"/>
         </packages>

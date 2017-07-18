@@ -23,9 +23,9 @@ import java.util.Map;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupSpec extends AbstractFeatureGroup {
+public class FeatureGroupSpec extends FeatureGroupSupport {
 
-    public static class Builder extends AbstractFeatureGroup.Builder<FeatureGroupSpec, Builder> {
+    public static class Builder extends FeatureGroupSupport.Builder<FeatureGroupSpec, Builder> {
 
         private Builder() {
             super();

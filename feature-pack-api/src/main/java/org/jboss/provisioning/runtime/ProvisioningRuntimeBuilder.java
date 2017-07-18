@@ -45,7 +45,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.AbstractFeatureGroup;
+import org.jboss.provisioning.feature.FeatureGroup;
 import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
@@ -95,6 +95,8 @@ public class ProvisioningRuntimeBuilder {
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
     Map<String, String> parameters = new HashMap<>();
     boolean trace = true;
+
+    private FeatureConfig parentFeature;
 
     private ProvisioningRuntimeBuilder() {
         startTime = System.currentTimeMillis();
@@ -450,10 +452,10 @@ public class ProvisioningRuntimeBuilder {
         return tmp;
     }
 
-    private boolean processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, AbstractFeatureGroup fgSpec) throws ProvisioningException {
+    private boolean processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroup featureGroup) throws ProvisioningException {
         boolean resolvedFeatures = false;
-        if(fgSpec.hasExternalDependencies()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : fgSpec.getExternalDependencies().entrySet()) {
+        if(featureGroup.hasExternalDependencies()) {
+            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
                 final FeaturePackDependencySpec fpDep = fp.spec.getDependency(entry.getKey());
                 if(fpDep == null) {
                     throw new ProvisioningDescriptionException("Unknown feature-pack dependency " + entry.getKey());
@@ -461,13 +463,17 @@ public class ProvisioningRuntimeBuilder {
                 resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getRtBuilder(fpDep.getTarget().getGav()), entry.getValue());
             }
         }
-        if(fgSpec.hasLocalDependencies()) {
-            for(FeatureGroupConfig nestedFg : fgSpec.getLocalDependencies()) {
+        if(featureGroup.hasLocalDependencies()) {
+            for(FeatureGroupConfig nestedFg : featureGroup.getLocalDependencies()) {
                 resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg);
             }
         }
-        if(fgSpec.hasFeatures()) {
-            for(FeatureConfig fc : fgSpec.getFeatures()) {
+        if(featureGroup.hasFeatures()) {
+            for (FeatureConfig fc : featureGroup.getFeatures()) {
+                if (parentFeature != null) {
+                    final FeaturePackRuntime.Builder nestedFp = getRtBuilder(fc.getSpecId(), fp);
+                    initForeignKey(parentFeature, fc, nestedFp);
+                }
                 resolvedFeatures |= resolveFeature(modelBuilder, fp, fc);
             }
         }
@@ -475,7 +481,7 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private boolean resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
-
+System.out.println("RESOLVE FEATURE " + fc.hashCode());
         final SpecId specId = fc.getSpecId();
         final FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
@@ -508,34 +514,37 @@ public class ProvisioningRuntimeBuilder {
             resolvedDeps = Collections.emptySet();
         }
         modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
-        if (fc.hasNested()) {
-            for (FeatureConfig nested : fc.getNested()) {
-                final FeaturePackRuntime.Builder nestedFp = getRtBuilder(nested.getSpecId(), targetFp);
-                final String parentRef = nested.getParentRef() == null ? specId.toString() : nested.getParentRef();
-                final ResolvedFeatureSpec nestedSpec = nestedFp.getFeatureSpec(nested.getSpecId().getName());
-                final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
-                if (refSpec == null) {
-                    throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in "
-                            + nestedSpec.id);
-                }
-                for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-                    final String paramValue = fc.getParam(refSpec.getTargetParam(i));
-                    if (paramValue == null) {
-                        throw new ProvisioningDescriptionException(fc + " is missing ID parameter " + refSpec.getTargetParam(i)
-                                + " for " + nestedSpec.id);
-                    }
-                    final String prevValue = nested.putParam(refSpec.getLocalParam(i), paramValue);
-                    if (prevValue != null && !prevValue.equals(paramValue)) {
-                        throw new ProvisioningDescriptionException("Value " + prevValue + " of ID parameter "
-                                + refSpec.getLocalParam(i) + " of " + nestedSpec.id
-                                + " conflicts with the corresponding parent ID value " + paramValue);
-                    }
-                }
 
-                resolveFeature(modelBuilder, nestedFp, nested);
+        final FeatureConfig myParent = parentFeature;
+        parentFeature = fc;
+        System.out.println("SET PARENT " + fc);
+        processFeatureGroupSpec(modelBuilder, targetFp, fc);
+        parentFeature = myParent;
+        System.out.println("RESET PARENT " + parentFeature);
+        return true;
+    }
+
+    private void initForeignKey(FeatureConfig parentFc, FeatureConfig childFc, final FeaturePackRuntime.Builder childFp) throws ProvisioningException {
+        System.out.println("ProvisioningRuntimeBuilder.initForeignKey " + parentFc + " " + childFc);
+        final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().toString() : childFc.getParentRef();
+        final ResolvedFeatureSpec nestedSpec = childFp.getFeatureSpec(childFc.getSpecId().getName());
+        final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
+        if (refSpec == null) {
+            throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + nestedSpec.id);
+        }
+        for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+            final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
+            if (paramValue == null) {
+                throw new ProvisioningDescriptionException(parentFc + " is missing ID parameter " + refSpec.getTargetParam(i)
+                        + " for " + nestedSpec.id);
+            }
+            final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
+            if (prevValue != null && !prevValue.equals(paramValue)) {
+                throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
+                        + refSpec.getLocalParam(i) + " of " + nestedSpec.id
+                        + " conflicts with the corresponding parent ID value '" + paramValue +"'");
             }
         }
-        return true;
     }
 
     private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {

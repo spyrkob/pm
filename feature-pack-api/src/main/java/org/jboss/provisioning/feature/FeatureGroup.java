@@ -14,16 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.feature;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface BuilderWithFeatureGroups<T> {
+public interface FeatureGroup {
 
-    T addFeatureGroup(FeatureGroupConfig group);
+    boolean hasExternalDependencies();
 
-    T addFeatureGroup(String fpDep, FeatureGroupConfig group);
+    Map<String, FeatureGroupSpec> getExternalDependencies();
+
+    boolean hasLocalDependencies();
+
+    List<FeatureGroupConfig> getLocalDependencies();
+
+    boolean hasFeatures();
+
+    List<FeatureConfig> getFeatures();
 }
