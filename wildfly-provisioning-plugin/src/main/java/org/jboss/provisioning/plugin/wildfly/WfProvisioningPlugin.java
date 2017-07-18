@@ -117,8 +117,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
      */
     @Override
     public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
-
-        System.out.println("WildFly provisioning plug-in");
+        if(runtime.trace()) {
+            System.out.println("WildFly provisioning plug-in");
+        }
 
         final String thinServerProp = System.getProperty("wfThinServer");
         if(thinServerProp != null) {
