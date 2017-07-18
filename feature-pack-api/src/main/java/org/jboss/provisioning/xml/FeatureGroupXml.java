@@ -28,7 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.BuilderWithFeatureGroups;
+import org.jboss.provisioning.feature.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureConfig;
@@ -123,7 +123,6 @@ public class FeatureGroupXml {
         OPTIONAL("optional"),
         PARENT_REF("parent-ref"),
         SPEC("spec"),
-        SOURCE("source"),
         VALUE("value"),
 
         // default unknown attribute
@@ -216,7 +215,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, BuilderWithFeatureGroups<?> config) throws XMLStreamException {
+    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> config) throws XMLStreamException {
         String dependency = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -245,6 +244,15 @@ public class FeatureGroupXml {
                                 config.addFeatureGroup(readFeatureGroupDependency(reader));
                             } else {
                                 config.addFeatureGroup(dependency, readFeatureGroupDependency(reader));
+                            }
+                            break;
+                        case FEATURE:
+                            final FeatureConfig nested = new FeatureConfig();
+                            readFeatureConfig(reader, nested);
+                            if(dependency == null) {
+                                config.addFeature(nested);
+                            } else {
+                                config.addFeature(dependency, nested);
                             }
                             break;
                         default:
@@ -461,6 +469,12 @@ public class FeatureGroupXml {
                             final FeatureConfig child = new FeatureConfig();
                             readFeatureConfig(reader, child);
                             config.addFeature(child);
+                            break;
+                        case FEATURE_GROUP:
+                            config.addFeatureGroup(readFeatureGroupDependency(reader));
+                            break;
+                        case FEATURE_PACK:
+                            readFeaturePackDependency(reader, config);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

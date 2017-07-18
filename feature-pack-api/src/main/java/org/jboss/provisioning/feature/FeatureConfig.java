@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.feature;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,7 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
+public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> implements FeatureGroup {
 
     public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
         final FeatureConfig config = new FeatureConfig(id.specId.name);
@@ -50,7 +49,6 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
     String parentRef;
-    List<FeatureConfig> nested = Collections.emptyList();
 
     public FeatureConfig() {
     }
@@ -132,33 +130,40 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     }
 
     @Override
-    public FeatureConfig addFeature(FeatureConfig config) {
-        switch(nested.size()) {
-            case 0:
-                nested = Collections.singletonList(config);
-                break;
-            case 1:
-                nested = new ArrayList<>(nested);
-            default:
-                nested.add(config);
-        }
-        return this;
+    public boolean hasExternalDependencies() {
+        return !externalGroups.isEmpty();
     }
 
-    public boolean hasNested() {
-        return !nested.isEmpty();
+    @Override
+    public Map<String, FeatureGroupSpec> getExternalDependencies() {
+        return this.buildExternalDependencies();
     }
 
-    public List<FeatureConfig> getNested() {
-        return nested;
+    @Override
+    public boolean hasLocalDependencies() {
+        return !localGroups.isEmpty();
+    }
+
+    @Override
+    public List<FeatureGroupConfig> getLocalDependencies() {
+        return localGroups;
+    }
+
+    @Override
+    public boolean hasFeatures() {
+        return !features.isEmpty();
+    }
+
+    @Override
+    public List<FeatureConfig> getFeatures() {
+        return features;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
-        result = prime * result + ((nested == null) ? 0 : nested.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
@@ -169,7 +174,7 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
@@ -178,11 +183,6 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
             if (other.dependencies != null)
                 return false;
         } else if (!dependencies.equals(other.dependencies))
-            return false;
-        if (nested == null) {
-            if (other.nested != null)
-                return false;
-        } else if (!nested.equals(other.nested))
             return false;
         if (params == null) {
             if (other.params != null)
@@ -227,12 +227,12 @@ public class FeatureConfig implements BuilderWithFeatures<FeatureConfig> {
                 buf.append(',').append(i.next());
             }
         }
-        if(!nested.isEmpty()) {
+        if(!features.isEmpty()) {
             buf.append(" nested=");
             int i = 0;
-            buf.append(nested.get(i++));
-            while(i < nested.size()) {
-                buf.append(',').append(nested.get(i++));
+            buf.append(features.get(i++));
+            while(i < features.size()) {
+                buf.append(',').append(features.get(i++));
             }
         }
         return buf.append(']').toString();

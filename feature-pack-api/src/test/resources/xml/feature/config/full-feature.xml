@@ -29,9 +29,41 @@
       <param name="param4" value="value4"/>
     </feature>
   </feature>
+  <feature-group name="group1">
+    <include feature-id="spec3:p1=v1">
+      <depends feature-id="spec4:p1=v1,p2=v2"/>
+      <depends feature-id="spec5:p1=v1,p2=v2"/>
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
+      <feature spec="spec9">
+        <param name="p1" value="v1"/>
+        <feature spec="spec10">
+          <feature spec="spec11" parent-ref="spec10-ref">
+            <param name="p1" value="v1"/>
+          </feature>
+        </feature>
+      </feature>
+    </include>
+    <exclude spec="spec6"/>
+    <exclude feature-id="spec8:p1=v1"/>
+  </feature-group>
   <feature spec="child-spec" parent-ref="feature-spec-ref">
     <param name="param5" value="value5"/>
   </feature>
+  <feature-pack dependency="fp2">
+    <feature-group name="group2">
+      <include feature-id="spec1:p1=v1">
+        <depends feature-id="spec4:p1=v1,p2=v2"/>
+        <param name="p1" value="v1"/>
+        <param name="p2" value="v2"/>
+      </include>
+      <exclude feature-id="spec2:p1=v1"/>
+    </feature-group>
+    <feature spec="spec2">
+      <param name="p1" value="v1"/>
+      <param name="p2" value="v2"/>
+    </feature>      
+  </feature-pack>
   <feature spec="another-spec">
     <param name="param6" value="value6"/>
   </feature>
