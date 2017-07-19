@@ -223,7 +223,7 @@ public class FeatureSpec implements PackageDependencies {
     public FeatureReferenceSpec getRef(String name) throws ProvisioningDescriptionException {
         final FeatureReferenceSpec ref = refs.get(name);
         if(ref == null) {
-            throw new ProvisioningDescriptionException("Feature reference '" + name + "' not found in feature spec " + name);
+            throw new ProvisioningDescriptionException("Feature reference '" + name + "' not found in feature spec " + this.name);
         }
         return ref;
     }

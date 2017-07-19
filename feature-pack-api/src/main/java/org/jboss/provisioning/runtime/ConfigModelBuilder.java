@@ -162,7 +162,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    void includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
+    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
@@ -176,7 +176,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         feature.addDependency(depId);
                     }
                 }
-                return;
+                return feature;
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps);
@@ -184,8 +184,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             featuresById.put(id, feature);
         }
         addToSpecFeatures(feature);
-
-        //System.out.println(model + ':' + name + "> processed " + id);
+        return feature;
     }
 
     private void addToSpecFeatures(final ResolvedFeature feature) {

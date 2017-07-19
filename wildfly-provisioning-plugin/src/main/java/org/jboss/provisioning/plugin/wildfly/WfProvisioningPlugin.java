@@ -49,6 +49,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
@@ -58,7 +59,9 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.state.ProvisionedConfig;
+import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -222,6 +225,19 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         messageWriter.print("    %s=%s", entry.getKey(), entry.getValue());
                     }
                 }
+                config.handle(new ProvisionedConfigHandler() {
+                    public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
+                        System.out.println("  " + fpGav);
+                    }
+
+                    public void nextSpec(ResolvedSpecId specId) throws ProvisioningException {
+                        System.out.println("    " + specId);
+                    }
+
+                    public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
+                        System.out.println("      " + feature.getId());
+                    }
+                });
             }
         }
 

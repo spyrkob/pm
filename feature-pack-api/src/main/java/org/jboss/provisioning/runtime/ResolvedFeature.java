@@ -39,7 +39,7 @@ public class ResolvedFeature implements ProvisionedFeature {
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
-    Set<ResolvedFeatureId> dependencies = Collections.emptySet();
+    Set<ResolvedFeatureId> dependencies;
     boolean beingHandled;
 
     ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
@@ -73,6 +73,15 @@ public class ResolvedFeature implements ProvisionedFeature {
                     this.params.put(param.getKey(), param.getValue());
                 }
             }
+        } else if(spec.xmlSpec.hasParams()) {
+            this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
+            for(FeatureParameterSpec pSpec : spec.xmlSpec.getParams()) {
+                if(pSpec.hasDefaultValue()) {
+                    this.params.put(pSpec.getName(), pSpec.getDefaultValue());
+                }
+            }
+        } else {
+            this.params = Collections.emptyMap();
         }
     }
 
