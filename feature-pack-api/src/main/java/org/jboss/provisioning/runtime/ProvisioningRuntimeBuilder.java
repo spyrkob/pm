@@ -39,7 +39,9 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactResolutionException;
 import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -73,7 +75,11 @@ import org.jboss.provisioning.xml.PackageXmlParser;
 public class ProvisioningRuntimeBuilder {
 
     public static ProvisioningRuntimeBuilder newInstance() {
-        return new ProvisioningRuntimeBuilder();
+        return newInstance(DefaultMessageWriter.getDefaultInstance());
+    }
+
+    public static ProvisioningRuntimeBuilder newInstance(final MessageWriter messageWriter) {
+        return new ProvisioningRuntimeBuilder(messageWriter);
     }
 
     final long startTime;
@@ -87,6 +93,7 @@ public class ProvisioningRuntimeBuilder {
     Path pluginsDir = null;
 
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
+    private final MessageWriter messageWriter;
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
     List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
     Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
@@ -98,10 +105,11 @@ public class ProvisioningRuntimeBuilder {
 
     private FeatureConfig parentFeature;
 
-    private ProvisioningRuntimeBuilder() {
+    private ProvisioningRuntimeBuilder(final MessageWriter messageWriter) {
         startTime = System.currentTimeMillis();
         workDir = IoUtils.createRandomTmpDir();
         layoutDir = workDir.resolve("layout");
+        this.messageWriter = messageWriter;
     }
 
     public ProvisioningRuntimeBuilder setEncoding(String encoding) {
@@ -129,6 +137,7 @@ public class ProvisioningRuntimeBuilder {
         return this;
     }
 
+    @Deprecated
     public ProvisioningRuntimeBuilder setTrace(boolean trace) {
         this.trace = trace;
         return this;
@@ -166,7 +175,7 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        return new ProvisioningRuntime(this);
+        return new ProvisioningRuntime(this, messageWriter);
     }
 
     private void buildConfigs() throws ProvisioningException {

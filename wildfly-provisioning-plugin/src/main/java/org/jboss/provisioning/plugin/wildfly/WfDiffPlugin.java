@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
@@ -44,9 +46,8 @@ public class WfDiffPlugin implements DiffPlugin {
 
     @Override
     public void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
-        if(runtime.trace()) {
-            System.out.println("WildFly diff plug-in");
-        }
+        final MessageWriter messageWriter = runtime.getMessageWriter();
+        messageWriter.verbose("WildFly diff plug-in");
 //         JBoss Modules overrides the default providers
         Process process = null;
         Process embeddedServer = null;
@@ -70,23 +71,25 @@ public class WfDiffPlugin implements DiffPlugin {
                 out.newLine();
                 out.flush();
             }
-            process = launchServer(customizedInstallation.toAbsolutePath(), serverConfig, runtime.trace());
-             if(!process.isAlive() && process.exitValue() != 0) {
+            process = launchServer(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
+            if(!process.isAlive() && process.exitValue() != 0) {
                 throw new ProvisioningException(String.format("Error executing synchronization. Couldn't start the installaed server at %s", customizedInstallation.toAbsolutePath()));
             }
-            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), synchronizationFile, runtime.trace());
+            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), synchronizationFile, messageWriter);
             if(!embeddedServer.isAlive() && embeddedServer.exitValue() != 0) {
                 throw new ProvisioningException("Error executing synchronization");
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            messageWriter.error(ex.getMessage());
+            messageWriter.verbose(ex, null);
             Logger.getLogger(WfDiffPlugin.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 ProcessHelper.destroyProcess(embeddedServer);
                 ProcessHelper.destroyProcess(process);
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                messageWriter.error(ex.getMessage());
+                messageWriter.verbose(ex, null);
             }
         }
     }
@@ -98,14 +101,12 @@ public class WfDiffPlugin implements DiffPlugin {
         }
         return defaultValue;
     }
-private static Process launchEmbeddedServerProcess(Path installDir, Path synchronizationFile, boolean trace) throws IOException {
-        if (trace) {
-            System.out.printf("Starting embeded admin-only server for %s%n", installDir);
-        }
+    private static Process launchEmbeddedServerProcess(Path installDir, Path synchronizationFile, MessageWriter messageWriter) throws IOException {
+        messageWriter.verbose("Starting embeded admin-only server for %s", installDir);
         Path logFile = new File("synchronization.log").toPath();
         Files.deleteIfExists(logFile);
         CliCommandBuilder builder = CliCommandBuilder.of(installDir);
-        if(trace) {
+        if(messageWriter.isVerboseEnabled()) {
             builder.addCliArgument("--echo-command");
         }
         builder.setScriptFile(synchronizationFile);
@@ -117,10 +118,8 @@ private static Process launchEmbeddedServerProcess(Path installDir, Path synchro
         return launcher.launch();
     }
 
-    private static Process launchServer(Path installDir, String serverConfig,  boolean trace) throws IOException {
-        if (trace) {
-            System.out.printf("Starting full server for %s using configuration file %s%n", installDir , serverConfig );
-        }
+    private static Process launchServer(Path installDir, String serverConfig,  MessageWriter messageWriter) throws IOException {
+        messageWriter.verbose("Starting full server for %s using configuration file %s", installDir , serverConfig );
         Launcher launcher = new Launcher(StandaloneCommandBuilder.of(installDir).setServerConfiguration(serverConfig))
                 .setRedirectErrorStream(true)
                 .addEnvironmentVariable("JBOSS_HOME", installDir.toString());

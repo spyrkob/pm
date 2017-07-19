@@ -37,6 +37,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.plugin.wildfly.config.PackageScripts;
@@ -60,6 +61,7 @@ abstract class ScriptCollector {
     private static final String SCRIPTS_XML = "scripts.xml";
     private final ProvisioningRuntime runtime;
     private final Path fpScripts;
+    private final MessageWriter messageWriter;
 
     private String configName;
     private Path script;
@@ -73,6 +75,7 @@ abstract class ScriptCollector {
     ScriptCollector(ProvisioningRuntime runtime) throws ProvisioningException {
         this.runtime = runtime;
         fpScripts = runtime.getResource(WfConstants.WILDFLY, WfConstants.SCRIPTS);
+        messageWriter = runtime.getMessageWriter();
     }
 
 
@@ -155,9 +158,7 @@ abstract class ScriptCollector {
             buf.append(" for profile ").append(profile);
         }
         buf.append(" from feature-pack ").append(fp.getGav().toString()).append(" package ").append(pkg.getName());
-        if(this.runtime.trace()) {
-            System.out.println(buf);
-        }
+        messageWriter.verbose(buf);
         if(profile != null) {
             addCommand("set profile=" + profile);
             addCommand("/profile=$profile:add");
@@ -357,29 +358,19 @@ abstract class ScriptCollector {
 
     protected void logScript(final FeaturePackRuntime fp, String pkgName, Path script) {
         if(!fp.getGav().equals(lastLoggedGav)) {
-            if(this.runtime.trace()) {
-                System.out.println("  " + fp.getGav());
-            }
+            messageWriter.verbose("  %s", fp.getGav());
             lastLoggedGav = fp.getGav();
             lastLoggedPackage = null;
         }
         if(!pkgName.equals(lastLoggedPackage)) {
-            if(this.runtime.trace()) {
-                System.out.println("    " + pkgName);
-            }
+            messageWriter.verbose("    %s", pkgName);
             lastLoggedPackage = pkgName;
         }
-        if (this.runtime.trace()) {
-            System.out.println("      - " + script.getFileName());
-        }
+        messageWriter.verbose("      - %s", script.getFileName());
     }
 
     void run() throws ProvisioningException {
-        if (this.runtime.trace()) {
-            System.out.print(" Generating ");
-            System.out.print(configName);
-            System.out.println(" configuration");
-        }
+        messageWriter.verbose(" Generating %s configuration", configName);
         try {
             scriptWriter.flush();
             scriptWriter.close();
@@ -433,15 +424,14 @@ abstract class ScriptCollector {
                     line = reader.readLine();
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                messageWriter.error(e, e.getMessage());
             }
 
             if(cliProcess.isAlive()) {
                 try {
                     cliProcess.waitFor();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    messageWriter.error(e, e.getMessage());
                 }
             }
 
@@ -460,13 +450,12 @@ abstract class ScriptCollector {
                     final String fpArtifact = p.getFileName().toString();
                     p = p.getParent();
                     final String fpGroup = p.getFileName().toString();
-                    System.out.println("Failed to execute script " + scriptName +
-                            " from " +  ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion) +
-                            " package " + pkgName + " line #" + opIndex);
-                    System.out.println(errorWriter.getBuffer());
+                    messageWriter.error("Failed to execute script %s from %s package %s line # %d", scriptName,
+                            ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion), pkgName, opIndex);
+                    messageWriter.error(errorWriter.getBuffer());
                 } else {
-                    System.out.println("Could not locate the cause of the error in the CLI output.");
-                    System.out.println(errorWriter.getBuffer());
+                    messageWriter.error("Could not locate the cause of the error in the CLI output.");
+                    messageWriter.error(errorWriter.getBuffer());
                 }
                 final StringBuilder buf = new StringBuilder("CLI configuration scripts failed");
 //                try {

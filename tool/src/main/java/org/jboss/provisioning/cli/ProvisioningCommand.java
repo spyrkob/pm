@@ -19,6 +19,8 @@ package org.jboss.provisioning.cli;
 import java.nio.file.Path;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
+import org.jboss.aesh.terminal.Shell;
+import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.ProvisioningManager;
 
 /**
@@ -31,14 +33,20 @@ public abstract class ProvisioningCommand extends PmSessionCommand {
             description="Target installation directory.")
     protected String targetDirArg;
 
+    @Option(name = "verbose", shortName = 'v', hasValue = false,
+            description = "Whether or not the output should be verbose")
+    boolean verbose;
+
     protected Path getTargetDir(PmSession session) {
         return targetDirArg == null ? session.getWorkDir() : session.getWorkDir().resolve(targetDirArg);
     }
 
     protected ProvisioningManager getManager(PmSession session) {
+        final Shell shell = session.getShell();
         return ProvisioningManager.builder()
                 .setArtifactResolver(ArtifactResolverImpl.getInstance())
                 .setInstallationHome(getTargetDir(session))
+                .setMessageWriter(new DefaultMessageWriter(shell.out(), shell.out(), verbose))
                 .build();
     }
 }

@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -50,6 +51,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.plugin.util.LoggerMessageWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 
 /**
@@ -74,6 +76,9 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
     /** The encoding to use when reading descriptor files */
     @Parameter(defaultValue = "${project.build.sourceEncoding}", required = true, property = "pm.encoding")
     private String encoding;
+
+    @Inject
+    private LoggerMessageWriter messageWriter;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -123,7 +128,9 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                             }
                             return Paths.get(result.getArtifact().getFile().toURI());
                         }
-                    }).build().provision(provisioningConfig);
+                    })
+                    .setMessageWriter(messageWriter)
+                    .build().provision(provisioningConfig);
         } catch (ProvisioningException e) {
             throw new MojoExecutionException("Failed to provision the installation", e);
         }

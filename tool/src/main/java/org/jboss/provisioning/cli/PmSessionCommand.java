@@ -33,7 +33,7 @@ public abstract class PmSessionCommand implements Command<PmSession> {
             return CommandResult.SUCCESS;
         } catch (Throwable t) {
             if(t instanceof RuntimeException) {
-                t.printStackTrace();
+                t.printStackTrace(session.getShell().err());
             }
             final StringBuilder buf = new StringBuilder("Error");
             while(t != null) {
