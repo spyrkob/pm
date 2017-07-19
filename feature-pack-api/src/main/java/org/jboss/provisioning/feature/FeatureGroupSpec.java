@@ -53,6 +53,10 @@ public class FeatureGroupSpec extends FeatureGroupSupport {
         super(builder);
     }
 
+    public FeatureGroupSpec(FeatureGroupSpec copy) {
+        super(copy);
+    }
+
     @Override
     public int hashCode() {
         return super.hashCode();

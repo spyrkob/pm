@@ -481,7 +481,6 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private boolean resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
-System.out.println("RESOLVE FEATURE " + fc.hashCode());
         final SpecId specId = fc.getSpecId();
         final FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
@@ -517,15 +516,12 @@ System.out.println("RESOLVE FEATURE " + fc.hashCode());
 
         final FeatureConfig myParent = parentFeature;
         parentFeature = fc;
-        System.out.println("SET PARENT " + fc);
         processFeatureGroupSpec(modelBuilder, targetFp, fc);
         parentFeature = myParent;
-        System.out.println("RESET PARENT " + parentFeature);
         return true;
     }
 
     private void initForeignKey(FeatureConfig parentFc, FeatureConfig childFc, final FeaturePackRuntime.Builder childFp) throws ProvisioningException {
-        System.out.println("ProvisioningRuntimeBuilder.initForeignKey " + parentFc + " " + childFc);
         final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().toString() : childFc.getParentRef();
         final ResolvedFeatureSpec nestedSpec = childFp.getFeatureSpec(childFc.getSpecId().getName());
         final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);

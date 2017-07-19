@@ -114,7 +114,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 }
                 fgSpecs.put(name, fgSpec);
             }
-            return fgSpec;
+            return new FeatureGroupSpec(fgSpec);
         }
 
         ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {

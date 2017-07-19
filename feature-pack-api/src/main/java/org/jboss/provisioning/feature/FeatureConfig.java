@@ -31,7 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> implements FeatureGroup {
+public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> implements FeatureGroup, Cloneable {
 
     public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
         final FeatureConfig config = new FeatureConfig(id.specId.name);
@@ -49,6 +49,18 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     Map<String, String> params = Collections.emptyMap();
     Set<FeatureId> dependencies = Collections.emptySet();
     String parentRef;
+
+    FeatureConfig(FeatureConfig copy) {
+        super(copy);
+        specId = copy.specId;
+        dependencies = copy.dependencies;
+        parentRef = copy.parentRef;
+        if(copy.params.size() > 1) {
+            params = new HashMap<>(copy.params);
+        } else {
+            params = copy.params;
+        }
+    }
 
     public FeatureConfig() {
     }
