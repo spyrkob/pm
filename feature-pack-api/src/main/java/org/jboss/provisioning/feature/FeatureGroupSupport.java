@@ -16,9 +16,13 @@
  */
 package org.jboss.provisioning.feature;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  *
@@ -50,6 +54,43 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
     protected final Map<String, FeatureGroupSpec> externalGroups;
     protected final List<FeatureGroupConfig> localGroups;
     protected final List<FeatureConfig> features;
+
+    protected FeatureGroupSupport(FeatureGroupSupport copy) {
+        name = copy.name;
+        switch(copy.externalGroups.size()) {
+            case 0:
+                externalGroups = Collections.emptyMap();
+                break;
+            case 1: {
+                final Entry<String, FeatureGroupSpec> entry = copy.externalGroups.entrySet().iterator().next();
+                externalGroups = Collections.singletonMap(entry.getKey(), new FeatureGroupSpec(entry.getValue()));
+                break;
+            }
+            default:
+                final Map<String, FeatureGroupSpec> tmp = new LinkedHashMap<>(copy.externalGroups.size());
+                final Iterator<Map.Entry<String, FeatureGroupSpec>> i = copy.externalGroups.entrySet().iterator();
+                while(i.hasNext()) {
+                    final Entry<String, FeatureGroupSpec> entry = i.next();
+                    tmp.put(entry.getKey(), new FeatureGroupSpec(entry.getValue()));
+                }
+                externalGroups = Collections.unmodifiableMap(tmp);
+        }
+        localGroups = copy.localGroups;
+        switch(copy.features.size()) {
+            case 0:
+                features = Collections.emptyList();
+                break;
+            case 1:
+                features = Collections.singletonList(new FeatureConfig(copy.features.get(0)));
+                break;
+            default:
+                final List<FeatureConfig> tmp = new ArrayList<>(copy.features.size());
+                for(FeatureConfig fc : copy.features) {
+                    tmp.add(new FeatureConfig(fc));
+                }
+                features = Collections.unmodifiableList(tmp);
+        }
+    }
 
     protected FeatureGroupSupport(Builder<?, ?> builder) {
         name = builder.name;

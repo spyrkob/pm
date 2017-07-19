@@ -30,11 +30,30 @@ import java.util.Map;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSupport<B>> {
+public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSupport<B>> {
 
     Map<String, FeatureGroupSpec.Builder> externalGroups = Collections.emptyMap();
     List<FeatureGroupConfig> localGroups = Collections.emptyList();
     List<FeatureConfig> features = Collections.emptyList();
+
+    protected FeatureGroupBuilderSupport(FeatureGroupBuilderSupport<B> src) {
+        externalGroups = src.externalGroups;
+        localGroups = src.localGroups;
+        switch(src.features.size()) {
+            case 0:
+                break;
+            case 1:
+                features = Collections.singletonList(new FeatureConfig(src.features.get(0)));
+                break;
+            default:
+                features = new ArrayList<>(src.features.size());
+                for(FeatureConfig fc : src.features) {
+                    features.add(new FeatureConfig(fc));
+                }
+        }
+    }
+
+    protected FeatureGroupBuilderSupport() {}
 
     @SuppressWarnings("unchecked")
     public B addFeatureGroup(String fpDep, FeatureGroupConfig group) {
@@ -124,6 +143,7 @@ public class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSupport<B>>
         return result;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

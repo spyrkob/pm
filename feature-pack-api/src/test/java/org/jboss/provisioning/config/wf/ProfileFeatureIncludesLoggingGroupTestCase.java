@@ -17,11 +17,6 @@
 
 package org.jboss.provisioning.config.wf;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -45,16 +40,13 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
 public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
@@ -90,7 +82,7 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
-        final Path p = repoManager.installer()
+        repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("extension")
                     .addParam(FeatureParameterSpec.createId("name"))
@@ -115,7 +107,7 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                     .addParam(FeatureParameterSpec.createId("profile"))
                     .addParam(FeatureParameterSpec.create("name", true, false, "CONSOLE"))
                     .addParam(FeatureParameterSpec.create("level", "INFO"))
-                    .addParam(FeatureParameterSpec.create("formatters", "COLOR_PATTERN"))
+                    .addParam(FeatureParameterSpec.create("formatters", "COLOR-PATTERN"))
                     .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
                     .addRef(FeatureReferenceSpec.builder("logging-formatter").mapParam("profile", "profile").mapParam("formatters", "name").build())
                     .build())
@@ -252,13 +244,6 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
         .addClassToPlugin(TestConfigHandler.class)
         .getInstaller()
         .install();
-
-        try {
-            IoUtils.copy(p, Paths.get("/home/olubyans/pm-test/" + UUID.randomUUID()));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -273,12 +258,117 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
         .setProperty("prop2", "value2")
         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "extension", "name", "org.jboss.as.logging")).build())
         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "default")).build())
-        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "ha")).build());
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "profile", "name", "ha")).build())
 
-        addDefaultLoggingState(config1, "default");
-        addDefaultLoggingState(config1, "ha");
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", "default"))
+                .setParam("extension", "org.jboss.as.logging")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", "ha"))
+                .setParam("extension", "org.jboss.as.logging")
+                .build())
 
-        config1.addFeature(ProvisionedFeatureBuilder.builder(
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", "default")
+                .setParam("name", "PATTERN").build())
+                .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", "default")
+                .setParam("name", "COLOR-PATTERN").build())
+                .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", "ha")
+                .setParam("name", "PATTERN").build())
+                .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
+                .setParam("profile", "ha")
+                .setParam("name", "COLOR-PATTERN").build())
+                .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
+                .build())
+
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-console-handler")
+                .setParam("profile", "default")
+                .setParam("name", "CONSOLE").build())
+                .setParam("level", "INFO")
+                .setParam("formatters", "COLOR-PATTERN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-console-handler")
+                .setParam("profile", "ha")
+                .setParam("name", "CONSOLE").build())
+                .setParam("level", "INFO")
+                .setParam("formatters", "COLOR-PATTERN")
+                .build())
+
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
+                .setParam("profile", "default")
+                .setParam("name", "FILE").build())
+                .setParam("level", "DEBUG")
+                .setParam("formatters", "PATTERN")
+                .setParam("relative-to", "jboss.server.log.dir")
+                .setParam("path", "server.log")
+                .setParam("suffix", ".yyyy-MM-dd")
+                .setParam("append", "true")
+                .setParam("autoflush", "true")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
+                .setParam("profile", "ha")
+                .setParam("name", "FILE").build())
+                .setParam("level", "DEBUG")
+                .setParam("formatters", "PATTERN")
+                .setParam("relative-to", "jboss.server.log.dir")
+                .setParam("path", "server.log")
+                .setParam("suffix", ".yyyy-MM-dd")
+                .setParam("append", "true")
+                .setParam("autoflush", "true")
+                .build())
+
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "default")
+                .setParam("category", "com.arjuna").build())
+                .setParam("level", "WARN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "default")
+                .setParam("category", "org.jboss.as.config").build())
+                .setParam("level", "DEBUG")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "default")
+                .setParam("category", "sun.rmi").build())
+                .setParam("level", "WARN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "ha")
+                .setParam("category", "com.arjuna").build())
+                .setParam("level", "WARN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "ha")
+                .setParam("category", "org.jboss.as.config").build())
+                .setParam("level", "DEBUG")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
+                ResolvedFeatureId.builder(FP_GAV, "logger")
+                .setParam("profile", "ha")
+                .setParam("category", "sun.rmi").build())
+                .setParam("level", "WARN")
+                .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(
                 ResolvedFeatureId.builder(FP_GAV, "logger")
                 .setParam("profile", "ha")
                 .setParam("category", "org.jboss.pm").build())
@@ -290,11 +380,18 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                 .setParam("category", "java.util").build())
                 .setParam("level", "INFO")
                 .build())
+
         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "root-logger", "profile", "default"))
                 .setParam("level", "INFO")
                 .setParam("console-handler", "CONSOLE")
                 .setParam("periodic-rotating-file-handler", "FILE")
                 .build())
+        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "root-logger", "profile", "ha"))
+                .setParam("level", "INFO")
+                .setParam("console-handler", "CONSOLE")
+                .setParam("periodic-rotating-file-handler", "FILE")
+                .build())
+
         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "interface", "name", "public")).build())
         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "socket-binding-group", "name", "standard-sockets"))
                 .setParam("default-interface", "public")
@@ -343,57 +440,5 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
     }
 
     private void addDefaultLoggingState(ProvisionedConfigBuilder builder, String profile) throws ProvisioningDescriptionException {
-        builder.addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "logging", "profile", profile))
-                .setParam("extension", "org.jboss.as.logging")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
-                .setParam("profile", profile)
-                .setParam("name", "PATTERN").build())
-                .setParam("pattern", "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logging-formatter")
-                .setParam("profile", profile)
-                .setParam("name", "COLOR-PATTERN").build())
-                .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logging-console-handler")
-                .setParam("profile", profile)
-                .setParam("name", "CONSOLE").build())
-                .setParam("level", "INFO")
-                .setParam("formatters", "COLOR_PATTERN")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
-                .setParam("profile", profile)
-                .setParam("name", "FILE").build())
-                .setParam("level", "DEBUG")
-                .setParam("formatters", "PATTERN")
-                .setParam("relative-to", "jboss.server.log.dir")
-                .setParam("path", "server.log")
-                .setParam("suffix", ".yyyy-MM-dd")
-                .setParam("append", "true")
-                .setParam("autoflush", "true")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logger")
-                .setParam("profile", profile)
-                .setParam("category", "com.arjuna").build())
-                .setParam("level", "WARN")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logger")
-                .setParam("profile", profile)
-                .setParam("category", "org.jboss.as.config").build())
-                .setParam("level", "DEBUG")
-                .build())
-        .addFeature(ProvisionedFeatureBuilder.builder(
-                ResolvedFeatureId.builder(FP_GAV, "logger")
-                .setParam("profile", profile)
-                .setParam("category", "sun.rmi").build())
-                .setParam("level", "WARN")
-                .build());
     }
 }
