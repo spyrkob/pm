@@ -125,7 +125,6 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                         }
                     }).build().provision(provisioningConfig);
         } catch (ProvisioningException e) {
-            e.printStackTrace();
             throw new MojoExecutionException("Failed to provision the installation", e);
         }
 

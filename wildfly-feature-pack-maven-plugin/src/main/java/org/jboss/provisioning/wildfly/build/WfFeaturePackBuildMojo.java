@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -138,6 +139,9 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
     @Parameter(alias="release-name", defaultValue = "${product.release.name}", required=true)
     private String releaseName;
 
+    @Inject
+    private MavenPluginUtil mavenPluginUtil;
+
     private MavenProjectArtifactVersions artifactVersions;
 
     private WildFlyFeaturePackBuild wfFpConfig;
@@ -149,7 +153,6 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         try {
             doExecute();
         } catch(RuntimeException | Error | MojoExecutionException | MojoFailureException e) {
-            e.printStackTrace();
             throw e;
         }
     }
@@ -176,7 +179,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
 
         final Path workDir = Paths.get(buildName, WfConstants.LAYOUT);
-        //System.out.println("WfFeaturePackBuildMojo.execute " + workDir);
+        //getLog().info("WfFeaturePackBuildMojo.execute " + workDir);
         IoUtils.recursiveDelete(workDir);
         final String fpArtifactId = project.getArtifactId() + "-new";
         final Path fpDir = workDir.resolve(project.getGroupId()).resolve(fpArtifactId).resolve(project.getVersion());
@@ -301,7 +304,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
 
         try {
-            repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
+            repoSystem.install(repoSession, mavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }
@@ -572,7 +575,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                             if(depSrc != null) {
                                 pkgSpecBuilder.addDependency(depSrc.getKey(), depName, moduleDep.isOptional());
                             } else if(moduleDep.isOptional()){
-                                //System.out.println("UNSATISFIED EXTERNAL OPTIONAL DEPENDENCY " + packageName + " -> " + depName);
+                                //getLog().warn("UNSATISFIED EXTERNAL OPTIONAL DEPENDENCY " + packageName + " -> " + depName);
                             } else {
                                 throw new MojoExecutionException("Package " + packageName + " has unsatisifed external dependency on package " + depName);
                             }
