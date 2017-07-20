@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -41,6 +42,7 @@ public class FeatureSpec implements PackageDependencies {
     public static class Builder {
 
         private String name;
+        private Map<String, String> notes = Collections.emptyMap();
         private Map<String, FeatureReferenceSpec> refs = Collections.emptyMap();
         private Map<String, FeatureParameterSpec> params = Collections.emptyMap();
         private List<FeatureParameterSpec> idParams = Collections.emptyList();
@@ -54,21 +56,42 @@ public class FeatureSpec implements PackageDependencies {
             this.name = name;
         }
 
-        public Builder setId(String name) {
+        public Builder setName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder addRef(FeatureReferenceSpec ref) {
-            switch(refs.size()) {
-                case 0:
-                    refs = Collections.singletonMap(ref.name, ref);
-                    break;
-                case 1:
-                    refs = new LinkedHashMap<>(refs);
-                default:
-                    refs.put(ref.name, ref);
+        public Builder addNote(String id, String value) throws ProvisioningDescriptionException {
+            if(notes.isEmpty()) {
+                notes = Collections.singletonMap(id, value);
+                return this;
             }
+            if(notes.containsKey(id)) {
+                throw new ProvisioningDescriptionException("Duplicate note id " + id + " for feature " + name);
+            }
+            if(notes.size() == 1) {
+                final Map.Entry<String, String> entry = notes.entrySet().iterator().next();
+                notes = new HashMap<>(2);
+                notes.put(entry.getKey(), entry.getValue());
+            }
+            notes.put(id, value);
+            return this;
+        }
+
+        public Builder addRef(FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
+            if(refs.isEmpty()) {
+                refs = Collections.singletonMap(ref.name, ref);
+                return this;
+            }
+            if(refs.containsKey(ref.name)) {
+                throw new ProvisioningDescriptionException("Duplicate reference " + ref.name + " for feature " + name);
+            }
+            if(refs.size() == 1) {
+                final Map.Entry<String, FeatureReferenceSpec> entry = refs.entrySet().iterator().next();
+                refs = new LinkedHashMap<>(2);
+                refs.put(entry.getKey(), entry.getValue());
+            }
+            refs.put(ref.name, ref);
             return this;
         }
 
@@ -78,8 +101,10 @@ public class FeatureSpec implements PackageDependencies {
             } else if(params.containsKey(param.name)) {
                 throw new ProvisioningDescriptionException("Duplicate parameter " + param + " for feature " + name);
             } else {
-                if(params.size() == 1) {
-                    params = new HashMap<>(params);
+                if (params.size() == 1) {
+                    final Map.Entry<String, FeatureParameterSpec> entry = params.entrySet().iterator().next();
+                    params = new HashMap<>();
+                    params.put(entry.getKey(), entry.getValue());
                 }
                 params.put(param.name, param);
             }
@@ -169,6 +194,7 @@ public class FeatureSpec implements PackageDependencies {
     }
 
     final String name;
+    final Map<String, String> notes;
     final Map<String, FeatureReferenceSpec> refs;
     final Map<String, FeatureParameterSpec> params;
     final List<FeatureParameterSpec> idParams;
@@ -178,6 +204,7 @@ public class FeatureSpec implements PackageDependencies {
 
     private FeatureSpec(Builder builder) {
         this.name = builder.name;
+        this.notes = builder.notes.size() > 1 ? Collections.unmodifiableMap(builder.notes) : builder.notes;
         this.refs = builder.refs.size() > 1 ? Collections.unmodifiableMap(builder.refs) : builder.refs;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
         this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
@@ -202,6 +229,14 @@ public class FeatureSpec implements PackageDependencies {
 
     public String getName() {
         return name;
+    }
+
+    public boolean hasNotes() {
+        return !notes.isEmpty();
+    }
+
+    public Map<String, String> getNotes() {
+        return notes;
     }
 
     public boolean hasId() {
@@ -294,6 +329,7 @@ public class FeatureSpec implements PackageDependencies {
         result = prime * result + ((idParams == null) ? 0 : idParams.hashCode());
         result = prime * result + ((localDeps == null) ? 0 : localDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((notes == null) ? 0 : notes.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((refs == null) ? 0 : refs.hashCode());
         return result;
@@ -328,6 +364,11 @@ public class FeatureSpec implements PackageDependencies {
                 return false;
         } else if (!name.equals(other.name))
             return false;
+        if (notes == null) {
+            if (other.notes != null)
+                return false;
+        } else if (!notes.equals(other.notes))
+            return false;
         if (params == null) {
             if (other.params != null)
                 return false;
@@ -345,6 +386,17 @@ public class FeatureSpec implements PackageDependencies {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
+        if(!notes.isEmpty()) {
+            buf.append(" notes=[");
+            final Iterator<Map.Entry<String, String>> i = notes.entrySet().iterator();
+            Entry<String, String> next = i.next();
+            buf.append(next.getKey()).append('=').append(next.getValue());
+            while(i.hasNext()) {
+                next = i.next();
+                buf.append(',').append(next.getKey()).append('=').append(next.getValue());
+            }
+            buf.append(']');
+        }
         if(!refs.isEmpty()) {
             buf.append(" refs=");
             final Iterator<FeatureReferenceSpec> i = refs.values().iterator();

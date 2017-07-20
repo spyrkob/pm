@@ -254,7 +254,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 if (id != null && fgConfig.excludedFeatures.contains(id)) {
                     return true;
                 }
-                if (fgConfig.excludedSpecs.contains(id.specId)) {
+                if (fgConfig.excludedSpecs.contains(specId)) {
                     if (id != null && fgConfig.includedFeatures.containsKey(id)) {
                         continue;
                     }
@@ -264,7 +264,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 if (id != null && fgConfig.includedFeatures.containsKey(id)) {
                     continue;
                 }
-                if (!fgConfig.includedSpecs.contains(id.specId)) {
+                if (!fgConfig.includedSpecs.contains(specId)) {
                     return true;
                 } else if (id != null && fgConfig.excludedFeatures.contains(id)) {
                     return true;
@@ -391,6 +391,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         final ResolvedFeature dep = featuresById.get(refId);
         if (dep == null) {
+            System.out.println(featuresById.keySet());
             throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
         if (!dep.beingHandled) {

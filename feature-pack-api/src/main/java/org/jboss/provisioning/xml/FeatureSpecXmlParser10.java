@@ -49,6 +49,8 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
 
         FEATURE_PACK("feature-pack"),
         FEATURE_SPEC("feature-spec"),
+        NOTES("notes"),
+        NOTE("note"),
         PACKAGE("package"),
         PACKAGES("packages"),
         PARAMETERS("params"),
@@ -111,10 +113,12 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
+        ID("id"),
         MAPS_TO("maps-to"),
         NAME("name"),
         NILLABLE("nillable"),
         OPTIONAL("optional"),
+        VALUE("value"),
         UNBOUNDED("unbounded"),
 
         // default unknown attribute
@@ -181,7 +185,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if (specName == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
-        featureBuilder.setId(specName);
+        featureBuilder.setName(specName);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -191,6 +195,9 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
+                        case NOTES:
+                            parseNotes(reader, featureBuilder);
+                            break;
                         case REFERENCES:
                             parseReferences(reader, featureBuilder);
                             break;
@@ -213,6 +220,59 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
+    private void parseNotes(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case NOTE:
+                            parseNote(reader, specBuilder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseNote(XMLExtendedStreamReader reader, FeatureSpec.Builder builder) throws XMLStreamException {
+        String id = null;
+        String value = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case ID:
+                    id = reader.getAttributeValue(i);
+                    break;
+                case VALUE:
+                    value = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(id == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ID));
+        }
+        ParsingUtils.parseNoContent(reader);
+        try {
+            builder.addNote(id, value);
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to add feature note", reader.getLocation(), e);
+        }
+    }
+
     private void parseReferences(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
@@ -224,7 +284,11 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case REFERENCE:
-                            specBuilder.addRef(parseReference(reader));
+                            try {
+                                specBuilder.addRef(parseReference(reader));
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse feature reference", e);
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -347,7 +411,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                             try {
                                 specBuilder.addParam(parseParameter(reader));
                             } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException("Failed to add parameter to the spec", reader.getLocation());
+                                throw new XMLStreamException("Failed to add parameter to the spec", reader.getLocation(), e);
                             }
                             break;
                         default:
@@ -394,7 +458,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         try {
             return FeatureParameterSpec.create(name, featureId, nillable, defaultValue);
         } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to create feature parameter", reader.getLocation());
+            throw new XMLStreamException("Failed to create feature parameter", reader.getLocation(), e);
         }
     }
 

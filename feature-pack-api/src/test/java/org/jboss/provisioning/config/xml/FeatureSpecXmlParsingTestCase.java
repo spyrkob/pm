@@ -46,6 +46,8 @@ public class FeatureSpecXmlParsingTestCase {
     @Test
     public void testFull() throws Exception {
         assertEquals(FeatureSpec.builder("full")
+                .addNote("note1", "note value1")
+                .addNote("note2", "note value2")
                 .addRef(FeatureReferenceSpec.create("spec1", "spec1", false))
                 .addRef(FeatureReferenceSpec.create("spec1-ref", "spec1", false))
                 .addRef(FeatureReferenceSpec.builder("spec2")
