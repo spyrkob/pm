@@ -18,7 +18,7 @@ package org.jboss.provisioning.plugin;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
 
@@ -32,7 +32,7 @@ public interface ProvisionedConfigHandler {
 
     default void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {};
 
-    default void nextSpec(ResolvedSpecId specId) throws ProvisioningException {};
+    default void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {};
 
     default void nextFeature(ProvisionedFeature feature) throws ProvisioningException {};
 

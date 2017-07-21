@@ -366,7 +366,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             if (lastHandledSpecId == null || !feature.spec.id.gav.equals(lastHandledSpecId.gav)) {
                 handler.nextFeaturePack(feature.spec.id.gav);
             }
-            handler.nextSpec(feature.spec.id);
+            handler.nextSpec(feature.spec);
             lastHandledSpecId = feature.getSpecId();
         }
         handler.nextFeature(feature);
@@ -391,7 +391,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         final ResolvedFeature dep = featuresById.get(refId);
         if (dep == null) {
-            System.out.println(featuresById.keySet());
             throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
         if (!dep.beingHandled) {

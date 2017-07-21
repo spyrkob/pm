@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import java.util.stream.Stream;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -59,7 +61,7 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.util.IoUtils;
@@ -227,15 +229,148 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
                 config.handle(new ProvisionedConfigHandler() {
                     public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
-                        System.out.println("  " + fpGav);
+                        messageWriter.print("  " + fpGav);
                     }
 
-                    public void nextSpec(ResolvedSpecId specId) throws ProvisioningException {
-                        System.out.println("    " + specId);
+                    String addrPref;
+                    List<String> addrParams;
+                    List<String> opParams;
+
+                    public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
+                        messageWriter.print("    SPEC " + spec.getName());
+                        if(!spec.hasNotes()) {
+                            addrPref = null;
+                            addrParams = null;
+                            opParams = null;
+                            return;
+                        }
+
+                        addrPref = spec.getNote(WfConstants.ADDR_PREF);
+                        String noteValue = spec.getNote(WfConstants.ADDR_PARAMS);
+                        if (noteValue == null) {
+                            throw new ProvisioningException("Required note " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
+                        }
+
+                        try {
+                            addrParams = parseList(noteValue);
+                        } catch (ProvisioningDescriptionException e) {
+                            throw new ProvisioningDescriptionException("Saw empty parameter name in note "
+                                    + WfConstants.ADDR_PARAMS + "=" + noteValue + " of " + spec.getId());
+                        }
+
+                        noteValue = spec.getNote(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
+                        if (noteValue == null) {
+                            opParams = Collections.emptyList();
+                        } else if (WfConstants.PM_UNDEFINED.equals(noteValue)) {
+                            if (spec.hasParams()) {
+                                final Set<String> allParams = spec.getParamNames();
+                                switch (allParams.size() - addrParams.size()) {
+                                    case 0:
+                                        opParams = Collections.emptyList();
+                                        break;
+                                    case 1:
+                                        opParams = null;
+                                        final Iterator<String> allI = allParams.iterator();
+                                        while (allI.hasNext() && opParams == null) {
+                                            final String paramName = allI.next();
+                                            if (!addrParams.contains(paramName)) {
+                                                opParams = Collections.singletonList(paramName);
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        opParams = new ArrayList<>(allParams.size() - addrParams.size());
+                                        for (String paramName : allParams) {
+                                            if (!addrParams.contains(paramName)) {
+                                                opParams.add(paramName);
+                                            }
+                                        }
+                                }
+                            } else {
+                                opParams = Collections.emptyList();
+                            }
+                        } else {
+                            try {
+                                opParams = parseList(noteValue);
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new ProvisioningDescriptionException("Saw empty parameter name in note "
+                                        + WfConstants.ADDR_PARAMS + "=" + noteValue + " of " + spec.getId());
+                            }
+                        }
+
+                        for (Map.Entry<String, String> note : spec.getNotes().entrySet()) {
+                            final StringBuilder buf = new StringBuilder("      NOTE " + note.getKey());
+                            if (note.getValue() != null) {
+                                buf.append('=' + note.getValue());
+                            }
+                            messageWriter.print(buf.toString());
+                        }
                     }
 
                     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
-                        System.out.println("      " + feature.getId());
+                        if (addrParams == null) {
+                            messageWriter.print("      " + feature.getParams());
+                            return;
+                        }
+                        final StringBuilder buf = new StringBuilder();
+                        if(addrPref != null) {
+                            buf.append(addrPref);
+                        }
+                        for(String param : addrParams) {
+                            final String value = feature.getParam(param);
+                            if(value == null) {
+                                continue;
+                            }
+                            buf.append('/').append(param).append('=').append(value);
+                        }
+                        buf.append(":add");
+                        if(!opParams.isEmpty()) {
+                            boolean comma = false;
+                            for(String param : opParams) {
+                                final String value = feature.getParam(param);
+                                if(value == null) {
+                                    continue;
+                                }
+                                if (comma) {
+                                    buf.append(',');
+                                } else {
+                                    comma = true;
+                                    buf.append('(');
+                                }
+                                buf.append(param).append("=\"").append(value).append('"');
+                            }
+                            if(comma) {
+                                buf.append(')');
+                            }
+                        }
+                        messageWriter.print("      " + buf);
+                    }
+
+                    private List<String> parseList(String str) throws ProvisioningDescriptionException {
+                        if (str.isEmpty()) {
+                            return Collections.emptyList();
+                        }
+                        int comma = str.indexOf(',');
+                        if (comma < 1) {
+                            return Collections.singletonList(str);
+                        }
+                        List<String> list = new ArrayList<>();
+                        int start = 0;
+                        while (comma > 0) {
+                            final String paramName = str.substring(start, comma);
+                            if (paramName.isEmpty()) {
+                                throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+                            }
+                            list.add(paramName);
+                            start = comma + 1;
+                            comma = str.indexOf(',', start);
+                        }
+                        if (start == str.length()) {
+                            throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+                        }
+                        list.add(str.substring(start));
+                        return list;
                     }
                 });
             }

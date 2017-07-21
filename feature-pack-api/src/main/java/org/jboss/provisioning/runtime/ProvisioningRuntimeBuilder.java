@@ -537,11 +537,9 @@ public class ProvisioningRuntimeBuilder {
             throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
         }
         for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-            final String paramValue = parentFc.getParamValue(refSpec.getTargetParam(i));
+            final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
             if (paramValue == null) {
-                System.out.println("initForeignKey " + childFp.getFeatureSpec(parentFc.getSpecId().getName()).xmlSpec.getParams());
-                throw new ProvisioningDescriptionException(parentFc.id + " is missing ID parameter " + refSpec.getTargetParam(i)
-                        + " for " + childSpec.id);
+                throw new ProvisioningDescriptionException(childSpec.id + " expects ID parameter '" + refSpec.getTargetParam(i) + "' in " + parentFc.id);
             }
             final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
             if (prevValue != null && !prevValue.equals(paramValue)) {

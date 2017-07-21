@@ -47,4 +47,10 @@ public interface WfConstants {
     String WILDFLY = "wildfly";
     String WILDFLY_TASKS_PROPS = "wildfly-tasks.properties";
     String WILDFLY_TASKS_XML = "wildfly-tasks.xml";
+
+    // Feature spec note IDs
+    String ADDR_PREF = "addr_pref";
+    String ADDR_PARAMS = "addr_params";
+    String OP_PARAMS = "op_params";
+    String PM_UNDEFINED = "PM_UNDEFINED";
 }

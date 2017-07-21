@@ -19,6 +19,7 @@ package org.jboss.provisioning.state;
 
 import java.util.Map;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 
@@ -37,4 +38,6 @@ public interface ProvisionedFeature {
     boolean hasParams();
 
     Map<String, String> getParams();
+
+    String getParam(String name) throws ProvisioningDescriptionException;
 }

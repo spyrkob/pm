@@ -111,6 +111,11 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
     }
 
     @Override
+    public String getParam(String name) {
+        return params.get(name);
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

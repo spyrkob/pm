@@ -23,7 +23,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser10.Attribute;
@@ -55,9 +55,9 @@ public class ProvisionedConfigXmlWriter extends BaseXmlWriter<ProvisionedConfig>
         }
 
         @Override
-        public void nextSpec(ResolvedSpecId specId) {
+        public void nextSpec(ResolvedFeatureSpec spec) {
             specElement = addElement(fpElement, Element.SPEC);
-            addAttribute(specElement, Attribute.NAME, specId.getName());
+            addAttribute(specElement, Attribute.NAME, spec.getId().getName());
         }
 
         @Override
