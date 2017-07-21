@@ -299,24 +299,28 @@ public class ProvisioningManager {
             Files.copy(userProvisionedXml, xmlTarget, StandardCopyOption.REPLACE_EXISTING);
         }
         Path tempInstallationDir = IoUtils.createRandomTmpDir();
-        ProvisioningManager reference = new ProvisioningManager(ProvisioningManager.builder()
-                .setArtifactResolver(this.getArtifactResolver())
-                .setEncoding(this.getEncoding())
-                .setInstallationHome(tempInstallationDir)
-                .setPackageParameterResolver(this.getPackageParameterResolver()));
-        reference.provision(configuration, false);
-        final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance()
-                .setArtifactResolver(this.getArtifactResolver())
-                .setConfig(configuration)
-                .setEncoding(this.getEncoding())
-                .setParameterResolver(this.getPackageParameterResolver())
-                .setInstallDir(tempInstallationDir);
-        parameters.entrySet().forEach(entry -> builder.addParameter(entry.getKey(), entry.getValue()));
-        try (ProvisioningRuntime runtime = builder.build()) {
-            // install the software
-            ProvisioningRuntime.exportDiff(runtime, location, installationHome);
-        } catch (IOException e) {
-            e.printStackTrace();
+        try {
+            ProvisioningManager reference = new ProvisioningManager(ProvisioningManager.builder()
+                    .setArtifactResolver(this.getArtifactResolver())
+                    .setEncoding(this.getEncoding())
+                    .setInstallationHome(tempInstallationDir)
+                    .setPackageParameterResolver(this.getPackageParameterResolver()));
+            reference.provision(configuration, false);
+            final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance()
+                    .setArtifactResolver(this.getArtifactResolver())
+                    .setConfig(configuration)
+                    .setEncoding(this.getEncoding())
+                    .setParameterResolver(this.getPackageParameterResolver())
+                    .setInstallDir(tempInstallationDir);
+            parameters.entrySet().forEach(entry -> builder.addParameter(entry.getKey(), entry.getValue()));
+            try (ProvisioningRuntime runtime = builder.build()) {
+                // install the software
+                ProvisioningRuntime.exportDiff(runtime, location, installationHome);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } finally {
+            IoUtils.recursiveDelete(tempInstallationDir);
         }
     }
 

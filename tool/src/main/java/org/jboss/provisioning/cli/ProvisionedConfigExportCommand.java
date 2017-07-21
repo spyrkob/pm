@@ -55,6 +55,9 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
     @Option(name = "protocol", required = false, defaultValue = "remote+http",
             description = "Protocol to connect to provisionned server.")
     protected String protocol;
+    @Option(name = "server-config", required = false, defaultValue = "standalone.xml",
+            description = "Server configuration file to use for the provisionned server.")
+    protected String serverConfig;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
@@ -82,6 +85,9 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
         }
         if (password != null) {
             parameters.put("password", password);
+        }
+        if (serverConfig != null) {
+            parameters.put("server-config", serverConfig);
         }
         final Resource specTargetResource = fileArg.get(1).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
         final Path targetFile = Paths.get(specTargetResource.getAbsolutePath());

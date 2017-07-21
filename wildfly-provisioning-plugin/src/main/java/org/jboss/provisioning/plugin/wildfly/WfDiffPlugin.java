@@ -16,11 +16,9 @@
  */
 package org.jboss.provisioning.plugin.wildfly;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +39,9 @@ import org.wildfly.core.launcher.StandaloneCommandBuilder;
  */
 public class WfDiffPlugin implements DiffPlugin {
 
+    private static final String CONFIGURE_SYNC = "/synchronization=simple:add(host=%s, port=%s, protocol=%s, username=%s, password=%s)";
+    private static final String EXPORT_DIFF = "attachment save --operation=/synchronization=simple:export-diff --file=%s";
+
     @Override
     public void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
         if(runtime.trace()) {
@@ -50,37 +51,32 @@ public class WfDiffPlugin implements DiffPlugin {
         Process process = null;
         Process embeddedServer = null;
         try {
-            process = launchServer(customizedInstallation.toAbsolutePath(), runtime.trace());
             String host = getParameter(runtime, "host", "127.0.0.1");
             String port = getParameter(runtime, "port", "9990");
             String protocol = getParameter(runtime, "protocol", "remote+http");
             String username = getParameter(runtime, "username", "admin");
             String password = getParameter(runtime, "password", "passw0rd!");
-            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), runtime.trace());
-            Path logFile = runtime.getInstallDir().resolve("standalone").resolve("log").resolve("synchronization.log");
-            Files.deleteIfExists(logFile);
-            try(BufferedWriter out = new BufferedWriter(new OutputStreamWriter(embeddedServer.getOutputStream(), StandardCharsets.UTF_8));
-                    BufferedWriter log = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(logFile, StandardOpenOption.CREATE), StandardCharsets.UTF_8));
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(embeddedServer.getInputStream(), StandardCharsets.UTF_8))) {
-                log.write(reader.readLine());log.newLine();
+            String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
+            Path synchronizationFile = runtime.getInstallDir().resolve("bin").resolve("synchronization.cli");
+            Files.deleteIfExists(synchronizationFile);
+            try(BufferedWriter out = Files.newBufferedWriter(synchronizationFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
                 out.write("embed-server --admin-only --server-config=standalone.xml");
                 out.newLine();
-                out.flush();
-                log.write(reader.readLine());log.newLine();
-                out.write(String.format("/synchronization=simple:add(host=%s, port=%s, protocol=%s, username=%s, password=%s)", host, port, protocol, username, password));
+                out.write(String.format(CONFIGURE_SYNC, host, port, protocol, username, password));
+                out.newLine();
+                out.write(String.format(EXPORT_DIFF, target.toAbsolutePath()));
+                out.newLine();
+                out.write("exit");
                 out.newLine();
                 out.flush();
-                log.write(reader.readLine());log.newLine();
-                log.write(reader.readLine());log.newLine();
-                out.write(("attachment save --operation=/synchronization=simple:export-diff --file=" + target.toAbsolutePath()));
-                out.newLine();
-                out.flush();
-                log.write(reader.readLine());log.newLine();
-                String lastLine = reader.readLine();
-                log.write(lastLine);log.newLine();
-                if (runtime.trace()) {
-                    System.out.println(lastLine);
-                }
+            }
+            process = launchServer(customizedInstallation.toAbsolutePath(), serverConfig, runtime.trace());
+             if(!process.isAlive() && process.exitValue() != 0) {
+                throw new ProvisioningException(String.format("Error executing synchronization. Couldn't start the installaed server at %s", customizedInstallation.toAbsolutePath()));
+            }
+            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), synchronizationFile, runtime.trace());
+            if(!embeddedServer.isAlive() && embeddedServer.exitValue() != 0) {
+                throw new ProvisioningException("Error executing synchronization");
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -102,22 +98,30 @@ public class WfDiffPlugin implements DiffPlugin {
         }
         return defaultValue;
     }
-
-    private static Process launchEmbeddedServerProcess(Path installDir, boolean trace) throws IOException {
+private static Process launchEmbeddedServerProcess(Path installDir, Path synchronizationFile, boolean trace) throws IOException {
         if (trace) {
-            System.out.println("Starting embeded admin-only server for " + installDir);
+            System.out.printf("Starting embeded admin-only server for %s%n", installDir);
         }
-        Launcher launcher = new Launcher(CliCommandBuilder.of(installDir))
+        Path logFile = new File("synchronization.log").toPath();
+        Files.deleteIfExists(logFile);
+        CliCommandBuilder builder = CliCommandBuilder.of(installDir);
+        if(trace) {
+            builder.addCliArgument("--echo-command");
+        }
+        builder.setScriptFile(synchronizationFile);
+        Launcher launcher = new Launcher(builder)
                 .setRedirectErrorStream(true)
+                .redirectOutput(logFile)
                 .setDirectory(installDir.resolve("bin"))
                 .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
         return launcher.launch();
     }
-    private static Process launchServer(Path installDir, boolean trace) throws IOException {
+
+    private static Process launchServer(Path installDir, String serverConfig,  boolean trace) throws IOException {
         if (trace) {
-            System.out.println("Starting full server for " + installDir);
+            System.out.printf("Starting full server for %s using configuration file %s%n", installDir , serverConfig );
         }
-        Launcher launcher = new Launcher(StandaloneCommandBuilder.of(installDir))
+        Launcher launcher = new Launcher(StandaloneCommandBuilder.of(installDir).setServerConfiguration(serverConfig))
                 .setRedirectErrorStream(true)
                 .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
         return launcher.launch();
