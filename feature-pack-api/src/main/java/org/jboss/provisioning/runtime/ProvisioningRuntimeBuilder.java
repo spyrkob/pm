@@ -103,7 +103,7 @@ public class ProvisioningRuntimeBuilder {
     Map<String, String> parameters = new HashMap<>();
     boolean trace = true;
 
-    private FeatureConfig parentFeature;
+    private ResolvedFeature parentFeature;
 
     private ProvisioningRuntimeBuilder(final MessageWriter messageWriter) {
         startTime = System.currentTimeMillis();
@@ -521,32 +521,30 @@ public class ProvisioningRuntimeBuilder {
         } else {
             resolvedDeps = Collections.emptySet();
         }
-        modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
 
-        final FeatureConfig myParent = parentFeature;
-        parentFeature = fc;
+        final ResolvedFeature myParent = parentFeature;
+        parentFeature = modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
         processFeatureGroupSpec(modelBuilder, targetFp, fc);
         parentFeature = myParent;
         return true;
     }
 
-    private void initForeignKey(FeatureConfig parentFc, FeatureConfig childFc, final FeaturePackRuntime.Builder childFp) throws ProvisioningException {
-        final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().toString() : childFc.getParentRef();
-        final ResolvedFeatureSpec nestedSpec = childFp.getFeatureSpec(childFc.getSpecId().getName());
-        final FeatureReferenceSpec refSpec = nestedSpec.xmlSpec.getRef(parentRef);
+    private void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final FeaturePackRuntime.Builder childFp) throws ProvisioningException {
+        final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
+        final ResolvedFeatureSpec childSpec = childFp.getFeatureSpec(childFc.getSpecId().getName());
+        final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getRef(parentRef);
         if (refSpec == null) {
-            throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + nestedSpec.id);
+            throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
         }
         for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
             final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
             if (paramValue == null) {
-                throw new ProvisioningDescriptionException(parentFc + " is missing ID parameter " + refSpec.getTargetParam(i)
-                        + " for " + nestedSpec.id);
+                throw new ProvisioningDescriptionException(childSpec.id + " expects ID parameter '" + refSpec.getTargetParam(i) + "' in " + parentFc.id);
             }
             final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
             if (prevValue != null && !prevValue.equals(paramValue)) {
                 throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
-                        + refSpec.getLocalParam(i) + " of " + nestedSpec.id
+                        + refSpec.getLocalParam(i) + " of " + childSpec.id
                         + " conflicts with the corresponding parent ID value '" + paramValue +"'");
             }
         }

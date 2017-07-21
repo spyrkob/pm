@@ -39,7 +39,7 @@ public class ResolvedFeature implements ProvisionedFeature {
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
-    Set<ResolvedFeatureId> dependencies = Collections.emptySet();
+    Set<ResolvedFeatureId> dependencies;
     boolean beingHandled;
 
     ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
@@ -73,6 +73,15 @@ public class ResolvedFeature implements ProvisionedFeature {
                     this.params.put(param.getKey(), param.getValue());
                 }
             }
+        } else if(spec.xmlSpec.hasParams()) {
+            this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
+            for(FeatureParameterSpec pSpec : spec.xmlSpec.getParams()) {
+                if(pSpec.hasDefaultValue()) {
+                    this.params.put(pSpec.getName(), pSpec.getDefaultValue());
+                }
+            }
+        } else {
+            this.params = Collections.emptyMap();
         }
     }
 
@@ -117,11 +126,8 @@ public class ResolvedFeature implements ProvisionedFeature {
         return params;
     }
 
-    public Set<String> getParamNames() {
-        return params.keySet();
-    }
-
-    public String getParamValue(String name) {
+    @Override
+    public String getParam(String name) throws ProvisioningDescriptionException {
         return params.get(name);
     }
 
@@ -144,28 +150,10 @@ public class ResolvedFeature implements ProvisionedFeature {
         return refIds;
     }
 
-    String resolveParam(String name) throws ProvisioningDescriptionException {
-        final FeatureParameterSpec param = spec.xmlSpec.getParam(name);
-        String value = params.get(param.getName());
-        if(value == null) {
-            value = param.getDefaultValue();
-        }
-        if(value == null && (param.isFeatureId() || !param.isNillable())) {
-            final StringBuilder buf = new StringBuilder();
-            if(id == null) {
-                buf.append(spec.id).append(" configuration");
-            } else {
-                buf.append(id);
-            }
-            throw new ProvisioningDescriptionException(buf.append(" is missing required parameter ").append(param.getName()).toString());
-        }
-        return value;
-    }
-
     private ResolvedFeatureId getRefTarget(final ResolvedSpecId specId, final FeatureReferenceSpec refSpec)
             throws ProvisioningDescriptionException {
         if(refSpec.getParamsMapped() == 1) {
-            final String paramValue = resolveParam(refSpec.getLocalParam(0));
+            final String paramValue = getParam(refSpec.getLocalParam(0));
             if(paramValue == null) {
                 if (!refSpec.isNillable()) {
                     final StringBuilder buf = new StringBuilder();
@@ -184,7 +172,7 @@ public class ResolvedFeature implements ProvisionedFeature {
         }
         Map<String, String> params = new HashMap<>(refSpec.getParamsMapped());
         for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
-            final String paramValue = resolveParam(refSpec.getLocalParam(i));
+            final String paramValue = getParam(refSpec.getLocalParam(i));
             if(paramValue == null) {
                 if (!refSpec.isNillable()) {
                     final StringBuilder buf = new StringBuilder();

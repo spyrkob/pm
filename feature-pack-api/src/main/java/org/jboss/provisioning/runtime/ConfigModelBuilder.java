@@ -162,7 +162,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    void includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
+    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
@@ -176,7 +176,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         feature.addDependency(depId);
                     }
                 }
-                return;
+                return feature;
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps);
@@ -184,8 +184,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             featuresById.put(id, feature);
         }
         addToSpecFeatures(feature);
-
-        //System.out.println(model + ':' + name + "> processed " + id);
+        return feature;
     }
 
     private void addToSpecFeatures(final ResolvedFeature feature) {
@@ -255,7 +254,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 if (id != null && fgConfig.excludedFeatures.contains(id)) {
                     return true;
                 }
-                if (fgConfig.excludedSpecs.contains(id.specId)) {
+                if (fgConfig.excludedSpecs.contains(specId)) {
                     if (id != null && fgConfig.includedFeatures.containsKey(id)) {
                         continue;
                     }
@@ -265,7 +264,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 if (id != null && fgConfig.includedFeatures.containsKey(id)) {
                     continue;
                 }
-                if (!fgConfig.includedSpecs.contains(id.specId)) {
+                if (!fgConfig.includedSpecs.contains(specId)) {
                     return true;
                 } else if (id != null && fgConfig.excludedFeatures.contains(id)) {
                     return true;
@@ -367,7 +366,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             if (lastHandledSpecId == null || !feature.spec.id.gav.equals(lastHandledSpecId.gav)) {
                 handler.nextFeaturePack(feature.spec.id.gav);
             }
-            handler.nextSpec(feature.spec.id);
+            handler.nextSpec(feature.spec);
             lastHandledSpecId = feature.getSpecId();
         }
         handler.nextFeature(feature);

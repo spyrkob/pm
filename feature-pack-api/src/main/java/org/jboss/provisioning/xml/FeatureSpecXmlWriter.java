@@ -17,6 +17,8 @@
 package org.jboss.provisioning.xml;
 
 
+import java.util.Map;
+
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
@@ -47,6 +49,17 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
 
         final ElementNode specE = addElement(null, Element.FEATURE_SPEC);
         addAttribute(specE, Attribute.NAME, featureSpec.getName());
+
+        if(featureSpec.hasNotes()) {
+            final ElementNode notesE = addElement(specE, Element.NOTES);
+            for(Map.Entry<String, String> entry : featureSpec.getNotes().entrySet()) {
+                final ElementNode noteE = addElement(notesE, Element.NOTE);
+                addAttribute(noteE, Attribute.ID, entry.getKey());
+                if(entry.getValue() != null) {
+                    addAttribute(noteE, Attribute.VALUE, entry.getValue());
+                }
+            }
+        }
 
         if(featureSpec.hasRefs()) {
             final ElementNode refsE = addElement(specE, Element.REFERENCES);

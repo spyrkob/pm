@@ -33,7 +33,7 @@ import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -70,8 +70,8 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
             System.out.println("Feature-pack " + fpGav);
         }
         @Override
-        public void nextSpec(ResolvedSpecId specId) {
-            System.out.println(" spec " + specId);
+        public void nextSpec(ResolvedFeatureSpec spec) {
+            System.out.println(" spec " + spec.getId());
         }
 
         @Override
@@ -437,8 +437,5 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                         .build())
                 .addConfig(config1.build())
                 .build();
-    }
-
-    private void addDefaultLoggingState(ProvisionedConfigBuilder builder, String profile) throws ProvisioningDescriptionException {
     }
 }

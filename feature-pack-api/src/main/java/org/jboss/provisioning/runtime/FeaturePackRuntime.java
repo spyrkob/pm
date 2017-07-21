@@ -110,7 +110,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 try(BufferedReader reader = Files.newBufferedReader(specXml)) {
                     fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
                 } catch (Exception e) {
-                    throw new ProvisioningException(Errors.parseXml(specXml));
+                    throw new ProvisioningException(Errors.parseXml(specXml), e);
                 }
                 fgSpecs.put(name, fgSpec);
             }
@@ -133,7 +133,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 try(BufferedReader reader = Files.newBufferedReader(specXml)) {
                     xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
                 } catch (Exception e) {
-                    throw new ProvisioningException(Errors.parseXml(specXml));
+                    throw new ProvisioningException(Errors.parseXml(specXml), e);
                 }
                 Map<String, ResolvedSpecId> resolvedRefTargets = Collections.emptyMap();
                 if (xmlSpec.hasRefs()) {
