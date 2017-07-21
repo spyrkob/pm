@@ -16,6 +16,8 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.util.logging.LogManager;
+
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
@@ -35,7 +37,7 @@ import org.jboss.aesh.extensions.rm.Rm;
 public class CliMain {
 
     public static void main(String[] args) throws Exception {
-        final Settings settings = new SettingsBuilder().logging(true).create();
+        final Settings settings = new SettingsBuilder().logging(overrideLogging()).create();
 
         final PmSession pmSession = new PmSession();
         pmSession.updatePrompt(settings.getAeshContext());
@@ -61,5 +63,15 @@ public class CliMain {
                 .commandInvocationProvider(ciServices)
                 .create();
         aeshConsole.start();
+    }
+
+    private static boolean overrideLogging() {
+        // If the current log manager is not java.util.logging.LogManager the user has specifically overridden this
+        // and we should not override logging
+        return LogManager.getLogManager().getClass() == LogManager.class &&
+                // The user has specified a class to configure logging, we shouldn't override it
+                System.getProperty("java.util.logging.config.class") == null &&
+                // The user has specified a specific logging configuration and again we shouldn't override it
+                System.getProperty("java.util.logging.config.file") == null;
     }
 }
