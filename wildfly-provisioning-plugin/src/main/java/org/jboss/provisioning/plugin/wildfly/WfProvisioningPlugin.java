@@ -32,7 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -49,9 +48,7 @@ import java.util.stream.Stream;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
-import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
@@ -61,9 +58,6 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
-import org.jboss.provisioning.state.ProvisionedConfig;
-import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -209,7 +203,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(domainScriptCollector != null) {
             domainScriptCollector.run();
         }
-
+/*
         if(runtime.hasConfigs()) {
             for (ProvisionedConfig config : runtime.getConfigs()) {
                 final StringBuilder msg = new StringBuilder(64)
@@ -375,7 +369,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 });
             }
         }
-
+*/
         //testEmbedded(runtime.getInstallDir());
 
     }
