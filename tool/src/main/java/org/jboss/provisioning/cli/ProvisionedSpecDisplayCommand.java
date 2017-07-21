@@ -17,7 +17,6 @@
 package org.jboss.provisioning.cli;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
@@ -30,9 +29,6 @@ import org.jboss.provisioning.state.ProvisionedState;
  */
 @CommandDefinition(name="display", description="Prints provisioned spec for the specified installation.")
 public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
-
-    @Option(shortName = 'v', name = "verbose", hasValue = false, description = "Include the dependencies")
-    private boolean verbose;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {

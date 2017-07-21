@@ -23,7 +23,11 @@ import java.io.StringWriter;
 /**
  *
  * @author Alexey Loubyansky
+ *
+ * @deprecated this is only used in the {@link org.jboss.provisioning.spec.FeaturePackSpec} and the method there does
+ * not seemed to be used. If we need messages written we should use the {@link org.jboss.provisioning.MessageWriter}
  */
+@Deprecated
 public class DescrFormatter {
 
     private final StringWriter writer = new StringWriter();

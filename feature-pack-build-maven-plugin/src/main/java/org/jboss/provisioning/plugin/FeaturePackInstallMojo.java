@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -49,6 +51,9 @@ public class FeaturePackInstallMojo extends AbstractMojo {
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
     protected RepositorySystemSession repoSession;
 
+    @Inject
+    private MavenPluginUtil mavenPluginUtil;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -62,7 +67,7 @@ public class FeaturePackInstallMojo extends AbstractMojo {
         }
 
         try {
-            repoSystem.install(repoSession, MavenPluginUtil.getInstallLayoutRequest(workDir));
+            repoSystem.install(repoSession, mavenPluginUtil.getInstallLayoutRequest(workDir));
         } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }

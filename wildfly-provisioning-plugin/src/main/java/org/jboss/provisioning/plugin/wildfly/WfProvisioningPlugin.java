@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
@@ -118,9 +119,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
      */
     @Override
     public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
-        if(runtime.trace()) {
-            System.out.println("WildFly provisioning plug-in");
-        }
+        final MessageWriter messageWriter = runtime.getMessageWriter();
+        messageWriter.verbose("WildFly provisioning plug-in");
 
         final String thinServerProp = System.getProperty("wfThinServer");
         if(thinServerProp != null) {
@@ -207,18 +207,19 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
         if(runtime.hasConfigs()) {
             for (ProvisionedConfig config : runtime.getConfigs()) {
-                System.out.print("Feature config");
+                final StringBuilder msg = new StringBuilder(64)
+                        .append("Feature config");
                 if(config.getModel() != null) {
-                    System.out.print(" model=" + config.getModel());
+                    msg.append(" model=").append(config.getModel());
                 }
                 if(config.getName() != null) {
-                    System.out.print(" name=" + config.getName());
+                    msg.append(" name=").append(config.getName());
                 }
-                System.out.println();
+                messageWriter.print(msg);
                 if (config.hasProperties()) {
-                    System.out.println("  properties");
+                    messageWriter.print("  properties");
                     for (Map.Entry<String, String> entry : config.getProperties().entrySet()) {
-                        System.out.println("    " + entry.getKey() + '=' + entry.getValue());
+                        messageWriter.print("    %s=%s", entry.getKey(), entry.getValue());
                     }
                 }
             }

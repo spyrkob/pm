@@ -104,7 +104,6 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-              <minimizeJar>true</minimizeJar>
               <filters>
                 <filter>
                   <artifact>org.jboss.logging:jboss-logging</artifact>

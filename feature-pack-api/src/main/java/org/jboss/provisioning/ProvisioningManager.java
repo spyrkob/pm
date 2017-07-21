@@ -49,6 +49,7 @@ public class ProvisioningManager {
         private Path installationHome;
         private ArtifactResolver artifactResolver;
         private PackageParameterResolver paramResolver;
+        private MessageWriter messageWriter;
 
         private Builder() {
         }
@@ -65,6 +66,11 @@ public class ProvisioningManager {
 
         public Builder setArtifactResolver(ArtifactResolver artifactResolver) {
             this.artifactResolver = artifactResolver;
+            return this;
+        }
+
+        public Builder setMessageWriter(MessageWriter messageWriter) {
+            this.messageWriter = messageWriter;
             return this;
         }
 
@@ -86,6 +92,7 @@ public class ProvisioningManager {
     private final Path installationHome;
     private final ArtifactResolver artifactResolver;
     private final PackageParameterResolver paramResolver;
+    private final MessageWriter messageWriter;
 
     private ProvisioningConfig provisioningConfig;
 
@@ -94,6 +101,7 @@ public class ProvisioningManager {
         this.installationHome = builder.installationHome;
         this.artifactResolver = builder.artifactResolver;
         this.paramResolver = builder.paramResolver == null ? PackageParameterResolver.NULL_RESOLVER : builder.paramResolver;
+        this.messageWriter = builder.messageWriter == null ? DefaultMessageWriter.getDefaultInstance() : builder.messageWriter;
     }
 
     /**
@@ -239,7 +247,7 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance()
+        try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                 .setArtifactResolver(artifactResolver)
                 .setConfig(provisioningConfig)
                 .setEncoding(encoding)
@@ -250,7 +258,7 @@ public class ProvisioningManager {
             // install the software
             ProvisioningRuntime.install(runtime);
         } catch (IOException e) {
-            e.printStackTrace();
+            messageWriter.error(e, e.getMessage());
         }
         this.provisioningConfig = null;
     }
@@ -317,7 +325,7 @@ public class ProvisioningManager {
                 // install the software
                 ProvisioningRuntime.exportDiff(runtime, location, installationHome);
             } catch (IOException e) {
-                e.printStackTrace();
+                messageWriter.error(e, e.getMessage());
             }
         } finally {
             IoUtils.recursiveDelete(tempInstallationDir);
