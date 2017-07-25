@@ -122,15 +122,12 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
 
-    private final boolean trace;
-
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder, final MessageWriter messageWriter) throws ProvisioningException {
         this.startTime = builder.startTime;
         this.artifactResolver = builder.artifactResolver;
         this.config = builder.config;
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
-        this.trace = builder.trace;
 
         if(!builder.anonymousConfigs.isEmpty()) {
             for(ProvisionedConfig config : builder.anonymousConfigs) {
@@ -231,14 +228,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     @Override
     public FeaturePackRuntime getFeaturePack(Gav gav) {
         return fpRuntimes.get(gav);
-    }
-
-    /**
-     * @deprecated use the {@link #getMessageWriter()} to write messages
-     */
-    @Deprecated
-    public boolean trace() {
-        return trace;
     }
 
     /**
@@ -373,7 +362,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         IoUtils.recursiveDelete(workDir);
         final long time = System.currentTimeMillis() - startTime;
         final long seconds = time / 1000;
-        messageWriter.print("Done in %d.%d seconds", seconds, (time - seconds*1000));
+        if(messageWriter.isVerboseEnabled()) {
+            messageWriter.print("Done in %d.%d seconds", seconds, (time - seconds*1000));
+        }
     }
 
     private void executeDiffPlugins(Path target, Path customizedInstallation) throws ProvisioningException {

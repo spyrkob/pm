@@ -16,24 +16,16 @@
  */
 package org.jboss.provisioning.plugin.wildfly;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
+import org.jboss.as.cli.impl.CommandContextConfiguration;
 
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.core.launcher.Launcher;
-import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.core.launcher.StandaloneCommandBuilder;
 
 /**
  *
@@ -48,48 +40,21 @@ public class WfDiffPlugin implements DiffPlugin {
     public void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
         final MessageWriter messageWriter = runtime.getMessageWriter();
         messageWriter.verbose("WildFly diff plug-in");
-//         JBoss Modules overrides the default providers
-        Process process = null;
-        Process embeddedServer = null;
+        String host = getParameter(runtime, "host", "127.0.0.1");
+        String port = getParameter(runtime, "port", "9990");
+        String protocol = getParameter(runtime, "protocol", "remote+http");
+        String username = getParameter(runtime, "username", "admin");
+        String password = getParameter(runtime, "password", "passw0rd!");
+        String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
+        Server server = new Server(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
         try {
-            String host = getParameter(runtime, "host", "127.0.0.1");
-            String port = getParameter(runtime, "port", "9990");
-            String protocol = getParameter(runtime, "protocol", "remote+http");
-            String username = getParameter(runtime, "username", "admin");
-            String password = getParameter(runtime, "password", "passw0rd!");
-            String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
-            Path synchronizationFile = runtime.getInstallDir().resolve("bin").resolve("synchronization.cli");
-            Files.deleteIfExists(synchronizationFile);
-            try(BufferedWriter out = Files.newBufferedWriter(synchronizationFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
-                out.write("embed-server --admin-only --server-config=standalone.xml");
-                out.newLine();
-                out.write(String.format(CONFIGURE_SYNC, host, port, protocol, username, password));
-                out.newLine();
-                out.write(String.format(EXPORT_DIFF, target.toAbsolutePath()));
-                out.newLine();
-                out.write("exit");
-                out.newLine();
-                out.flush();
-            }
-            process = launchServer(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
-            if(!process.isAlive() && process.exitValue() != 0) {
-                throw new ProvisioningException(String.format("Error executing synchronization. Couldn't start the installaed server at %s", customizedInstallation.toAbsolutePath()));
-            }
-            embeddedServer = launchEmbeddedServerProcess(runtime.getInstallDir(), synchronizationFile, messageWriter);
-            if(!embeddedServer.isAlive() && embeddedServer.exitValue() != 0) {
-                throw new ProvisioningException("Error executing synchronization");
-            }
-        } catch (IOException ex) {
-            messageWriter.error(ex.getMessage());
-            messageWriter.verbose(ex, null);
-            Logger.getLogger(WfDiffPlugin.class.getName()).log(Level.SEVERE, null, ex);
+            server.startServer();
+            executeEmbeddedServerCommands(runtime.getInstallDir().toAbsolutePath(), messageWriter,
+                    String.format(CONFIGURE_SYNC, host, port, protocol, username, password),
+                    String.format(EXPORT_DIFF, target.toAbsolutePath()));
         } finally {
-            try {
-                ProcessHelper.destroyProcess(embeddedServer);
-                ProcessHelper.destroyProcess(process);
-            } catch (InterruptedException ex) {
-                messageWriter.error(ex.getMessage());
-                messageWriter.verbose(ex, null);
+            if (server != null) {
+                server.stopServer();
             }
         }
     }
@@ -101,29 +66,45 @@ public class WfDiffPlugin implements DiffPlugin {
         }
         return defaultValue;
     }
-    private static Process launchEmbeddedServerProcess(Path installDir, Path synchronizationFile, MessageWriter messageWriter) throws IOException {
-        messageWriter.verbose("Starting embeded admin-only server for %s", installDir);
-        Path logFile = new File("synchronization.log").toPath();
-        Files.deleteIfExists(logFile);
-        CliCommandBuilder builder = CliCommandBuilder.of(installDir);
-        if(messageWriter.isVerboseEnabled()) {
-            builder.addCliArgument("--echo-command");
+
+    private void executeEmbeddedServerCommands(Path installDir, MessageWriter messageWriter, String ...commands) throws ProvisioningException {
+        CommandContext ctx = null;
+        try {
+            System.setProperty("jboss.cli.config", installDir.resolve("bin").resolve("jboss-cli.xml").toAbsolutePath().toString());
+            ctx = CommandContextFactory.getInstance().newCommandContext(
+                    new CommandContextConfiguration.Builder()
+                            .setSilent(!messageWriter.isVerboseEnabled())
+                            .setEchoCommand(messageWriter.isVerboseEnabled())
+                            .setInitConsole(false)
+                            .build());
+            ctx.handle("embed-server --admin-only --server-config=standalone.xml --jboss-home=" + installDir.toAbsolutePath());
+            for (String cmd : commands) {
+                ctx.handle(cmd);
+            }
+            ctx.handle("stop-embedded-server");
+        } catch (Exception e) {
+            messageWriter.error(e, "Error using console");
+            messageWriter.verbose(e, null);
+            throw new ProvisioningException(e);
+        } finally {
+            if(ctx != null) {
+                ctx.terminateSession();
+                clearXMLConfiguration();
+                System.clearProperty("jboss.cli.config");
+            }
         }
-        builder.setScriptFile(synchronizationFile);
-        Launcher launcher = new Launcher(builder)
-                .setRedirectErrorStream(true)
-                .redirectOutput(logFile)
-                .setDirectory(installDir.resolve("bin"))
-                .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
-        return launcher.launch();
     }
 
-    private static Process launchServer(Path installDir, String serverConfig,  MessageWriter messageWriter) throws IOException {
-        messageWriter.verbose("Starting full server for %s using configuration file %s", installDir , serverConfig );
-        Launcher launcher = new Launcher(StandaloneCommandBuilder.of(installDir).setServerConfiguration(serverConfig))
-                .setRedirectErrorStream(true)
-                .addEnvironmentVariable("JBOSS_HOME", installDir.toString());
-        return launcher.launch();
+    private void clearXMLConfiguration() {
+        System.clearProperty("javax.xml.parsers.DocumentBuilderFactory");
+        System.clearProperty("javax.xml.parsers.SAXParserFactory");
+        System.clearProperty("javax.xml.transform.TransformerFactory");
+        System.clearProperty("javax.xml.xpath.XPathFactory");
+        System.clearProperty("javax.xml.stream.XMLEventFactory");
+        System.clearProperty("javax.xml.stream.XMLInputFactory");
+        System.clearProperty("javax.xml.stream.XMLOutputFactory");
+        System.clearProperty("javax.xml.datatype.DatatypeFactory");
+        System.clearProperty("javax.xml.validation.SchemaFactory");
+        System.clearProperty("org.xml.sax.driver");
     }
-
 }
