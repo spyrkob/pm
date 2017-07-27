@@ -81,6 +81,10 @@
     <version.org.jboss.logging>3.3.1.Final</version.org.jboss.logging>
     <version.org.jboss.logmanager>2.0.6.Final</version.org.jboss.logmanager>
 
+    <!-- sfl4j is brought in by eclipse aether and version needs to be overridden. Currently only used in tool module -->
+    <version.org.slf4j>1.7.21</version.org.slf4j>
+    <version.org.jboss.logging.slf4j-jboss-logging>1.1.0.Final</version.org.jboss.logging.slf4j-jboss-logging>
+
     <!-- Checkstyle configuration -->
     <linkXRef>false</linkXRef>
     <version.org.wildfly.checkstyle-config>1.0.4.Final</version.org.wildfly.checkstyle-config>
