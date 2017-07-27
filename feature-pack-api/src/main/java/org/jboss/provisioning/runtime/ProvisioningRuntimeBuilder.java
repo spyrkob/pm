@@ -101,7 +101,6 @@ public class ProvisioningRuntimeBuilder {
     Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
     Map<String, String> parameters = new HashMap<>();
-    boolean trace = true;
 
     private ResolvedFeature parentFeature;
 
@@ -134,12 +133,6 @@ public class ProvisioningRuntimeBuilder {
 
     public ProvisioningRuntimeBuilder setInstallDir(Path installDir) {
         this.installDir = installDir;
-        return this;
-    }
-
-    @Deprecated
-    public ProvisioningRuntimeBuilder setTrace(boolean trace) {
-        this.trace = trace;
         return this;
     }
 

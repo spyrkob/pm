@@ -196,16 +196,13 @@ public class ProvisioningManager {
         }
     }
 
-    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
-        provision(provisioningConfig, true);
-    }
     /**
      * (Re-)provisions the current installation to the desired specification.
      *
      * @param provisioningConfig  the desired installation specification
      * @throws ProvisioningException  in case the re-provisioning fails
      */
-    public void provision(ProvisioningConfig provisioningConfig, boolean trace) throws ProvisioningException {
+    public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
 
         if(Files.exists(installationHome)) {
             if(!Files.isDirectory(installationHome)) {
@@ -253,7 +250,6 @@ public class ProvisioningManager {
                 .setEncoding(encoding)
                 .setParameterResolver(paramResolver)
                 .setInstallDir(installationHome)
-                .setTrace(trace)
                 .build()) {
             // install the software
             ProvisioningRuntime.install(runtime);
@@ -312,9 +308,35 @@ public class ProvisioningManager {
                     .setArtifactResolver(this.getArtifactResolver())
                     .setEncoding(this.getEncoding())
                     .setInstallationHome(tempInstallationDir)
+                    .setMessageWriter(new MessageWriter() {
+                        @Override
+                        public void verbose(Throwable cause, CharSequence message) {
+                            return;
+                        }
+
+                        @Override
+                        public void print(Throwable cause, CharSequence message) {
+                            messageWriter.print(cause, message);
+                        }
+
+                        @Override
+                        public void error(Throwable cause, CharSequence message) {
+                            messageWriter.error(cause, message);
+                        }
+
+                        @Override
+                        public boolean isVerboseEnabled() {
+                            return false;
+                        }
+
+                        @Override
+                        public void close() throws Exception {
+                            return;
+                        }
+                    })
                     .setPackageParameterResolver(this.getPackageParameterResolver()));
-            reference.provision(configuration, false);
-            final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance()
+            reference.provision(configuration);
+            final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())

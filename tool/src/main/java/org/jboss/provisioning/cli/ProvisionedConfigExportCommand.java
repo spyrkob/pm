@@ -29,7 +29,6 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 
 /**
  * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
@@ -68,8 +67,6 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
             throw new CommandExecutionException("The command expects only two argument.");
         }
 
-        final Resource specResource = fileArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
-        final Path sourceFile = Paths.get(specResource.getAbsolutePath());
         Map<String, String> parameters = new HashMap<>(5);
         if (host != null) {
             parameters.put("host", host);
@@ -92,16 +89,15 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
         final Resource specTargetResource = fileArg.get(1).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
         final Path targetFile = Paths.get(specTargetResource.getAbsolutePath());
         try {
-            getManager(sourceFile).exportConfigurationChanges(targetFile, parameters);
+            getManager(session).exportConfigurationChanges(targetFile, parameters);
         } catch (ProvisioningException | IOException e) {
             throw new CommandExecutionException("Failed to export provisioned state", e);
         }
     }
 
-    protected ProvisioningManager getManager(Path sourceFile) {
-        return ProvisioningManager.builder()
-                .setArtifactResolver(ArtifactResolverImpl.getInstance())
-                .setInstallationHome(sourceFile)
-                .build();
+    @Override
+    protected Path getTargetDir(PmSession session) {
+        final Resource specResource = fileArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
+        return Paths.get(specResource.getAbsolutePath());
     }
 }
