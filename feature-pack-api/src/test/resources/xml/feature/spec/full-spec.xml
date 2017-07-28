@@ -18,10 +18,15 @@
 
 -->
 <feature-spec name="full" xmlns="urn:wildfly:pm-feature-spec:1.0">
-  <notes>
-    <note id="note1" value="note value1"/>
-    <note id="note2" value="note value2"/>
-  </notes>
+  <annotation name="a1">
+    <elem name="e1" value="v1"/>
+    <elem name="e2" value="v2"/>
+  </annotation>
+  <annotation name="a2"/>
+  <annotation name="a1">
+    <elem name="e1" value="v3"/>
+    <elem name="e2" value="v4"/>
+  </annotation>
   <refs>
     <ref feature="spec1"/>
     <ref feature="spec1" name="spec1-ref"/>

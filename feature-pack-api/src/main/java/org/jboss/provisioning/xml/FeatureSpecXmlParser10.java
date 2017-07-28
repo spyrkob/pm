@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
@@ -47,10 +48,10 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
 
     enum Element implements XmlNameProvider {
 
+        ANNOTATION("annotation"),
+        ELEM("elem"),
         FEATURE_PACK("feature-pack"),
         FEATURE_SPEC("feature-spec"),
-        NOTES("notes"),
-        NOTE("note"),
         PACKAGE("package"),
         PACKAGES("packages"),
         PARAMETERS("params"),
@@ -113,7 +114,6 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
-        ID("id"),
         MAPS_TO("maps-to"),
         NAME("name"),
         NILLABLE("nillable"),
@@ -195,8 +195,8 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case NOTES:
-                            parseNotes(reader, featureBuilder);
+                        case ANNOTATION:
+                            parseAnnotation(reader, featureBuilder);
                             break;
                         case REFERENCES:
                             parseReferences(reader, featureBuilder);
@@ -220,18 +220,33 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseNotes(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
+    private void parseAnnotation(XMLExtendedStreamReader reader, FeatureSpec.Builder builder) throws XMLStreamException {
+        String name = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+        final FeatureAnnotation fa = new FeatureAnnotation(name);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    builder.addAnnotation(fa);
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case NOTE:
-                            parseNote(reader, specBuilder);
+                        case ELEM:
+                            parseAnnotationElem(reader, fa);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -246,14 +261,14 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseNote(XMLExtendedStreamReader reader, FeatureSpec.Builder builder) throws XMLStreamException {
-        String id = null;
+    private void parseAnnotationElem(XMLExtendedStreamReader reader, FeatureAnnotation fa) throws XMLStreamException {
+        String name = null;
         String value = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case ID:
-                    id = reader.getAttributeValue(i);
+                case NAME:
+                    name = reader.getAttributeValue(i);
                     break;
                 case VALUE:
                     value = reader.getAttributeValue(i);
@@ -262,15 +277,11 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if(id == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ID));
+        if(name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         ParsingUtils.parseNoContent(reader);
-        try {
-            builder.addNote(id, value);
-        } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to add feature note", reader.getLocation(), e);
-        }
+        fa.setAttr(name, value);
     }
 
     private void parseReferences(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {

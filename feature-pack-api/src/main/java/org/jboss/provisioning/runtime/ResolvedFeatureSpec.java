@@ -17,9 +17,11 @@
 
 package org.jboss.provisioning.runtime;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.feature.FeatureSpec;
 
 /**
@@ -46,24 +48,12 @@ public class ResolvedFeatureSpec {
         return id.name;
     }
 
-    public boolean hasNotes() {
-        return xmlSpec.hasNotes();
+    public boolean hasAnnotations() {
+        return xmlSpec.hasAnnotations();
     }
 
-    public Map<String, String> getNotes() {
-        return xmlSpec.getNotes();
-    }
-
-    public String getNote(String id) {
-        return xmlSpec.getNotes().get(id);
-    }
-
-    public String getNote(String id, String defaultValue) {
-        return xmlSpec.getNotes().getOrDefault(id, defaultValue);
-    }
-
-    public boolean containsNote(String id) {
-        return xmlSpec.getNotes().containsKey(id);
+    public List<FeatureAnnotation> getAnnotations() {
+        return xmlSpec.getAnnotations();
     }
 
     public boolean hasParams() {
