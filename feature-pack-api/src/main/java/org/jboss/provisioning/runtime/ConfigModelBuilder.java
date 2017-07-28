@@ -30,7 +30,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.state.ProvisionedConfig;
@@ -274,11 +273,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return false;
     }
 
-    ResolvedFeatureId resolveFeatureId(ResolvedFeatureSpec spec, FeatureConfig config)
-            throws ProvisioningDescriptionException {
-        return spec.xmlSpec.hasId() ? getFeatureId(spec.id, spec.xmlSpec.getIdParams(), config.getParams()) : null;
-    }
-
     @Override
     public String getModel() {
         return model;
@@ -398,7 +392,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
     }
 
-    private StringBuilder errorFor(ResolvedFeature feature) {
+    private static StringBuilder errorFor(ResolvedFeature feature) {
         final StringBuilder buf = new StringBuilder();
         if (feature.id != null) {
             buf.append(feature.id);
@@ -406,29 +400,5 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             buf.append(feature.spec.id).append(" configuration");
         }
         return buf;
-    }
-
-    private static ResolvedFeatureId getFeatureId(ResolvedSpecId specId, List<FeatureParameterSpec> idSpecs, Map<String, String> params) throws ProvisioningDescriptionException {
-        if(idSpecs.size() == 1) {
-            final FeatureParameterSpec idSpec = idSpecs.get(0);
-            return new ResolvedFeatureId(specId, Collections.singletonMap(idSpec.getName(), getParamValue(specId, params, idSpec)));
-        }
-        final Map<String, String> resolvedParams = new HashMap<>(idSpecs.size());
-        for(FeatureParameterSpec param : idSpecs) {
-            resolvedParams.put(param.getName(), getParamValue(specId, params, param));
-        }
-        return new ResolvedFeatureId(specId, resolvedParams);
-    }
-
-    private static String getParamValue(ResolvedSpecId specId, Map<String, String> params, final FeatureParameterSpec param)
-            throws ProvisioningDescriptionException {
-        String value = params.get(param.getName());
-        if(value == null) {
-            value = param.getDefaultValue();
-        }
-        if(value == null && (param.isFeatureId() || !param.isNillable())) {
-            throw new ProvisioningDescriptionException("Required parameter " + param.getName() + " of " + specId + " is missing value");
-        }
-        return value;
     }
 }
