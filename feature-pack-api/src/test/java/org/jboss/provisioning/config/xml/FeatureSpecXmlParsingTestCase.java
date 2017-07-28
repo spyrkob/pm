@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
@@ -46,8 +47,9 @@ public class FeatureSpecXmlParsingTestCase {
     @Test
     public void testFull() throws Exception {
         assertEquals(FeatureSpec.builder("full")
-                .addNote("note1", "note value1")
-                .addNote("note2", "note value2")
+                .addAnnotation(new FeatureAnnotation("a1").setAttr("e1", "v1").setAttr("e2", "v2"))
+                .addAnnotation(new FeatureAnnotation("a2"))
+                .addAnnotation(new FeatureAnnotation("a1").setAttr("e1", "v3").setAttr("e2", "v4"))
                 .addRef(FeatureReferenceSpec.create("spec1", "spec1", false))
                 .addRef(FeatureReferenceSpec.create("spec1-ref", "spec1", false))
                 .addRef(FeatureReferenceSpec.builder("spec2")

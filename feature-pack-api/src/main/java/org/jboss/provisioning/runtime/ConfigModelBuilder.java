@@ -427,7 +427,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             value = param.getDefaultValue();
         }
         if(value == null && (param.isFeatureId() || !param.isNillable())) {
-            throw new ProvisioningDescriptionException(specId + " configuration is missing required parameter " + param.getName());
+            throw new ProvisioningDescriptionException("Required parameter " + param.getName() + " of " + specId + " is missing value");
         }
         return value;
     }
