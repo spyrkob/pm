@@ -54,4 +54,5 @@ public interface WfConstants {
     String OP_PARAMS = "op-params";
     String PM_UNDEFINED = "PM_UNDEFINED";
     String WRITE_ATTRIBUTE = "write-attribute";
+    String LINE = "line";
 }

@@ -29,7 +29,7 @@ import java.util.Map;
 public class FeatureAnnotation {
 
     final String name;
-    private Map<String, String> attrs = Collections.emptyMap();
+    private Map<String, String> elems = Collections.emptyMap();
 
     public FeatureAnnotation(String name) {
         this.name = name;
@@ -40,52 +40,52 @@ public class FeatureAnnotation {
     }
 
     public FeatureAnnotation setAttr(String name, String value) {
-        if(attrs.isEmpty()) {
-            attrs = Collections.singletonMap(name, value);
+        if(elems.isEmpty()) {
+            elems = Collections.singletonMap(name, value);
             return this;
         }
-        if(attrs.containsKey(name)) {
-            if(attrs.size() == 1) {
-                attrs = Collections.singletonMap(name, value);
+        if(elems.containsKey(name)) {
+            if(elems.size() == 1) {
+                elems = Collections.singletonMap(name, value);
             } else {
-                attrs.put(name, value);
+                elems.put(name, value);
             }
             return this;
         }
-        if(attrs.size() == 1) {
-            final Map.Entry<String, String> entry = attrs.entrySet().iterator().next();
-            attrs = new HashMap<>(2);
-            attrs.put(entry.getKey(), entry.getValue());
+        if(elems.size() == 1) {
+            final Map.Entry<String, String> entry = elems.entrySet().iterator().next();
+            elems = new HashMap<>(2);
+            elems.put(entry.getKey(), entry.getValue());
         }
-        attrs.put(name, value);
+        elems.put(name, value);
         return this;
     }
 
     public boolean hasAttrs() {
-        return !attrs.isEmpty();
+        return !elems.isEmpty();
     }
 
     public Map<String, String> getAttrs() {
-        return attrs;
+        return elems;
     }
 
     public boolean hasAttr(String name) {
-        return attrs.containsKey(name);
+        return elems.containsKey(name);
     }
 
-    public String getAttr(String name) {
-        return attrs.get(name);
+    public String getElem(String name) {
+        return elems.get(name);
     }
 
     public String getAttr(String name, String defaultValue) {
-        return attrs.getOrDefault(name, defaultValue);
+        return elems.getOrDefault(name, defaultValue);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((attrs == null) ? 0 : attrs.hashCode());
+        result = prime * result + ((elems == null) ? 0 : elems.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -99,10 +99,10 @@ public class FeatureAnnotation {
         if (getClass() != obj.getClass())
             return false;
         FeatureAnnotation other = (FeatureAnnotation) obj;
-        if (attrs == null) {
-            if (other.attrs != null)
+        if (elems == null) {
+            if (other.elems != null)
                 return false;
-        } else if (!attrs.equals(other.attrs))
+        } else if (!elems.equals(other.elems))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -116,14 +116,20 @@ public class FeatureAnnotation {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append("name=").append(name);
-        if(!attrs.isEmpty()) {
-            buf.append(" attrs={");
-            final Iterator<Map.Entry<String, String>> i = attrs.entrySet().iterator();
+        if(!elems.isEmpty()) {
+            buf.append(" elems={");
+            final Iterator<Map.Entry<String, String>> i = elems.entrySet().iterator();
             Map.Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
+            buf.append(entry.getKey());
+            if(entry.getValue() != null) {
+                buf.append('=').append(entry.getValue());
+            }
             while(i.hasNext()) {
                 entry = i.next();
-                buf.append(';').append(entry.getKey()).append('=').append(entry.getValue());
+                buf.append(';').append(entry.getKey());
+                if(entry.getValue() != null) {
+                    buf.append('=').append(entry.getValue());
+                }
             }
             buf.append('}');
         }
