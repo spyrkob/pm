@@ -203,8 +203,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(domainScriptCollector != null) {
             domainScriptCollector.run();
         }
-
-/*        if(runtime.hasConfigs()) {
+/*
+        if(runtime.hasConfigs()) {
             final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(messageWriter);
             for (ProvisionedConfig config : runtime.getConfigs()) {
                 final StringBuilder msg = new StringBuilder(64)

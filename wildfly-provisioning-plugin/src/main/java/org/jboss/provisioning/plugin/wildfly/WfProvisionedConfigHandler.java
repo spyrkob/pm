@@ -39,12 +39,14 @@ import org.jboss.provisioning.state.ProvisionedFeature;
 class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     private class ManagedOp {
+        String line;
         String addrPref;
         String name;
         List<String> addrParams = Collections.emptyList();
         List<String> opParams = Collections.emptyList();
 
         void reset() {
+            line = null;
             addrPref = null;
             name = null;
             addrParams = Collections.emptyList();
@@ -52,38 +54,44 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
 
         void toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
-            final StringBuilder buf = new StringBuilder();
-            if (addrPref != null) {
-                buf.append(addrPref);
-            }
-            for (String param : addrParams) {
-                final String value = feature.getParam(param);
-                if (value == null) {
-                    continue;
+            final String line;
+            if (this.line != null) {
+                line = this.line;
+            } else {
+                final StringBuilder buf = new StringBuilder();
+                if (addrPref != null) {
+                    buf.append(addrPref);
                 }
-                buf.append('/').append(param).append('=').append(value);
-            }
-            buf.append(':').append(name);
-            if (!opParams.isEmpty()) {
-                boolean comma = false;
-                for (String param : opParams) {
+                for (String param : addrParams) {
                     final String value = feature.getParam(param);
                     if (value == null) {
                         continue;
                     }
-                    if (comma) {
-                        buf.append(',');
-                    } else {
-                        comma = true;
-                        buf.append('(');
+                    buf.append('/').append(param).append('=').append(value);
+                }
+                buf.append(':').append(name);
+                if (!opParams.isEmpty()) {
+                    boolean comma = false;
+                    for (String param : opParams) {
+                        final String value = feature.getParam(param);
+                        if (value == null) {
+                            continue;
+                        }
+                        if (comma) {
+                            buf.append(',');
+                        } else {
+                            comma = true;
+                            buf.append('(');
+                        }
+                        buf.append(param).append("=\"").append(value).append('"');
                     }
-                    buf.append(param).append("=\"").append(value).append('"');
+                    if (comma) {
+                        buf.append(')');
+                    }
                 }
-                if (comma) {
-                    buf.append(')');
-                }
+                line = buf.toString();
             }
-            messageWriter.print("      " + buf.toString());
+            messageWriter.print("      " + line);
         }
     }
 
@@ -123,26 +131,31 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int i = 0;
         while (i < opsTotal) {
             final FeatureAnnotation annotation = annotations.get(i);
+            messageWriter.print("      Annotation: " + annotation);
             final ManagedOp mop = ops[i++];
             mop.reset();
+            mop.line = annotation.getElem(WfConstants.LINE);
+            if(mop.line != null) {
+                continue;
+            }
             mop.name = annotation.getName();
-            mop.addrPref = annotation.getAttr(WfConstants.ADDR_PREF);
-            String noteValue = annotation.getAttr(WfConstants.ADDR_PARAMS);
-            if (noteValue == null) {
-                throw new ProvisioningException("Required note " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
+            mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
+            String elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
+            if (elemValue == null) {
+                throw new ProvisioningException("Required element " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
             }
 
             try {
-                mop.addrParams = parseList(noteValue);
+                mop.addrParams = parseList(elemValue);
             } catch (ProvisioningDescriptionException e) {
-                throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS + "="
-                        + noteValue + " of " + spec.getId());
+                throw new ProvisioningDescriptionException("Saw empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
+                        + elemValue + " of " + spec.getId());
             }
 
-            noteValue = annotation.getAttr(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
-            if (noteValue == null) {
+            elemValue = annotation.getAttr(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
+            if (elemValue == null) {
                 mop.opParams = Collections.emptyList();
-            } else if (WfConstants.PM_UNDEFINED.equals(noteValue)) {
+            } else if (WfConstants.PM_UNDEFINED.equals(elemValue)) {
                 if (spec.hasParams()) {
                     final Set<String> allParams = spec.getParamNames();
                     switch (allParams.size() - mop.addrParams.size()) {
@@ -178,10 +191,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
             } else {
                 try {
-                    mop.opParams = parseList(noteValue);
+                    mop.opParams = parseList(elemValue);
                 } catch (ProvisioningDescriptionException e) {
                     throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS
-                            + "=" + noteValue + " of " + spec.getId());
+                            + "=" + elemValue + " of " + spec.getId());
                 }
                 if (mop.opParams.size() > 1 && mop.name.equals(WfConstants.WRITE_ATTRIBUTE)) {
                     throw new ProvisioningDescriptionException(WfConstants.OP_PARAMS + " element of "
@@ -189,7 +202,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             + " contains more than one parameter: " + annotation);
                 }
             }
-            messageWriter.print("      ANNOTATION " + annotation);
         }
     }
 

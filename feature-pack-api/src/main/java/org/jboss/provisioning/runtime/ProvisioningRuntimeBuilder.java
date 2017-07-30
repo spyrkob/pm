@@ -53,6 +53,7 @@ import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
@@ -80,6 +81,42 @@ public class ProvisioningRuntimeBuilder {
 
     public static ProvisioningRuntimeBuilder newInstance(final MessageWriter messageWriter) {
         return new ProvisioningRuntimeBuilder(messageWriter);
+    }
+
+    private static ResolvedFeatureId resolveFeatureId(ResolvedFeatureSpec spec, FeatureConfig config) throws ProvisioningDescriptionException {
+        if(!spec.xmlSpec.hasId()) {
+            return null;
+        }
+        final List<FeatureParameterSpec> idSpecs = spec.xmlSpec.getIdParams();
+        if(idSpecs.size() == 1) {
+            final FeatureParameterSpec idSpec = idSpecs.get(0);
+            return new ResolvedFeatureId(spec.id, Collections.singletonMap(idSpec.getName(), getParamValue(spec.id, config.getParams(), idSpec)));
+        }
+        final Map<String, String> resolvedParams = new HashMap<>(idSpecs.size());
+        for(FeatureParameterSpec param : idSpecs) {
+            resolvedParams.put(param.getName(), getParamValue(spec.id, config.getParams(), param));
+        }
+        return new ResolvedFeatureId(spec.id, resolvedParams);
+    }
+
+    private static String getParamValue(ResolvedSpecId specId, Map<String, String> params, final FeatureParameterSpec param)
+            throws ProvisioningDescriptionException {
+        String value = params.get(param.getName());
+        if(value == null) {
+            value = param.getDefaultValue();
+        }
+        if(value == null && (param.isFeatureId() || !param.isNillable())) {
+            throw new ProvisioningDescriptionException("Required parameter " + param.getName() + " of " + specId + " is missing value");
+        }
+        return value;
+    }
+
+    private static void mkdirs(final Path path) throws ProvisioningException {
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.mkdirs(path));
+        }
     }
 
     final long startTime;
@@ -487,7 +524,7 @@ public class ProvisioningRuntimeBuilder {
         final FeaturePackRuntime.Builder targetFp = getRtBuilder(specId, fp);
         final ResolvedFeatureSpec spec = targetFp.getFeatureSpec(specId.getName());
 
-        final ResolvedFeatureId resolvedId = modelBuilder.resolveFeatureId(spec, fc);
+        final ResolvedFeatureId resolvedId = resolveFeatureId(spec, fc);
         if(modelBuilder.isFilteredOut(spec.id, resolvedId)) {
             return false;
         }
@@ -766,14 +803,6 @@ public class ProvisioningRuntimeBuilder {
     private void orderFpRtBuilder(final FeaturePackRuntime.Builder fpRtBuilder) {
         this.fpRtBuildersOrdered.add(fpRtBuilder);
         fpRtBuilder.ordered = true;
-    }
-
-    private void mkdirs(final Path path) throws ProvisioningException {
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            throw new ProvisioningException(Errors.mkdirs(path));
-        }
     }
 
     private void copyResources(FeaturePackRuntime.Builder fpRtBuilder) throws ProvisioningException {
