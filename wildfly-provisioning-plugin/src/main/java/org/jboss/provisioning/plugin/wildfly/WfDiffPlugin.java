@@ -18,9 +18,6 @@ package org.jboss.provisioning.plugin.wildfly;
 
 
 import java.nio.file.Path;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.impl.CommandContextConfiguration;
 
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
@@ -28,7 +25,7 @@ import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
- *
+ * WildFly plugin to compute the model difference between an instance and a clean provisioned instance.
  * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
 public class WfDiffPlugin implements DiffPlugin {
@@ -47,15 +44,17 @@ public class WfDiffPlugin implements DiffPlugin {
         String password = getParameter(runtime, "password", "passw0rd!");
         String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
         Server server = new Server(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
+        EmbeddedServer embeddedServer = new EmbeddedServer(
+                runtime.getInstallDir().toAbsolutePath(),
+                runtime.getInstallDir().resolve("bin").resolve("jboss-cli.xml").toAbsolutePath(),
+                messageWriter);
         try {
             server.startServer();
-            executeEmbeddedServerCommands(runtime.getInstallDir().toAbsolutePath(), messageWriter,
+            embeddedServer.execute(true,
                     String.format(CONFIGURE_SYNC, host, port, protocol, username, password),
                     String.format(EXPORT_DIFF, target.toAbsolutePath()));
         } finally {
-            if (server != null) {
-                server.stopServer();
-            }
+            server.stopServer();
         }
     }
 
@@ -65,46 +64,5 @@ public class WfDiffPlugin implements DiffPlugin {
             return runtime.getParameter(name);
         }
         return defaultValue;
-    }
-
-    private void executeEmbeddedServerCommands(Path installDir, MessageWriter messageWriter, String ...commands) throws ProvisioningException {
-        CommandContext ctx = null;
-        try {
-            System.setProperty("jboss.cli.config", installDir.resolve("bin").resolve("jboss-cli.xml").toAbsolutePath().toString());
-            ctx = CommandContextFactory.getInstance().newCommandContext(
-                    new CommandContextConfiguration.Builder()
-                            .setSilent(!messageWriter.isVerboseEnabled())
-                            .setEchoCommand(messageWriter.isVerboseEnabled())
-                            .setInitConsole(false)
-                            .build());
-            ctx.handle("embed-server --admin-only --server-config=standalone.xml --jboss-home=" + installDir.toAbsolutePath());
-            for (String cmd : commands) {
-                ctx.handle(cmd);
-            }
-            ctx.handle("stop-embedded-server");
-        } catch (Exception e) {
-            messageWriter.error(e, "Error using console");
-            messageWriter.verbose(e, null);
-            throw new ProvisioningException(e);
-        } finally {
-            if(ctx != null) {
-                ctx.terminateSession();
-                clearXMLConfiguration();
-                System.clearProperty("jboss.cli.config");
-            }
-        }
-    }
-
-    private void clearXMLConfiguration() {
-        System.clearProperty("javax.xml.parsers.DocumentBuilderFactory");
-        System.clearProperty("javax.xml.parsers.SAXParserFactory");
-        System.clearProperty("javax.xml.transform.TransformerFactory");
-        System.clearProperty("javax.xml.xpath.XPathFactory");
-        System.clearProperty("javax.xml.stream.XMLEventFactory");
-        System.clearProperty("javax.xml.stream.XMLInputFactory");
-        System.clearProperty("javax.xml.stream.XMLOutputFactory");
-        System.clearProperty("javax.xml.datatype.DatatypeFactory");
-        System.clearProperty("javax.xml.validation.SchemaFactory");
-        System.clearProperty("org.xml.sax.driver");
     }
 }
