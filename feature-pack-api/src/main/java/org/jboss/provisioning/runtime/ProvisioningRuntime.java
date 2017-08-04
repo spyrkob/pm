@@ -161,8 +161,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
     private FileSystemDiffResult diff = FileSystemDiffResult.empty();
-    private ClassLoader pluginsClassLoader;
     private final String operation;
+    private ClassLoader pluginsClassLoader;
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder, final MessageWriter messageWriter) throws ProvisioningException {
         this.startTime = builder.startTime;

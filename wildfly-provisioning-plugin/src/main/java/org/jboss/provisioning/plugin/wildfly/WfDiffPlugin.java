@@ -18,7 +18,12 @@ package org.jboss.provisioning.plugin.wildfly;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
@@ -51,7 +56,30 @@ public class WfDiffPlugin implements DiffPlugin {
         final MessageWriter messageWriter = runtime.getMessageWriter();
         messageWriter.verbose("WildFly diff plug-in");
         FileSystemDiff diff = new FileSystemDiff(messageWriter, runtime.getInstallDir(), customizedInstallation);
-        runtime.setDiff(diff.diff(getFilter(runtime)));
+        String host = getParameter(runtime, "host", "127.0.0.1");
+        String port = getParameter(runtime, "port", "9990");
+        String protocol = getParameter(runtime, "protocol", "remote+http");
+        String username = getParameter(runtime, "username", "admin");
+        String password = getParameter(runtime, "password", "passw0rd!");
+        String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
+        Server server = new Server(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
+        EmbeddedServer embeddedServer = new EmbeddedServer(runtime.getInstallDir().toAbsolutePath(), messageWriter);
+        try {
+            Files.createDirectories(target);
+            server.startServer();
+            embeddedServer.execute(false,
+                    String.format(CONFIGURE_SYNC, host, port, protocol, username, password),
+                    String.format(EXPORT_DIFF, target.resolve("finalize.cli").toAbsolutePath()));
+            WfDiffResult result = new WfDiffResult(
+                    Collections.singletonList(target.resolve("finalize.cli").toAbsolutePath()),
+                    diff.diff(getFilter(runtime)));
+            runtime.setDiff(result.merge(runtime.getDiff()));
+        } catch (IOException ex) {
+            messageWriter.error(ex, "Couldn't compute the WildFly Model diff because of %s", ex.getMessage());
+            Logger.getLogger(WfDiffPlugin.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            server.stopServer();
+        }
     }
 
     private PathFilter getFilter(ProvisioningRuntime runtime) {
