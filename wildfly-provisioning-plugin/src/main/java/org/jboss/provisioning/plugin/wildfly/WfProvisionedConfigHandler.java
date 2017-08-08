@@ -17,9 +17,13 @@
 
 package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,6 +48,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         String name;
         List<String> addrParams = Collections.emptyList();
         List<String> opParams = Collections.emptyList();
+        boolean writeAttr;
 
         void reset() {
             line = null;
@@ -51,6 +56,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             name = null;
             addrParams = Collections.emptyList();
             opParams = Collections.emptyList();
+            writeAttr = false;
         }
 
         void toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
@@ -62,18 +68,27 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 if (addrPref != null) {
                     buf.append(addrPref);
                 }
-                for (String param : addrParams) {
-                    final String value = feature.getParam(param);
+                int i = 0;
+                while(i < addrParams.size()) {
+                    final String value = feature.getParam(addrParams.get(i++));
                     if (value == null) {
                         continue;
                     }
-                    buf.append('/').append(param).append('=').append(value);
+                    buf.append('/').append(addrParams.get(i++)).append('=').append(value);
+
                 }
                 buf.append(':').append(name);
-                if (!opParams.isEmpty()) {
+                if(writeAttr) {
+                    final String value = feature.getParam(opParams.get(0));
+                    if (value == null) {
+                        throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
+                    }
+                    buf.append("(name=").append(opParams.get(1)).append(",value=").append(value).append(')');
+                } else if (!opParams.isEmpty()) {
                     boolean comma = false;
-                    for (String param : opParams) {
-                        final String value = feature.getParam(param);
+                    i = 0;
+                    while(i < opParams.size()) {
+                        final String value = feature.getParam(opParams.get(i++));
                         if (value == null) {
                             continue;
                         }
@@ -83,7 +98,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             comma = true;
                             buf.append('(');
                         }
-                        buf.append(param).append("=\"").append(value).append('"');
+                        buf.append(opParams.get(i++)).append('=').append(value);
                     }
                     if (comma) {
                         buf.append(')');
@@ -92,6 +107,13 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 line = buf.toString();
             }
             messageWriter.print("      " + line);
+            try {
+                opsWriter.write(line);
+                opsWriter.newLine();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
@@ -100,14 +122,25 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private int opsTotal;
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
 
+    private final BufferedWriter opsWriter;
+
     WfProvisionedConfigHandler(MessageWriter messageWriter) {
         this.messageWriter = messageWriter;
+        try {
+            opsWriter = Files.newBufferedWriter(Paths.get("./config-ops.log"), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+            opsWriter.write("embed-server --empty-config --remove-existing --server-config=test.xml");
+            opsWriter.newLine();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
+    @Override
     public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
         messageWriter.print("  " + fpGav);
     }
 
+    @Override
     public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
         messageWriter.print("    SPEC " + spec.getName());
         if(!spec.hasAnnotations()) {
@@ -139,6 +172,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 continue;
             }
             mop.name = annotation.getName();
+            mop.writeAttr = mop.name.equals(WfConstants.WRITE_ATTRIBUTE);
             mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
             String elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
             if (elemValue == null) {
@@ -152,39 +186,23 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         + elemValue + " of " + spec.getId());
             }
 
-            elemValue = annotation.getAttr(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
+            elemValue = annotation.getElem(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
             if (elemValue == null) {
                 mop.opParams = Collections.emptyList();
             } else if (WfConstants.PM_UNDEFINED.equals(elemValue)) {
                 if (spec.hasParams()) {
                     final Set<String> allParams = spec.getParamNames();
-                    switch (allParams.size() - mop.addrParams.size()) {
-                        case 0:
-                            mop.opParams = Collections.emptyList();
-                            break;
-                        case 1:
-                            mop.opParams = null;
-                            final Iterator<String> allI = allParams.iterator();
-                            while (allI.hasNext() && mop.opParams == null) {
-                                final String paramName = allI.next();
-                                if (!mop.addrParams.contains(paramName)) {
-                                    mop.opParams = Collections.singletonList(paramName);
-                                    break;
-                                }
+                    final int opParams = allParams.size() - mop.addrParams.size() / 2;
+                    if(opParams == 0) {
+                        mop.opParams = Collections.emptyList();
+                    } else {
+                        mop.opParams = new ArrayList<>((allParams.size() - mop.addrParams.size())*2);
+                        for (String paramName : allParams) {
+                            if (!mop.addrParams.contains(paramName)) {
+                                mop.opParams.add(paramName);
+                                mop.opParams.add(paramName);
                             }
-                            break;
-                        default:
-                            if(mop.name.equals(WfConstants.WRITE_ATTRIBUTE)) {
-                                throw new ProvisioningDescriptionException(WfConstants.OP_PARAMS + " element of "
-                                        + WfConstants.WRITE_ATTRIBUTE + " annotation of " + spec.getId()
-                                        + " contains more than one parameter: " + annotation);
-                            }
-                            mop.opParams = new ArrayList<>(allParams.size() - mop.addrParams.size());
-                            for (String paramName : allParams) {
-                                if (!mop.addrParams.contains(paramName)) {
-                                    mop.opParams.add(paramName);
-                                }
-                            }
+                        }
                     }
                 } else {
                     mop.opParams = Collections.emptyList();
@@ -196,15 +214,23 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS
                             + "=" + elemValue + " of " + spec.getId());
                 }
-                if (mop.opParams.size() > 1 && mop.name.equals(WfConstants.WRITE_ATTRIBUTE)) {
-                    throw new ProvisioningDescriptionException(WfConstants.OP_PARAMS + " element of "
-                            + WfConstants.WRITE_ATTRIBUTE + " annotation of " + spec.getId()
-                            + " contains more than one parameter: " + annotation);
-                }
             }
+
+            elemValue = annotation.getElem(WfConstants.OP_PARAMS_MAPPING);
+            if(elemValue != null) {
+                mapParams(mop.opParams, elemValue);
+            }
+
+            if(mop.writeAttr && mop.opParams.size() != 2) {
+                throw new ProvisioningDescriptionException(WfConstants.OP_PARAMS + " element of "
+                        + WfConstants.WRITE_ATTRIBUTE + " annotation of " + spec.getId()
+                        + " accepts only one parameter: " + annotation);
+            }
+
         }
     }
 
+    @Override
     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
         if (opsTotal == 0) {
             messageWriter.print("      " + feature.getParams());
@@ -215,15 +241,27 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
     }
 
+    @Override
+    public void done() throws ProvisioningException {
+        try {
+            opsWriter.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     private List<String> parseList(String str) throws ProvisioningDescriptionException {
         if (str.isEmpty()) {
             return Collections.emptyList();
         }
         int comma = str.indexOf(',');
-        if (comma < 1) {
-            return Collections.singletonList(str);
-        }
         List<String> list = new ArrayList<>();
+        if (comma < 1) {
+            list.add(str);
+            list.add(str);
+            return list;
+        }
         int start = 0;
         while (comma > 0) {
             final String paramName = str.substring(start, comma);
@@ -231,13 +269,43 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 throw new ProvisioningDescriptionException("Saw list item in note '" + str);
             }
             list.add(paramName);
+            list.add(paramName);
             start = comma + 1;
             comma = str.indexOf(',', start);
         }
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw list item in note '" + str);
         }
-        list.add(str.substring(start));
+        final String paramName = str.substring(start);
+        list.add(paramName);
+        list.add(paramName);
         return list;
+    }
+
+    private void mapParams(List<String> params, String str) throws ProvisioningDescriptionException {
+        if (str.isEmpty()) {
+            return;
+        }
+        int comma = str.indexOf(',');
+        if (comma < 1) {
+            params.set(1, str);
+            return;
+        }
+        int start = 0;
+        int i = 1;
+        while (comma > 0) {
+            final String paramName = str.substring(start, comma);
+            if (paramName.isEmpty()) {
+                throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+            }
+            params.set(i, paramName);
+            i += 2;
+            start = comma + 1;
+            comma = str.indexOf(',', start);
+        }
+        if (start == str.length()) {
+            throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+        }
+        params.set(i, str.substring(start));
     }
 }

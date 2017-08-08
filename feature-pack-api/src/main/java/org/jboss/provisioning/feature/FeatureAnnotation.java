@@ -77,7 +77,7 @@ public class FeatureAnnotation {
         return elems.get(name);
     }
 
-    public String getAttr(String name, String defaultValue) {
+    public String getElem(String name, String defaultValue) {
         return elems.getOrDefault(name, defaultValue);
     }
 

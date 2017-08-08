@@ -52,6 +52,7 @@ public interface WfConstants {
     String ADDR_PREF = "addr-pref";
     String ADDR_PARAMS = "addr-params";
     String OP_PARAMS = "op-params";
+    String OP_PARAMS_MAPPING = "op-params-mapping";
     String PM_UNDEFINED = "PM_UNDEFINED";
     String WRITE_ATTRIBUTE = "write-attribute";
     String LINE = "line";
