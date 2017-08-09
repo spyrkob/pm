@@ -20,6 +20,7 @@ package org.jboss.provisioning.plugin.wildfly;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
 /**
@@ -122,13 +124,40 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private int opsTotal;
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
 
-    private final BufferedWriter opsWriter;
+    private BufferedWriter opsWriter;
 
     WfProvisionedConfigHandler(MessageWriter messageWriter) {
         this.messageWriter = messageWriter;
+    }
+
+    @Override
+    public void prepare(ProvisionedConfig config) throws ProvisioningException {
+        final String embedCmd;
+        final String logFile;
+        if("standalone".equals(config.getModel())) {
+            logFile = config.getProperties().get("config-name");
+            if(logFile == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
+            }
+            embedCmd = "embed-server --empty-config --remove-existing --server-config=" + logFile;
+        } else if("domain".equals(config.getModel())) {
+            final String domainConfig = config.getProperties().get("domain-config-name");
+            if(domainConfig == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property domain-config-name");
+            }
+            final String hostConfig = config.getProperties().get("host-config-name");
+            embedCmd = "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config --domain-config=" + domainConfig +
+                    " --host-config=" + hostConfig;
+            logFile = domainConfig;
+        } else {
+            throw new ProvisioningException("Unsupported config model " + config.getModel());
+        }
+
         try {
-            opsWriter = Files.newBufferedWriter(Paths.get("./config-ops.log"), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-            opsWriter.write("embed-server --empty-config --remove-existing --server-config=test.xml");
+            final Path path = Paths.get("/home/olubyans/pm-scripts/" + logFile);
+            messageWriter.print("Logging ops to " + path.toAbsolutePath());
+            opsWriter = Files.newBufferedWriter(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+            opsWriter.write(embedCmd);
             opsWriter.newLine();
         } catch (IOException e) {
             throw new IllegalStateException(e);

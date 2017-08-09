@@ -309,6 +309,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 specFeatures.checkRefs();
             }
         }
+        handler.prepare(this);
         for(SpecFeatures features : featuresBySpec.values()) {
             handleSpec(features, handler);
         }
@@ -377,7 +378,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
         if(targetSpecFeatures == null) {
-            throw new ProvisioningDescriptionException("Failed to locate instances of feature specifition " + refId.specId);
+            throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
         if (!targetSpecFeatures.beingHandled) {
             handleSpec(targetSpecFeatures, handler);
