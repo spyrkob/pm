@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +44,10 @@ import org.jboss.provisioning.state.ProvisionedFeature;
  * @author Alexey Loubyansky
  */
 class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
+
+    private interface NameFilter {
+        boolean accepts(String name);
+    }
 
     private class ManagedOp {
         String line;
@@ -123,6 +128,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     private int opsTotal;
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
+    private NameFilter paramFilter;
 
     private BufferedWriter opsWriter;
 
@@ -140,15 +146,46 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
             embedCmd = "embed-server --empty-config --remove-existing --server-config=" + logFile;
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return !("profile".equals(name) || "host".equals(name));
+                }
+            };
         } else if("domain".equals(config.getModel())) {
             final String domainConfig = config.getProperties().get("domain-config-name");
             if(domainConfig == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property domain-config-name");
             }
-            final String hostConfig = config.getProperties().get("host-config-name");
-            embedCmd = "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config --domain-config=" + domainConfig +
-                    " --host-config=" + hostConfig;
+            embedCmd = "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig;
             logFile = domainConfig;
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return !"host".equals(name);
+                }
+            };
+        } else if("host".equals(config.getModel())) {
+            final String hostConfig = config.getProperties().get("host-config-name");
+            if(hostConfig == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property host-config-name");
+            }
+            final StringBuilder buf = new StringBuilder();
+            buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=").append(hostConfig);
+            final String domainConfig = config.getProperties().get("domain-config-name");
+            if(domainConfig == null) {
+                buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=pm-tmp-domain.xml");
+            } else {
+                buf.append(" --domain-config=").append(domainConfig);
+            }
+            embedCmd = buf.toString();
+            logFile = hostConfig;
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return !"profile".equals(name);
+                }
+            };
         } else {
             throw new ProvisioningException("Unsupported config model " + config.getModel());
         }
@@ -203,16 +240,32 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             mop.name = annotation.getName();
             mop.writeAttr = mop.name.equals(WfConstants.WRITE_ATTRIBUTE);
             mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
-            String elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
+
+            String elemValue = annotation.getElem(WfConstants.SKIP_IF_FILTERED);
+            final Set<String> skipIfFiltered;
+            if (elemValue != null) {
+                skipIfFiltered = parseSet(elemValue);
+            } else {
+                skipIfFiltered = Collections.emptySet();
+            }
+
+            elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
             if (elemValue == null) {
                 throw new ProvisioningException("Required element " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
             }
 
             try {
-                mop.addrParams = parseList(elemValue);
+                mop.addrParams = parseList(elemValue, paramFilter, skipIfFiltered);
             } catch (ProvisioningDescriptionException e) {
-                throw new ProvisioningDescriptionException("Saw empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
+                throw new ProvisioningDescriptionException("Saw an empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
                         + elemValue + " of " + spec.getId());
+            }
+            if(mop.addrParams == null) {
+                // skip
+                mop.reset();
+                --opsTotal;
+                --i;
+                continue;
             }
 
             elemValue = annotation.getElem(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
@@ -225,11 +278,19 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     if(opParams == 0) {
                         mop.opParams = Collections.emptyList();
                     } else {
-                        mop.opParams = new ArrayList<>((allParams.size() - mop.addrParams.size())*2);
+                        mop.opParams = new ArrayList<>(opParams*2);
                         for (String paramName : allParams) {
                             if (!mop.addrParams.contains(paramName)) {
-                                mop.opParams.add(paramName);
-                                mop.opParams.add(paramName);
+                                if(paramFilter.accepts(paramName)) {
+                                    mop.opParams.add(paramName);
+                                    mop.opParams.add(paramName);
+                                } else if(skipIfFiltered.contains(paramName)) {
+                                    // skip
+                                    mop.reset();
+                                    --opsTotal;
+                                    --i;
+                                    continue;
+                                }
                             }
                         }
                     }
@@ -238,16 +299,23 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
             } else {
                 try {
-                    mop.opParams = parseList(elemValue);
+                    mop.opParams = parseList(elemValue, paramFilter, skipIfFiltered);
                 } catch (ProvisioningDescriptionException e) {
                     throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS
                             + "=" + elemValue + " of " + spec.getId());
+                }
+                if(mop.addrParams == null) {
+                    // skip
+                    mop.reset();
+                    --opsTotal;
+                    --i;
+                    continue;
                 }
             }
 
             elemValue = annotation.getElem(WfConstants.OP_PARAMS_MAPPING);
             if(elemValue != null) {
-                mapParams(mop.opParams, elemValue);
+                mapParams(mop.opParams, elemValue, paramFilter);
             }
 
             if(mop.writeAttr && mop.opParams.size() != 2) {
@@ -255,7 +323,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         + WfConstants.WRITE_ATTRIBUTE + " annotation of " + spec.getId()
                         + " accepts only one parameter: " + annotation);
             }
-
         }
     }
 
@@ -280,44 +347,84 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
     }
 
-    private List<String> parseList(String str) throws ProvisioningDescriptionException {
+    private static Set<String> parseSet(String str) throws ProvisioningDescriptionException {
+        if (str.isEmpty()) {
+            return Collections.emptySet();
+        }
+        int comma = str.indexOf(',');
+        if (comma < 1) {
+            return Collections.singleton(str);
+        }
+        final Set<String> set = new HashSet<>();
+        int start = 0;
+        while (comma > 0) {
+            final String paramName = str.substring(start, comma);
+            if (paramName.isEmpty()) {
+                throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
+            }
+            set.add(paramName);
+            start = comma + 1;
+            comma = str.indexOf(',', start);
+        }
+        if (start == str.length()) {
+            throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
+        }
+        set.add(str.substring(start));
+        return set;
+    }
+
+    private static List<String> parseList(String str, NameFilter filter, Set<String> skipIfFiltered) throws ProvisioningDescriptionException {
         if (str.isEmpty()) {
             return Collections.emptyList();
         }
         int comma = str.indexOf(',');
         List<String> list = new ArrayList<>();
         if (comma < 1) {
-            list.add(str);
-            list.add(str);
+            if (filter.accepts(str)) {
+                list.add(str);
+                list.add(str);
+            } else if(skipIfFiltered.contains(str)) {
+                return null;
+            }
             return list;
         }
         int start = 0;
         while (comma > 0) {
             final String paramName = str.substring(start, comma);
             if (paramName.isEmpty()) {
-                throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+                throw new ProvisioningDescriptionException("Saw en empty list item in note '" + str);
             }
-            list.add(paramName);
-            list.add(paramName);
+            if (filter.accepts(paramName)) {
+                list.add(paramName);
+                list.add(paramName);
+            } else if(skipIfFiltered.contains(paramName)) {
+                return null;
+            }
             start = comma + 1;
             comma = str.indexOf(',', start);
         }
         if (start == str.length()) {
-            throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+            throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
         final String paramName = str.substring(start);
-        list.add(paramName);
-        list.add(paramName);
+        if(filter.accepts(paramName)) {
+            list.add(paramName);
+            list.add(paramName);
+        } else if(skipIfFiltered.contains(paramName)) {
+            return null;
+        }
         return list;
     }
 
-    private void mapParams(List<String> params, String str) throws ProvisioningDescriptionException {
+    private static void mapParams(List<String> params, String str, NameFilter filter) throws ProvisioningDescriptionException {
         if (str.isEmpty()) {
             return;
         }
         int comma = str.indexOf(',');
         if (comma < 1) {
-            params.set(1, str);
+            if(filter.accepts(params.get(0))) {
+                params.set(1, str);
+            }
             return;
         }
         int start = 0;
@@ -325,16 +432,20 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         while (comma > 0) {
             final String paramName = str.substring(start, comma);
             if (paramName.isEmpty()) {
-                throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+                throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
             }
-            params.set(i, paramName);
-            i += 2;
+            if (filter.accepts(params.get(i - 1))) {
+                params.set(i, paramName);
+                i += 2;
+            }
             start = comma + 1;
             comma = str.indexOf(',', start);
         }
         if (start == str.length()) {
-            throw new ProvisioningDescriptionException("Saw list item in note '" + str);
+            throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
-        params.set(i, str.substring(start));
+        if(filter.accepts(params.get(i - 1))) {
+            params.set(i, str.substring(start));
+        }
     }
 }

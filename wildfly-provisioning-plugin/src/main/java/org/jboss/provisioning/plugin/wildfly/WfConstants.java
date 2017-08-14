@@ -56,4 +56,5 @@ public interface WfConstants {
     String PM_UNDEFINED = "PM_UNDEFINED";
     String WRITE_ATTRIBUTE = "write-attribute";
     String LINE = "line";
+    String SKIP_IF_FILTERED = "skip-if-filtered";
 }
