@@ -30,8 +30,6 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class FeatureReferenceSpec {
 
-    private static final String NAME = "name";
-
     public static class Builder {
 
         private final SpecId feature;
@@ -67,9 +65,6 @@ public class FeatureReferenceSpec {
         }
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
-            if(paramMapping == null) {
-                paramMapping = Collections.singletonMap(feature.getName(), NAME);
-            }
             return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
         }
     }
@@ -107,7 +102,7 @@ public class FeatureReferenceSpec {
     }
 
     public static FeatureReferenceSpec create(String name, SpecId feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(name, feature, nillable, Collections.singletonMap(feature.getName(), NAME));
+        return new FeatureReferenceSpec(name, feature, nillable, null);
     }
 
     final String name;
@@ -120,17 +115,18 @@ public class FeatureReferenceSpec {
         this.name = name;
         this.feature = feature;
         this.nillable = nillable;
-        if(paramMapping.isEmpty()) {
-            throw new ProvisioningDescriptionException("Reference " + name + " is missing parameter mapping.");
+        if(paramMapping == null || paramMapping.isEmpty()) {
+            this.localParams = new String[0];
+            this.targetParams = this.localParams;
+        } else {
+            this.localParams = new String[paramMapping.size()];
+            this.targetParams = new String[paramMapping.size()];
+            int i = 0;
+            for (Map.Entry<String, String> mapping : paramMapping.entrySet()) {
+                localParams[i] = mapping.getKey();
+                targetParams[i++] = mapping.getValue();
+            }
         }
-        this.localParams = new String[paramMapping.size()];
-        this.targetParams = new String[paramMapping.size()];
-        int i = 0;
-        for(Map.Entry<String, String> mapping : paramMapping.entrySet()) {
-            localParams[i] = mapping.getKey();
-            targetParams[i++] = mapping.getValue();
-        }
-
     }
 
     public String getName() {

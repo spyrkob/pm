@@ -25,12 +25,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.state.ProvisionedConfig;
 
@@ -48,41 +46,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
         private SpecFeatures(ResolvedFeatureSpec spec) {
             this.spec = spec;
-        }
-
-        void checkRefs() throws ProvisioningDescriptionException {
-            if (spec.resolvedRefTargets.isEmpty()) {
-                return;
-            }
-            for (Map.Entry<String, ResolvedSpecId> entry : spec.resolvedRefTargets.entrySet()) {
-                final FeatureReferenceSpec refSpec = spec.xmlSpec.getRef(entry.getKey());
-                final SpecFeatures targetSpec = featuresBySpec.get(entry.getValue());
-                if(targetSpec == null) {
-                    throw new ProvisioningDescriptionException(spec.xmlSpec.getName() + " feature declares reference "
-                            + refSpec.getName() + " which targets unknown feature " + entry.getValue());
-                }
-                if (!targetSpec.spec.xmlSpec.hasId()) {
-                    throw new ProvisioningDescriptionException(spec.xmlSpec.getName() + " feature declares reference "
-                            + refSpec.getName() + " which targets feature " + targetSpec.spec.xmlSpec.getName()
-                            + " that has no ID parameters");
-                }
-                if (targetSpec.spec.xmlSpec.getIdParams().size() != refSpec.getParamsMapped()) {
-                    throw new ProvisioningDescriptionException("Parameters of reference " + refSpec.getName() + " of feature "
-                            + spec.xmlSpec.getName() + " must correspond to the ID parameters of the target feature "
-                            + targetSpec.spec.xmlSpec.getName());
-                }
-                for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-                    if (!spec.xmlSpec.hasParam(refSpec.getLocalParam(i))) {
-                        throw new ProvisioningDescriptionException(spec.xmlSpec.getName() + " feature does not include parameter "
-                                + refSpec.getLocalParam(i) + " mapped in reference " + refSpec.getName());
-                    }
-                    if (!targetSpec.spec.xmlSpec.hasParam(refSpec.getTargetParam(i))) {
-                        throw new ProvisioningDescriptionException(targetSpec.spec.xmlSpec.getName()
-                                + " feature does not include parameter '" + refSpec.getTargetParam(i) + "' targeted from "
-                                + spec.xmlSpec.getName() + " through reference " + refSpec.getName());
-                    }
-                }
-            }
         }
     }
 
@@ -107,7 +70,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private Map<String, String> props = Collections.emptyMap();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
-    private boolean checkRefs;
     private ResolvedSpecId lastHandledSpecId;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
@@ -115,6 +77,14 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private ConfigModelBuilder(String model, String name) {
         this.model = model;
         this.name = name;
+    }
+
+    ResolvedFeatureSpec getResolvedSpec(ResolvedSpecId specId) throws ProvisioningDescriptionException {
+        final SpecFeatures specFeatures = featuresBySpec.get(specId);
+        if(specFeatures == null) {
+            throw new ProvisioningDescriptionException(specId + " is not found in the config model.");
+        }
+        return specFeatures.spec;
     }
 
     public void overwriteProps(Map<String, String> props) {
@@ -304,11 +274,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             return;
         }
         //System.out.println(model + ':' + name + "> handle");
-        if(checkRefs) {
-            for(SpecFeatures specFeatures : featuresBySpec.values()) {
-                specFeatures.checkRefs();
-            }
-        }
         handler.prepare(this);
         for(SpecFeatures features : featuresBySpec.values()) {
             handleSpec(features, handler);
@@ -324,6 +289,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     }
 
     public ProvisionedConfig build() throws ProvisioningException {
+        for (SpecFeatures features : featuresBySpec.values()) {
+            features.spec.resolveRefMappings(this);
+        }
         return this;
     }
 
@@ -350,7 +318,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 handleRef(feature, depId, handler);
             }
         }
-        List<ResolvedFeatureId> refIds = feature.resolveRefs();
+        List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
         if(!refIds.isEmpty()) {
             for(ResolvedFeatureId refId : refIds) {
                 handleRef(feature, refId, handler);

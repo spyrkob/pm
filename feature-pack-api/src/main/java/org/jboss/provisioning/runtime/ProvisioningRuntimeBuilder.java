@@ -566,16 +566,28 @@ public class ProvisioningRuntimeBuilder {
         if (refSpec == null) {
             throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
         }
-        for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-            final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
-            if (paramValue == null) {
-                throw new ProvisioningDescriptionException(childSpec.id + " expects ID parameter '" + refSpec.getTargetParam(i) + "' in " + parentFc.id);
+        if(refSpec.getParamsMapped() == 0) {
+            for(Map.Entry<String, String> idEntry : parentFc.id.params.entrySet()) {
+                final String prevValue = childFc.putParam(idEntry.getKey(), idEntry.getValue());
+                if (prevValue != null && !prevValue.equals(idEntry.getValue())) {
+                    throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
+                            + idEntry.getKey() + " of " + childSpec.id
+                            + " conflicts with the corresponding parent ID value '" + idEntry.getValue() + "'");
+                }
             }
-            final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
-            if (prevValue != null && !prevValue.equals(paramValue)) {
-                throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
-                        + refSpec.getLocalParam(i) + " of " + childSpec.id
-                        + " conflicts with the corresponding parent ID value '" + paramValue +"'");
+        } else {
+            for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
+                if (paramValue == null) {
+                    throw new ProvisioningDescriptionException(childSpec.id + " expects ID parameter '"
+                            + refSpec.getTargetParam(i) + "' in " + parentFc.id);
+                }
+                final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
+                if (prevValue != null && !prevValue.equals(paramValue)) {
+                    throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
+                            + refSpec.getLocalParam(i) + " of " + childSpec.id
+                            + " conflicts with the corresponding parent ID value '" + paramValue + "'");
+                }
             }
         }
     }
