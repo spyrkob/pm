@@ -290,7 +290,19 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     public ProvisionedConfig build() throws ProvisioningException {
         for (SpecFeatures features : featuresBySpec.values()) {
-            features.spec.resolveRefMappings(this);
+            try {
+                features.spec.resolveRefMappings(this);
+            } catch(ProvisioningDescriptionException e) {
+                final StringBuilder buf = new StringBuilder();
+                buf.append("Failed to build config");
+                if(name != null) {
+                    buf.append(" name=").append(name);
+                }
+                if(model != null) {
+                    buf.append(" model=").append(model);
+                }
+                throw new ProvisioningException(buf.toString(), e);
+            }
         }
         return this;
     }

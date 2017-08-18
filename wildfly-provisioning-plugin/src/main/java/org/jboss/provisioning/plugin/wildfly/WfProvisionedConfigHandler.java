@@ -45,6 +45,10 @@ import org.jboss.provisioning.state.ProvisionedFeature;
  */
 class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
+    private static final int OP = 0;
+    private static final int WRITE_ATTR = 1;
+    private static final int LIST_ADD = 2;
+
     private interface NameFilter {
         boolean accepts(String name);
     }
@@ -55,7 +59,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         String name;
         List<String> addrParams = Collections.emptyList();
         List<String> opParams = Collections.emptyList();
-        boolean writeAttr;
+        int op;
 
         void reset() {
             line = null;
@@ -63,7 +67,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             name = null;
             addrParams = Collections.emptyList();
             opParams = Collections.emptyList();
-            writeAttr = false;
+            op = OP;
         }
 
         void toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
@@ -85,31 +89,48 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
                 }
                 buf.append(':').append(name);
-                if(writeAttr) {
-                    final String value = feature.getParam(opParams.get(0));
-                    if (value == null) {
-                        throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
+                switch(op) {
+                    case OP: {
+                        if (!opParams.isEmpty()) {
+                            boolean comma = false;
+                            i = 0;
+                            while(i < opParams.size()) {
+                                final String value = feature.getParam(opParams.get(i++));
+                                if (value == null) {
+                                    continue;
+                                }
+                                if (comma) {
+                                    buf.append(',');
+                                } else {
+                                    comma = true;
+                                    buf.append('(');
+                                }
+                                buf.append(opParams.get(i++)).append('=').append(value);
+                            }
+                            if (comma) {
+                                buf.append(')');
+                            }
+                        }
+                        break;
                     }
-                    buf.append("(name=").append(opParams.get(1)).append(",value=").append(value).append(')');
-                } else if (!opParams.isEmpty()) {
-                    boolean comma = false;
-                    i = 0;
-                    while(i < opParams.size()) {
-                        final String value = feature.getParam(opParams.get(i++));
+                    case WRITE_ATTR: {
+                        final String value = feature.getParam(opParams.get(0));
                         if (value == null) {
-                            continue;
+                            throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
-                        if (comma) {
-                            buf.append(',');
-                        } else {
-                            comma = true;
-                            buf.append('(');
+                        buf.append("(name=").append(opParams.get(1)).append(",value=").append(value).append(')');
+                        break;
+                    }
+                    case LIST_ADD: {
+                        final String value = feature.getParam(opParams.get(0));
+                        if (value == null) {
+                            throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
-                        buf.append(opParams.get(i++)).append('=').append(value);
+                        buf.append("(name=").append(opParams.get(1)).append(",value=").append(value).append(')');
+                        break;
                     }
-                    if (comma) {
-                        buf.append(')');
-                    }
+                    default:
+
                 }
                 line = buf.toString();
             }
@@ -238,7 +259,15 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 continue;
             }
             mop.name = annotation.getName();
-            mop.writeAttr = mop.name.equals(WfConstants.WRITE_ATTRIBUTE);
+            if(mop.name.equals(WfConstants.ADD)) {
+                mop.op = OP;
+            } else if(mop.name.equals(WfConstants.WRITE_ATTRIBUTE)) {
+                mop.op = WRITE_ATTR;
+            } else if(mop.name.equals(WfConstants.LIST_ADD)) {
+                mop.op = LIST_ADD;
+            } else {
+                mop.op = OP;
+            }
             mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
 
             String elemValue = annotation.getElem(WfConstants.SKIP_IF_FILTERED);
@@ -318,7 +347,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 mapParams(mop.opParams, elemValue, paramFilter);
             }
 
-            if(mop.writeAttr && mop.opParams.size() != 2) {
+            if(mop.op == WRITE_ATTR && mop.opParams.size() != 2) {
                 throw new ProvisioningDescriptionException(WfConstants.OP_PARAMS + " element of "
                         + WfConstants.WRITE_ATTRIBUTE + " annotation of " + spec.getId()
                         + " accepts only one parameter: " + annotation);

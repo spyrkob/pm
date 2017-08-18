@@ -49,8 +49,10 @@ public interface WfConstants {
     String WILDFLY_TASKS_XML = "wildfly-tasks.xml";
 
     // Feature annotation names and elements
+    String ADD = "add";
     String ADDR_PREF = "addr-pref";
     String ADDR_PARAMS = "addr-params";
+    String LIST_ADD = "list-add";
     String OP_PARAMS = "op-params";
     String OP_PARAMS_MAPPING = "op-params-mapping";
     String PM_UNDEFINED = "PM_UNDEFINED";
