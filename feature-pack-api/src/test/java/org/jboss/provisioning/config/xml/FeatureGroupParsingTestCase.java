@@ -18,11 +18,14 @@
 package org.jboss.provisioning.config.xml;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
@@ -47,7 +50,10 @@ public class FeatureGroupParsingTestCase {
                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
                         .inheritFeatures(false)
                         .includeSpec("spec1")
-                        .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
+                        .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"),
+                                new FeatureConfig("spec2")
+                               .setParam("p1", "v1")
+                               .setParam("p2", "v2"))
                         .includeFeature(
                                 FeatureId.fromString("spec3:p1=v1"),
                                 new FeatureConfig("spec3")
@@ -89,6 +95,18 @@ public class FeatureGroupParsingTestCase {
                                         .setParam("p1", "v1"))))
                 .build();
         assertEquals(expected, xmlConfig);
+    }
+
+    @Test
+    public void testFeatureIdParameterInIncludeConflict() throws Exception {
+        try {
+            parseConfig("feature-id-parameter-in-include-conflict.xml");
+        } catch(XMLStreamException e) {
+            Assert.assertEquals("Failed to parse config", e.getMessage());
+            Throwable cause = e.getCause();
+            assertNotNull(cause);
+            assertEquals("Parameter p2 has value 'v2' in feature ID and value 'v22' in the feature body", cause.getMessage());
+        }
     }
 
     private static FeatureGroupSpec parseConfig(String xml) throws Exception {

@@ -80,6 +80,16 @@ public class FeatureGroupConfig {
             if(excludedFeatures.contains(featureId)) {
                 throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
             }
+            if(feature == null) {
+                feature = new FeatureConfig(featureId.specId);
+            }
+            for (Map.Entry<String, String> idEntry : featureId.params.entrySet()) {
+                final String prevValue = feature.putParam(idEntry.getKey(), idEntry.getValue());
+                if (prevValue != null && !prevValue.equals(idEntry.getValue())) {
+                    throw new ProvisioningDescriptionException("Parameter " + idEntry.getKey() + " has value '"
+                            + idEntry.getValue() + "' in feature ID and value '" + prevValue + "' in the feature body");
+                }
+            }
             switch(includedFeatures.size()) {
                 case 0:
                     includedFeatures = Collections.singletonMap(featureId, feature);

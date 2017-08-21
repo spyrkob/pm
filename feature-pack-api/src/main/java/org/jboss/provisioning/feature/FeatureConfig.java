@@ -114,6 +114,11 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
                 params = Collections.singletonMap(name, value);
                 return null;
             case 1:
+                final String prevValue = params.get(name);
+                if(prevValue != null) {
+                    params = Collections.singletonMap(name, value);
+                    return prevValue;
+                }
                 params = new HashMap<>(params);
             default:
                 return params.put(name, value);
@@ -126,6 +131,9 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
                 dependencies = Collections.singleton(featureId);
                 break;
             case 1:
+                if(dependencies.contains(featureId)) {
+                    return this;
+                }
                 dependencies = new LinkedHashSet<>(dependencies);
             default:
                 dependencies.add(featureId);

@@ -54,7 +54,12 @@ public class ResolvedFeatureSpec {
         }
         for (Map.Entry<String, ResolvedSpecId> entry : resolvedRefTargets.entrySet()) {
             final FeatureReferenceSpec refSpec = xmlSpec.getRef(entry.getKey());
-            final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(entry.getValue());
+            final ResolvedFeatureSpec targetSpec;
+            try {
+                targetSpec = configModelBuilder.getResolvedSpec(entry.getValue());
+            } catch(ProvisioningDescriptionException e) {
+                throw new ProvisioningDescriptionException("Failed to resolve reference " + refSpec.getName() + " of " + getId(), e);
+            }
             if (!targetSpec.xmlSpec.hasId()) {
                 throw new ProvisioningDescriptionException(getName() + " feature declares reference "
                         + refSpec.getName() + " which targets feature " + targetSpec.getName()

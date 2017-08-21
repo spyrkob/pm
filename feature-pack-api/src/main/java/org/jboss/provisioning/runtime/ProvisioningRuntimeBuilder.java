@@ -451,12 +451,24 @@ public class ProvisioningRuntimeBuilder {
 
     private Map<ResolvedFeatureId, FeatureConfig> resolveFeatureMap(FeaturePackRuntime.Builder fp, Map<FeatureId, FeatureConfig> features) throws ProvisioningException {
         if (features.size() == 1) {
-            final Map.Entry<FeatureId, FeatureConfig> excluded = features.entrySet().iterator().next();
-            return Collections.singletonMap(resolveFeatureId(fp, excluded.getKey()), excluded.getValue());
+            final Map.Entry<FeatureId, FeatureConfig> included = features.entrySet().iterator().next();
+            final FeatureConfig fc = included.getValue();
+            final FeaturePackRuntime.Builder targetFp = getRtBuilder(fc.getSpecId(), fp);
+            final ResolvedFeatureSpec resolvedSpec = targetFp.getFeatureSpec(fc.getSpecId().getName());
+            if (parentFeature != null) {
+                initForeignKey(parentFeature, fc, resolvedSpec);
+            }
+            return Collections.singletonMap(new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams()), fc);
         }
         final Map<ResolvedFeatureId, FeatureConfig> tmp = new HashMap<>(features.size());
-        for (Map.Entry<FeatureId, FeatureConfig> excluded : features.entrySet()) {
-            tmp.put(resolveFeatureId(fp, excluded.getKey()), excluded.getValue());
+        for (Map.Entry<FeatureId, FeatureConfig> included : features.entrySet()) {
+            final FeatureConfig fc = included.getValue();
+            final FeaturePackRuntime.Builder targetFp = getRtBuilder(fc.getSpecId(), fp);
+            final ResolvedFeatureSpec resolvedSpec = targetFp.getFeatureSpec(fc.getSpecId().getName());
+            if (parentFeature != null) {
+                initForeignKey(parentFeature, fc, resolvedSpec);
+            }
+            tmp.put(new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams()), fc);
         }
         return tmp;
     }
@@ -511,7 +523,7 @@ public class ProvisioningRuntimeBuilder {
             for (FeatureConfig fc : featureGroup.getFeatures()) {
                 if (parentFeature != null) {
                     final FeaturePackRuntime.Builder nestedFp = getRtBuilder(fc.getSpecId(), fp);
-                    initForeignKey(parentFeature, fc, nestedFp);
+                    initForeignKey(parentFeature, fc, nestedFp.getFeatureSpec(fc.getSpecId().getName()));
                 }
                 resolvedFeatures |= resolveFeature(modelBuilder, fp, fc);
             }
@@ -559,9 +571,8 @@ public class ProvisioningRuntimeBuilder {
         return true;
     }
 
-    private void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final FeaturePackRuntime.Builder childFp) throws ProvisioningException {
+    private void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
         final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
-        final ResolvedFeatureSpec childSpec = childFp.getFeatureSpec(childFc.getSpecId().getName());
         final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getRef(parentRef);
         if (refSpec == null) {
             throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
