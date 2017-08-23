@@ -298,6 +298,11 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 continue;
             }
 
+            elemValue = annotation.getElem(WfConstants.ADDR_PARAMS_MAPPING);
+            if(elemValue != null) {
+                mapParams(mop.addrParams, elemValue, paramFilter);
+            }
+
             elemValue = annotation.getElem(WfConstants.OP_PARAMS, Constants.PM_UNDEFINED);
             if (elemValue == null) {
                 mop.opParams = Collections.emptyList();
@@ -310,7 +315,15 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     } else {
                         mop.opParams = new ArrayList<>(opParams*2);
                         for (String paramName : allParams) {
-                            if (!mop.addrParams.contains(paramName)) {
+                            boolean inAddr = false;
+                            int j = 0;
+                            while(!inAddr && j < mop.addrParams.size()) {
+                                if(mop.addrParams.get(j).equals(paramName)) {
+                                    inAddr = true;
+                                }
+                                j += 2;
+                            }
+                            if (!inAddr) {
                                 if(paramFilter.accepts(paramName)) {
                                     mop.opParams.add(paramName);
                                     mop.opParams.add(paramName);

@@ -400,7 +400,7 @@ public class ProvisioningRuntimeBuilder {
             modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
-        final ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
+        ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
         if (modelBuilder == null) {
             if (namedConfigs.size() == 1) {
                 namedConfigs = new HashMap<>(namedConfigs);
@@ -409,6 +409,7 @@ public class ProvisioningRuntimeBuilder {
                 }
                 modelConfigs.put(config.getModel(), namedConfigs);
             }
+            modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             namedConfigs.put(config.getName(), modelBuilder);
         }
         modelBuilder.overwriteProps(config.getProperties());
