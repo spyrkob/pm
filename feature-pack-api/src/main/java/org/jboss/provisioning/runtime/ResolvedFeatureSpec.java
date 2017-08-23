@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
@@ -56,7 +57,10 @@ public class ResolvedFeatureSpec {
             final FeatureReferenceSpec refSpec = xmlSpec.getRef(entry.getKey());
             final ResolvedFeatureSpec targetSpec;
             try {
-                targetSpec = configModelBuilder.getResolvedSpec(entry.getValue());
+                targetSpec = configModelBuilder.getResolvedSpec(entry.getValue(), !refSpec.isNillable());
+                if(targetSpec == null) {
+                    continue;
+                }
             } catch(ProvisioningDescriptionException e) {
                 throw new ProvisioningDescriptionException("Failed to resolve reference " + refSpec.getName() + " of " + getId(), e);
             }
@@ -115,23 +119,16 @@ public class ResolvedFeatureSpec {
     private ResolvedFeatureId getRefTarget(final ResolvedFeature feature, final ResolvedSpecId targetSpecId, final FeatureReferenceSpec refSpec, ConfigModelBuilder configModelBuilder)
             throws ProvisioningDescriptionException {
         if(refSpec.getParamsMapped() == 0) {
-            final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(targetSpecId);
+            final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(targetSpecId, !refSpec.isNillable());
+            if(targetSpec == null) {
+                return null;
+            }
             final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
             if(targetIdParams.size() == 1) {
                 final String paramName = targetIdParams.get(0).getName();
                 final String paramValue = feature.getParam(paramName);
-                if(paramValue == null) {
-                    if (!refSpec.isNillable()) {
-                        final StringBuilder buf = new StringBuilder();
-                        buf.append("Reference ").append(refSpec).append(" of ");
-                        if (feature.id != null) {
-                            buf.append(feature.id);
-                        } else {
-                            buf.append(id).append(" configuration ");
-                        }
-                        buf.append(" cannot be null");
-                        throw new ProvisioningDescriptionException(buf.toString());
-                    }
+                if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
+                    assertRefNotNillable(feature, refSpec);
                     return null;
                 }
                 return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(paramName, paramValue));
@@ -140,37 +137,22 @@ public class ResolvedFeatureSpec {
             for(FeatureParameterSpec targetIdParam : targetIdParams) {
                 final String paramValue = feature.getParam(targetIdParam.getName());
                 if(paramValue == null) {
-                    if (!refSpec.isNillable()) {
-                        final StringBuilder buf = new StringBuilder();
-                        buf.append("Reference ").append(refSpec).append(" of ");
-                        if (feature.id != null) {
-                            buf.append(feature.id);
-                        } else {
-                            buf.append(id).append(" configuration ");
-                        }
-                        buf.append(" cannot be null");
-                        throw new ProvisioningDescriptionException(buf.toString());
-                    }
+                    assertRefNotNillable(feature, refSpec);
                     return null;
+                } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
+                    params.put(targetIdParam.getName(), paramValue);
                 }
-                params.put(targetIdParam.getName(), paramValue);
+            }
+            if(params.isEmpty()) {
+                assertRefNotNillable(feature, refSpec);
+                return null;
             }
             return new ResolvedFeatureId(targetSpecId, params);
         }
         if(refSpec.getParamsMapped() == 1) {
             final String paramValue = feature.getParam(refSpec.getLocalParam(0));
-            if(paramValue == null) {
-                if (!refSpec.isNillable()) {
-                    final StringBuilder buf = new StringBuilder();
-                    buf.append("Reference ").append(refSpec).append(" of ");
-                    if (feature.id != null) {
-                        buf.append(feature.id);
-                    } else {
-                        buf.append(id).append(" configuration ");
-                    }
-                    buf.append(" cannot be null");
-                    throw new ProvisioningDescriptionException(buf.toString());
-                }
+            if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
+                assertRefNotNillable(feature, refSpec);
                 return null;
             }
             return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(refSpec.getTargetParam(0), paramValue));
@@ -179,22 +161,32 @@ public class ResolvedFeatureSpec {
         for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
             final String paramValue = feature.getParam(refSpec.getLocalParam(i));
             if(paramValue == null) {
-                if (!refSpec.isNillable()) {
-                    final StringBuilder buf = new StringBuilder();
-                    buf.append("Reference ").append(refSpec).append(" of ");
-                    if (feature.id != null) {
-                        buf.append(feature.id);
-                    } else {
-                        buf.append(id).append(" configuration ");
-                    }
-                    buf.append(" cannot be null");
-                    throw new ProvisioningDescriptionException(buf.toString());
-                }
+                assertRefNotNillable(feature, refSpec);
                 return null;
+            } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
+                params.put(refSpec.getTargetParam(i), paramValue);
             }
-            params.put(refSpec.getTargetParam(i), paramValue);
+        }
+        if(params.isEmpty()) {
+            assertRefNotNillable(feature, refSpec);
+            return null;
         }
         return new ResolvedFeatureId(targetSpecId, params);
+    }
+
+    private void assertRefNotNillable(final ResolvedFeature feature, final FeatureReferenceSpec refSpec)
+            throws ProvisioningDescriptionException {
+        if (!refSpec.isNillable()) {
+            final StringBuilder buf = new StringBuilder();
+            buf.append("Reference ").append(refSpec).append(" of ");
+            if (feature.id != null) {
+                buf.append(feature.id);
+            } else {
+                buf.append(id).append(" configuration ");
+            }
+            buf.append(" cannot be null");
+            throw new ProvisioningDescriptionException(buf.toString());
+        }
     }
 
     public ResolvedSpecId getId() {

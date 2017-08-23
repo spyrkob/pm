@@ -42,4 +42,6 @@ public interface Constants {
 
     String PROVISIONED_STATE_DIR = ".pm";
     String PROVISIONED_STATE_XML = "provisioned.xml";
+
+    String PM_UNDEFINED = "PM_UNDEFINED";
 }

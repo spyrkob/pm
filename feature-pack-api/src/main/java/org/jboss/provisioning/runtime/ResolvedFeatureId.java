@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
@@ -160,7 +161,26 @@ public class ResolvedFeatureId {
 
     ResolvedFeatureId(ResolvedSpecId specId, Map<String, String> params) {
         this.specId = specId;
-        this.params = params.size() > 1 ? Collections.unmodifiableMap(params) : params;
+        Map<String, String> filtered = Collections.emptyMap();
+        for(Map.Entry<String, String> entry : params.entrySet()) {
+            if(!Constants.PM_UNDEFINED.equals(entry.getValue())) {
+                switch(filtered.size()) {
+                    case 0:
+                        filtered = Collections.singletonMap(entry.getKey(), entry.getValue());
+                        break;
+                    case 1:
+                        final Map.Entry<String, String> first = filtered.entrySet().iterator().next();
+                        filtered = new HashMap<>(2);
+                        filtered.put(first.getKey(), first.getValue());
+                    default:
+                        filtered.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if(filtered.isEmpty()) {
+            filtered = params;
+        }
+        this.params = filtered.size() > 1 ? Collections.unmodifiableMap(filtered) : filtered;
     }
 
     public ResolvedSpecId getSpecId() {

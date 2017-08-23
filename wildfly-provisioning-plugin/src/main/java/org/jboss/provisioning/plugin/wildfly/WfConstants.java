@@ -55,7 +55,6 @@ public interface WfConstants {
     String LIST_ADD = "list-add";
     String OP_PARAMS = "op-params";
     String OP_PARAMS_MAPPING = "op-params-mapping";
-    String PM_UNDEFINED = "PM_UNDEFINED";
     String WRITE_ATTRIBUTE = "write-attribute";
     String LINE = "line";
     String SKIP_IF_FILTERED = "skip-if-filtered";

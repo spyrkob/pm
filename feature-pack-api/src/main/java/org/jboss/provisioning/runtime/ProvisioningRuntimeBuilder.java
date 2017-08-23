@@ -487,8 +487,7 @@ public class ProvisioningRuntimeBuilder {
 
     private ResolvedFeatureId resolveFeatureId(FeaturePackRuntime.Builder fp, final FeatureId featureId)
             throws ProvisioningException {
-        final SpecId specId = featureId.getSpec();
-        return new ResolvedFeatureId(resolveSpecId(specId, fp), featureId.getParams());
+        return new ResolvedFeatureId(resolveSpecId(featureId.getSpec(), fp), featureId.getParams());
     }
 
     private Set<ResolvedSpecId> resolveSpecs(FeaturePackRuntime.Builder fp, Set<SpecId> specs) throws ProvisioningException {

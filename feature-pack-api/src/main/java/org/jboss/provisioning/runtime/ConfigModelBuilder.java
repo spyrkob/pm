@@ -79,12 +79,12 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         this.name = name;
     }
 
-    ResolvedFeatureSpec getResolvedSpec(ResolvedSpecId specId) throws ProvisioningDescriptionException {
+    ResolvedFeatureSpec getResolvedSpec(ResolvedSpecId specId, boolean required) throws ProvisioningDescriptionException {
         final SpecFeatures specFeatures = featuresBySpec.get(specId);
-        if(specFeatures == null) {
+        if(specFeatures == null && required) {
             throw new ProvisioningDescriptionException(specId + " is not found in the config model.");
         }
-        return specFeatures.spec;
+        return specFeatures == null ? null : specFeatures.spec;
     }
 
     public void overwriteProps(Map<String, String> props) {

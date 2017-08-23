@@ -105,6 +105,8 @@ public class FeatureReferenceSpec {
         return new FeatureReferenceSpec(name, feature, nillable, null);
     }
 
+    private static final String[] EMPTY_ARR = new String[0];
+
     final String name;
     final SpecId feature;
     final boolean nillable;
@@ -116,8 +118,8 @@ public class FeatureReferenceSpec {
         this.feature = feature;
         this.nillable = nillable;
         if(paramMapping == null || paramMapping.isEmpty()) {
-            this.localParams = new String[0];
-            this.targetParams = this.localParams;
+            this.localParams = EMPTY_ARR;
+            this.targetParams = EMPTY_ARR;
         } else {
             this.localParams = new String[paramMapping.size()];
             this.targetParams = new String[paramMapping.size()];
@@ -201,10 +203,12 @@ public class FeatureReferenceSpec {
         if(nillable) {
             buf.append(" nillable");
         }
-        buf.append(' ');
-        buf.append(localParams[0]).append('=').append(targetParams[0]);
-        for(int i = 1; i < localParams.length; ++i) {
-            buf.append(',').append(localParams[i]).append('=').append(targetParams[i]);
+        if(localParams.length > 0) {
+            buf.append(' ');
+            buf.append(localParams[0]).append('=').append(targetParams[0]);
+            for (int i = 1; i < localParams.length; ++i) {
+                buf.append(',').append(localParams[i]).append('=').append(targetParams[i]);
+            }
         }
         return buf.append(']').toString();
     }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -297,10 +298,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 continue;
             }
 
-            elemValue = annotation.getElem(WfConstants.OP_PARAMS, WfConstants.PM_UNDEFINED);
+            elemValue = annotation.getElem(WfConstants.OP_PARAMS, Constants.PM_UNDEFINED);
             if (elemValue == null) {
                 mop.opParams = Collections.emptyList();
-            } else if (WfConstants.PM_UNDEFINED.equals(elemValue)) {
+            } else if (Constants.PM_UNDEFINED.equals(elemValue)) {
                 if (spec.hasParams()) {
                     final Set<String> allParams = spec.getParamNames();
                     final int opParams = allParams.size() - mop.addrParams.size() / 2;
