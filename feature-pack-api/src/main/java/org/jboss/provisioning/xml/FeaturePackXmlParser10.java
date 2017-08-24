@@ -49,6 +49,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
 
         ARTIFACT("artifact"),
         CONFIG("config"),
+        DEFAULT_CONFIGS("default-configs"),
         DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -111,6 +112,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         COORDS("coords"),
         EXTENSION("extension"),
         INHERIT("inherit"),
+        MODEL("model"),
         VERSION("version"),
         NAME("name"),
         // default unknown attribute
@@ -300,6 +302,9 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             break;
                         case NAME:
                             name = reader.getElementText();
+                            break;
+                        case DEFAULT_CONFIGS:
+                            ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

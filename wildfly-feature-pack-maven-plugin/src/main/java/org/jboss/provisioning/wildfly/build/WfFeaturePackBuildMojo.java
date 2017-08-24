@@ -28,11 +28,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
@@ -434,6 +436,40 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         depBuilder.includeAllPackages(depConfig.getIncludedPackages()).build();
                     } catch (ProvisioningException e) {
                         throw new MojoExecutionException("Failed to process dependencies", e);
+                    }
+                }
+                depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
+                if(depConfig.hasDefinedConfigs()) {
+                    for(String model : depConfig.getDefinedConfigModels()) {
+                        final Collection<Config> definedConfigs = depConfig.getDefinedConfigs(model);
+                        for(Config config : definedConfigs) {
+                            depBuilder.addConfig(config);
+                        }
+                    }
+                }
+                if(depConfig.hasExcludedConfigs()) {
+                    for(String model : depConfig.getExcludedModels()) {
+                        final Set<String> excludedConfigs = depConfig.getExcludedConfigs(model);
+                        for(String name : excludedConfigs) {
+                            depBuilder.excludeDefaultConfig(model, name);
+                        }
+                    }
+                }
+                if(depConfig.hasFullModelsExcluded()) {
+                    for(String model : depConfig.getFullModelsExcluded()) {
+                        depBuilder.excludeModel(model);
+                    }
+                }
+                if(depConfig.hasFullModelsIncluded()) {
+                    for(String model : depConfig.getFullModelsIncluded()) {
+                        depBuilder.includeModel(model);
+                    }
+                }
+                if(depConfig.hasIncludedConfigs()) {
+                    for(String model : depConfig.getIncludedModels()) {
+                        for(String name : depConfig.getIncludedConfigs(model)) {
+                            depBuilder.includeDefaultConfig(model, name);
+                        }
                     }
                 }
                 fpBuilder.addDependency(depSpec.getName(), depBuilder.build());

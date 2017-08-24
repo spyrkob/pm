@@ -104,8 +104,10 @@ public class FeaturePackLayout {
                     }
                     if(pkg.dependsOnExternalPackages()) {
                         for(String depName : pkg.getPackageDependencySources()) {
-                            if(builtSpec.getDependency(depName) == null) {
-                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), depName));
+                            try {
+                                builtSpec.getDependency(depName);
+                            } catch(ProvisioningDescriptionException e) {
+                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), depName), e);
                             }
                         }
                         externalPackageDependencies = true;

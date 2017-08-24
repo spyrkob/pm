@@ -67,8 +67,16 @@ public class ConfigXmlWriter extends BaseXmlWriter<Config> {
             for(Map.Entry<String, FeatureGroupSpec> entry : config.getExternalDependencies().entrySet()) {
                 final ElementNode fpE = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
-                for(FeatureGroupConfig fg : entry.getValue().getLocalDependencies()) {
-                    FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
+                final FeatureGroupSpec externalDep = entry.getValue();
+                if (externalDep.hasLocalDependencies()) {
+                    for (FeatureGroupConfig fg : externalDep.getLocalDependencies()) {
+                        FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
+                    }
+                }
+                if (externalDep.hasFeatures()) {
+                    for (FeatureConfig fc : externalDep.getFeatures()) {
+                        FeatureGroupXmlWriter.addFeatureConfig(fpE, fc, ns);
+                    }
                 }
             }
         }

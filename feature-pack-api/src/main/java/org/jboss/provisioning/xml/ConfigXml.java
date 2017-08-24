@@ -58,25 +58,11 @@ public class ConfigXml {
         // default unknown element
         UNKNOWN(null);
 
-        private static final Map<QName, Element> elements;
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
             elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
                     .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
-        }
-
-        static Element of(QName qName) {
-            QName name;
-            if (qName.getNamespaceURI().equals("")) {
-                name = new QName(NAMESPACE_1_0, qName.getLocalPart());
-            } else {
-                name = qName;
-            }
-            final Element element = elements.get(name);
-            return element == null ? UNKNOWN : element;
         }
 
         static Element of(String localName) {

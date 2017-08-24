@@ -38,7 +38,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Builder> {
+public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-provisioning:1.0";
     public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.INSTALLATION.getLocalName());
@@ -57,20 +57,15 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
         UNKNOWN(null);
 
 
-        private static final Map<QName, Element> elements;
+        private static final Map<String, Element> elementsByLocal;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
+                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
         }
 
-        static Element of(QName qName) {
-            QName name;
-            if (qName.getNamespaceURI().equals("")) {
-                name = new QName(NAMESPACE_1_0, qName.getLocalPart());
-            } else {
-                name = qName;
-            }
-            final Element element = elements.get(name);
+        static Element of(String localName) {
+            final Element element = elementsByLocal.get(localName);
             return element == null ? UNKNOWN : element;
         }
 
@@ -171,7 +166,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getLocalName());
                     switch (element) {
                         case FEATURE_PACK:
                             hasFp = true;
@@ -230,7 +225,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                     return fpBuilder.build();
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getLocalName());
                     switch (element) {
                         case DEFAULT_CONFIGS:
                             parseDefaultConfigs(reader, fpBuilder);
@@ -264,7 +259,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    public static void parseDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         boolean inherit = true;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -285,7 +280,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getLocalName());
                     switch (element) {
                         case INCLUDE:
                             parseConfigModelRef(reader, fpBuilder, true);
@@ -306,7 +301,7 @@ class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningConfig.Bu
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
+    private static void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
         String name = null;
         String model = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {

@@ -157,12 +157,12 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return resolvedSpec;
         }
 
-        private ResolvedSpecId resolveSpecId(final SpecId refSpecId) {
+        private ResolvedSpecId resolveSpecId(final SpecId refSpecId) throws ProvisioningDescriptionException {
             final ArtifactCoords.Gav refGav;
             if (refSpecId.getFpDepName() == null) {
                 refGav = gav;
             } else {
-                refGav = this.spec.getDependency(refSpecId.getName()).getTarget().getGav();
+                refGav = this.spec.getDependency(refSpecId.getFpDepName()).getTarget().getGav();
             }
             return new ResolvedSpecId(refGav, refSpecId.getName());
         }

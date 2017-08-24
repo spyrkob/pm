@@ -508,9 +508,6 @@ public class ProvisioningRuntimeBuilder {
         if(featureGroup.hasExternalDependencies()) {
             for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
                 final FeaturePackDependencySpec fpDep = fp.spec.getDependency(entry.getKey());
-                if(fpDep == null) {
-                    throw new ProvisioningDescriptionException("Unknown feature-pack dependency " + entry.getKey());
-                }
                 resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getRtBuilder(fpDep.getTarget().getGav()), entry.getValue());
             }
         }
@@ -670,9 +667,6 @@ public class ProvisioningRuntimeBuilder {
         FeaturePackRuntime.Builder targetFp = originFp;
         if (specId.getFpDepName() != null) {
             final FeaturePackDependencySpec fpDep = originFp.spec.getDependency(specId.getFpDepName());
-            if (fpDep == null) {
-                throw new ProvisioningException(Errors.unknownDependencyName(originFp.gav, specId.getFpDepName()));
-            }
             targetFp = getRtBuilder(fpDep.getTarget().getGav());
         }
         return targetFp;

@@ -190,7 +190,7 @@ public class FeaturePackConfig {
                         }
                         excludedModels = new HashSet<>(excludedModels);
                     default:
-                        excludedPackages.add(name);
+                        excludedModels.add(name);
                 }
             }
             return this;

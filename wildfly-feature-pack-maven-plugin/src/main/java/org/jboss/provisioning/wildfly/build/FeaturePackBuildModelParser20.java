@@ -24,6 +24,7 @@ import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.ConfigXml;
 import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;
+import org.jboss.provisioning.xml.ProvisioningXmlParser10;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -55,6 +56,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         ARTIFACT("artifact"),
         BUILD("build"),
         CONFIG("config"),
+        DEFAULT_CONFIGS("default-configs"),
         DEFAULT_PACKAGES("default-packages"),
         DEPENDENCIES("dependencies"),
         DEPENDENCY("dependency"),
@@ -74,6 +76,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
             elementsMap.put(new QName(NAMESPACE_2_0, Element.ARTIFACT.getLocalName()), Element.ARTIFACT);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.BUILD.getLocalName()), Element.BUILD);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG.getLocalName()), Element.CONFIG);
+            elementsMap.put(new QName(NAMESPACE_2_0, Element.DEFAULT_CONFIGS.getLocalName()), Element.DEFAULT_CONFIGS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEFAULT_PACKAGES.getLocalName()), Element.DEFAULT_PACKAGES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCIES.getLocalName()), Element.DEPENDENCIES);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DEPENDENCY.getLocalName()), Element.DEPENDENCY);
@@ -235,7 +238,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDependencies(final XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
+    private void parseDependencies(final XMLExtendedStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -260,7 +263,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseDependency(XMLStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
+    private void parseDependency(XMLExtendedStreamReader reader, final WildFlyFeaturePackBuild.Builder builder) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
         String version = null;
@@ -299,6 +302,18 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                     switch (element) {
                         case NAME:
                             depName = reader.getElementText().trim();
+                            break;
+                        case DEFAULT_CONFIGS:
+                            ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
+                            break;
+                        case CONFIG:
+                            final Config.Builder configBuilder = Config.builder();
+                            ConfigXml.readConfig(reader, configBuilder);
+                            try {
+                                depBuilder.addConfig(configBuilder.build());
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException(e);
+                            }
                             break;
                         case PACKAGES:
                             try {

@@ -124,5 +124,53 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
                 }
             }
         }
+
+        ElementNode defaultConfigs = null;
+        if (!target.isInheritConfigs()) {
+            defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
+            addAttribute(defaultConfigs, Attribute.INHERIT, "false");
+        }
+        if (target.hasFullModelsExcluded()) {
+            if (defaultConfigs == null) {
+                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
+            }
+            for (String excluded : target.getFullModelsExcluded()) {
+                final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
+                addAttribute(exclude, Attribute.MODEL, excluded);
+            }
+        }
+        if (target.hasFullModelsIncluded()) {
+            if (defaultConfigs == null) {
+                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
+            }
+            for (String included : target.getFullModelsIncluded()) {
+                final ElementNode include = addElement(defaultConfigs, Element.INCLUDE);
+                addAttribute(include, Attribute.MODEL, included);
+            }
+        }
+        if (target.hasExcludedConfigs()) {
+            if (defaultConfigs == null) {
+                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
+            }
+            for (String model : target.getExcludedModels()) {
+                for(String name : target.getExcludedConfigs(model)) {
+                    final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
+                    addAttribute(exclude, Attribute.MODEL, model);
+                    addAttribute(exclude, Attribute.NAME, name);
+                }
+            }
+        }
+        if (target.hasIncludedConfigs()) {
+            if (defaultConfigs == null) {
+                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
+            }
+            for (String model : target.getIncludedModels()) {
+                for(String name : target.getIncludedConfigs(model)) {
+                    final ElementNode include = addElement(defaultConfigs, Element.INCLUDE);
+                    addAttribute(include, Attribute.MODEL, model);
+                    addAttribute(include, Attribute.NAME, name);
+                }
+            }
+        }
     }
 }

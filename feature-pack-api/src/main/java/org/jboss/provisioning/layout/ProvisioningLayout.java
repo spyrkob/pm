@@ -76,9 +76,11 @@ public class ProvisioningLayout {
                     for(PackageSpec pkg : fp.getPackages()) {
                         if(pkg.dependsOnExternalPackages()) {
                             for(String depName : pkg.getPackageDependencySources()) {
-                                final FeaturePackDependencySpec fpDepSpec = fpSpec.getDependency(depName);
-                                if(fpDepSpec == null) {
-                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), depName));
+                                final FeaturePackDependencySpec fpDepSpec;
+                                try {
+                                    fpDepSpec = fpSpec.getDependency(depName);
+                                } catch(ProvisioningDescriptionException e) {
+                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), depName), e);
                                 }
                                 final FeaturePackConfig fpDepConfig = fpDepSpec.getTarget();
                                 final FeaturePackLayout fpDepLayout = featurePacks.get(fpDepConfig.getGav().toGa());

@@ -209,8 +209,12 @@ public class FeaturePackSpec {
         return dependencies.get(gaPart);
     }
 
-    public FeaturePackDependencySpec getDependency(String name) {
-        return dependencyByName.get(name);
+    public FeaturePackDependencySpec getDependency(String name) throws ProvisioningDescriptionException {
+        final FeaturePackDependencySpec result = dependencyByName.get(name);
+        if(result == null) {
+            throw new ProvisioningDescriptionException(Errors.unknownDependencyName(gav, name));
+        }
+        return result;
     }
 
     public String logContent() throws IOException {
