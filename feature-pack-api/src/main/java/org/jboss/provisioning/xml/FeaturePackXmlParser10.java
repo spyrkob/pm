@@ -176,7 +176,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             }
                             break;
                         case CONFIG:
-                            final Config.Builder config = Config.builder();
+                            final Config.Builder config = Config.builder().setResetFeaturePackOrigin(true);
                             ConfigXml.readConfig(reader, config);
                             try {
                                 fpBuilder.addConfig(config.build());

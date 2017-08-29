@@ -33,12 +33,19 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
     abstract static class Builder<T extends FeatureGroupSupport, B extends Builder<T, B>> extends FeatureGroupBuilderSupport<B> {
 
         String name;
+        boolean resetFeaturePackOrigin;
 
         protected Builder() {
         }
 
         protected Builder(String name) {
             this.name = name;
+        }
+
+        @SuppressWarnings("unchecked")
+        public B setResetFeaturePackOrigin(boolean resetOrigin) {
+            this.resetFeaturePackOrigin = resetOrigin;
+            return (B) this;
         }
 
         @SuppressWarnings("unchecked")
@@ -51,12 +58,14 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
     }
 
     protected final String name;
+    protected final boolean resetFeaturePackOrigin;
     protected final Map<String, FeatureGroupSpec> externalGroups;
     protected final List<FeatureGroupConfig> localGroups;
     protected final List<FeatureConfig> features;
 
     protected FeatureGroupSupport(FeatureGroupSupport copy) {
         name = copy.name;
+        resetFeaturePackOrigin = copy.resetFeaturePackOrigin;
         switch(copy.externalGroups.size()) {
             case 0:
                 externalGroups = Collections.emptyMap();
@@ -94,6 +103,7 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
 
     protected FeatureGroupSupport(Builder<?, ?> builder) {
         name = builder.name;
+        resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
         this.localGroups = builder.localGroups.size() > 1 ? Collections.unmodifiableList(builder.localGroups) : builder.localGroups;
         this.features = builder.features.size() > 1 ? Collections.unmodifiableList(builder.features) : builder.features;
         this.externalGroups = builder.buildExternalDependencies();
@@ -101,6 +111,11 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isResetFeaturePackOrigin() {
+        return resetFeaturePackOrigin;
     }
 
     /* (non-Javadoc)

@@ -39,6 +39,7 @@ public interface Constants {
     String PROVISIONING_XML = "provisioning.xml";
     String RESOURCES = "resources";
     String SPEC_XML = "spec.xml";
+    String THIS = "this";
 
     String PROVISIONED_STATE_DIR = ".pm";
     String PROVISIONED_STATE_XML = "provisioned.xml";

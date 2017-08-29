@@ -166,7 +166,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
+    public static void readFeatureGroupSpec(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -215,7 +215,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> config) throws XMLStreamException {
+    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> groupBuilder) throws XMLStreamException {
         String dependency = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -231,6 +231,7 @@ public class FeatureGroupXml {
         if (dependency == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
         }
+
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -240,20 +241,12 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            if(dependency == null) {
-                                config.addFeatureGroup(readFeatureGroupDependency(reader));
-                            } else {
-                                config.addFeatureGroup(dependency, readFeatureGroupDependency(reader));
-                            }
+                            groupBuilder.addFeatureGroup(dependency, readFeatureGroupDependency(reader));
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
                             readFeatureConfig(reader, nested);
-                            if(dependency == null) {
-                                config.addFeature(nested);
-                            } else {
-                                config.addFeature(dependency, nested);
-                            }
+                            groupBuilder.addFeature(dependency, nested);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

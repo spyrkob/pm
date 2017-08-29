@@ -151,8 +151,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
                 }
             }
         }
-        if(!builder.parameters.isEmpty()) {
-            this.parameters.putAll(builder.parameters);
+        if(!builder.rtParams.isEmpty()) {
+            this.parameters.putAll(builder.rtParams);
         }
         if(configs.size() > 1) {
             configs = Collections.unmodifiableList(configs);

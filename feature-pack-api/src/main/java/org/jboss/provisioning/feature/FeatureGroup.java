@@ -36,4 +36,8 @@ public interface FeatureGroup {
     boolean hasFeatures();
 
     List<FeatureConfig> getFeatures();
+
+    default boolean isResetFeaturePackOrigin() {
+        return false;
+    }
 }

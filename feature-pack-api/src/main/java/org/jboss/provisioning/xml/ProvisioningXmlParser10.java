@@ -231,7 +231,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                             parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final Config.Builder configBuilder = Config.builder();
+                            final Config.Builder configBuilder = Config.builder().setResetFeaturePackOrigin(true);
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 fpBuilder.addConfig(configBuilder.build());

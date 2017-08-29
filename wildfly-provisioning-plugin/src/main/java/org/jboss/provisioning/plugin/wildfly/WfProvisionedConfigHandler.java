@@ -167,7 +167,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
-            embedCmd = "embed-server --empty-config --remove-existing --server-config=" + logFile;
+            embedCmd = "embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile;
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
@@ -279,13 +279,14 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 skipIfFiltered = Collections.emptySet();
             }
 
+            final String addrParamMapping = annotation.getElem(WfConstants.ADDR_PARAMS_MAPPING);
             elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
             if (elemValue == null) {
                 throw new ProvisioningException("Required element " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
             }
 
             try {
-                mop.addrParams = parseList(elemValue, paramFilter, skipIfFiltered);
+                mop.addrParams = parseList(elemValue, paramFilter, skipIfFiltered, addrParamMapping);
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningDescriptionException("Saw an empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
                         + elemValue + " of " + spec.getId());
@@ -298,10 +299,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 continue;
             }
 
-            elemValue = annotation.getElem(WfConstants.ADDR_PARAMS_MAPPING);
-            if(elemValue != null) {
-                mapParams(mop.addrParams, elemValue, paramFilter);
-            }
+            final String paramsMapping = annotation.getElem(WfConstants.OP_PARAMS_MAPPING);
 
             elemValue = annotation.getElem(WfConstants.OP_PARAMS, Constants.PM_UNDEFINED);
             if (elemValue == null) {
@@ -342,23 +340,11 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
             } else {
                 try {
-                    mop.opParams = parseList(elemValue, paramFilter, skipIfFiltered);
+                    mop.opParams = parseList(elemValue, paramFilter, skipIfFiltered, paramsMapping);
                 } catch (ProvisioningDescriptionException e) {
                     throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS
                             + "=" + elemValue + " of " + spec.getId());
                 }
-                if(mop.addrParams == null) {
-                    // skip
-                    mop.reset();
-                    --opsTotal;
-                    --i;
-                    continue;
-                }
-            }
-
-            elemValue = annotation.getElem(WfConstants.OP_PARAMS_MAPPING);
-            if(elemValue != null) {
-                mapParams(mop.opParams, elemValue, paramFilter);
             }
 
             if(mop.op == WRITE_ATTR && mop.opParams.size() != 2) {
@@ -416,79 +402,64 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         return set;
     }
 
-    private static List<String> parseList(String str, NameFilter filter, Set<String> skipIfFiltered) throws ProvisioningDescriptionException {
+    private static List<String> parseList(String str, NameFilter filter, Set<String> skipIfFiltered, String mappingStr) throws ProvisioningDescriptionException {
         if (str.isEmpty()) {
             return Collections.emptyList();
         }
-        int comma = str.indexOf(',');
+        int strComma = str.indexOf(',');
         List<String> list = new ArrayList<>();
-        if (comma < 1) {
+        if (strComma < 1) {
+            final String mapped = mappingStr == null ? str : mappingStr;
             if (filter.accepts(str)) {
                 list.add(str);
-                list.add(str);
+                list.add(mapped);
             } else if(skipIfFiltered.contains(str)) {
                 return null;
             }
             return list;
         }
+        int mappingComma = mappingStr == null ? -1 : mappingStr.indexOf(',');
+        int mappingStart = mappingComma > 0 ? 0 : -1;
         int start = 0;
-        while (comma > 0) {
-            final String paramName = str.substring(start, comma);
+        while (strComma > 0) {
+            final String paramName = str.substring(start, strComma);
             if (paramName.isEmpty()) {
-                throw new ProvisioningDescriptionException("Saw en empty list item in note '" + str);
+                throw new ProvisioningDescriptionException("Saw en empty list item in note '" + str + "'");
             }
+            final String mappedName;
+            if(mappingComma < 0) {
+                mappedName = paramName;
+            } else {
+                mappedName = mappingStr.substring(mappingStart, mappingComma);
+                if (mappedName.isEmpty()) {
+                    throw new ProvisioningDescriptionException("Saw en empty list item in note '" + mappingStr + "'");
+                }
+            }
+
             if (filter.accepts(paramName)) {
                 list.add(paramName);
-                list.add(paramName);
+                list.add(mappedName);
             } else if(skipIfFiltered.contains(paramName)) {
                 return null;
             }
-            start = comma + 1;
-            comma = str.indexOf(',', start);
+            start = strComma + 1;
+            strComma = str.indexOf(',', start);
+            if(mappingComma > 0) {
+                mappingStart = mappingComma + 1;
+                mappingComma = mappingStr.indexOf(',', mappingStart);
+            }
         }
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
         final String paramName = str.substring(start);
+        final String mappedName = mappingStart < 0 ? paramName : mappingStr.substring(mappingStart);
         if(filter.accepts(paramName)) {
             list.add(paramName);
-            list.add(paramName);
+            list.add(mappedName);
         } else if(skipIfFiltered.contains(paramName)) {
             return null;
         }
         return list;
-    }
-
-    private static void mapParams(List<String> params, String str, NameFilter filter) throws ProvisioningDescriptionException {
-        if (str.isEmpty()) {
-            return;
-        }
-        int comma = str.indexOf(',');
-        if (comma < 1) {
-            if(filter.accepts(params.get(0))) {
-                params.set(1, str);
-            }
-            return;
-        }
-        int start = 0;
-        int i = 1;
-        while (comma > 0) {
-            final String paramName = str.substring(start, comma);
-            if (paramName.isEmpty()) {
-                throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
-            }
-            if (filter.accepts(params.get(i - 1))) {
-                params.set(i, paramName);
-                i += 2;
-            }
-            start = comma + 1;
-            comma = str.indexOf(',', start);
-        }
-        if (start == str.length()) {
-            throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
-        }
-        if(filter.accepts(params.get(i - 1))) {
-            params.set(i, str.substring(start));
-        }
     }
 }

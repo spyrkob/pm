@@ -36,6 +36,6 @@ class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroupSpec.Buil
 
     @Override
     public void readElement(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder builder) throws XMLStreamException {
-        FeatureGroupXml.readConfig(reader, builder);
+        FeatureGroupXml.readFeatureGroupSpec(reader, builder);
     }
 }
