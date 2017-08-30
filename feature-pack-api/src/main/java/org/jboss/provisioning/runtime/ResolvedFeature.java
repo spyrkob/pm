@@ -129,6 +129,33 @@ public class ResolvedFeature implements ProvisionedFeature {
         return params.get(name);
     }
 
+    public void setParam(String name, String value) throws ProvisioningDescriptionException {
+        if(id != null) {
+            final String idValue = id.params.get(name);
+            if(idValue != null) {
+                if(!idValue.equals(value)) {
+                    throw new ProvisioningDescriptionException("ID parameter " + name + "=" + idValue + " can't be reset to " + value);
+                }
+                return;
+            }
+        }
+        switch(params.size()) {
+            case 0:
+                params = Collections.singletonMap(name, value);
+                break;
+            case 1:
+                if(params.containsKey(name)) {
+                    params = Collections.singletonMap(name, value);
+                    return;
+                }
+                final Map.Entry<String, String> first = params.entrySet().iterator().next();
+                params = new HashMap<>(2);
+                params.put(first.getKey(), first.getValue());
+            default:
+                params.put(name, value);
+        }
+    }
+
     List<ResolvedFeatureId> resolveRefs(ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
         return spec.resolveRefs(this, configModelBuilder);
     }

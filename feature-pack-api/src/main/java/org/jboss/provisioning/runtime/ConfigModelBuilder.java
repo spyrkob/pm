@@ -137,7 +137,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             if(feature != null) {
                 if(config.hasParams()) {
                     for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
-                        feature.params.put(entry.getKey(), entry.getValue());
+                        feature.setParam(entry.getKey(), entry.getValue());
                     }
                 }
                 if(!resolvedDeps.isEmpty()) {
@@ -200,7 +200,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(feature.hasParams()) {
             for(Map.Entry<String, String> entry : feature.params.entrySet()) {
                 if(!localFeature.params.containsKey(entry.getKey())) {
-                    localFeature.params.put(entry.getKey(), entry.getValue());
+                    localFeature.setParam(entry.getKey(), entry.getValue());
                 }
             }
         }

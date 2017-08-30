@@ -213,7 +213,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
 
         try {
-            final Path path = Paths.get("/home/olubyans/pm-scripts/" + logFile);
+            final Path path = Paths.get("/home/aloubyansky/pm-scripts/" + logFile);
             messageWriter.print("Logging ops to " + path.toAbsolutePath());
             opsWriter = Files.newBufferedWriter(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
             opsWriter.write(embedCmd);
