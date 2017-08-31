@@ -21,6 +21,7 @@ import java.util.Map;
 import org.jboss.provisioning.feature.FeatureGroup;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureGroupConfigSupport;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.feature.SpecId;
@@ -91,7 +92,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         addFeatureGroupDepBody(dep, ns, depE);
     }
 
-    public static void addFeatureGroupDepBody(FeatureGroupConfig dep, String ns, final ElementNode depE) {
+    public static void addFeatureGroupDepBody(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
         addAttribute(depE, Attribute.NAME, dep.getName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);

@@ -24,52 +24,68 @@ import java.util.Map;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupConfig extends FeatureGroupConfigSupport {
+public class IncludedConfig extends FeatureGroupConfigSupport {
 
-    public static class Builder extends FeatureGroupConfigBuilderSupport<FeatureGroupConfig, Builder> {
+    public static class Builder extends FeatureGroupConfigBuilderSupport<IncludedConfig, Builder> {
 
-        private Builder(String featureGroupName, boolean inheritFeatures) {
-            super(featureGroupName);
-            this.inheritFeatures = inheritFeatures;
+        private final String model;
+
+        private Builder(String model, String name) {
+            super(name);
+            this.model = model;
         }
 
         @Override
-        public FeatureGroupConfig build() {
-            return new FeatureGroupConfig(this);
+        public IncludedConfig build() {
+            return new IncludedConfig(this);
         }
     }
 
-    public static Builder builder() {
-        return new Builder(null, true);
+    public static Builder builder(String model, String name) {
+        return new Builder(model, name);
     }
 
-    public static Builder builder(String featureGroupName) {
-        return builder(featureGroupName, true);
-    }
+    final ConfigId id;
 
-    public static Builder builder(String featureGroupName, boolean inheritFeatures) {
-        return new Builder(featureGroupName, inheritFeatures);
-    }
-
-    public static FeatureGroupConfig forGroup(String featureGroupName) {
-        return new FeatureGroupConfig(featureGroupName);
-    }
-
-    private FeatureGroupConfig(String name) {
-        super(name);
-    }
-
-    private FeatureGroupConfig(Builder builder) {
+    private IncludedConfig(Builder builder) {
         super(builder);
+        this.id = new ConfigId(builder.model, builder.name);
+    }
+
+    public ConfigId getId() {
+        return id;
+    }
+
+    public String getModel() {
+        return id.model;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((id.model == null) ? 0 : id.model.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) {
+            return false;
+        }
+        final IncludedConfig other = (IncludedConfig) obj;
+        if (id.model == null) {
+            if (other.id.model != null)
+                return false;
+        } else if (!id.model.equals(other.id.model))
+            return false;
+        return true;
     }
 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append('[');
-        if(name != null) {
-            buf.append(name);
-        }
+        buf.append("[model=").append(id.model).append(" name=").append(id.name);
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");
         }

@@ -30,6 +30,8 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.ConfigId;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
@@ -44,7 +46,7 @@ public class FeaturePackConfig {
         protected final ArtifactCoords.Gav gav;
         protected boolean inheritConfigs = true;
         protected Set<String> includedModels = Collections.emptySet();
-        protected Map<String, Set<String>> includedConfigs = Collections.emptyMap();
+        protected Map<ConfigId, IncludedConfig> includedConfigs = Collections.emptyMap();
         protected Set<String> excludedModels = Collections.emptySet();
         protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
         protected Map<String, Map<String, Config>> configModels = Collections.emptyMap();
@@ -217,28 +219,24 @@ public class FeaturePackConfig {
             return this;
         }
 
-        public Builder includeDefaultConfig(String model, String name) {
+        public Builder includeDefaultConfig(String model, String name) throws ProvisioningDescriptionException {
+            return includeDefaultConfig(IncludedConfig.builder(model, name).build());
+        }
+
+        public Builder includeDefaultConfig(IncludedConfig includedConfig) throws ProvisioningDescriptionException {
             if(includedConfigs.isEmpty()) {
-                includedConfigs = Collections.singletonMap(model, Collections.singleton(name));
+                includedConfigs = Collections.singletonMap(includedConfig.getId(), includedConfig);
                 return this;
             }
-            Set<String> names = includedConfigs.get(model);
-            if(names == null) {
-                if(includedConfigs.size() == 1) {
-                    includedConfigs = new HashMap<>(includedConfigs);
-                }
-                includedConfigs.put(model, Collections.singleton(name));
-            } else {
-                if(names.size() == 1) {
-                    names = new HashSet<>(names);
-                    if(includedConfigs.size() == 1) {
-                        includedConfigs = Collections.singletonMap(model, names);
-                    } else {
-                        includedConfigs.put(model, names);
-                    }
-                }
-                names.add(name);
+            if(includedConfigs.containsKey(includedConfig.getId())) {
+                throw new ProvisioningDescriptionException("Duplicate config " + includedConfig.getId());
             }
+            if(includedConfigs.size() == 1) {
+                final Map.Entry<ConfigId, IncludedConfig> first = includedConfigs.entrySet().iterator().next();
+                includedConfigs = new HashMap<>(2);
+                includedConfigs.put(first.getKey(), first.getValue());
+            }
+            includedConfigs.put(includedConfig.getId(), includedConfig);
             return this;
         }
 
@@ -288,7 +286,7 @@ public class FeaturePackConfig {
     private final boolean inheritConfigs;
     private final Set<String> includedModels;
     private final Set<String> excludedModels;
-    private final Map<String, Set<String>> includedConfigs;
+    private final Map<ConfigId, IncludedConfig> includedConfigs;
     private final Map<String, Set<String>> excludedConfigs;
     private final Map<String, Map<String, Config>> configModels;
     private final boolean inheritPackages;
@@ -362,17 +360,16 @@ public class FeaturePackConfig {
         return !includedConfigs.isEmpty();
     }
 
-    public boolean isConfigIncluded(String model, String name) {
-        final Set<String> names = includedConfigs.get(model);
-        return names == null ? false : names.contains(name);
+    public boolean isConfigIncluded(ConfigId id) {
+        return includedConfigs.containsKey(id);
     }
 
-    public Set<String> getIncludedModels() {
-        return includedConfigs.keySet();
+    public Collection<IncludedConfig> getIncludedConfigs() {
+        return includedConfigs.values();
     }
 
-    public Set<String> getIncludedConfigs(String model) {
-        return includedConfigs.get(model);
+    public IncludedConfig getIncludedConfig(ConfigId id) {
+        return includedConfigs.get(id);
     }
 
     public boolean hasDefinedConfigs() {
@@ -499,6 +496,15 @@ public class FeaturePackConfig {
         builder.append("[").append(gav.toString());
         if(!inheritConfigs) {
             builder.append(" inheritConfigs=false");
+        }
+        if(!includedConfigs.isEmpty()) {
+            builder.append(" included configs ");
+            final Iterator<Map.Entry<ConfigId, IncludedConfig>> i = includedConfigs.entrySet().iterator();
+            IncludedConfig config = i.next().getValue();
+            builder.append(config);
+            while(i.hasNext()) {
+                builder.append(',').append(i.next().getValue());
+            }
         }
         if(!configModels.isEmpty()) {
             final Iterator<Entry<String, Map<String, Config>>> modelConfigs = configModels.entrySet().iterator();

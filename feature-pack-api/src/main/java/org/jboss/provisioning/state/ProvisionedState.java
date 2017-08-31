@@ -140,7 +140,7 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         if (configs == null) {
             if (other.configs != null)
                 return false;
-        } else if (!configs.equals(other.configs))
+        } else if (configs.size() != other.configs.size() || !configs.containsAll(other.configs))
             return false;
         if (featurePacks == null) {
             if (other.featurePacks != null)

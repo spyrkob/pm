@@ -22,6 +22,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -102,7 +103,9 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
                 Arrays.sort(configs);
                 for(String configName : configs) {
                     final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE);
-                    addAttribute(excluded, Attribute.MODEL, modelName);
+                    if(modelName != null) {
+                        addAttribute(excluded, Attribute.MODEL, modelName);
+                    }
                     addAttribute(excluded, Attribute.NAME, configName);
                 }
             }
@@ -111,16 +114,12 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             if(defConfigsE == null) {
                 defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
             }
-            String[] models = featurePack.getIncludedModels().toArray(EMPTY_ARRAY);
-            Arrays.sort(models);
-            for(String modelName : models) {
-                String[] configs = featurePack.getIncludedConfigs(modelName).toArray(EMPTY_ARRAY);
-                Arrays.sort(configs);
-                for(String configName : configs) {
-                    final ElementNode excluded = addElement(defConfigsE, Element.INCLUDE);
-                    addAttribute(excluded, Attribute.MODEL, modelName);
-                    addAttribute(excluded, Attribute.NAME, configName);
+            for (IncludedConfig config : featurePack.getIncludedConfigs()) {
+                final ElementNode includeElement = addElement(defConfigsE, Element.INCLUDE);
+                if(config.getModel() != null) {
+                    addAttribute(includeElement, Attribute.MODEL, config.getModel());
                 }
+                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, Element.INCLUDE.getNamespace(), includeElement);
             }
         }
 

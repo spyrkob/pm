@@ -63,6 +63,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
@@ -466,10 +467,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                 }
                 if(depConfig.hasIncludedConfigs()) {
-                    for(String model : depConfig.getIncludedModels()) {
-                        for(String name : depConfig.getIncludedConfigs(model)) {
-                            depBuilder.includeDefaultConfig(model, name);
-                        }
+                    for(IncludedConfig includedConfig : depConfig.getIncludedConfigs()) {
+                        depBuilder.includeDefaultConfig(includedConfig.getModel(), includedConfig.getName());
                     }
                 }
                 fpBuilder.addDependency(depSpec.getName(), depBuilder.build());

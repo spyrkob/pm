@@ -62,16 +62,21 @@ public class Config extends FeatureGroupSupport {
         return new Builder();
     }
 
-    final String model;
+    final ConfigId id;
     final Map<String, String> props;
 
     private Config(Builder builder) {
         super(builder);
-        this.model = builder.model;
+        this.id = new ConfigId(builder.model, builder.name);
         this.props = builder.props.size() > 1 ? Collections.unmodifiableMap(builder.props) : builder.props;
     }
+
+    public ConfigId getId() {
+        return id;
+    }
+
     public String getModel() {
-        return model;
+        return id.model;
     }
 
     public boolean hasProperties() {
@@ -86,7 +91,7 @@ public class Config extends FeatureGroupSupport {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((model == null) ? 0 : model.hashCode());
+        result = prime * result + ((id.model == null) ? 0 : id.model.hashCode());
         result = prime * result + ((props == null) ? 0 : props.hashCode());
         return result;
     }
@@ -99,10 +104,10 @@ public class Config extends FeatureGroupSupport {
         if (getClass() != obj.getClass())
             return false;
         Config other = (Config) obj;
-        if (model == null) {
-            if (other.model != null)
+        if (id.model == null) {
+            if (other.id.model != null)
                 return false;
-        } else if (!model.equals(other.model))
+        } else if (!id.model.equals(other.id.model))
             return false;
         if (props == null) {
             if (other.props != null)
@@ -119,8 +124,8 @@ public class Config extends FeatureGroupSupport {
         if(name != null) {
             buf.append(name).append(' ');
         }
-        if(model != null) {
-            buf.append("model=").append(model).append(' ');
+        if(id.model != null) {
+            buf.append("model=").append(id.model).append(' ');
         }
         if(!props.isEmpty()) {
             final Iterator<Map.Entry<String, String>> i = props.entrySet().iterator();

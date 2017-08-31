@@ -49,12 +49,15 @@ import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.feature.FeatureGroup;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.ConfigId;
 import org.jboss.provisioning.feature.FeatureConfig;
 import org.jboss.provisioning.feature.FeatureGroupConfig;
+import org.jboss.provisioning.feature.FeatureGroupConfigSupport;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureId;
 import org.jboss.provisioning.feature.FeatureParameterSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
@@ -280,15 +283,25 @@ public class ProvisioningRuntimeBuilder {
 
         if(fpConfig.isInheritConfigs()) {
             for(Config config : fp.spec.getConfigs()) {
-                if(fp.isConfigExcluded(config)) {
+                if(fp.isConfigExcluded(config.getId())) {
                     continue;
                 }
-                contributed |= includeConfig(fp, config);
+                final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
+                if(includedConfig != null) {
+                    contributed |= includeConfig(fp, includedConfig, config);
+                } else {
+                    contributed |= processConfigSpec(fp, config);
+                }
             }
         } else {
             for(Config config : fp.spec.getConfigs()) {
-                if(fp.isConfigIncluded(config)) {
-                    contributed |= includeConfig(fp, config);
+                if(fp.isConfigIncluded(config.getId())) {
+                    final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
+                    if(includedConfig != null) {
+                        contributed |= includeConfig(fp, includedConfig, config);
+                    } else {
+                        contributed |= processConfigSpec(fp, config);
+                    }
                 }
             }
         }
@@ -319,10 +332,10 @@ public class ProvisioningRuntimeBuilder {
         if (fpConfig.hasDefinedConfigs()) {
             for (String modelName : fpConfig.getDefinedConfigModels()) {
                 for(Config config : fpConfig.getDefinedConfigs(modelName)) {
-                    if (fp.isConfigExcluded(config)) {
+                    if (fp.isConfigExcluded(config.getId())) {
                         continue;
                     }
-                    contributed |= includeConfig(fp, config);
+                    contributed |= processConfigSpec(fp, config);
                 }
             }
         }
@@ -332,15 +345,22 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
-    private boolean includeConfig(FeaturePackRuntime.Builder fp, Config config) throws ProvisioningException {
-        return processFeatureGroupSpec(getConfigModelBuilder(config), fp, config);
+    private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, Config config) throws ProvisioningException {
+        final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
+        configBuilder.overwriteProps(config.getProperties());
+        return processFeatureGroupConfig(configBuilder, fp, includedConfig, config);
     }
 
-    private ConfigModelBuilder getConfigModelBuilder(Config config) {
+    private boolean processConfigSpec(FeaturePackRuntime.Builder fp, Config config) throws ProvisioningException {
+        final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
+        configBuilder.overwriteProps(config.getProperties());
+        return processFeatureGroupSpec(configBuilder, fp, config);
+    }
+
+    private ConfigModelBuilder getConfigModelBuilder(ConfigId config) {
         if(config.getModel() == null) {
             if(config.getName() == null) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.anonymous();
-                modelBuilder.overwriteProps(config.getProperties());
                 switch(anonymousConfigs.size()) {
                     case 0:
                         anonymousConfigs = Collections.singletonList(modelBuilder);
@@ -354,7 +374,6 @@ public class ProvisioningRuntimeBuilder {
             }
             if (noModelNamedConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forName(config.getName());
-                modelBuilder.overwriteProps(config.getProperties());
                 noModelNamedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
                 return modelBuilder;
             }
@@ -366,13 +385,11 @@ public class ProvisioningRuntimeBuilder {
                 }
                 noModelNamedConfigs.put(config.getName(), modelBuilder);
             }
-            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if(config.getName() == null) {
             if(noNameModelConfigs.isEmpty()) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forModel(config.getModel());
-                modelBuilder.overwriteProps(config.getProperties());
                 noNameModelConfigs = Collections.singletonMap(config.getModel(), modelBuilder);
                 return modelBuilder;
             }
@@ -384,12 +401,10 @@ public class ProvisioningRuntimeBuilder {
                 }
                 noNameModelConfigs.put(config.getModel(), modelBuilder);
             }
-            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         if (modelConfigs.isEmpty()) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
-            modelBuilder.overwriteProps(config.getProperties());
             modelConfigs = Collections.singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
             return modelBuilder;
         }
@@ -400,7 +415,6 @@ public class ProvisioningRuntimeBuilder {
                 modelConfigs = new LinkedHashMap<>(modelConfigs);
             }
             modelConfigs.put(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
-            modelBuilder.overwriteProps(config.getProperties());
             return modelBuilder;
         }
         ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
@@ -415,15 +429,15 @@ public class ProvisioningRuntimeBuilder {
             modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             namedConfigs.put(config.getName(), modelBuilder);
         }
-        modelBuilder.overwriteProps(config.getProperties());
         return modelBuilder;
     }
 
-    private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfig fgConfig) throws ProvisioningException {
+    private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfigSupport fgConfig, final FeatureGroup fgSpec)
+            throws ProvisioningException {
         if(!modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
             return false;
         }
-        boolean resolvedFeatures = processFeatureGroupSpec(modelBuilder, fp, fp.getFeatureGroupSpec(fgConfig.getName()));
+        boolean resolvedFeatures = processFeatureGroupSpec(modelBuilder, fp, fgSpec);
         final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(fp.gav);
         if(!popped.includedFeatures.isEmpty()) {
             for(Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
@@ -435,20 +449,20 @@ public class ProvisioningRuntimeBuilder {
         return resolvedFeatures;
     }
 
-    private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfig fpConfig) throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(fpConfig.getName());
-        resolvedFgc.inheritFeatures = fpConfig.isInheritFeatures();
-        if(fpConfig.hasExcludedSpecs()) {
-            resolvedFgc.excludedSpecs = resolveSpecs(fp, fpConfig.getExcludedSpecs());
+    private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeaturePackRuntime.Builder fp, FeatureGroupConfigSupport fg) throws ProvisioningException {
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(fg.getName());
+        resolvedFgc.inheritFeatures = fg.isInheritFeatures();
+        if(fg.hasExcludedSpecs()) {
+            resolvedFgc.excludedSpecs = resolveSpecs(fp, fg.getExcludedSpecs());
         }
-        if(fpConfig.hasIncludedSpecs()) {
-            resolvedFgc.includedSpecs = resolveSpecs(fp, fpConfig.getIncludedSpecs());
+        if(fg.hasIncludedSpecs()) {
+            resolvedFgc.includedSpecs = resolveSpecs(fp, fg.getIncludedSpecs());
         }
-        if(fpConfig.hasExcludedFeatures()) {
-            resolvedFgc.excludedFeatures = resolveFeatureSet(fp, fpConfig.getExcludedFeatures());
+        if(fg.hasExcludedFeatures()) {
+            resolvedFgc.excludedFeatures = resolveFeatureSet(fp, fg.getExcludedFeatures());
         }
-        if(fpConfig.hasIncludedFeatures()) {
-            resolvedFgc.includedFeatures = resolveFeatureMap(fp, fpConfig.getIncludedFeatures());
+        if(fg.hasIncludedFeatures()) {
+            resolvedFgc.includedFeatures = resolveFeatureMap(fp, fg.getIncludedFeatures());
         }
         return resolvedFgc;
     }
@@ -527,7 +541,7 @@ public class ProvisioningRuntimeBuilder {
         }
         if(featureGroup.hasLocalDependencies()) {
             for(FeatureGroupConfig nestedFg : featureGroup.getLocalDependencies()) {
-                resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg);
+                resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg, fp.getFeatureGroupSpec(nestedFg.getName()));
             }
         }
         if(featureGroup.hasFeatures()) {
@@ -641,31 +655,31 @@ public class ProvisioningRuntimeBuilder {
             return;
         }
 
-        boolean pushDep = false;
+        boolean doPush = false;
         if(fp.isInheritPackages()) {
             if(fpConfig.hasExcludedPackages()) {
                 for(String excluded : fpConfig.getExcludedPackages()) {
                     if(!fp.isPackageExcluded(excluded) && !fp.isPackageIncluded(excluded, Collections.emptyList())) {
-                        pushDep = true;
+                        doPush = true;
                         break;
                     }
                 }
             }
-            if(!pushDep && fpConfig.hasIncludedPackages()) {
+            if(!doPush && fpConfig.hasIncludedPackages()) {
                 for(PackageConfig included : fpConfig.getIncludedPackages()) {
                     if(!fp.isPackageIncluded(included.getName(), included.getParameters()) && !fp.isPackageExcluded(included.getName())) {
-                        pushDep = true;
+                        doPush = true;
                         break;
                     }
                 }
             }
         }
 
-        if(!pushDep && fpConfig.hasDefinedConfigs() && fp.isInheritConfigs()) {
-            pushDep = true;
+        if(!doPush && fpConfig.hasDefinedConfigs() && fp.isInheritConfigs()) {
+            doPush = true;
         }
 
-        if(pushDep) {
+        if(doPush) {
             pushed.add(fpConfig);
             fp.push(fpConfig);
         }

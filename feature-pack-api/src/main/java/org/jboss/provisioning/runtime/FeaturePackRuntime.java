@@ -37,7 +37,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.ConfigId;
 import org.jboss.provisioning.feature.FeatureGroupSpec;
 import org.jboss.provisioning.feature.FeatureReferenceSpec;
 import org.jboss.provisioning.feature.FeatureSpec;
@@ -253,7 +253,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return false;
         }
 
-        boolean isConfigExcluded(Config config) {
+        boolean isConfigExcluded(ConfigId config) {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
@@ -261,20 +261,20 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                     return true;
                 }
                 if(fpConfig.isFullModelExcluded(config.getModel())) {
-                    return !fpConfig.isConfigIncluded(config.getModel(), config.getName());
+                    return !fpConfig.isConfigIncluded(config);
                 }
                 if (!fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isFullModelIncluded(config.getModel()) && !fpConfig.isConfigIncluded(config.getModel(), config.getName());
+                    return !fpConfig.isFullModelIncluded(config.getModel()) && !fpConfig.isConfigIncluded(config);
                 }
             }
             return false;
         }
 
-        boolean isConfigIncluded(Config config) {
+        boolean isConfigIncluded(ConfigId config) {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if(fpConfig.isConfigIncluded(config.getModel(), config.getName())) {
+                if(fpConfig.isConfigIncluded(config)) {
                     return true;
                 }
                 if(fpConfig.isFullModelIncluded(config.getModel())) {

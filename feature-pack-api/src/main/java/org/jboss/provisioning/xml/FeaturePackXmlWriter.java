@@ -22,6 +22,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
@@ -155,7 +156,9 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             for (String model : target.getExcludedModels()) {
                 for(String name : target.getExcludedConfigs(model)) {
                     final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
-                    addAttribute(exclude, Attribute.MODEL, model);
+                    if(model != null) {
+                        addAttribute(exclude, Attribute.MODEL, model);
+                    }
                     addAttribute(exclude, Attribute.NAME, name);
                 }
             }
@@ -164,12 +167,12 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             if (defaultConfigs == null) {
                 defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
             }
-            for (String model : target.getIncludedModels()) {
-                for(String name : target.getIncludedConfigs(model)) {
-                    final ElementNode include = addElement(defaultConfigs, Element.INCLUDE);
-                    addAttribute(include, Attribute.MODEL, model);
-                    addAttribute(include, Attribute.NAME, name);
+            for (IncludedConfig config : target.getIncludedConfigs()) {
+                final ElementNode includeElement = addElement(defaultConfigs, Element.INCLUDE);
+                if(config.getModel() != null) {
+                    addAttribute(includeElement, Attribute.MODEL, config.getModel());
                 }
+                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, Element.FEATURE_PACK.getNamespace(), includeElement);
             }
         }
     }

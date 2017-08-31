@@ -31,6 +31,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.FeaturePackConfig.Builder;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -102,6 +103,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
         INHERIT("inherit"),
+        INHERIT_FEATURES("inherit-features"),
         MODEL("model"),
         NAME("name"),
         VERSION("version"),
@@ -304,6 +306,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
     private static void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
         String name = null;
         String model = null;
+        Boolean inheritFeatures = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
@@ -313,18 +316,26 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 case MODEL:
                     model = reader.getAttributeValue(i);
                     break;
+                case INHERIT_FEATURES:
+                    inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        ParsingUtils.parseNoContent(reader);
 
         try {
             if (include) {
                 if (name == null) {
                     fpBuilder.includeModel(model);
                 } else {
-                    fpBuilder.includeDefaultConfig(model, name);
+                    final IncludedConfig.Builder configBuilder = IncludedConfig.builder(model, name);
+                    if(inheritFeatures != null) {
+                        configBuilder.inheritFeatures(inheritFeatures);
+                    }
+                    FeatureGroupXml.readFeatureGroupConfigBody(reader, configBuilder);
+                    fpBuilder.includeDefaultConfig(configBuilder.build());
+                    return;
                 }
             } else if (name == null) {
                 fpBuilder.excludeModel(model);
@@ -334,5 +345,6 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         } catch(ProvisioningDescriptionException e) {
             throw new XMLStreamException(e);
         }
+        ParsingUtils.parseNoContent(reader);
     }
 }

@@ -35,7 +35,7 @@ public class FeatureId {
 
         final int length = str.length();
         if(length == 0) {
-            formatException();
+            formatException(str);
         }
 
         int nextIndex = 0;
@@ -46,13 +46,13 @@ public class FeatureId {
         while(nextIndex < length) {
             if(c == SpecId.SEPARATOR) {
                 if(nextIndex == 1) {
-                    formatException();
+                    formatException(str);
                 }
                 fpDepName = buf.toString();
                 buf.setLength(0);
             } else if(c == ':') {
                 if(buf.length() == 0) {
-                    formatException();
+                    formatException(str);
                 }
                 specId = SpecId.create(fpDepName, buf.toString());
                 break;
@@ -63,14 +63,14 @@ public class FeatureId {
         }
 
         if(specId == null) {
-            formatException();
+            formatException(str);
         }
 
         int endIndex = str.indexOf(',', nextIndex + 3);
         if(endIndex < 0) {
             final int equals = str.indexOf('=', nextIndex + 1);
             if(equals < 0 || equals == str.length() - 1) {
-                formatException();
+                formatException(str);
             }
             return FeatureId.create(specId.toString(), str.substring(nextIndex, equals), str.substring(equals + 1));
         }
@@ -80,7 +80,7 @@ public class FeatureId {
         while(endIndex > 0) {
             int equals = str.indexOf('=', lastComma + 2);
             if(equals < 0 || equals == str.length() - 1) {
-                formatException();
+                formatException(str);
             }
             builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1, endIndex));
             lastComma = endIndex;
@@ -89,14 +89,14 @@ public class FeatureId {
 
         int equals = str.indexOf('=', lastComma + 2);
         if(equals < 0 || equals == str.length() - 1) {
-            formatException();
+            formatException(str);
         }
         builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1));
         return builder.build();
     }
 
-    private static void formatException() throws ProvisioningDescriptionException {
-        throw new ProvisioningDescriptionException("The string does not follow format fp_dep_name#spec_name:param_name=value(,param_name=value)*");
+    private static void formatException(String s) throws ProvisioningDescriptionException {
+        throw new ProvisioningDescriptionException('\'' + s + "' does not follow format fp_dep_name#spec_name:param_name=value(,param_name=value)*");
     }
 
     public static class Builder {
