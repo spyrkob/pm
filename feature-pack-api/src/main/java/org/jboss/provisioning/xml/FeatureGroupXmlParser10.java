@@ -19,7 +19,7 @@ package org.jboss.provisioning.xml;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**

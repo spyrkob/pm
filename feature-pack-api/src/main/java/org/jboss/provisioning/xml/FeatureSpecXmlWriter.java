@@ -19,10 +19,10 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.feature.FeatureAnnotation;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser10.Attribute;

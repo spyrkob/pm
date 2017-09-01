@@ -27,10 +27,10 @@ import java.util.Map.Entry;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureAnnotation;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 
 
 /**

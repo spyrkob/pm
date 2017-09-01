@@ -32,7 +32,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -48,8 +47,8 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private List<Config> defConfigs = Collections.emptyList();
-        private Config unnamedConfig;
+        private List<ConfigSpec> defConfigs = Collections.emptyList();
+        private ConfigSpec unnamedConfig;
 
         protected Builder() {
             this(null);
@@ -82,7 +81,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addConfig(Config config) throws ProvisioningDescriptionException {
+        public Builder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
             assert config != null : "config is null";
             if(config.getName() == null && config.getModel() == null) {
                 if (unnamedConfig != null) {
@@ -95,7 +94,7 @@ public class FeaturePackSpec {
                     defConfigs = Collections.singletonList(config);
                     break;
                 case 1:
-                    defConfigs = new ArrayList<Config>(defConfigs);
+                    defConfigs = new ArrayList<ConfigSpec>(defConfigs);
                 default:
                     defConfigs.add(config);
             }
@@ -159,7 +158,7 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final List<Config> defConfigs;
+    private final List<ConfigSpec> defConfigs;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
@@ -177,7 +176,7 @@ public class FeaturePackSpec {
         return !defConfigs.isEmpty();
     }
 
-    public List<Config> getConfigs() {
+    public List<ConfigSpec> getConfigs() {
         return defConfigs;
     }
 

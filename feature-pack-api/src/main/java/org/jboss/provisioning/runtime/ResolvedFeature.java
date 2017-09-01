@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
 /**

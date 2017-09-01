@@ -24,9 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.junit.Assert;
 import org.junit.Test;

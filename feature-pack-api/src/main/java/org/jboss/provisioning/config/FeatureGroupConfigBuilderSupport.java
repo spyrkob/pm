@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.config;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.SpecId;
 
 /**
  * @author Alexey Loubyansky
@@ -89,12 +91,12 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
             throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
         }
         if(feature == null) {
-            feature = new FeatureConfig(featureId.specId);
+            feature = new FeatureConfig(featureId.getSpec());
         }
         if(feature.specId == null) {
-            feature.specId = featureId.specId;
+            feature.specId = featureId.getSpec();
         }
-        for (Map.Entry<String, String> idEntry : featureId.params.entrySet()) {
+        for (Map.Entry<String, String> idEntry : featureId.getParams().entrySet()) {
             final String prevValue = feature.putParam(idEntry.getKey(), idEntry.getValue());
             if (prevValue != null && !prevValue.equals(idEntry.getValue())) {
                 throw new ProvisioningDescriptionException("Parameter " + idEntry.getKey() + " has value '"

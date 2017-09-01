@@ -19,10 +19,10 @@ package org.jboss.provisioning.xml;
 import java.util.Arrays;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.IncludedConfig;
+import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -127,7 +127,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             String[] models = featurePack.getDefinedConfigModels().toArray(EMPTY_ARRAY);
             Arrays.sort(models);
             for(String model : models) {
-                for(Config config : featurePack.getDefinedConfigs(model)) {
+                for(ConfigSpec config : featurePack.getDefinedConfigs(model)) {
                     fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
                 }
             }

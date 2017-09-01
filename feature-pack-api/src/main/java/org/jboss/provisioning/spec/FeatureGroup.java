@@ -14,16 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.provisioning.spec;
 
-package org.jboss.provisioning.feature;
+import java.util.List;
+import java.util.Map;
 
-import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface FeatureConfigLoader {
+public interface FeatureGroup {
 
-    FeatureConfig load(FeatureId featureId) throws ProvisioningDescriptionException;
+    boolean hasExternalDependencies();
+
+    Map<String, FeatureGroupSpec> getExternalDependencies();
+
+    boolean hasLocalDependencies();
+
+    List<FeatureGroupConfig> getLocalDependencies();
+
+    boolean hasFeatures();
+
+    List<FeatureConfig> getFeatures();
+
+    default boolean isResetFeaturePackOrigin() {
+        return false;
+    }
 }

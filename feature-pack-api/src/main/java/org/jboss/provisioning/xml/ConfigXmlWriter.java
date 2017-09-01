@@ -18,10 +18,10 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.xml.ConfigXml.Attribute;
 import org.jboss.provisioning.xml.ConfigXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -30,7 +30,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigXmlWriter extends BaseXmlWriter<Config> {
+public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
 
     private static final ConfigXmlWriter INSTANCE = new ConfigXmlWriter();
 
@@ -41,11 +41,11 @@ public class ConfigXmlWriter extends BaseXmlWriter<Config> {
     private ConfigXmlWriter() {
     }
 
-    protected ElementNode toElement(Config config) {
+    protected ElementNode toElement(ConfigSpec config) {
         return toElement(config, ConfigXml.NAMESPACE_1_0);
     }
 
-    protected ElementNode toElement(Config config, String ns) {
+    protected ElementNode toElement(ConfigSpec config, String ns) {
         final ElementNode configE = addElement(null, Element.CONFIG.getLocalName(), ns);
         if(config.getName() != null) {
             addAttribute(configE, Attribute.NAME, config.getName());

@@ -21,16 +21,16 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
-import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -68,7 +68,7 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
                     .addFeature(new FeatureConfig("specA").setParam("a", "aOne"))
                     .addFeature(new FeatureConfig("specB").setParam("b", "bOne"))
                     .build())
-            .addConfig(Config.builder()
+            .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig(SpecId.create("fp2", "specD"))
                             .setParam("d", "dOne")

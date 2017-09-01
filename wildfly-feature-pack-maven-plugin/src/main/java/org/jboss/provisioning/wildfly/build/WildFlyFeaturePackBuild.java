@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 
 /**
@@ -40,7 +40,7 @@ public class WildFlyFeaturePackBuild {
         private List<FeaturePackDependencySpec> dependencies = Collections.emptyList();
         private Set<String> schemaGroups = Collections.emptySet();
         private Set<String> defaultPackages = Collections.emptySet();
-        private List<Config> configs = Collections.emptyList();
+        private List<ConfigSpec> configs = Collections.emptyList();
 
         private Builder() {
         }
@@ -90,13 +90,13 @@ public class WildFlyFeaturePackBuild {
             return this;
         }
 
-        public Builder addConfig(Config config) {
+        public Builder addConfig(ConfigSpec config) {
             switch(configs.size()) {
                 case 0:
                     configs = Collections.singletonList(config);
                     break;
                 case 1:
-                    final Config first = configs.get(0);
+                    final ConfigSpec first = configs.get(0);
                     configs = new ArrayList<>();
                     configs.add(first);
                 default:
@@ -117,7 +117,7 @@ public class WildFlyFeaturePackBuild {
     private final List<FeaturePackDependencySpec> dependencies;
     private final Set<String> schemaGroups;
     private final Set<String> defaultPackages;
-    private final List<Config> configs;
+    private final List<ConfigSpec> configs;
 
     private WildFlyFeaturePackBuild(Builder builder) {
         this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableList(builder.dependencies) : builder.dependencies;
@@ -150,7 +150,7 @@ public class WildFlyFeaturePackBuild {
         return !configs.isEmpty();
     }
 
-    public List<Config> getConfigs() {
+    public List<ConfigSpec> getConfigs() {
         return configs;
     }
 }

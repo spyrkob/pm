@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.spec;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.spec.PackageDependencies;
-import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
-import org.jboss.provisioning.spec.PackageDependencySpec;
 
 /**
  *

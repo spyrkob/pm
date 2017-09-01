@@ -28,7 +28,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.state.ProvisionedConfig;
 

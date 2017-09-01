@@ -19,11 +19,11 @@ package org.jboss.provisioning.featurepack.xml.test;
 import java.nio.file.Paths;
 import java.util.Locale;
 
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
@@ -165,7 +165,7 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-default-configs.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addConfig(Config.builder().setName("config1").setModel("model1")
+                .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg1").build())
@@ -178,7 +178,7 @@ public class FeaturePackXmlParserTestCase  {
                         .setParam("p1", "v1")
                         .setParam("p2", "v2"))
                     .build())
-                .addConfig(Config.builder().setModel("model2")
+                .addConfig(ConfigSpec.builder().setModel("model2")
                     .setProperty("prop3", "value3")
                     .setProperty("prop4", "value4")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg3").build())
@@ -202,7 +202,7 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-unnamed-config.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addConfig(Config.builder()
+                .addConfig(ConfigSpec.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")

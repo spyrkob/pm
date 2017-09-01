@@ -28,10 +28,10 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.FeaturePackConfig.Builder;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.IncludedConfig;
+import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -233,7 +233,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                             parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final Config.Builder configBuilder = Config.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder().setResetFeaturePackOrigin(true);
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 fpBuilder.addConfig(configBuilder.build());

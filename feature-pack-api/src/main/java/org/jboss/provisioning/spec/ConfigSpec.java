@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.spec;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,13 +23,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+
 /**
  *
  * @author Alexey Loubyansky
  */
-public class Config extends FeatureGroupSupport {
+public class ConfigSpec extends FeatureGroupSupport {
 
-    public static class Builder extends FeatureGroupSupport.Builder<Config, Builder> {
+    public static class Builder extends FeatureGroupSupport.Builder<ConfigSpec, Builder> {
 
         private String model;
         private Map<String, String> props = Collections.emptyMap();
@@ -53,8 +56,8 @@ public class Config extends FeatureGroupSupport {
         }
 
         @Override
-        public Config build() {
-            return new Config(this);
+        public ConfigSpec build() {
+            return new ConfigSpec(this);
         }
     }
 
@@ -65,7 +68,7 @@ public class Config extends FeatureGroupSupport {
     final ConfigId id;
     final Map<String, String> props;
 
-    private Config(Builder builder) {
+    private ConfigSpec(Builder builder) {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
         this.props = builder.props.size() > 1 ? Collections.unmodifiableMap(builder.props) : builder.props;
@@ -103,7 +106,7 @@ public class Config extends FeatureGroupSupport {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Config other = (Config) obj;
+        ConfigSpec other = (ConfigSpec) obj;
         if (id.model == null) {
             if (other.id.model != null)
                 return false;

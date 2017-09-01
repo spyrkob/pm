@@ -18,13 +18,13 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.feature.FeatureGroup;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfigSupport;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureId;
-import org.jboss.provisioning.feature.SpecId;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.config.FeatureGroupConfigSupport;
+import org.jboss.provisioning.spec.FeatureGroup;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.xml.FeatureGroupXml.Attribute;
 import org.jboss.provisioning.xml.FeatureGroupXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;

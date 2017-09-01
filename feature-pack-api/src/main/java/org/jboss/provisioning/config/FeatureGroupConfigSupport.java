@@ -15,11 +15,14 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.config;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.SpecId;
 
 /**
  *
@@ -100,7 +103,7 @@ public abstract class FeatureGroupConfigSupport {
         if (excludedFeatures.contains(featureId)) {
             return true;
         }
-        if (excludedSpecs.contains(featureId.specId)) {
+        if (excludedSpecs.contains(featureId.getSpec())) {
             return !includedFeatures.containsKey(featureId);
         }
         return false;

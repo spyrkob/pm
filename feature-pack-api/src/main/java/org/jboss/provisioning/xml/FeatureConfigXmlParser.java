@@ -21,7 +21,7 @@ import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.config.FeatureConfig;
 
 /**
  *

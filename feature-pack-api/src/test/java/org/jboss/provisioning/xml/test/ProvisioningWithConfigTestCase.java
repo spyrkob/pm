@@ -19,12 +19,12 @@ package org.jboss.provisioning.xml.test;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
 import org.junit.Assert;
@@ -50,7 +50,7 @@ public class ProvisioningWithConfigTestCase {
                         .excludeModel("model2")
                         .excludeDefaultConfig("model1", "name1")
                         .includeDefaultConfig("model2", "name2")
-                        .addConfig(Config.builder()
+                        .addConfig(ConfigSpec.builder()
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep1").inheritFeatures(true).build())
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep2").inheritFeatures(false).build())
                                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")

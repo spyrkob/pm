@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.config;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +26,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeatureGroup;
+import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.SpecId;
 
 /**
  *
@@ -34,8 +39,8 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> implements FeatureGroup, Cloneable {
 
     public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
-        final FeatureConfig config = new FeatureConfig(id.specId.name);
-        for(Map.Entry<String, String> param : id.params.entrySet()) {
+        final FeatureConfig config = new FeatureConfig(id.getSpec());
+        for(Map.Entry<String, String> param : id.getParams().entrySet()) {
             config.setParam(param.getKey(), param.getValue());
         }
         return config;
@@ -50,7 +55,7 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     Set<FeatureId> dependencies = Collections.emptySet();
     String parentRef;
 
-    FeatureConfig(FeatureConfig copy) {
+    public FeatureConfig(FeatureConfig copy) {
         super(copy);
         specId = copy.specId;
         dependencies = copy.dependencies;

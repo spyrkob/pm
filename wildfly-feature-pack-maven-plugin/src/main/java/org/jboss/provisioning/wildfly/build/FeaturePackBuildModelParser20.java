@@ -19,7 +19,7 @@ package org.jboss.provisioning.wildfly.build;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
+import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.ConfigXml;
@@ -196,7 +196,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             parsePackageSchemas(reader, builder);
                             break;
                         case CONFIG:
-                            final Config.Builder config = Config.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder config = ConfigSpec.builder().setResetFeaturePackOrigin(true);
                             ConfigXml.readConfig(reader, config);
                             builder.addConfig(config.build());
                             break;
@@ -307,7 +307,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
                             break;
                         case CONFIG:
-                            final Config.Builder configBuilder = Config.builder();
+                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder();
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 depBuilder.addConfig(configBuilder.build());

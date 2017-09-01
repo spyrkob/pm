@@ -21,12 +21,12 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -50,14 +50,14 @@ public class SimpleUnnamedModelConfigsTestCase extends PmInstallFeaturePackTestB
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(Config.builder().setModel("config1")
+            .addConfig(ConfigSpec.builder().setModel("config1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(Config.builder().setModel("config2")
+            .addConfig(ConfigSpec.builder().setModel("config2")
                     .setProperty("prop1", "value3")
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")

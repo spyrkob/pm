@@ -24,10 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.jboss.provisioning.feature.FeatureAnnotation;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
+import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 import org.junit.Assert;
 import org.junit.Test;

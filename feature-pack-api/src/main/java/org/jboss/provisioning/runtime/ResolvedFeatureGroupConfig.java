@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.config.FeatureConfig;
 
 /**
  *

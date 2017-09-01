@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.spec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+
 
 /**
  *
@@ -32,9 +35,9 @@ import java.util.Map;
  */
 public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSupport<B>> {
 
-    Map<String, FeatureGroupSpec.Builder> externalGroups = Collections.emptyMap();
-    List<FeatureGroupConfig> localGroups = Collections.emptyList();
-    List<FeatureConfig> features = Collections.emptyList();
+    protected Map<String, FeatureGroupSpec.Builder> externalGroups = Collections.emptyMap();
+    protected List<FeatureGroupConfig> localGroups = Collections.emptyList();
+    protected List<FeatureConfig> features = Collections.emptyList();
 
     protected FeatureGroupBuilderSupport(FeatureGroupBuilderSupport<B> src) {
         externalGroups = src.externalGroups;

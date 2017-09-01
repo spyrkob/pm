@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.spec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 
 /**
  *

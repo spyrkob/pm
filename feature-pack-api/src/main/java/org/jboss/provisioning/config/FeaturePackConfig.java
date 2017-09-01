@@ -29,10 +29,9 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigId;
-import org.jboss.provisioning.feature.IncludedConfig;
 import org.jboss.provisioning.parameters.PackageParameter;
+import org.jboss.provisioning.spec.ConfigId;
+import org.jboss.provisioning.spec.ConfigSpec;
 
 /**
  * This class represents a feature-pack configuration to be installed.
@@ -49,7 +48,7 @@ public class FeaturePackConfig {
         protected Map<ConfigId, IncludedConfig> includedConfigs = Collections.emptyMap();
         protected Set<String> excludedModels = Collections.emptySet();
         protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
-        protected Map<String, Map<String, Config>> configModels = Collections.emptyMap();
+        protected Map<String, Map<String, ConfigSpec>> configModels = Collections.emptyMap();
         protected boolean inheritPackages = true;
         protected Set<String> excludedPackages = Collections.emptySet();
         protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
@@ -149,12 +148,12 @@ public class FeaturePackConfig {
             return this;
         }
 
-        public Builder addConfig(Config config) throws ProvisioningDescriptionException {
+        public Builder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
             if(configModels.isEmpty()) {
                 configModels = Collections.singletonMap(config.getModel(), Collections.singletonMap(config.getName(), config));
                 return this;
             }
-            Map<String, Config> modelConfigs = configModels.get(config.getModel());
+            Map<String, ConfigSpec> modelConfigs = configModels.get(config.getModel());
             if(modelConfigs == null) {
                 if(configModels.size() == 1) {
                     configModels = new HashMap<>(configModels);
@@ -288,7 +287,7 @@ public class FeaturePackConfig {
     private final Set<String> excludedModels;
     private final Map<ConfigId, IncludedConfig> includedConfigs;
     private final Map<String, Set<String>> excludedConfigs;
-    private final Map<String, Map<String, Config>> configModels;
+    private final Map<String, Map<String, ConfigSpec>> configModels;
     private final boolean inheritPackages;
     private final Set<String> excludedPackages;
     private final Map<String, PackageConfig> includedPackages;
@@ -380,8 +379,8 @@ public class FeaturePackConfig {
         return configModels.keySet();
     }
 
-    public Collection<Config> getDefinedConfigs(String model) {
-        final Map<String, Config> configMap = configModels.get(model);
+    public Collection<ConfigSpec> getDefinedConfigs(String model) {
+        final Map<String, ConfigSpec> configMap = configModels.get(model);
         return configMap == null ? Collections.emptyList() : configMap.values();
     }
 
@@ -507,16 +506,16 @@ public class FeaturePackConfig {
             }
         }
         if(!configModels.isEmpty()) {
-            final Iterator<Entry<String, Map<String, Config>>> modelConfigs = configModels.entrySet().iterator();
-            Entry<String, Map<String, Config>> modelConfig = modelConfigs.next();
+            final Iterator<Entry<String, Map<String, ConfigSpec>>> modelConfigs = configModels.entrySet().iterator();
+            Entry<String, Map<String, ConfigSpec>> modelConfig = modelConfigs.next();
             if(modelConfig.getKey() != null) {
                 builder.append(" model=").append(modelConfig.getKey()).append('{');
             } else {
                 builder.append(" default-model{");
             }
 
-            Iterator<Config> configs = modelConfig.getValue().values().iterator();
-            Config config = configs.next();
+            Iterator<ConfigSpec> configs = modelConfig.getValue().values().iterator();
+            ConfigSpec config = configs.next();
             builder.append(config);
             while(configs.hasNext()) {
                 builder.append(',').append(configs.next());

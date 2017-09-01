@@ -21,17 +21,17 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureId;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
-import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -65,7 +65,7 @@ public class ThisAsFeatureSpecOriginInFeatureIncludeTestCase extends PmProvision
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", false))
                     .build())
-            .addConfig(Config.builder()
+            .addConfig(ConfigSpec.builder()
                     .addFeatureGroup("fp2", FeatureGroupConfig.builder("fg2", false)
                             .includeFeature(FeatureId.fromString("specD:d=dOne"))
                             .includeFeature(FeatureId.fromString("this#specA:a=aOne,d=dOne")).build())

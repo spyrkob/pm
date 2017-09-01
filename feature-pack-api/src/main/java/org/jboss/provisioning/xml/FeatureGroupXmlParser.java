@@ -21,7 +21,7 @@ import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 
 /**
  *

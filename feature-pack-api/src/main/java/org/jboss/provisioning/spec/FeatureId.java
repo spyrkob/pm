@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.feature;
+package org.jboss.provisioning.spec;
 
 import java.util.Collection;
 import java.util.Collections;

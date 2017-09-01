@@ -23,12 +23,12 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
@@ -53,7 +53,7 @@ public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFe
                     .addParam(FeatureParameterSpec.create("a", true))
                     .addPackageDependency("specA.pkg")
                     .build())
-            .addConfig(Config.builder()
+            .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a"))

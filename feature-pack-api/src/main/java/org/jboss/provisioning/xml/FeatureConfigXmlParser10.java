@@ -19,7 +19,7 @@ package org.jboss.provisioning.xml;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.feature.FeatureConfig;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**

@@ -62,13 +62,13 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.IncludedConfig;
+import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.WfConstants;
+import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -254,7 +254,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
         if(wfFpConfig.hasConfigs()) {
-            for(Config config : wfFpConfig.getConfigs()) {
+            for(ConfigSpec config : wfFpConfig.getConfigs()) {
                 try {
                     fpBuilder.getSpecBuilder().addConfig(config);
                 } catch (ProvisioningDescriptionException e) {
@@ -442,8 +442,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
                 if(depConfig.hasDefinedConfigs()) {
                     for(String model : depConfig.getDefinedConfigModels()) {
-                        final Collection<Config> definedConfigs = depConfig.getDefinedConfigs(model);
-                        for(Config config : definedConfigs) {
+                        final Collection<ConfigSpec> definedConfigs = depConfig.getDefinedConfigs(model);
+                        for(ConfigSpec config : definedConfigs) {
                             depBuilder.addConfig(config);
                         }
                     }

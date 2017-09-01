@@ -21,13 +21,13 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -51,25 +51,25 @@ public class ExcludeConfigByNameTestCase extends PmProvisionConfigTestBase {
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(Config.builder().setName("config1").setModel("model1")
+            .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
                     .setProperty("prop1", "c1m1")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(Config.builder().setName("config2").setModel("model1")
+            .addConfig(ConfigSpec.builder().setName("config2").setModel("model1")
                     .setProperty("prop1", "c2m1")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config2"))
                     .build())
-            .addConfig(Config.builder().setName("config1")
+            .addConfig(ConfigSpec.builder().setName("config1")
                     .setProperty("prop1", "c1m2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(Config.builder().setName("config2")
+            .addConfig(ConfigSpec.builder().setName("config2")
                     .setProperty("prop1", "c2m2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")

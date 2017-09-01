@@ -34,9 +34,9 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.feature.FeatureAnnotation;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
+import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 

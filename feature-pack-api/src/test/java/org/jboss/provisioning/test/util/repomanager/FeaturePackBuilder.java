@@ -35,11 +35,11 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureSpec;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.fs.FsTaskContext;
@@ -174,7 +174,7 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public FeaturePackBuilder addConfig(Config config) throws ProvisioningDescriptionException {
+    public FeaturePackBuilder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
         fpBuilder.addConfig(config);
         return this;
     }

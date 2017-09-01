@@ -28,12 +28,12 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.feature.FeatureGroupBuilderSupport;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfigBuilderSupport;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureId;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.config.FeatureGroupConfigBuilderSupport;
+import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 

@@ -44,27 +44,27 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.config.FeatureGroupConfigSupport;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.feature.FeatureGroup;
-import org.jboss.provisioning.feature.Config;
-import org.jboss.provisioning.feature.ConfigId;
-import org.jboss.provisioning.feature.FeatureConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfig;
-import org.jboss.provisioning.feature.FeatureGroupConfigSupport;
-import org.jboss.provisioning.feature.FeatureGroupSpec;
-import org.jboss.provisioning.feature.FeatureId;
-import org.jboss.provisioning.feature.FeatureParameterSpec;
-import org.jboss.provisioning.feature.FeatureReferenceSpec;
-import org.jboss.provisioning.feature.IncludedConfig;
-import org.jboss.provisioning.feature.SpecId;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
+import org.jboss.provisioning.spec.ConfigId;
+import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroup;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.PackageDependencies;
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -282,7 +282,7 @@ public class ProvisioningRuntimeBuilder {
         boolean contributed = false;
 
         if(fpConfig.isInheritConfigs()) {
-            for(Config config : fp.spec.getConfigs()) {
+            for(ConfigSpec config : fp.spec.getConfigs()) {
                 if(fp.isConfigExcluded(config.getId())) {
                     continue;
                 }
@@ -294,7 +294,7 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         } else {
-            for(Config config : fp.spec.getConfigs()) {
+            for(ConfigSpec config : fp.spec.getConfigs()) {
                 if(fp.isConfigIncluded(config.getId())) {
                     final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
                     if(includedConfig != null) {
@@ -331,7 +331,7 @@ public class ProvisioningRuntimeBuilder {
 
         if (fpConfig.hasDefinedConfigs()) {
             for (String modelName : fpConfig.getDefinedConfigModels()) {
-                for(Config config : fpConfig.getDefinedConfigs(modelName)) {
+                for(ConfigSpec config : fpConfig.getDefinedConfigs(modelName)) {
                     if (fp.isConfigExcluded(config.getId())) {
                         continue;
                     }
@@ -345,13 +345,13 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
-    private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, Config config) throws ProvisioningException {
+    private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, ConfigSpec config) throws ProvisioningException {
         final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
         configBuilder.overwriteProps(config.getProperties());
         return processFeatureGroupConfig(configBuilder, fp, includedConfig, config);
     }
 
-    private boolean processConfigSpec(FeaturePackRuntime.Builder fp, Config config) throws ProvisioningException {
+    private boolean processConfigSpec(FeaturePackRuntime.Builder fp, ConfigSpec config) throws ProvisioningException {
         final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
         configBuilder.overwriteProps(config.getProperties());
         return processFeatureGroupSpec(configBuilder, fp, config);
