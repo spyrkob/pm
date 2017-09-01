@@ -262,20 +262,16 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
     }
 
     public static void parseDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
-        boolean inherit = true;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case INHERIT:
-                    inherit = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    fpBuilder.setInheritConfigs(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-
-        fpBuilder.setInheritConfigs(inherit);
-
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {

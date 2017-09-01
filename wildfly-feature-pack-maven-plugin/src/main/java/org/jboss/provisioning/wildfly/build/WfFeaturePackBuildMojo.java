@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -441,11 +440,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
                 depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
                 if(depConfig.hasDefinedConfigs()) {
-                    for(String model : depConfig.getDefinedConfigModels()) {
-                        final Collection<ConfigSpec> definedConfigs = depConfig.getDefinedConfigs(model);
-                        for(ConfigSpec config : definedConfigs) {
-                            depBuilder.addConfig(config);
-                        }
+                    for (ConfigSpec config : depConfig.getDefinedConfigs()) {
+                        depBuilder.addConfig(config);
                     }
                 }
                 if(depConfig.hasExcludedConfigs()) {

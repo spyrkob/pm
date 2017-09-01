@@ -124,12 +124,8 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         }
 
         if(featurePack.hasDefinedConfigs()) {
-            String[] models = featurePack.getDefinedConfigModels().toArray(EMPTY_ARRAY);
-            Arrays.sort(models);
-            for(String model : models) {
-                for(ConfigSpec config : featurePack.getDefinedConfigs(model)) {
-                    fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
-                }
+            for (ConfigSpec config : featurePack.getDefinedConfigs()) {
+                fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
             }
         }
 

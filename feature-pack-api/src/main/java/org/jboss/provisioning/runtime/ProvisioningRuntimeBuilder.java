@@ -330,13 +330,11 @@ public class ProvisioningRuntimeBuilder {
         }
 
         if (fpConfig.hasDefinedConfigs()) {
-            for (String modelName : fpConfig.getDefinedConfigModels()) {
-                for(ConfigSpec config : fpConfig.getDefinedConfigs(modelName)) {
-                    if (fp.isConfigExcluded(config.getId())) {
-                        continue;
-                    }
-                    contributed |= processConfigSpec(fp, config);
+            for (ConfigSpec config : fpConfig.getDefinedConfigs()) {
+                if (fp.isConfigExcluded(config.getId())) {
+                    continue;
                 }
+                contributed |= processConfigSpec(fp, config);
             }
         }
 
