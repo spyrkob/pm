@@ -528,7 +528,7 @@ public class FeatureGroupXml {
                     value = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (name == null) {

@@ -464,7 +464,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
                 if(depConfig.hasIncludedConfigs()) {
                     for(IncludedConfig includedConfig : depConfig.getIncludedConfigs()) {
-                        depBuilder.includeDefaultConfig(includedConfig.getModel(), includedConfig.getName());
+                        depBuilder.includeDefaultConfig(includedConfig);
                     }
                 }
                 fpBuilder.addDependency(depSpec.getName(), depBuilder.build());
