@@ -52,6 +52,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
+import org.jboss.provisioning.plugin.wildfly.config.DeletePath;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
 import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
@@ -272,6 +273,9 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                         }
                         domainScriptCollector.collectScripts(fp, pkg, genConfig.getDomainProfileConfig().getProfile());
                     }
+                }
+                if(pkgTasks.hasDeletePaths()) {
+                    deletePaths(pkgTasks, pmWfDir);
                 }
             }
         }
@@ -499,6 +503,25 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                     IoUtils.copy(src, target);
                 } catch (IOException e) {
                     throw new ProvisioningException(Errors.copyFile(src, target));
+                }
+            }
+        }
+    }
+
+    private void deletePaths(final WildFlyPackageTasks tasks, final Path pmWfDir) throws ProvisioningException {
+        for(DeletePath deletePath : tasks.getDeletePaths()) {
+            final Path path = runtime.getStagedDir().resolve(deletePath.getPath());
+            if (!Files.exists(path)) {
+//                throw new ProvisioningException(Errors.pathDoesNotExist(path));
+                continue;
+            }
+            if(deletePath.isRecursive()) {
+                IoUtils.recursiveDelete(path);
+            } else {
+                try {
+                    Files.delete(path);
+                } catch (IOException e) {
+                    throw new ProvisioningException(Errors.deletePath(path), e);
                 }
             }
         }

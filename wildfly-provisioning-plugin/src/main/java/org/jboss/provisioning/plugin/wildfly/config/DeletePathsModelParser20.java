@@ -35,21 +35,20 @@ import java.util.Map;
  *
  * @author Alexey Loubyansky
  */
-public class CopyPathsModelParser20 {
+public class DeletePathsModelParser20 {
 
-    public static final String ELEMENT_LOCAL_NAME = "copy-paths";
+    public static final String ELEMENT_LOCAL_NAME = "delete-paths";
 
     enum Element {
 
-        PATH("path"),
-
+        DELETE("delete"),
         // default unknown element
         UNKNOWN(null);
 
         private static final Map<String, Element> elements;
 
         static {
-            elements = Collections.singletonMap(Element.PATH.getLocalName(), Element.PATH);
+            elements = Collections.singletonMap(Element.DELETE.getLocalName(), Element.DELETE);
         }
 
         static Element of(QName qName) {
@@ -75,20 +74,17 @@ public class CopyPathsModelParser20 {
 
     enum Attribute implements XmlNameProvider {
 
-        SRC("src"),
-        TARGET("target"),
-        REPLACE_PROPERTIES("replace-props"),
-
+        PATH("path"),
+        RECURSIVE("recursive"),
         // default unknown attribute
         UNKNOWN(null);
 
         private static final Map<String, Attribute> attributes;
 
         static {
-            Map<String, Attribute> attributesMap = new HashMap<>();
-            attributesMap.put(SRC.getLocalName(), SRC);
-            attributesMap.put(TARGET.getLocalName(), TARGET);
-            attributesMap.put(REPLACE_PROPERTIES.getLocalName(), REPLACE_PROPERTIES);
+            Map<String, Attribute> attributesMap = new HashMap<>(2);
+            attributesMap.put(PATH.getLocalName(), PATH);
+            attributesMap.put(RECURSIVE.getLocalName(), RECURSIVE);
             attributes = attributesMap;
         }
 
@@ -119,11 +115,8 @@ public class CopyPathsModelParser20 {
         }
     }
 
-    public CopyPathsModelParser20() {
-    }
-
-    public List<CopyPath> parseCopyPaths(final XMLStreamReader reader) throws XMLStreamException {
-        final List<CopyPath> list = new ArrayList<>();
+    public List<DeletePath> parseDeletePaths(final XMLStreamReader reader) throws XMLStreamException {
+        final List<DeletePath> list = new ArrayList<>();
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -132,8 +125,8 @@ public class CopyPathsModelParser20 {
                 case XMLStreamConstants.START_ELEMENT: {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
-                        case PATH:
-                            parseCopyPath(reader, list);
+                        case DELETE:
+                            parseDeletePath(reader, list);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -148,31 +141,29 @@ public class CopyPathsModelParser20 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void parseCopyPath(XMLStreamReader reader, final List<CopyPath> list) throws XMLStreamException {
-        final CopyPath.Builder builder = CopyPath.builder();
-        boolean src = false;
+    private void parseDeletePath(XMLStreamReader reader, final List<DeletePath> list) throws XMLStreamException {
         final int count = reader.getAttributeCount();
+        String path = null;
+        boolean recursive = false;
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case SRC:
-                    builder.setSrc(reader.getAttributeValue(i));
-                    src = true;
+                case PATH:
+                    path = reader.getAttributeValue(i);
                     break;
-                case TARGET:
-                    builder.setTarget(reader.getAttributeValue(i));
-                    break;
-                case REPLACE_PROPERTIES:
-                    builder.setReplaceProperties(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                case RECURSIVE:
+                    if(Boolean.parseBoolean(reader.getAttributeValue(i))) {
+                        recursive = true;
+                    }
                     break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (!src) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.SRC));
+        if (path == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.PATH));
         }
+        list.add(new DeletePath(path, recursive));
         ParsingUtils.parseNoContent(reader);
-        list.add(builder.build());
     }
 }

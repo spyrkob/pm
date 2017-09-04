@@ -54,6 +54,10 @@ public interface Errors {
         return "Failed to copy " + src + " to " + target;
     }
 
+    static String deletePath(Path src) {
+        return "Failed to delete " + src;
+    }
+
     static String moveFile(Path src, Path target) {
         return "Failed to move " + src.toAbsolutePath() + " to " + target.toAbsolutePath();
     }
