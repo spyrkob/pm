@@ -17,12 +17,6 @@
 
 package org.jboss.provisioning.plugin.wildfly;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,6 +29,8 @@ import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.plugin.wildfly.embedded.JBossCliUtil;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.state.ProvisionedConfig;
@@ -71,7 +67,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             op = OP;
         }
 
-        void toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
+        String toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
             final String line;
             if (this.line != null) {
                 line = this.line;
@@ -135,84 +131,99 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
                 line = buf.toString();
             }
-            messageWriter.print("      " + line);
-            try {
+            return line;
+/*            try {
                 opsWriter.write(line);
                 opsWriter.newLine();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        }
+*/        }
     }
 
+    private final ProvisioningRuntime runtime;
     private final MessageWriter messageWriter;
 
     private int opsTotal;
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
     private NameFilter paramFilter;
 
-    private BufferedWriter opsWriter;
+    //private BufferedWriter opsWriter;
+    private List<String> cliOps = new ArrayList<>();
 
-    WfProvisionedConfigHandler(MessageWriter messageWriter) {
-        this.messageWriter = messageWriter;
+    WfProvisionedConfigHandler(ProvisioningRuntime runtime) {
+        this.runtime = runtime;
+        this.messageWriter = runtime.getMessageWriter();
     }
 
     @Override
     public void prepare(ProvisionedConfig config) throws ProvisioningException {
-        final String embedCmd;
+        //final String embedCmd;
         final String logFile;
         if("standalone".equals(config.getModel())) {
             logFile = config.getProperties().get("config-name");
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
-            embedCmd = "embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile;
+
+            //embedCmd = "embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile;
+            cliOps.add("embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile + " --jboss-home=" + runtime.getStagedDir());
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
                     return !("profile".equals(name) || "host".equals(name));
                 }
             };
-        } else if("domain".equals(config.getModel())) {
-            final String domainConfig = config.getProperties().get("domain-config-name");
-            if(domainConfig == null) {
-                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property domain-config-name");
-            }
-            embedCmd = "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig;
-            logFile = domainConfig;
-            paramFilter = new NameFilter() {
-                @Override
-                public boolean accepts(String name) {
-                    return !"host".equals(name);
-                }
-            };
-        } else if("host".equals(config.getModel())) {
-            final String hostConfig = config.getProperties().get("host-config-name");
-            if(hostConfig == null) {
-                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property host-config-name");
-            }
-            final StringBuilder buf = new StringBuilder();
-            buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=").append(hostConfig);
-            final String domainConfig = config.getProperties().get("domain-config-name");
-            if(domainConfig == null) {
-                buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=pm-tmp-domain.xml");
-            } else {
-                buf.append(" --domain-config=").append(domainConfig);
-            }
-            embedCmd = buf.toString();
-            logFile = hostConfig;
-            paramFilter = new NameFilter() {
-                @Override
-                public boolean accepts(String name) {
-                    return !"profile".equals(name);
-                }
-            };
         } else {
-            throw new ProvisioningException("Unsupported config model " + config.getModel());
+            if("domain".equals(config.getModel())) {
+                final String domainConfig = config.getProperties().get("domain-config-name");
+                if (domainConfig == null) {
+                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                            + " is missing property domain-config-name");
+                }
+                //embedCmd = "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig;
+                cliOps.add("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig + " --jboss-home=" + runtime.getStagedDir());
+                logFile = domainConfig;
+                paramFilter = new NameFilter() {
+                    @Override
+                    public boolean accepts(String name) {
+                        return !"host".equals(name);
+                    }
+                };
+            } else if ("host".equals(config.getModel())) {
+                final String hostConfig = config.getProperties().get("host-config-name");
+                if (hostConfig == null) {
+                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                            + " is missing property host-config-name");
+                }
+
+                final StringBuilder buf = new StringBuilder();
+                buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
+                        .append(hostConfig);
+                final String domainConfig = config.getProperties().get("domain-config-name");
+                if (domainConfig == null) {
+                    buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=pm-tmp-domain.xml");
+                } else {
+                    buf.append(" --domain-config=").append(domainConfig);
+                }
+                buf.append(" --jboss-home=").append(runtime.getStagedDir());
+                //embedCmd = buf.toString();
+                cliOps.add(buf.toString());
+
+                logFile = hostConfig;
+                paramFilter = new NameFilter() {
+                    @Override
+                    public boolean accepts(String name) {
+                        return !"profile".equals(name);
+                    }
+                };
+            } else {
+                throw new ProvisioningException("Unsupported config model " + config.getModel());
+            }
         }
 
-        try {
+/*        try {
             final Path path = Paths.get("/home/aloubyansky/pm-scripts/" + logFile);
             messageWriter.print("Logging ops to " + path.toAbsolutePath());
             opsWriter = Files.newBufferedWriter(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
@@ -221,7 +232,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-    }
+*/    }
 
     @Override
     public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
@@ -362,19 +373,23 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             return;
         }
         for(int i = 0; i < opsTotal; ++i) {
-            ops[i].toCommandLine(feature);
+            final String line = ops[i].toCommandLine(feature);
+            messageWriter.print("      " + line);
+            cliOps.add(line);
         }
     }
 
     @Override
     public void done() throws ProvisioningException {
-        try {
+        JBossCliUtil.runCliScript(runtime.getStagedDir(), false, true, cliOps);
+        cliOps.clear();
+/*        try {
             opsWriter.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
+*/    }
 
     private static Set<String> parseSet(String str) throws ProvisioningDescriptionException {
         if (str.isEmpty()) {

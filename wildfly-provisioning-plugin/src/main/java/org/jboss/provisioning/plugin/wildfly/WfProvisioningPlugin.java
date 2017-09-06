@@ -119,6 +119,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
      */
     @Override
     public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
+
         final MessageWriter messageWriter = runtime.getMessageWriter();
         messageWriter.verbose("WildFly provisioning plug-in");
 
@@ -212,9 +213,10 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 CliScriptRunner.runCliScript(runtime.getStagedDir(), finalizeCli, messageWriter);
             }
         }
+
 /*
         if(runtime.hasConfigs()) {
-            final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(messageWriter);
+            final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(runtime);
             for (ProvisionedConfig config : runtime.getConfigs()) {
                 final StringBuilder msg = new StringBuilder(64)
                         .append("Feature config");
@@ -236,7 +238,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         }
 */
         //testEmbedded(runtime.getInstallDir());
-
     }
 
     private void processPackages(final FeaturePackRuntime fp) throws ProvisioningException {
