@@ -59,6 +59,7 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -81,44 +82,12 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     private StandaloneConfigGenerator standaloneGenerator;
     private DomainConfigGenerator domainScriptCollector;
 
-
-/*    private static void testEmbedded(Path installDir) {
-        System.out.println("testing embedded server");
-
-        // JBoss Modules overrides the default providers
-        final String origXmlOutFactory = System.getProperty("javax.xml.stream.XMLOutputFactory");
-        CommandContext ctx = null;
-        try {
-            ctx = CommandContextFactory.getInstance().newCommandContext(
-                    new CommandContextConfiguration.Builder()
-                    .setSilent(true)
-                    .setInitConsole(false)
-                    .build());
-            ctx.handle("embed-server --empty-config --remove-existing --server-config=test.xml --jboss-home=" + installDir.toAbsolutePath());
-            ctx.handle(":read-attribute(name=name)");
-            ctx.handle("stop-embedded-server");
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            if(origXmlOutFactory == null) {
-                if(System.getProperty("javax.xml.stream.XMLOutputFactory") != null) {
-                    System.clearProperty("javax.xml.stream.XMLOutputFactory");
-                }
-            } else if(!origXmlOutFactory.equals(System.getProperty("javax.xml.stream.XMLOutputFactory"))) {
-                System.setProperty("javax.xml.stream.XMLOutputFactory", origXmlOutFactory);
-            }
-            if(ctx != null) {
-                ctx.terminateSession();
-            }
-        }
-    }
-*/
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
      */
     @Override
     public void postInstall(ProvisioningRuntime runtime) throws ProvisioningException {
+
         final MessageWriter messageWriter = runtime.getMessageWriter();
         messageWriter.verbose("WildFly provisioning plug-in");
 
@@ -212,9 +181,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 CliScriptRunner.runCliScript(runtime.getStagedDir(), finalizeCli, messageWriter);
             }
         }
-/*
+
+
+        //generateConfigs(runtime, messageWriter);
+    }
+
+    private void generateConfigs(ProvisioningRuntime runtime, final MessageWriter messageWriter) throws ProvisioningException {
         if(runtime.hasConfigs()) {
-            final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(messageWriter);
+            final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(runtime);
             for (ProvisionedConfig config : runtime.getConfigs()) {
                 final StringBuilder msg = new StringBuilder(64)
                         .append("Feature config");
@@ -234,9 +208,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 config.handle(configHandler);
             }
         }
-*/
-        //testEmbedded(runtime.getInstallDir());
-
     }
 
     private void processPackages(final FeaturePackRuntime fp) throws ProvisioningException {
