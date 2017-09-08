@@ -25,8 +25,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.jboss.provisioning.Errors;
-import org.jboss.provisioning.ProvisioningException;
+import java.util.List;
 
 /**
  * @author Alexey Loubyansky
@@ -37,22 +36,22 @@ public class JBossCliUtil {
     private static Method launchMethod;
     private static Object launcher;
 
-    public static void runCliScript(Path installDir, boolean silent, boolean echoCommand, String... cmds) throws ProvisioningException {
+    public static void runCliScript(Path installDir, boolean silent, boolean echoCommand, List<String> cmds) throws Exception {
         initLauncher(installDir);
         try {
             launchMethod.invoke(launcher,
                     new File[] { installDir.resolve("modules").resolve("system").resolve("layers").resolve("base").toFile() },
                     new Object[] {installDir.resolve("jboss-cli.xml"), silent, echoCommand}, new Object[] {cmds});
         } catch (Exception e) {
-            throw new ProvisioningException("Failed to execute a CLI task", e);
+            throw new Exception("Failed to execute a CLI task", e);
         }
     }
 
-    private static void initLauncher(Path installDir) throws ProvisioningException {
+    private static void initLauncher(Path installDir) throws Exception {
         if (launcher == null) {
             final Path jbossModulesJar = installDir.resolve("jboss-modules.jar");
             if (!Files.exists(jbossModulesJar)) {
-                throw new ProvisioningException(Errors.pathDoesNotExist(jbossModulesJar));
+                throw new Exception("Path does not exist " + jbossModulesJar);
             }
 
             final URL[] pluginURLs = ((URLClassLoader) Thread.currentThread().getContextClassLoader()).getURLs();
@@ -60,7 +59,7 @@ public class JBossCliUtil {
             try {
                 newURLs[0] = jbossModulesJar.toUri().toURL();
             } catch (MalformedURLException e) {
-                throw new ProvisioningException("Failed to transform " + jbossModulesJar + " to URL", e);
+                throw new Exception("Failed to transform " + jbossModulesJar + " to URL", e);
             }
             System.arraycopy(pluginURLs, 0, newURLs, 1, pluginURLs.length);
 
@@ -77,7 +76,7 @@ public class JBossCliUtil {
                     } catch (IOException e1) {
                     }
                 }
-                throw new ProvisioningException("Failed to init JBoss Modules environment", e);
+                throw new Exception("Failed to init JBoss Modules environment", e);
             }
         }
     }

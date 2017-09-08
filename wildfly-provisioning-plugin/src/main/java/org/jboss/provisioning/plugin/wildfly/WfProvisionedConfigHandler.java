@@ -29,9 +29,7 @@ import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
-import org.jboss.provisioning.plugin.wildfly.embedded.WfEmbeddedHc;
-import org.jboss.provisioning.plugin.wildfly.embedded.WfEmbeddedServer;
-import org.jboss.provisioning.plugin.wildfly.embedded.WfEmbeddedSupport;
+import org.jboss.provisioning.plugin.wildfly.embedded.JBossCliUtil;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
@@ -152,7 +150,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private NameFilter paramFilter;
 
     //private BufferedWriter opsWriter;
-    private WfEmbeddedSupport<?>.EmbeddedSession embeddedSession;
+    private List<String> cliOps = new ArrayList<>();
 
     WfProvisionedConfigHandler(ProvisioningRuntime runtime) {
         this.runtime = runtime;
@@ -163,21 +161,14 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     public void prepare(ProvisionedConfig config) throws ProvisioningException {
         //final String embedCmd;
         final String logFile;
-        final WfEmbeddedSupport<?> wfEmbedded;
         if("standalone".equals(config.getModel())) {
             logFile = config.getProperties().get("config-name");
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
 
-            final WfEmbeddedServer embeddedServer = WfEmbeddedServer.newInstance();
-            wfEmbedded = embeddedServer;
-            embeddedServer.setAdminOnly(true)
-            .setEmptyConfig(true)
-            .setRemoveExistingConfig(true)
-            .setServerConfig(logFile);
-
             //embedCmd = "embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile;
+            cliOps.add("embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile + " --jboss-home=" + runtime.getStagedDir());
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
@@ -185,21 +176,14 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
             };
         } else {
-            final WfEmbeddedHc embeddedHc = WfEmbeddedHc.newInstance()
-                    .setEmptyHostConfig(true)
-                    .setRemoveExistingHostConfig(true)
-                    .setEmptyDomainConfig(true);
-            wfEmbedded = embeddedHc;
             if("domain".equals(config.getModel())) {
                 final String domainConfig = config.getProperties().get("domain-config-name");
                 if (domainConfig == null) {
                     throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
                             + " is missing property domain-config-name");
                 }
-                embeddedHc.setHostConfig("pm-tmp-host.xml")
-                .setRemoveExistingDomainConfig(true)
-                .setDomainConfig(domainConfig);
                 //embedCmd = "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig;
+                cliOps.add("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig + " --jboss-home=" + runtime.getStagedDir());
                 logFile = domainConfig;
                 paramFilter = new NameFilter() {
                     @Override
@@ -213,8 +197,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
                             + " is missing property host-config-name");
                 }
-                embeddedHc.setHostConfig(hostConfig)
-                .setRemoveExistingDomainConfig(true);
 
                 final StringBuilder buf = new StringBuilder();
                 buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
@@ -222,12 +204,13 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 final String domainConfig = config.getProperties().get("domain-config-name");
                 if (domainConfig == null) {
                     buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=pm-tmp-domain.xml");
-                    embeddedHc.setRemoveExistingDomainConfig(true).setDomainConfig("pm-tmp-domain.xml");
                 } else {
                     buf.append(" --domain-config=").append(domainConfig);
-                    embeddedHc.setDomainConfig(domainConfig);
                 }
+                buf.append(" --jboss-home=").append(runtime.getStagedDir());
                 //embedCmd = buf.toString();
+                cliOps.add(buf.toString());
+
                 logFile = hostConfig;
                 paramFilter = new NameFilter() {
                     @Override
@@ -240,10 +223,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
         }
 
-        embeddedSession = wfEmbedded.setInstallHome(runtime.getStagedDir())
-                .setMessageWriter(runtime.getMessageWriter())
-                .setValidate(true)
-                .newSession();
 /*        try {
             final Path path = Paths.get("/home/aloubyansky/pm-scripts/" + logFile);
             messageWriter.print("Logging ops to " + path.toAbsolutePath());
@@ -396,19 +375,18 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         for(int i = 0; i < opsTotal; ++i) {
             final String line = ops[i].toCommandLine(feature);
             messageWriter.print("      " + line);
-            try {
-                embeddedSession.handle(line);
-            } catch(ProvisioningException e) {
-                embeddedSession.close();
-                throw e;
-            }
+            cliOps.add(line);
         }
     }
 
     @Override
     public void done() throws ProvisioningException {
-        embeddedSession.close();
-        embeddedSession = null;
+        try {
+            JBossCliUtil.runCliScript(runtime.getStagedDir(), false, true, cliOps);
+        } catch (Exception e) {
+            throw new ProvisioningException("Failed to run the CLI script", e);
+        }
+        cliOps.clear();
 /*        try {
             opsWriter.close();
         } catch (IOException e) {

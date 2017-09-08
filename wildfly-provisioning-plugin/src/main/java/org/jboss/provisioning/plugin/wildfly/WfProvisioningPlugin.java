@@ -59,6 +59,7 @@ import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
@@ -206,8 +207,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             domainScriptCollector.run();
         }
 
-        //JBossCliUtil.runCliScript(runtime.getStagedDir(), false, true, "1", "2");
-/*
         if(runtime.hasConfigs()) {
             final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(runtime);
             for (ProvisionedConfig config : runtime.getConfigs()) {
@@ -229,7 +228,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 config.handle(configHandler);
             }
         }
-*/
 
         //testEmbedded(runtime.getInstallDir());
     }

@@ -21,13 +21,13 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.jboss.modules.LocalModuleFinder;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleFinder;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.provisioning.ProvisioningException;
 
 import __redirected.__JAXPRedirected;
 
@@ -45,7 +45,7 @@ public class JBossCliLauncher {
     private Method taskMethod;
     private Object task;
 
-    public void launch(File[] repoRoots, Object[] ctorArgs, Object[] methodArgs) throws ProvisioningException {
+    public void launch(File[] repoRoots, Object[] ctorArgs, Object[] methodArgs) throws Exception {
 
         if(task == null) {
             init(repoRoots, ctorArgs);
@@ -56,13 +56,13 @@ public class JBossCliLauncher {
             Thread.currentThread().setContextClassLoader(newCl);
             taskMethod.invoke(task, methodArgs);
         } catch (Exception e) {
-            throw new ProvisioningException("Failed to execute JBoss Modules task", e);
+            throw new Exception("Failed to execute JBoss Modules task", e);
         } finally {
             Thread.currentThread().setContextClassLoader(originalCl);
         }
     }
 
-    private void init(File[] repoRoots, Object[] ctorArgs) throws ProvisioningException {
+    private void init(File[] repoRoots, Object[] ctorArgs) throws Exception {
         final ModuleFinder mf = new LocalModuleFinder(repoRoots);
         final ModuleLoader ml = new ModuleLoader(new ModuleFinder[] {mf});
         final String origXmlOutFactory = System.getProperty(JAVAX_XML_STREAM_XML_OUTPUT_FACTORY);
@@ -73,14 +73,14 @@ public class JBossCliLauncher {
             final URLClassLoader originalCl = (URLClassLoader) getClass().getClassLoader();
             newCl = new URLClassLoader(originalCl.getURLs(), cliModule.getClassLoader());
             final Class<?> taskClass = newCl.loadClass(JBossCli.class.getName());
-            taskMethod = taskClass.getMethod("run", new Class[] {String[].class});
+            taskMethod = taskClass.getMethod("execute", new Class[] {List.class});
             task = taskClass.getConstructor(CTOR_TYPES).newInstance(ctorArgs);
         } catch (ModuleLoadException e) {
-            throw new ProvisioningException("Failed to load CLI module", e);
+            throw new Exception("Failed to load CLI module", e);
         } catch (ClassNotFoundException e) {
-            throw new ProvisioningException("Failed to load " + JBossCli.class, e);
+            throw new Exception("Failed to load " + JBossCli.class, e);
         } catch (Exception e) {
-            throw new ProvisioningException("Failed to initialize an instance of " + JBossCli.class);
+            throw new Exception("Failed to initialize an instance of " + JBossCli.class);
         } finally {
             __JAXPRedirected.restorePlatformFactory();
             if(origXmlOutFactory == null) {
