@@ -27,7 +27,6 @@ import org.jboss.as.cli.CliInitializationException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.impl.CommandContextConfiguration;
-import org.jboss.provisioning.ProvisioningException;
 
 /**
  *
@@ -48,9 +47,10 @@ public class JBossCli {
     /**
      * Starts an embedded server to execute commands
      * @param commands the list of commands to execute on the embedded server.
-     * @throws ProvisioningException
+     * @throws Exception
      */
-    public void execute(List<String> commands) throws ProvisioningException {
+    public void execute(List<String> commands) throws Exception {
+
         Properties props = (Properties) System.getProperties().clone();
         CommandContext ctx = null;
         try {
@@ -68,7 +68,7 @@ public class JBossCli {
                 ctx.handle(cmd);
             }
         } catch (Exception e) {
-            throw new ProvisioningException("Failed to execute script", e);
+            throw new Exception("Failed to execute script", e);
         } finally {
             if(ctx != null) {
                 ctx.terminateSession();

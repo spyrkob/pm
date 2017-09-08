@@ -381,7 +381,11 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     @Override
     public void done() throws ProvisioningException {
-        JBossCliUtil.runCliScript(runtime.getStagedDir(), false, true, cliOps);
+        try {
+            JBossCliUtil.runCliScript(runtime.getStagedDir(), false, true, cliOps);
+        } catch (Exception e) {
+            throw new ProvisioningException("Failed to run the CLI script", e);
+        }
         cliOps.clear();
 /*        try {
             opsWriter.close();
