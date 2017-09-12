@@ -70,7 +70,8 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private Map<String, String> props = Collections.emptyMap();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
-    private ResolvedSpecId lastHandledSpecId;
+
+    private List<ResolvedFeature> orderedFeatures;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
@@ -265,27 +266,28 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     @Override
     public boolean hasFeatures() {
-        return !featuresById.isEmpty();
+        return orderedFeatures != null && !orderedFeatures.isEmpty();
     }
 
     @Override
     public void handle(ProvisionedConfigHandler handler) throws ProvisioningException {
-        if(featuresById.isEmpty()) {
+        if(orderedFeatures.isEmpty()) {
             return;
         }
         //System.out.println(model + ':' + name + "> handle");
         handler.prepare(this);
-        for(SpecFeatures features : featuresBySpec.values()) {
-            handleSpec(features, handler);
-        }
-        lastHandledSpecId = null;
-        handler.done();
-        for(SpecFeatures features : featuresBySpec.values()) {
-            features.beingHandled = false;
-            for(ResolvedFeature feature : features.list) {
-                feature.beingHandled = false;
+        ResolvedSpecId lastHandledSpecId = null;
+        for(ResolvedFeature feature : orderedFeatures) {
+            if(!feature.spec.id.equals(lastHandledSpecId)) {
+                if (lastHandledSpecId == null || !feature.spec.id.gav.equals(lastHandledSpecId.gav)) {
+                    handler.nextFeaturePack(feature.spec.id.gav);
+                }
+                handler.nextSpec(feature.spec);
+                lastHandledSpecId = feature.getSpecId();
             }
+            handler.nextFeature(feature);
         }
+        handler.done();
     }
 
     public ProvisionedConfig build() throws ProvisioningException {
@@ -304,56 +306,60 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 throw new ProvisioningException(buf.toString(), e);
             }
         }
+        if(featuresById.isEmpty()) {
+            orderedFeatures = Collections.emptyList();
+            featuresById = Collections.emptyMap();
+            featuresBySpec = Collections.emptyMap();
+            return this;
+        }
+        orderedFeatures = new ArrayList<>(featuresById.size());
+        for(SpecFeatures features : featuresBySpec.values()) {
+            processSpec(features);
+        }
+
+        featuresById = Collections.emptyMap();
+        featuresBySpec = Collections.emptyMap();
         return this;
     }
 
-    private void handleSpec(SpecFeatures features, ProvisionedConfigHandler handler) throws ProvisioningException {
+    private void processSpec(SpecFeatures features) throws ProvisioningException {
         if(features.beingHandled) {
             return;
         }
         features.beingHandled = true;
-        handleFeature(features.list.get(0), handler);
+        processFeature(features.list.get(0));
         int i = 1;
         while(i < features.list.size()) {
-            handleFeature(features.list.get(i++), handler);
+            processFeature(features.list.get(i++));
         }
     }
 
-    private void handleFeature(ResolvedFeature feature, ProvisionedConfigHandler handler) throws ProvisioningException {
+    private void processFeature(ResolvedFeature feature) throws ProvisioningException {
         if(feature.beingHandled) {
             return;
         }
         feature.beingHandled = true;
-
         if(!feature.dependencies.isEmpty()) {
             for(ResolvedFeatureId depId : feature.dependencies) {
-                handleRef(feature, depId, handler);
+                processRef(feature, depId);
             }
         }
         List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
         if(!refIds.isEmpty()) {
             for(ResolvedFeatureId refId : refIds) {
-                handleRef(feature, refId, handler);
+                processRef(feature, refId);
             }
         }
-
-        if(!feature.spec.id.equals(lastHandledSpecId)) {
-            if (lastHandledSpecId == null || !feature.spec.id.gav.equals(lastHandledSpecId.gav)) {
-                handler.nextFeaturePack(feature.spec.id.gav);
-            }
-            handler.nextSpec(feature.spec);
-            lastHandledSpecId = feature.getSpecId();
-        }
-        handler.nextFeature(feature);
+        orderedFeatures.add(feature);
     }
 
-    private void handleRef(ResolvedFeature feature, ResolvedFeatureId refId, ProvisionedConfigHandler handler) throws ProvisioningException {
+    private void processRef(ResolvedFeature feature, ResolvedFeatureId refId) throws ProvisioningException {
         if (feature.spec.id.equals(refId.specId)) {
             final ResolvedFeature dep = featuresById.get(refId);
             if (dep == null) {
                 throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
             }
-            handleFeature(dep, handler);
+            processFeature(dep);
             return;
         }
         final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
@@ -361,7 +367,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
         if (!targetSpecFeatures.beingHandled) {
-            handleSpec(targetSpecFeatures, handler);
+            processSpec(targetSpecFeatures);
             return;
         }
         final ResolvedFeature dep = featuresById.get(refId);
@@ -369,7 +375,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
         if (!dep.beingHandled) {
-            handleFeature(dep, handler);
+            processFeature(dep);
         }
     }
 
