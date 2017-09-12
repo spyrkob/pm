@@ -182,8 +182,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             }
         }
 
-
-        //generateConfigs(runtime, messageWriter);
+        generateConfigs(runtime, messageWriter);
     }
 
     private void generateConfigs(ProvisioningRuntime runtime, final MessageWriter messageWriter) throws ProvisioningException {

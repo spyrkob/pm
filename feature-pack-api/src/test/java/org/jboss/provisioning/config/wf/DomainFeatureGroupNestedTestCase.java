@@ -67,16 +67,16 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
 
         @Override
         public void nextFeaturePack(ArtifactCoords.Gav fpGav) {
-            System.out.println("Feature-pack " + fpGav);
+            //System.out.println("Feature-pack " + fpGav);
         }
         @Override
         public void nextSpec(ResolvedFeatureSpec spec) {
-            System.out.println(" spec " + spec.getId());
+            //System.out.println(" spec " + spec.getId());
         }
 
         @Override
         public void nextFeature(ProvisionedFeature feature) {
-            System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
+            //System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
         }
     }
 
@@ -107,7 +107,7 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
                     .addParam(FeatureParameterSpec.createId("profile"))
                     .addParam(FeatureParameterSpec.create("name", true, false, "CONSOLE"))
                     .addParam(FeatureParameterSpec.create("level", "INFO"))
-                    .addParam(FeatureParameterSpec.create("formatters", "COLOR_PATTERN"))
+                    .addParam(FeatureParameterSpec.create("formatters", "COLOR-PATTERN"))
                     .addRef(FeatureReferenceSpec.builder("logging").mapParam("profile", "profile").build())
                     .addRef(FeatureReferenceSpec.builder("logging-formatter").mapParam("profile", "profile").mapParam("formatters", "name").build())
                     .build())
@@ -285,7 +285,7 @@ public class DomainFeatureGroupNestedTestCase extends PmInstallFeaturePackTestBa
                                 .setParam("profile", "default")
                                 .setParam("name", "CONSOLE").build())
                                 .setParam("level", "INFO")
-                                .setParam("formatters", "COLOR_PATTERN")
+                                .setParam("formatters", "COLOR-PATTERN")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
