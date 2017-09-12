@@ -32,7 +32,7 @@ public abstract class PmSessionCommand implements Command<PmSession> {
             runCommand(session);
             return CommandResult.SUCCESS;
         } catch (Throwable t) {
-            t.printStackTrace();
+            //t.printStackTrace();
             if(t instanceof RuntimeException) {
                 t.printStackTrace(session.getShell().err());
             }
