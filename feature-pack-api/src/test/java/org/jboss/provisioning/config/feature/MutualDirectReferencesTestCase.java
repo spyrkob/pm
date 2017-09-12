@@ -39,7 +39,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class MutualReferencesTestCase extends PmInstallFeaturePackTestBase {
+public class MutualDirectReferencesTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -68,6 +68,7 @@ public class MutualReferencesTestCase extends PmInstallFeaturePackTestBase {
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
+                    // this is also a test for the order in which the features appear in the config
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "b")
@@ -76,6 +77,14 @@ public class MutualReferencesTestCase extends PmInstallFeaturePackTestBase {
                             new FeatureConfig("specA")
                             .setParam("name", "a")
                             .setParam("b", "b"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("b", "b1"))
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("name", "b1")
+                            .setParam("a", "a1"))
                     .build())
             .newPackage("p1", true)
                 .getFeaturePack()
@@ -97,11 +106,17 @@ public class MutualReferencesTestCase extends PmInstallFeaturePackTestBase {
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
+                                .setParam("a", "a")
+                                .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a"))
                                 .setParam("b", "b")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
+                                .setParam("b", "b1")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b1"))
+                                .setParam("a", "a1")
                                 .build())
                         .build())
                 .build();

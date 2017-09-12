@@ -72,7 +72,7 @@ public class DomainFeatureGroupFlatTestCase extends PmInstallFeaturePackTestBase
                     .addParam(FeatureParameterSpec.createId("profile"))
                     .addParam(FeatureParameterSpec.create("name", true, false, "CONSOLE"))
                     .addParam(FeatureParameterSpec.create("level", "INFO"))
-                    .addParam(FeatureParameterSpec.create("formatters", "COLOR_PATTERN"))
+                    .addParam(FeatureParameterSpec.create("formatters", "COLOR-PATTERN"))
                     .addRef(FeatureReferenceSpec.create("logging"))
                     .addRef(FeatureReferenceSpec.builder("logging-formatter").mapParam("profile", "profile").mapParam("formatters", "name").build())
                     .build())
@@ -275,7 +275,7 @@ public class DomainFeatureGroupFlatTestCase extends PmInstallFeaturePackTestBase
                                 .setParam("profile", "default")
                                 .setParam("name", "CONSOLE").build())
                                 .setParam("level", "INFO")
-                                .setParam("formatters", "COLOR_PATTERN")
+                                .setParam("formatters", "COLOR-PATTERN")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 ResolvedFeatureId.builder(FP_GAV, "logging-rotating-file-handler")
