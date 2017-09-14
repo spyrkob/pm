@@ -204,6 +204,14 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(domainScriptCollector != null) {
             domainScriptCollector.run();
         }
+
+        // TODO this needs to be revisited
+        for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
+            final Path finalizeCli = fp.getResource(WfConstants.WILDFLY, WfConstants.SCRIPTS, "finalize.cli");
+            if(Files.exists(finalizeCli)) {
+                CliScriptRunner.runCliScript(runtime.getStagedDir(), finalizeCli, messageWriter);
+            }
+        }
 /*
         if(runtime.hasConfigs()) {
             final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(messageWriter);
