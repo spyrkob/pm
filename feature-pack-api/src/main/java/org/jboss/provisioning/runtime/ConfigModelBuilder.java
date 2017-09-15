@@ -70,18 +70,35 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private static final class CircularRefInfo {
         final ResolvedFeature loopedOn;
         ResolvedFeature firstInConfig;
+        private boolean firstInConfigMapsToNonNullParams;
         ResolvedFeature nextOnPath;
 
         CircularRefInfo(ResolvedFeature start) {
             loopedOn = start;
-            firstInConfig = start;
             nextOnPath = start;
         }
 
         void setNext(ResolvedFeature feature) {
             nextOnPath = feature;
-            if(firstInConfig.includeNo > feature.includeNo) {
-                firstInConfig = feature;
+        }
+
+        void setNextMapping(ResolvedFeature feature) {
+            if(firstInConfig == null) {
+                firstInConfig = nextOnPath;
+                firstInConfigMapsToNonNullParams = feature.isMappedToNonNullParams(nextOnPath.id);
+                return;
+            }
+            if(!feature.isMappedToNonNullParams(nextOnPath.id)) {
+                if(!firstInConfigMapsToNonNullParams) {
+                    if(firstInConfig.includeNo > nextOnPath.includeNo) {
+                        firstInConfig = nextOnPath;
+                    }
+                } else {
+                    firstInConfig = nextOnPath;
+                    firstInConfigMapsToNonNullParams = true;
+                }
+            } else if(firstInConfigMapsToNonNullParams && firstInConfig.includeNo > nextOnPath.includeNo) {
+                firstInConfig = nextOnPath;
             }
         }
     }
@@ -424,7 +441,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(!feature.dependencies.isEmpty()) {
             circularRefs = orderRefs(feature, feature.dependencies, false);
         }
-        List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
+        Collection<ResolvedFeatureId> refIds = feature.resolveRefs(this);
         if(!refIds.isEmpty()) {
             final List<CircularRefInfo> cyclicSpecRefs = orderRefs(feature, refIds, true);
             if(circularRefs == null) {
@@ -568,6 +585,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 for (int i = 0; i < specLoops.size(); ++i) {
                     final CircularRefInfo specLoop = specLoops.get(i);
                     if (specLoop.nextOnPath.id.equals(refId)) {
+                        specLoop.setNextMapping(feature);
                         if (featureLoops == null) {
                             featureLoops = Collections.singletonList(specLoop);
                         } else {
@@ -589,7 +607,13 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if (dep == null) {
             throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
         }
-        return orderFeature(dep);
+        final List<CircularRefInfo> featureLoops = orderFeature(dep);
+        if(featureLoops != null) {
+            for(int i = 0; i < featureLoops.size(); ++i) {
+                featureLoops.get(i).setNextMapping(feature);
+            }
+        }
+        return featureLoops;
     }
 
     private static StringBuilder errorFor(ResolvedFeature feature) {

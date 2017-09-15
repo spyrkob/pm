@@ -16,10 +16,11 @@
  */
 package org.jboss.provisioning.runtime;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -46,6 +47,7 @@ public class ResolvedFeature implements ProvisionedFeature {
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
     Set<ResolvedFeatureId> dependencies;
+    private Map<ResolvedFeatureId, Boolean> resolvedRefs;
 
     private byte orderingState = FREE;
 
@@ -192,7 +194,30 @@ public class ResolvedFeature implements ProvisionedFeature {
         }
     }
 
-    List<ResolvedFeatureId> resolveRefs(ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
-        return spec.resolveRefs(this, configModelBuilder);
+    void addResolvedRef(ResolvedFeatureId refId, boolean mapsToNonNullParams) {
+        switch(resolvedRefs.size()) {
+            case 0:
+                resolvedRefs = Collections.singletonMap(refId, mapsToNonNullParams);
+                break;
+            case 1:
+                final Map.Entry<ResolvedFeatureId, Boolean> first = resolvedRefs.entrySet().iterator().next();
+                resolvedRefs = new LinkedHashMap<>(2);
+                resolvedRefs.put(first.getKey(), first.getValue());
+            default:
+                resolvedRefs.put(refId, mapsToNonNullParams);
+        }
+    }
+
+    Collection<ResolvedFeatureId> resolveRefs(ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
+        if(resolvedRefs == null) {
+            resolvedRefs = Collections.emptyMap();
+            spec.resolveRefs(this, configModelBuilder);
+        }
+        return resolvedRefs.keySet();
+    }
+
+    boolean isMappedToNonNullParams(ResolvedFeatureId refId) {
+        final Boolean mappedToNonNullParams = resolvedRefs.get(refId);
+        return mappedToNonNullParams == null ? false : mappedToNonNullParams;
     }
 }

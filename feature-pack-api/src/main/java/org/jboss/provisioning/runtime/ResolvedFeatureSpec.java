@@ -17,14 +17,11 @@
 
 package org.jboss.provisioning.runtime;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
-
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureAnnotation;
@@ -97,31 +94,21 @@ public class ResolvedFeatureSpec {
         }
     }
 
-    List<ResolvedFeatureId> resolveRefs(ResolvedFeature feature, ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
+    void resolveRefs(ResolvedFeature feature, ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
         if(resolvedRefTargets.isEmpty()) {
-            return Collections.emptyList();
+            return;
         }
-        if(resolvedRefTargets.size() == 1) {
-            final Entry<String, ResolvedSpecId> refEntry = resolvedRefTargets.entrySet().iterator().next();
-            final ResolvedFeatureId refId = getRefTarget(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
-            return refId == null ? Collections.emptyList() : Collections.singletonList(refId);
-        }
-        final List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
         for(Map.Entry<String, ResolvedSpecId> refEntry : resolvedRefTargets.entrySet()) {
-            final ResolvedFeatureId refId = getRefTarget(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
-            if(refId != null) {
-                refIds.add(refId);
-            }
+            resolveRef(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
         }
-        return refIds;
     }
 
-    private ResolvedFeatureId getRefTarget(final ResolvedFeature feature, final ResolvedSpecId targetSpecId, final FeatureReferenceSpec refSpec, ConfigModelBuilder configModelBuilder)
+    private void resolveRef(final ResolvedFeature feature, final ResolvedSpecId targetSpecId, final FeatureReferenceSpec refSpec, ConfigModelBuilder configModelBuilder)
             throws ProvisioningDescriptionException {
         if(refSpec.getParamsMapped() == 0) {
             final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(targetSpecId, !refSpec.isNillable());
             if(targetSpec == null) {
-                return null;
+                return;
             }
             final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
             if(targetIdParams.size() == 1) {
@@ -129,49 +116,65 @@ public class ResolvedFeatureSpec {
                 final String paramValue = feature.getParam(paramName);
                 if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
                     assertRefNotNillable(feature, refSpec);
-                    return null;
+                    return;
                 }
-                return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(paramName, paramValue));
+                feature.addResolvedRef(new ResolvedFeatureId(targetSpecId, Collections.singletonMap(paramName, paramValue)),
+                        !feature.spec.xmlSpec.getParam(paramName).isNillable());
+                return;
             }
             final Map<String, String> params = new HashMap<>(targetIdParams.size());
+            boolean mapsToNonNullParams = false;
             for(FeatureParameterSpec targetIdParam : targetIdParams) {
-                final String paramValue = feature.getParam(targetIdParam.getName());
+                final String paramName = targetIdParam.getName();
+                final String paramValue = feature.getParam(paramName);
                 if(paramValue == null) {
                     assertRefNotNillable(feature, refSpec);
-                    return null;
-                } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
-                    params.put(targetIdParam.getName(), paramValue);
+                    return;
+                }
+                if(!paramValue.equals(Constants.PM_UNDEFINED)) {
+                    params.put(paramName, paramValue);
+                    if(!mapsToNonNullParams && !feature.spec.xmlSpec.getParam(paramName).isNillable()) {
+                        mapsToNonNullParams = true;
+                    }
                 }
             }
             if(params.isEmpty()) {
                 assertRefNotNillable(feature, refSpec);
-                return null;
+                return;
             }
-            return new ResolvedFeatureId(targetSpecId, params);
+            feature.addResolvedRef(new ResolvedFeatureId(targetSpecId, params), mapsToNonNullParams);
+            return;
         }
         if(refSpec.getParamsMapped() == 1) {
             final String paramValue = feature.getParam(refSpec.getLocalParam(0));
             if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
                 assertRefNotNillable(feature, refSpec);
-                return null;
+                return;
             }
-            return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(refSpec.getTargetParam(0), paramValue));
+            feature.addResolvedRef(new ResolvedFeatureId(targetSpecId, Collections.singletonMap(refSpec.getTargetParam(0), paramValue)),
+                    !feature.spec.xmlSpec.getParam(refSpec.getLocalParam(0)).isNillable());
+            return;
         }
         Map<String, String> params = new HashMap<>(refSpec.getParamsMapped());
+        boolean mapsToNonNullParams = false;
         for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
             final String paramValue = feature.getParam(refSpec.getLocalParam(i));
             if(paramValue == null) {
                 assertRefNotNillable(feature, refSpec);
-                return null;
-            } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
+                return;
+            }
+            if(!paramValue.equals(Constants.PM_UNDEFINED)) {
                 params.put(refSpec.getTargetParam(i), paramValue);
+                if(!mapsToNonNullParams && !feature.spec.xmlSpec.getParam(refSpec.getLocalParam(i)).isNillable()) {
+                    mapsToNonNullParams = true;
+                }
             }
         }
         if(params.isEmpty()) {
             assertRefNotNillable(feature, refSpec);
-            return null;
+            return;
         }
-        return new ResolvedFeatureId(targetSpecId, params);
+        feature.addResolvedRef(new ResolvedFeatureId(targetSpecId, params), mapsToNonNullParams);
     }
 
     private void assertRefNotNillable(final ResolvedFeature feature, final FeatureReferenceSpec refSpec)
