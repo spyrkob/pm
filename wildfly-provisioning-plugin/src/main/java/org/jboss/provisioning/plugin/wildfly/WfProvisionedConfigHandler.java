@@ -424,12 +424,12 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
         int comma = str.indexOf(',');
         if (comma < 1) {
-            return Collections.singleton(str);
+            return Collections.singleton(str.trim());
         }
         final Set<String> set = new HashSet<>();
         int start = 0;
         while (comma > 0) {
-            final String paramName = str.substring(start, comma);
+            final String paramName = str.substring(start, comma).trim();
             if (paramName.isEmpty()) {
                 throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
             }
@@ -440,7 +440,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
-        set.add(str.substring(start));
+        set.add(str.substring(start).trim());
         return set;
     }
 
@@ -451,7 +451,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int strComma = str.indexOf(',');
         List<String> list = new ArrayList<>();
         if (strComma < 1) {
-            final String mapped = mappingStr == null ? str : mappingStr;
+            str = str.trim();
+            final String mapped = mappingStr == null ? str : mappingStr.trim();
             if (filter.accepts(str)) {
                 list.add(str);
                 list.add(mapped);
@@ -464,7 +465,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int mappingStart = mappingComma > 0 ? 0 : -1;
         int start = 0;
         while (strComma > 0) {
-            final String paramName = str.substring(start, strComma);
+            final String paramName = str.substring(start, strComma).trim();
             if (paramName.isEmpty()) {
                 throw new ProvisioningDescriptionException("Saw en empty list item in note '" + str + "'");
             }
@@ -472,7 +473,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             if(mappingComma < 0) {
                 mappedName = paramName;
             } else {
-                mappedName = mappingStr.substring(mappingStart, mappingComma);
+                mappedName = mappingStr.substring(mappingStart, mappingComma).trim();
                 if (mappedName.isEmpty()) {
                     throw new ProvisioningDescriptionException("Saw en empty list item in note '" + mappingStr + "'");
                 }
@@ -494,8 +495,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
-        final String paramName = str.substring(start);
-        final String mappedName = mappingStart < 0 ? paramName : mappingStr.substring(mappingStart);
+        final String paramName = str.substring(start).trim();
+        final String mappedName = mappingStart < 0 ? paramName : mappingStr.substring(mappingStart).trim();
         if(filter.accepts(paramName)) {
             list.add(paramName);
             list.add(mappedName);
