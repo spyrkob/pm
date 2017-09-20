@@ -34,13 +34,27 @@ import org.jboss.provisioning.state.ProvisionedFeature;
  */
 public class ResolvedFeature implements ProvisionedFeature {
 
+    /*
+     * These states are used when the features are being ordered in the config
+     */
+    private static final byte FREE = 0;
+    private static final byte SCHEDULED = 1;
+    private static final byte ORDERED = 2;
+
+    private static final byte BATCH_START = 1;
+    private static final byte BATCH_END = 2;
+
+    final int includeNo;
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
     Set<ResolvedFeatureId> dependencies;
-    boolean beingHandled;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
+    private byte orderingState = FREE;
+    private byte batchControl;
+
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps, int includeNo) throws ProvisioningDescriptionException {
+        this.includeNo = includeNo;
         this.id = id;
         this.spec = spec;
         this.dependencies = resolvedDeps;
@@ -81,6 +95,48 @@ public class ResolvedFeature implements ProvisionedFeature {
         } else {
             this.params = Collections.emptyMap();
         }
+    }
+
+    boolean isFree() {
+        return orderingState == FREE;
+    }
+
+    boolean isOrdered() {
+        return orderingState == ORDERED;
+    }
+
+    void schedule() {
+        if(orderingState != FREE) {
+            throw new IllegalStateException();
+        }
+        orderingState = SCHEDULED;
+    }
+
+    void ordered() {
+        if(orderingState != SCHEDULED) {
+            throw new IllegalStateException();
+        }
+        orderingState = ORDERED;
+    }
+
+    void free() {
+        orderingState = FREE;
+    }
+
+    void startBatch() {
+        batchControl = BATCH_START;
+    }
+
+    void endBatch() {
+        batchControl = BATCH_END;
+    }
+
+    boolean isBatchStart() {
+        return batchControl == BATCH_START;
+    }
+
+    boolean isBatchEnd() {
+        return batchControl == BATCH_END;
     }
 
     public void addDependency(ResolvedFeatureId id) {

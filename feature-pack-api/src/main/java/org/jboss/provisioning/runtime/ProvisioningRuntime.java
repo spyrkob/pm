@@ -351,6 +351,10 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
                         }
                     } finally {
                         thread.setContextClassLoader(ocl);
+                        try {
+                            ucl.close();
+                        } catch (IOException e) {
+                        }
                     }
                 }
             }

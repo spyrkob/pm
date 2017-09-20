@@ -21,8 +21,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,14 +29,17 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.util.IoUtils;
 
 /**
  *
@@ -49,6 +50,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private static final int OP = 0;
     private static final int WRITE_ATTR = 1;
     private static final int LIST_ADD = 2;
+
+    private static final String TMP_DOMAIN_XML = "pm-tmp-domain.xml";
+    private static final String TMP_HOST_XML = "pm-tmp-host.xml";
 
     private interface NameFilter {
         boolean accepts(String name);
@@ -71,7 +75,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             op = OP;
         }
 
-        void toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
+        String toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
             final String line;
             if (this.line != null) {
                 line = this.line;
@@ -135,91 +139,117 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
                 line = buf.toString();
             }
-            messageWriter.print("      " + line);
-            try {
-                opsWriter.write(line);
-                opsWriter.newLine();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            return line;
         }
     }
 
+    private final ProvisioningRuntime runtime;
     private final MessageWriter messageWriter;
 
     private int opsTotal;
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
     private NameFilter paramFilter;
 
+    private Path script;
+    private String tmpConfig;
     private BufferedWriter opsWriter;
 
-    WfProvisionedConfigHandler(MessageWriter messageWriter) {
-        this.messageWriter = messageWriter;
+    WfProvisionedConfigHandler(ProvisioningRuntime runtime) {
+        this.runtime = runtime;
+        this.messageWriter = runtime.getMessageWriter();
+    }
+
+    private void initOpsWriter(String name, String op) throws ProvisioningException {
+        script = runtime.getTmpPath("cli", name);
+        try {
+            Files.createDirectories(script.getParent());
+            opsWriter = Files.newBufferedWriter(script);
+            writeOp(op);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.openFile(script));
+        }
+    }
+
+    private void writeOp(String op) throws ProvisioningException {
+        try {
+            opsWriter.write(op);
+            opsWriter.newLine();
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to write operation to a file", e);
+        }
     }
 
     @Override
     public void prepare(ProvisionedConfig config) throws ProvisioningException {
-        final String embedCmd;
         final String logFile;
         if("standalone".equals(config.getModel())) {
             logFile = config.getProperties().get("config-name");
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
-            embedCmd = "embed-server --admin-only=true --empty-config --remove-existing --server-config=" + logFile;
+
+            final StringBuilder buf = new StringBuilder();
+            buf.append("embed-server --admin-only=true --empty-config --remove-existing --server-config=")
+            .append(logFile).append(" --jboss-home=").append(runtime.getStagedDir());
+            initOpsWriter(logFile, buf.toString());
+
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
                     return !("profile".equals(name) || "host".equals(name));
                 }
             };
-        } else if("domain".equals(config.getModel())) {
-            final String domainConfig = config.getProperties().get("domain-config-name");
-            if(domainConfig == null) {
-                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property domain-config-name");
-            }
-            embedCmd = "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=pm-tmp-host.xml --domain-config=" + domainConfig;
-            logFile = domainConfig;
-            paramFilter = new NameFilter() {
-                @Override
-                public boolean accepts(String name) {
-                    return !"host".equals(name);
-                }
-            };
-        } else if("host".equals(config.getModel())) {
-            final String hostConfig = config.getProperties().get("host-config-name");
-            if(hostConfig == null) {
-                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property host-config-name");
-            }
-            final StringBuilder buf = new StringBuilder();
-            buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=").append(hostConfig);
-            final String domainConfig = config.getProperties().get("domain-config-name");
-            if(domainConfig == null) {
-                buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=pm-tmp-domain.xml");
-            } else {
-                buf.append(" --domain-config=").append(domainConfig);
-            }
-            embedCmd = buf.toString();
-            logFile = hostConfig;
-            paramFilter = new NameFilter() {
-                @Override
-                public boolean accepts(String name) {
-                    return !"profile".equals(name);
-                }
-            };
         } else {
-            throw new ProvisioningException("Unsupported config model " + config.getModel());
-        }
+            if("domain".equals(config.getModel())) {
+                logFile = config.getProperties().get("domain-config-name");
+                if (logFile == null) {
+                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                            + " is missing property domain-config-name");
+                }
 
-        try {
-            final Path path = Paths.get("/home/aloubyansky/pm-scripts/" + logFile);
-            messageWriter.print("Logging ops to " + path.toAbsolutePath());
-            opsWriter = Files.newBufferedWriter(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-            opsWriter.write(embedCmd);
-            opsWriter.newLine();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+                tmpConfig = TMP_HOST_XML;
+                final StringBuilder buf = new StringBuilder();
+                buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
+                .append(TMP_HOST_XML)
+                .append(" --domain-config=").append(logFile)
+                .append(" --jboss-home=").append(runtime.getStagedDir());
+                initOpsWriter(logFile, buf.toString());
+
+                paramFilter = new NameFilter() {
+                    @Override
+                    public boolean accepts(String name) {
+                        return !"host".equals(name);
+                    }
+                };
+            } else if ("host".equals(config.getModel())) {
+                logFile = config.getProperties().get("host-config-name");
+                if (logFile == null) {
+                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                            + " is missing property host-config-name");
+                }
+
+                final StringBuilder buf = new StringBuilder();
+                buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
+                        .append(logFile);
+                final String domainConfig = config.getProperties().get("domain-config-name");
+                if (domainConfig == null) {
+                    tmpConfig = TMP_DOMAIN_XML;
+                    buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=").append(TMP_DOMAIN_XML);
+                } else {
+                    buf.append(" --domain-config=").append(domainConfig);
+                }
+                buf.append(" --jboss-home=").append(runtime.getStagedDir());
+                initOpsWriter(logFile, buf.toString());
+
+                paramFilter = new NameFilter() {
+                    @Override
+                    public boolean accepts(String name) {
+                        return !"profile".equals(name);
+                    }
+                };
+            } else {
+                throw new ProvisioningException("Unsupported config model " + config.getModel());
+            }
         }
     }
 
@@ -362,7 +392,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             return;
         }
         for(int i = 0; i < opsTotal; ++i) {
-            ops[i].toCommandLine(feature);
+            final String line = ops[i].toCommandLine(feature);
+            messageWriter.print("      " + line);
+            writeOp(line);
         }
     }
 
@@ -371,8 +403,18 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         try {
             opsWriter.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new ProvisioningException("Failed to close " + script, e);
+        }
+        messageWriter.print(" Generating %s configuration", script.getFileName().toString());
+        CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
+        if(tmpConfig != null) {
+            final Path tmpPath = runtime.getStagedDir().resolve("domain").resolve("configuration").resolve(tmpConfig);
+            if(Files.exists(tmpPath)) {
+                IoUtils.recursiveDelete(tmpPath);
+            } else {
+                messageWriter.error("Expected path does not exist " + tmpPath);
+            }
+            tmpConfig = null;
         }
     }
 
@@ -382,12 +424,12 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
         int comma = str.indexOf(',');
         if (comma < 1) {
-            return Collections.singleton(str);
+            return Collections.singleton(str.trim());
         }
         final Set<String> set = new HashSet<>();
         int start = 0;
         while (comma > 0) {
-            final String paramName = str.substring(start, comma);
+            final String paramName = str.substring(start, comma).trim();
             if (paramName.isEmpty()) {
                 throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
             }
@@ -398,7 +440,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
-        set.add(str.substring(start));
+        set.add(str.substring(start).trim());
         return set;
     }
 
@@ -409,7 +451,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int strComma = str.indexOf(',');
         List<String> list = new ArrayList<>();
         if (strComma < 1) {
-            final String mapped = mappingStr == null ? str : mappingStr;
+            str = str.trim();
+            final String mapped = mappingStr == null ? str : mappingStr.trim();
             if (filter.accepts(str)) {
                 list.add(str);
                 list.add(mapped);
@@ -422,7 +465,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int mappingStart = mappingComma > 0 ? 0 : -1;
         int start = 0;
         while (strComma > 0) {
-            final String paramName = str.substring(start, strComma);
+            final String paramName = str.substring(start, strComma).trim();
             if (paramName.isEmpty()) {
                 throw new ProvisioningDescriptionException("Saw en empty list item in note '" + str + "'");
             }
@@ -430,7 +473,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             if(mappingComma < 0) {
                 mappedName = paramName;
             } else {
-                mappedName = mappingStr.substring(mappingStart, mappingComma);
+                mappedName = mappingStr.substring(mappingStart, mappingComma).trim();
                 if (mappedName.isEmpty()) {
                     throw new ProvisioningDescriptionException("Saw en empty list item in note '" + mappingStr + "'");
                 }
@@ -452,8 +495,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         if (start == str.length()) {
             throw new ProvisioningDescriptionException("Saw an empty list item in note '" + str);
         }
-        final String paramName = str.substring(start);
-        final String mappedName = mappingStart < 0 ? paramName : mappingStr.substring(mappingStart);
+        final String paramName = str.substring(start).trim();
+        final String mappedName = mappingStart < 0 ? paramName : mappingStr.substring(mappingStart).trim();
         if(filter.accepts(paramName)) {
             list.add(paramName);
             list.add(mappedName);
