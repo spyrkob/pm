@@ -23,6 +23,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -31,6 +32,8 @@ import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.TestConfigHandlersProvisioningPlugin;
+import org.jboss.provisioning.test.util.TestProvisionedConfigHandler;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
@@ -42,6 +45,41 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 public class CircularRefsLoopOfThreeTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
+    public static class ConfigHandler extends TestProvisionedConfigHandler {
+        @Override
+        protected boolean enableLogging() {
+            return false;
+        }
+        @Override
+        protected String[] initEvents() {
+            return new String[] {
+                    batchStartEvent(),
+                    featurePackEvent(FP_GAV),
+                    specEvent("specA"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")),
+                    specEvent("specC"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specC", "c", "c1")),
+                    specEvent("specB"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")),
+                    batchEndEvent(),
+                    batchStartEvent(),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b2")),
+                    specEvent("specA"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a2")),
+                    specEvent("specC"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specC", "c", "c2")),
+                    batchEndEvent(),
+                    batchStartEvent(),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specC", "c", "c3")),
+                    specEvent("specB"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b3")),
+                    specEvent("specA"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a3")),
+                    batchEndEvent()
+            };
+        }
+    }
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -103,6 +141,8 @@ public class CircularRefsLoopOfThreeTestCase extends PmInstallFeaturePackTestBas
                             .setParam("c", "c3"))
 
                     .build())
+            .addPlugin(TestConfigHandlersProvisioningPlugin.class)
+            .addService(ProvisionedConfigHandler.class, ConfigHandler.class)
             .getInstaller()
         .install();
     }

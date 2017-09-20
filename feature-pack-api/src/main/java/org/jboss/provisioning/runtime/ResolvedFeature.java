@@ -41,6 +41,9 @@ public class ResolvedFeature implements ProvisionedFeature {
     private static final byte SCHEDULED = 1;
     private static final byte ORDERED = 2;
 
+    private static final byte BATCH_START = 1;
+    private static final byte BATCH_END = 2;
+
     final int includeNo;
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
@@ -48,6 +51,7 @@ public class ResolvedFeature implements ProvisionedFeature {
     Set<ResolvedFeatureId> dependencies;
 
     private byte orderingState = FREE;
+    private byte batchControl;
 
     ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps, int includeNo) throws ProvisioningDescriptionException {
         this.includeNo = includeNo;
@@ -117,6 +121,22 @@ public class ResolvedFeature implements ProvisionedFeature {
 
     void free() {
         orderingState = FREE;
+    }
+
+    void startBatch() {
+        batchControl = BATCH_START;
+    }
+
+    void endBatch() {
+        batchControl = BATCH_END;
+    }
+
+    boolean isBatchStart() {
+        return batchControl == BATCH_START;
+    }
+
+    boolean isBatchEnd() {
+        return batchControl == BATCH_END;
     }
 
     public void addDependency(ResolvedFeatureId id) {

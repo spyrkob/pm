@@ -14,32 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.plugin;
 
-import org.jboss.provisioning.ArtifactCoords;
+package org.jboss.provisioning.test.util;
+
+import java.util.ServiceLoader;
+
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedConfig;
-import org.jboss.provisioning.state.ProvisionedFeature;
-
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public interface ProvisionedConfigHandler {
+public class TestConfigHandlersProvisioningPlugin implements ProvisioningPlugin {
 
-    default void prepare(ProvisionedConfig config) throws ProvisioningException {};
-
-    default void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {};
-
-    default void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {};
-
-    default void nextFeature(ProvisionedFeature feature) throws ProvisioningException {};
-
-    default void startBatch() throws ProvisioningException {};
-
-    default void endBatch() throws ProvisioningException {};
-
-    default void done() throws ProvisioningException {};
+    @Override
+    public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
+        if (ctx.hasConfigs()) {
+            final ServiceLoader<ProvisionedConfigHandler> handlers = ServiceLoader.load(ProvisionedConfigHandler.class);
+            for (ProvisionedConfigHandler handler : handlers) {
+                for (ProvisionedConfig config : ctx.getConfigs()) {
+                    config.handle(handler);
+                }
+            }
+        }
+    }
 }

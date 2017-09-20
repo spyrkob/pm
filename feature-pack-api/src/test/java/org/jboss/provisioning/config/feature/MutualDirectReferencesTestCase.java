@@ -23,6 +23,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -31,9 +32,12 @@ import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.TestConfigHandlersProvisioningPlugin;
+import org.jboss.provisioning.test.util.TestProvisionedConfigHandler;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
+
 
 /**
  *
@@ -42,6 +46,26 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 public class MutualDirectReferencesTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
+    public static class ConfigHandler extends TestProvisionedConfigHandler {
+        @Override
+        protected String[] initEvents() {
+            return new String[] {
+                    batchStartEvent(),
+                    featurePackEvent(FP_GAV),
+                    specEvent("specB"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b")),
+                    specEvent("specA"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")),
+                    batchEndEvent(),
+                    batchStartEvent(),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1")),
+                    specEvent("specB"),
+                    featureEvent(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b1")),
+                    batchEndEvent()
+            };
+        }
+    }
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -86,8 +110,8 @@ public class MutualDirectReferencesTestCase extends PmInstallFeaturePackTestBase
                             .setParam("name", "b1")
                             .setParam("a", "a1"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
+            .addPlugin(TestConfigHandlersProvisioningPlugin.class)
+            .addService(ProvisionedConfigHandler.class, ConfigHandler.class)
             .getInstaller()
         .install();
     }
@@ -100,9 +124,7 @@ public class MutualDirectReferencesTestCase extends PmInstallFeaturePackTestBase
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")

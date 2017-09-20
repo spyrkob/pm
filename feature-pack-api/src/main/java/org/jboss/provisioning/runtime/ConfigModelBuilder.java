@@ -21,7 +21,6 @@ package org.jboss.provisioning.runtime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -112,6 +111,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private List<ResolvedFeature> orderedFeatures;
     private boolean orderReferencedSpec = true;
     private int featureIncludeCount = 0;
+    private boolean inBatch;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
@@ -318,6 +318,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         handler.prepare(this);
         ResolvedSpecId lastHandledSpecId = null;
         for(ResolvedFeature feature : orderedFeatures) {
+            if(feature.isBatchStart()) {
+                handler.startBatch();
+            }
             if(!feature.spec.id.equals(lastHandledSpecId)) {
                 if (lastHandledSpecId == null || !feature.spec.id.gav.equals(lastHandledSpecId.gav)) {
                     handler.nextFeaturePack(feature.spec.id.gav);
@@ -326,6 +329,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 lastHandledSpecId = feature.getSpecId();
             }
             handler.nextFeature(feature);
+            if(feature.isBatchEnd()) {
+                handler.endBatch();
+            }
         }
         handler.done();
     }
@@ -489,11 +495,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             final boolean prevOrderRefSpec = orderReferencedSpec;
             orderReferencedSpec = false;
             // sort according to the appearance in the config
-            initiatedCircularRefs.sort(new Comparator<CircularRefInfo>() {
-                @Override
-                public int compare(CircularRefInfo o1, CircularRefInfo o2) {
-                    return o1.firstInConfig.includeNo - o2.firstInConfig.includeNo;
-                }});
+            initiatedCircularRefs.sort((o1, o2) -> o1.firstInConfig.includeNo - o2.firstInConfig.includeNo);
             if(initiatedCircularRefs.get(0).firstInConfig.includeNo < feature.includeNo) {
                 feature.free();
                 for(CircularRefInfo ref : initiatedCircularRefs) {
@@ -502,12 +504,24 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                     }
                 }
             } else {
+                final boolean endBatch;
+                if(inBatch) {
+                    endBatch = false;
+                } else {
+                    inBatch = true;
+                    feature.startBatch();
+                    endBatch = true;
+                }
                 feature.ordered();
                 orderedFeatures.add(feature);
                 for(CircularRefInfo ref : initiatedCircularRefs) {
                     if(orderFeature(ref.nextOnPath) != null) {
                         throw new IllegalStateException();
                     }
+                }
+                if(endBatch) {
+                    inBatch = false;
+                    this.orderedFeatures.get(orderedFeatures.size() - 1).endBatch();
                 }
             }
             orderReferencedSpec = prevOrderRefSpec;
