@@ -174,6 +174,8 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             domainScriptCollector.run();
         }
 
+        generateConfigs(runtime, messageWriter);
+
         // TODO this needs to be revisited
         for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {
             final Path finalizeCli = fp.getResource(WfConstants.WILDFLY, WfConstants.SCRIPTS, "finalize.cli");
@@ -181,8 +183,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 CliScriptRunner.runCliScript(runtime.getStagedDir(), finalizeCli, messageWriter);
             }
         }
-
-        //generateConfigs(runtime, messageWriter);
     }
 
     private void generateConfigs(ProvisioningRuntime runtime, final MessageWriter messageWriter) throws ProvisioningException {

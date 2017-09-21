@@ -399,6 +399,18 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     }
 
     @Override
+    public void startBatch() throws ProvisioningException {
+        messageWriter.print("      START BATCH");
+        writeOp("batch");
+    }
+
+    @Override
+    public void endBatch() throws ProvisioningException {
+        messageWriter.print("      END BATCH");
+        writeOp("run-batch");
+    }
+
+    @Override
     public void done() throws ProvisioningException {
         try {
             opsWriter.close();
