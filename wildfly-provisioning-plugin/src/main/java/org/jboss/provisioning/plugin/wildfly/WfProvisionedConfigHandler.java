@@ -110,7 +110,12 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                                     comma = true;
                                     buf.append('(');
                                 }
-                                buf.append(opParams.get(i++)).append('=').append(value);
+                                buf.append(opParams.get(i++)).append('=');
+                                if(value.trim().isEmpty()) {
+                                    buf.append('\"').append(value).append('\"');
+                                } else {
+                                    buf.append(value);
+                                }
                             }
                             if (comma) {
                                 buf.append(')');
