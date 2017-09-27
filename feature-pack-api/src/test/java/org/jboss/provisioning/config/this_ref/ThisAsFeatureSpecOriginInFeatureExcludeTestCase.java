@@ -78,7 +78,8 @@ public class ThisAsFeatureSpecOriginInFeatureExcludeTestCase extends PmProvision
             .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeature(new FeatureConfig("specD").setParam("d", "dOne")
                     .addFeature(new FeatureConfig(SpecId.create("fp1", "specA")).setParam("a", "aOne"))
-                    .addFeature(new FeatureConfig(SpecId.create("fp1", "specB")).setParam("b", "bOne")))
+                    .addFeature(new FeatureConfig(SpecId.create("fp1", "specB")).setParam("b", "bOne"))
+                    .addFeature(new FeatureConfig(SpecId.create("fp1", "specB")).setParam("b", "bTwo")))
                     .build())
             .getInstaller()
         .install();
@@ -105,7 +106,7 @@ public class ThisAsFeatureSpecOriginInFeatureExcludeTestCase extends PmProvision
                                 .setParam("d", "dOne").setParam("a", "aOne").build())
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP1_GAV, "specB")
-                                .setParam("d", "dOne").setParam("b", "bOne").build())
+                                .setParam("d", "dOne").setParam("b", "bTwo").build())
                                 .build())
                         .build())
                 .build();

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeatureGroupConfig.Builder;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 
@@ -40,6 +41,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
     Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
     Set<SpecId> excludedSpecs = Collections.emptySet();
     Set<FeatureId> excludedFeatures = Collections.emptySet();
+    Map<String, FeatureGroupConfig.Builder> externalFgConfigs = Collections.emptyMap();
 
     protected FeatureGroupConfigBuilderSupport() {
     }
@@ -64,8 +66,31 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return includeSpec(SpecId.fromString(spec));
     }
 
+    private FeatureGroupConfig.Builder getExternalFgConfig(String fpDep) {
+        FeatureGroupConfig.Builder fgBuilder = externalFgConfigs.get(fpDep);
+        if(fgBuilder != null) {
+            return fgBuilder;
+        }
+        fgBuilder = FeatureGroupConfig.builder();
+        if(externalFgConfigs.isEmpty()) {
+            externalFgConfigs = Collections.singletonMap(fpDep, fgBuilder);
+            return fgBuilder;
+        }
+        if(externalFgConfigs.size() == 1) {
+            final Map.Entry<String, Builder> first = externalFgConfigs.entrySet().iterator().next();
+            externalFgConfigs = new LinkedHashMap<>(2);
+            externalFgConfigs.put(first.getKey(), first.getValue());
+        }
+        externalFgConfigs.put(fpDep, fgBuilder);
+        return fgBuilder;
+    }
+
     @SuppressWarnings("unchecked")
     public B includeSpec(SpecId spec) throws ProvisioningDescriptionException {
+        if(spec.getFpDepName() != null) {
+            getExternalFgConfig(spec.getFpDepName()).includeSpec(spec.getName());
+            return (B) this;
+        }
         if(excludedSpecs.contains(spec)) {
             throw new ProvisioningDescriptionException(spec + " spec has been explicitly excluded");
         }
@@ -87,6 +112,11 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
 
     @SuppressWarnings("unchecked")
     public B includeFeature(FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+        if(featureId.getSpec().getFpDepName() != null) {
+            final FeatureId localFeatureId = new FeatureId(SpecId.create(featureId.getSpec().getName()), featureId.getParams());
+            getExternalFgConfig(featureId.getSpec().getFpDepName()).includeFeature(localFeatureId, feature);
+            return (B) this;
+        }
         if(excludedFeatures.contains(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
         }
@@ -123,6 +153,10 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
 
     @SuppressWarnings("unchecked")
     public B excludeSpec(SpecId spec) throws ProvisioningDescriptionException {
+        if(spec.getFpDepName() != null) {
+            getExternalFgConfig(spec.getFpDepName()).excludeSpec(spec.getName());
+            return (B) this;
+        }
         if(includedSpecs.contains(spec)) {
             throw new ProvisioningDescriptionException(spec + " spec has been inplicitly excluded");
         }
@@ -140,6 +174,11 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
 
     @SuppressWarnings("unchecked")
     public B excludeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
+        if(featureId.getSpec().getFpDepName() != null) {
+            final FeatureId localFeatureId = new FeatureId(SpecId.create(featureId.getSpec().getName()), featureId.getParams());
+            getExternalFgConfig(featureId.getSpec().getFpDepName()).excludeFeature(localFeatureId);
+            return (B) this;
+        }
         if(includedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly included");
         }
@@ -148,7 +187,9 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
                 excludedFeatures = Collections.singleton(featureId);
                 break;
             case 1:
-                excludedFeatures = new HashSet<>(excludedFeatures);
+                final FeatureId first = excludedFeatures.iterator().next();
+                excludedFeatures = new HashSet<>(2);
+                excludedFeatures.add(first);
             default:
                 excludedFeatures.add(featureId);
         }

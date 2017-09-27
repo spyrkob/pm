@@ -432,15 +432,49 @@ public class ProvisioningRuntimeBuilder {
 
     private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfigSupport fgConfig, final FeatureGroup fgSpec)
             throws ProvisioningException {
-        if(!modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
+        List<FeaturePackRuntime.Builder> pushedConfigs = Collections.emptyList();
+        if(fgConfig.hasExternalFeatureGroups()) {
+            for(Map.Entry<String, FeatureGroupConfig> entry : fgConfig.getExternalFeatureGroups().entrySet()) {
+                final FeaturePackRuntime.Builder depFpRt = getFpDependency(fp, entry.getKey());
+                if(modelBuilder.pushConfig(depFpRt.gav, resolveFeatureGroupConfig(depFpRt, entry.getValue()))) {
+                    switch(pushedConfigs.size()) {
+                        case 0:
+                            pushedConfigs = Collections.singletonList(depFpRt);
+                            break;
+                        case 1:
+                            final FeaturePackRuntime.Builder first = pushedConfigs.get(0);
+                            pushedConfigs = new ArrayList<>(2);
+                            pushedConfigs.add(first);
+                        default:
+                            pushedConfigs.add(depFpRt);
+                    }
+                }
+            }
+        }
+        if(modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
+            switch(pushedConfigs.size()) {
+                case 0:
+                    pushedConfigs = Collections.singletonList(fp);
+                    break;
+                case 1:
+                    final FeaturePackRuntime.Builder first = pushedConfigs.get(0);
+                    pushedConfigs = new ArrayList<>(2);
+                    pushedConfigs.add(first);
+                default:
+                    pushedConfigs.add(fp);
+            }
+        }
+        if (pushedConfigs.isEmpty()) {
             return false;
         }
         boolean resolvedFeatures = processFeatureGroupSpec(modelBuilder, fp, fgSpec);
-        final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(fp.gav);
-        if(!popped.includedFeatures.isEmpty()) {
-            for(Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
-                if(feature.getValue() != null) {
-                    resolvedFeatures |= resolveFeature(modelBuilder, getRtBuilder(feature.getValue().getSpecId(), fp), feature.getValue());
+        for(FeaturePackRuntime.Builder pushedFp : pushedConfigs) {
+            final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(pushedFp.gav);
+            if (!popped.includedFeatures.isEmpty()) {
+                for (Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
+                    if (feature.getValue() != null) {
+                        resolvedFeatures |= resolveFeature(modelBuilder, getRtBuilder(feature.getValue().getSpecId(), pushedFp), feature.getValue());
+                    }
                 }
             }
         }
@@ -526,15 +560,7 @@ public class ProvisioningRuntimeBuilder {
         }
         if(featureGroup.hasExternalDependencies()) {
             for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
-                final FeaturePackRuntime.Builder newFp;
-                final String fpDepName = entry.getKey();
-                if(Constants.THIS.equals(fpDepName)) {
-                    newFp = this.fpOrigin;
-                } else {
-                    final FeaturePackDependencySpec fpDep = fp.spec.getDependency(fpDepName);
-                    newFp = getRtBuilder(fpDep.getTarget().getGav());
-                }
-                resolvedFeatures |= processFeatureGroupSpec(modelBuilder, newFp, entry.getValue());
+                resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getFpDependency(fp, entry.getKey()), entry.getValue());
             }
         }
         if(featureGroup.hasLocalDependencies()) {
@@ -553,6 +579,14 @@ public class ProvisioningRuntimeBuilder {
         }
         this.fpOrigin = prevFpOrigin;
         return resolvedFeatures;
+    }
+
+    private FeaturePackRuntime.Builder getFpDependency(FeaturePackRuntime.Builder fp, final String fpDepName)
+            throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
+        if(Constants.THIS.equals(fpDepName)) {
+            return this.fpOrigin;
+        }
+        return getRtBuilder(fp.spec.getDependency(fpDepName).getTarget().getGav());
     }
 
     private boolean resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
