@@ -30,7 +30,6 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -53,13 +52,13 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
         .newFeaturePack(FP1_GAV)
             .addDependency("fp2", FP2_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .addRef(FeatureReferenceSpec.create("specD", SpecId.create("fp2", "specD")))
+                    .addRef(FeatureReferenceSpec.builder("specD").setDependency("fp2").build())
                     .addParam(FeatureParameterSpec.createId("a"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addRef(FeatureReferenceSpec.create("specD", SpecId.create("fp2", "specD")))
+                    .addRef(FeatureReferenceSpec.builder("specD").setDependency("fp2").build())
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", false))
@@ -69,8 +68,7 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
                     .addFeature(new FeatureConfig("specB").setParam("b", "bOne"))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeature(
-                            new FeatureConfig(SpecId.create("fp2", "specD"))
+                    .addFeature("fp2", new FeatureConfig("specD")
                             .setParam("d", "dOne")
                             .addFeatureGroup("this", FeatureGroupConfig.forGroup("fg1")))
                     .build())

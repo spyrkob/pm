@@ -46,6 +46,10 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         return new Builder(null, true);
     }
 
+    public static Builder builder(boolean inheritFeatures) {
+        return new Builder(null, inheritFeatures);
+    }
+
     public static Builder builder(String featureGroupName) {
         return builder(featureGroupName, true);
     }

@@ -25,59 +25,14 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  */
 public class SpecId {
 
-    static final char SEPARATOR = '#';
-
     public static SpecId fromString(String str) throws ProvisioningDescriptionException {
-        final int length = str.length();
-        if(length == 0) {
-            throw new ProvisioningDescriptionException("The string does not follow expected format fp_dep_name#spec_name");
-        }
-
-        int i = 0;
-        char c = str.charAt(i++);
-        final StringBuilder buf = new StringBuilder(length);
-        while(c != SEPARATOR) {
-            buf.append(c);
-            if(i == length) {
-                return new SpecId(null, buf.toString());
-            }
-            c = str.charAt(i++);
-        }
-
-        if(i == 1 || i == length) {
-            throw new ProvisioningDescriptionException("The string does not follow expected format fp_dep_name#spec_name");
-        }
-
-        final String fpDepName = buf.toString();
-        buf.setLength(0);
-        while(i < length) {
-            c = str.charAt(i++);
-            if(c == SEPARATOR) {
-                throw new ProvisioningDescriptionException("The string does not follow expected format fp_dep_name#spec_name");
-            }
-            buf.append(c);
-        }
-        return new SpecId(fpDepName, buf.toString());
+        return new SpecId(str);
     }
 
-    public static SpecId create(String name) {
-        return new SpecId(null, name);
-    }
-
-    public static SpecId create(String fpDepName, String name) {
-        return new SpecId(fpDepName, name);
-    }
-
-    final String fpDepName;
     final String name;
 
-    private SpecId(String fpDepName, String name) {
-        this.fpDepName = fpDepName;
+    private SpecId(String name) {
         this.name = name;
-    }
-
-    public String getFpDepName() {
-        return fpDepName;
     }
 
     public String getName() {
@@ -88,7 +43,6 @@ public class SpecId {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((fpDepName == null) ? 0 : fpDepName.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -102,11 +56,6 @@ public class SpecId {
         if (getClass() != obj.getClass())
             return false;
         SpecId other = (SpecId) obj;
-        if (fpDepName == null) {
-            if (other.fpDepName != null)
-                return false;
-        } else if (!fpDepName.equals(other.fpDepName))
-            return false;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -117,6 +66,6 @@ public class SpecId {
 
     @Override
     public String toString() {
-        return fpDepName == null ? name : fpDepName + SEPARATOR + name;
+        return name;
     }
 }

@@ -62,46 +62,29 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return (B) this;
     }
 
-    public B includeSpec(String spec) throws ProvisioningDescriptionException {
-        return includeSpec(SpecId.fromString(spec));
-    }
-
-    private FeatureGroupConfig.Builder getExternalFgConfig(String fpDep) {
-        FeatureGroupConfig.Builder fgBuilder = externalFgConfigs.get(fpDep);
-        if(fgBuilder != null) {
-            return fgBuilder;
+    @SuppressWarnings("unchecked")
+    public B includeSpec(String fpDep, String spec) throws ProvisioningDescriptionException {
+        if(fpDep == null) {
+            return includeSpec(spec);
         }
-        fgBuilder = FeatureGroupConfig.builder();
-        if(externalFgConfigs.isEmpty()) {
-            externalFgConfigs = Collections.singletonMap(fpDep, fgBuilder);
-            return fgBuilder;
-        }
-        if(externalFgConfigs.size() == 1) {
-            final Map.Entry<String, Builder> first = externalFgConfigs.entrySet().iterator().next();
-            externalFgConfigs = new LinkedHashMap<>(2);
-            externalFgConfigs.put(first.getKey(), first.getValue());
-        }
-        externalFgConfigs.put(fpDep, fgBuilder);
-        return fgBuilder;
+        getExternalFgConfig(fpDep).includeSpec(spec);
+        return (B) this;
     }
 
     @SuppressWarnings("unchecked")
-    public B includeSpec(SpecId spec) throws ProvisioningDescriptionException {
-        if(spec.getFpDepName() != null) {
-            getExternalFgConfig(spec.getFpDepName()).includeSpec(spec.getName());
-            return (B) this;
-        }
-        if(excludedSpecs.contains(spec)) {
-            throw new ProvisioningDescriptionException(spec + " spec has been explicitly excluded");
+    public B includeSpec(String spec) throws ProvisioningDescriptionException {
+        final SpecId specId = SpecId.fromString(spec);
+        if(excludedSpecs.contains(specId)) {
+            throw new ProvisioningDescriptionException(specId + " spec has been explicitly excluded");
         }
         switch(includedSpecs.size()) {
             case 0:
-                includedSpecs = Collections.singleton(spec);
+                includedSpecs = Collections.singleton(specId);
                 break;
             case 1:
                 includedSpecs = new LinkedHashSet<>(includedSpecs);
             default:
-                includedSpecs.add(spec);
+                includedSpecs.add(specId);
         }
         return (B) this;
     }
@@ -110,13 +93,21 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return includeFeature(featureId, null);
     }
 
+    public B includeFeature(String fpDep, FeatureId featureId) throws ProvisioningDescriptionException {
+        return includeFeature(fpDep, featureId, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public B includeFeature(String fpDep, FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+        if(fpDep == null) {
+            return includeFeature(featureId, feature);
+        }
+        getExternalFgConfig(fpDep).includeFeature(featureId, feature);
+        return (B) this;
+    }
+
     @SuppressWarnings("unchecked")
     public B includeFeature(FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
-        if(featureId.getSpec().getFpDepName() != null) {
-            final FeatureId localFeatureId = new FeatureId(SpecId.create(featureId.getSpec().getName()), featureId.getParams());
-            getExternalFgConfig(featureId.getSpec().getFpDepName()).includeFeature(localFeatureId, feature);
-            return (B) this;
-        }
         if(excludedFeatures.contains(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
         }
@@ -147,38 +138,44 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return (B) this;
     }
 
-    public B excludeSpec(String spec) throws ProvisioningDescriptionException {
-        return excludeSpec(SpecId.fromString(spec));
+    @SuppressWarnings("unchecked")
+    public B excludeSpec(String fpDep, String spec) throws ProvisioningDescriptionException {
+        if(fpDep == null) {
+            return excludeSpec(spec);
+        }
+        getExternalFgConfig(fpDep).excludeSpec(spec);
+        return (B) this;
     }
 
     @SuppressWarnings("unchecked")
-    public B excludeSpec(SpecId spec) throws ProvisioningDescriptionException {
-        if(spec.getFpDepName() != null) {
-            getExternalFgConfig(spec.getFpDepName()).excludeSpec(spec.getName());
-            return (B) this;
-        }
-        if(includedSpecs.contains(spec)) {
-            throw new ProvisioningDescriptionException(spec + " spec has been inplicitly excluded");
+    public B excludeSpec(String spec) throws ProvisioningDescriptionException {
+        final SpecId specId = SpecId.fromString(spec);
+        if(includedSpecs.contains(specId)) {
+            throw new ProvisioningDescriptionException(specId + " spec has been inplicitly excluded");
         }
         switch(excludedSpecs.size()) {
             case 0:
-                excludedSpecs = Collections.singleton(spec);
+                excludedSpecs = Collections.singleton(specId);
                 break;
             case 1:
                 excludedSpecs = new HashSet<>(excludedSpecs);
             default:
-                excludedSpecs.add(spec);
+                excludedSpecs.add(specId);
         }
         return (B) this;
     }
 
     @SuppressWarnings("unchecked")
-    public B excludeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
-        if(featureId.getSpec().getFpDepName() != null) {
-            final FeatureId localFeatureId = new FeatureId(SpecId.create(featureId.getSpec().getName()), featureId.getParams());
-            getExternalFgConfig(featureId.getSpec().getFpDepName()).excludeFeature(localFeatureId);
-            return (B) this;
+    public B excludeFeature(String fpDep, FeatureId featureId) throws ProvisioningDescriptionException {
+        if(fpDep == null) {
+            return excludeFeature(featureId);
         }
+        getExternalFgConfig(fpDep).excludeFeature(featureId);
+        return (B) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public B excludeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
         if(includedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly included");
         }
@@ -197,4 +194,26 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
     }
 
     public abstract T build() throws ProvisioningDescriptionException;
+
+    private FeatureGroupConfig.Builder getExternalFgConfig(String fpDep) {
+        if(fpDep == null) {
+            throw new IllegalArgumentException();
+        }
+        FeatureGroupConfig.Builder fgBuilder = externalFgConfigs.get(fpDep);
+        if(fgBuilder != null) {
+            return fgBuilder;
+        }
+        fgBuilder = FeatureGroupConfig.builder(inheritFeatures);
+        if(externalFgConfigs.isEmpty()) {
+            externalFgConfigs = Collections.singletonMap(fpDep, fgBuilder);
+            return fgBuilder;
+        }
+        if(externalFgConfigs.size() == 1) {
+            final Map.Entry<String, Builder> first = externalFgConfigs.entrySet().iterator().next();
+            externalFgConfigs = new LinkedHashMap<>(2);
+            externalFgConfigs.put(first.getKey(), first.getValue());
+        }
+        externalFgConfigs.put(fpDep, fgBuilder);
+        return fgBuilder;
+    }
 }

@@ -34,7 +34,6 @@ import org.jboss.provisioning.config.FeatureGroupConfigBuilderSupport;
 import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -381,23 +380,8 @@ public class FeatureGroupXml {
             if(featureIdStr != null) {
                 throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
             }
-            SpecId specId;
             try {
-                specId = SpecId.fromString(spec);
-                if(dependency != null) {
-                    if(specId.getFpDepName() != null) {
-                        if(!specId.getFpDepName().equals(dependency)) {
-                            throw new XMLStreamException("Included spec " + specId + " can't override target feature-pack dependency other than " + dependency);
-                        }
-                    } else {
-                        specId = SpecId.create(dependency, specId.getName());
-                    }
-                }
-            } catch (ProvisioningDescriptionException e) {
-                throw new XMLStreamException(e);
-            }
-            try {
-                depBuilder.includeSpec(specId);
+                depBuilder.includeSpec(dependency, spec);
             } catch (ProvisioningDescriptionException e) {
                 throw new XMLStreamException("Failed to parse config", e);
             }
@@ -407,26 +391,13 @@ public class FeatureGroupXml {
         if(featureIdStr == null) {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
-        FeatureId featureId = parseFeatureId(featureIdStr);
-        if(dependency != null) {
-            if(featureId.getSpec().getFpDepName() != null) {
-                if(!featureId.getSpec().getFpDepName().equals(dependency)) {
-                    throw new XMLStreamException("Included feature " + featureId + " can't override target feature-pack dependency other than " + dependency);
-                }
-            } else {
-                try {
-                    featureId = new FeatureId(SpecId.create(dependency, featureId.getSpec().getName()), featureId.getParams());
-                } catch (ProvisioningDescriptionException e) {
-                    throw new XMLStreamException(e);
-                }
-            }
-        }
+        final FeatureId featureId = parseFeatureId(featureIdStr);
         FeatureConfig fc = null;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
                     try {
-                        depBuilder.includeFeature(featureId, fc);
+                        depBuilder.includeFeature(dependency, featureId, fc);
                     } catch (ProvisioningDescriptionException e) {
                         throw new XMLStreamException("Failed to parse config", e);
                     }
@@ -485,43 +456,14 @@ public class FeatureGroupXml {
             if(featureIdStr != null) {
                 throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
             }
-            SpecId specId;
             try {
-                specId = SpecId.fromString(spec);
-                if(dependency != null) {
-                    if(specId.getFpDepName() != null) {
-                        if(!specId.getFpDepName().equals(dependency)) {
-                            throw new XMLStreamException("Included spec " + specId + " can't override target feature-pack dependency other than " + dependency);
-                        }
-                    } else {
-                        specId = SpecId.create(dependency, specId.getName());
-                    }
-                }
-            } catch (ProvisioningDescriptionException e) {
-                throw new XMLStreamException(e);
-            }
-            try {
-                depBuilder.excludeSpec(specId);
+                depBuilder.excludeSpec(dependency, spec);
             } catch (ProvisioningDescriptionException e) {
                 throw new XMLStreamException("Failed to parse config", e);
             }
         } else if(featureIdStr != null) {
-            FeatureId featureId = parseFeatureId(featureIdStr);
-            if(dependency != null) {
-                if(featureId.getSpec().getFpDepName() != null) {
-                    if(!featureId.getSpec().getFpDepName().equals(dependency)) {
-                        throw new XMLStreamException("Included feature " + featureId + " can't override target feature-pack dependency other than " + dependency);
-                    }
-                } else {
-                    try {
-                        featureId = new FeatureId(SpecId.create(dependency, featureId.getSpec().getName()), featureId.getParams());
-                    } catch (ProvisioningDescriptionException e) {
-                        throw new XMLStreamException(e);
-                    }
-                }
-            }
             try {
-                depBuilder.excludeFeature(featureId);
+                depBuilder.excludeFeature(dependency, parseFeatureId(featureIdStr));
             } catch (ProvisioningDescriptionException e) {
                 throw new XMLStreamException("Failed to parse config", e);
             }

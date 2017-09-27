@@ -30,7 +30,6 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -57,22 +56,21 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addRef(FeatureReferenceSpec.create("specD", SpecId.create("fp2", "specD")))
+                    .addRef(FeatureReferenceSpec.builder("specD").setDependency("fp2").build())
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", false))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
-                    .addFeature(
-                            new FeatureConfig(SpecId.create("fp2", "specD"))
+                    .addFeature("fp2", new FeatureConfig("specD")
                             .setParam("d", "dOne")
-                            .addFeature(new FeatureConfig(SpecId.create("this", "specB"))
-                            .setParam("b", "bOne")))
+                            .addFeature("this", new FeatureConfig("specB")
+                                    .setParam("b", "bOne")))
                     .build()).getInstaller()
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FP1_GAV)
             .addSpec(FeatureSpec.builder("specC")
-                    .addRef(FeatureReferenceSpec.create("specA", SpecId.create("fp1", "specA")))
+                    .addRef(FeatureReferenceSpec.builder("specA").setDependency("fp1").build())
                     .addParam(FeatureParameterSpec.createId("a"))
                     .addParam(FeatureParameterSpec.createId("c"))
                     .addParam(FeatureParameterSpec.create("p1", true))
@@ -82,11 +80,10 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
                     .addParam(FeatureParameterSpec.create("p1", false))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeature(
-                            new FeatureConfig(SpecId.create("fp1", "specA"))
+                    .addFeature("fp1", new FeatureConfig("specA")
                             .setParam("a", "aOne")
-                            .addFeature(new FeatureConfig(SpecId.create("this", "specC"))
-                            .setParam("c", "cOne")))
+                            .addFeature("this", new FeatureConfig("specC")
+                                    .setParam("c", "cOne")))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")

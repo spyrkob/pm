@@ -71,6 +71,9 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
             for(FeatureReferenceSpec ref : featureSpec.getRefs()) {
                 final ElementNode refE = addElement(refsE, Element.REFERENCE);
                 final String feature = ref.getFeature().toString();
+                if(ref.getDependency() != null) {
+                    addAttribute(refE, Attribute.DEPENDENCY, ref.getDependency());
+                }
                 addAttribute(refE, Attribute.FEATURE, feature);
                 if(!feature.equals(ref.getName())) {
                     addAttribute(refE, Attribute.NAME, ref.getName());

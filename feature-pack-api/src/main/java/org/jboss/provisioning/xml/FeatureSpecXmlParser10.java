@@ -33,7 +33,6 @@ import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -315,12 +314,16 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
     }
 
     private FeatureReferenceSpec parseReference(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String dependency = null;
         String name = null;
         String feature = null;
         boolean nillable = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
+                case DEPENDENCY:
+                    dependency = reader.getAttributeValue(i);
+                    break;
                 case NAME:
                     name = reader.getAttributeValue(i);
                     break;
@@ -340,12 +343,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if(name == null) {
             name = feature;
         }
-        FeatureReferenceSpec.Builder refBuilder;
-        try {
-            refBuilder = FeatureReferenceSpec.builder(SpecId.fromString(feature)).setName(name).setNillable(nillable);
-        } catch (ProvisioningDescriptionException e) {
-            throw new XMLStreamException("Failed to parse feature reference", e);
-        }
+        FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setDependency(dependency).setName(name).setNillable(nillable);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

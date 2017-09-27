@@ -45,7 +45,6 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.FeaturePack;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
@@ -140,13 +139,11 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                     Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
                     if(refs.size() == 1) {
                         final FeatureReferenceSpec refSpec = refs.iterator().next();
-                        final SpecId refSpecId = refSpec.getFeature();
-                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolveSpecId(refSpecId));
+                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolveSpecId(refSpec));
                     } else {
                         resolvedRefTargets = new HashMap<>(refs.size());
                         for (FeatureReferenceSpec refSpec : refs) {
-                            final SpecId refSpecId = refSpec.getFeature();
-                            resolvedRefTargets.put(refSpec.getName(), resolveSpecId(refSpecId));
+                            resolvedRefTargets.put(refSpec.getName(), resolveSpecId(refSpec));
                         }
                         resolvedRefTargets = Collections.unmodifiableMap(resolvedRefTargets);
                     }
@@ -157,14 +154,14 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return resolvedSpec;
         }
 
-        private ResolvedSpecId resolveSpecId(final SpecId refSpecId) throws ProvisioningDescriptionException {
+        private ResolvedSpecId resolveSpecId(final FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
             final ArtifactCoords.Gav refGav;
-            if (refSpecId.getFpDepName() == null) {
+            if (ref.getDependency() == null) {
                 refGav = gav;
             } else {
-                refGav = this.spec.getDependency(refSpecId.getFpDepName()).getTarget().getGav();
+                refGav = this.spec.getDependency(ref.getDependency()).getTarget().getGav();
             }
-            return new ResolvedSpecId(refGav, refSpecId.getName());
+            return new ResolvedSpecId(refGav, ref.getFeature().getName());
         }
 
         boolean isInheritPackages() {

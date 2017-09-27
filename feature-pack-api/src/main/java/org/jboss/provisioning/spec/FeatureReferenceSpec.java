@@ -32,14 +32,20 @@ public class FeatureReferenceSpec {
 
     public static class Builder {
 
-        private final SpecId feature;
+        private String dependency;
+        private final String featureSpec;
         private String name;
         private boolean nillable;
         private Map<String, String> paramMapping = null;
 
-        private Builder(SpecId feature) {
-            this.feature = feature;
-            this.name = feature.toString();
+        private Builder(String spec) {
+            this.featureSpec = spec;
+            this.name = featureSpec.toString();
+        }
+
+        public Builder setDependency(String fpDep) {
+            this.dependency = fpDep;
+            return this;
         }
 
         public Builder setName(String name) {
@@ -65,57 +71,39 @@ public class FeatureReferenceSpec {
         }
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
-            return new FeatureReferenceSpec(name, feature, nillable, paramMapping);
+            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, paramMapping);
         }
     }
 
-    public static Builder builder(String feature) throws ProvisioningDescriptionException {
-        return builder(SpecId.fromString(feature));
-    }
-
-    public static Builder builder(SpecId feature) {
+    public static Builder builder(String feature) {
         return new Builder(feature);
     }
 
     public static FeatureReferenceSpec create(String str) throws ProvisioningDescriptionException {
-        return create(SpecId.fromString(str));
+        return create(str, str, false);
     }
 
     public static FeatureReferenceSpec create(String str, boolean nillable) throws ProvisioningDescriptionException {
-        return create(SpecId.fromString(str), nillable);
-    }
-
-    public static FeatureReferenceSpec create(SpecId feature) throws ProvisioningDescriptionException {
-        return create(feature.toString(), feature, false);
-    }
-
-    public static FeatureReferenceSpec create(SpecId feature, boolean nillable) throws ProvisioningDescriptionException {
-        return create(feature.toString(), feature, nillable);
-    }
-
-    public static FeatureReferenceSpec create(String name, SpecId feature) throws ProvisioningDescriptionException {
-        return create(name, feature, false);
+        return create(str, str, nillable);
     }
 
     public static FeatureReferenceSpec create(String name, String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return create(name, SpecId.fromString(feature), nillable);
-    }
-
-    public static FeatureReferenceSpec create(String name, SpecId feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(name, feature, nillable, null);
+        return new FeatureReferenceSpec(null, name, feature, nillable, null);
     }
 
     private static final String[] EMPTY_ARR = new String[0];
 
+    final String dependency;
     final String name;
     final SpecId feature;
     final boolean nillable;
     final String[] localParams;
     final String[] targetParams;
 
-    private FeatureReferenceSpec(String name, SpecId feature, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
+    private FeatureReferenceSpec(String dependency, String name, String featureSpec, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
+        this.dependency = dependency;
         this.name = name;
-        this.feature = feature;
+        this.feature = SpecId.fromString(featureSpec);
         this.nillable = nillable;
         if(paramMapping == null || paramMapping.isEmpty()) {
             this.localParams = EMPTY_ARR;
@@ -129,6 +117,10 @@ public class FeatureReferenceSpec {
                 targetParams[i++] = mapping.getValue();
             }
         }
+    }
+
+    public String getDependency() {
+        return dependency;
     }
 
     public String getName() {
@@ -159,6 +151,7 @@ public class FeatureReferenceSpec {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((dependency == null) ? 0 : dependency.hashCode());
         result = prime * result + ((feature == null) ? 0 : feature.hashCode());
         result = prime * result + Arrays.hashCode(localParams);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -176,6 +169,11 @@ public class FeatureReferenceSpec {
         if (getClass() != obj.getClass())
             return false;
         FeatureReferenceSpec other = (FeatureReferenceSpec) obj;
+        if (dependency == null) {
+            if (other.dependency != null)
+                return false;
+        } else if (!dependency.equals(other.dependency))
+            return false;
         if (feature == null) {
             if (other.feature != null)
                 return false;
@@ -199,6 +197,9 @@ public class FeatureReferenceSpec {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
+        if(dependency != null) {
+            buf.append(" fpDep=").append(dependency);
+        }
         buf.append(" feature=").append(feature);
         if(nillable) {
             buf.append(" nillable");
