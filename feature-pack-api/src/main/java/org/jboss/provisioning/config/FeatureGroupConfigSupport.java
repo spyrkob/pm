@@ -18,6 +18,7 @@
 package org.jboss.provisioning.config;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +37,7 @@ public abstract class FeatureGroupConfigSupport {
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<SpecId> excludedSpecs;
     final Set<FeatureId> excludedFeatures;
+    final Map<String, FeatureGroupConfig> externalFgConfigs;
 
     protected FeatureGroupConfigSupport(String name) {
         this.name = name;
@@ -44,6 +46,7 @@ public abstract class FeatureGroupConfigSupport {
         this.includedFeatures = Collections.emptyMap();
         this.excludedSpecs = Collections.emptySet();
         this.excludedFeatures = Collections.emptySet();
+        this.externalFgConfigs = Collections.emptyMap();
     }
 
     protected FeatureGroupConfigSupport(FeatureGroupConfigBuilderSupport<?, ?> builder) {
@@ -53,6 +56,19 @@ public abstract class FeatureGroupConfigSupport {
         this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
         this.includedFeatures = builder.includedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.includedFeatures) : builder.includedFeatures;
         this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
+
+        if(builder.externalFgConfigs.isEmpty()) {
+            this.externalFgConfigs = Collections.emptyMap();
+        } else if(builder.externalFgConfigs.size() == 1) {
+            final Map.Entry<String, FeatureGroupConfig.Builder> entry = builder.externalFgConfigs.entrySet().iterator().next();
+            this.externalFgConfigs = Collections.singletonMap(entry.getKey(), entry.getValue().build());
+        } else {
+            final Map<String, FeatureGroupConfig> tmp = new LinkedHashMap<>(builder.externalFgConfigs.size());
+            for(Map.Entry<String, FeatureGroupConfig.Builder> entry : builder.externalFgConfigs.entrySet()) {
+                tmp.put(entry.getKey(), entry.getValue().build());
+            }
+            this.externalFgConfigs = Collections.unmodifiableMap(tmp);
+        }
     }
 
     public String getName() {
@@ -93,6 +109,14 @@ public abstract class FeatureGroupConfigSupport {
 
     public Map<FeatureId, FeatureConfig> getIncludedFeatures() {
         return includedFeatures;
+    }
+
+    public boolean hasExternalFeatureGroups() {
+        return !externalFgConfigs.isEmpty();
+    }
+
+    public Map<String, FeatureGroupConfig> getExternalFeatureGroups() {
+        return externalFgConfigs;
     }
 
     boolean isExcluded(SpecId spec) {

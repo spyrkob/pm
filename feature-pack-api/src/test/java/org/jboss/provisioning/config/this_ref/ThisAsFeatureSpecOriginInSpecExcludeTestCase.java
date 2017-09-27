@@ -30,7 +30,6 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
@@ -53,19 +52,19 @@ public class ThisAsFeatureSpecOriginInSpecExcludeTestCase extends PmProvisionCon
         .newFeaturePack(FP1_GAV)
             .addDependency("fp2", FP2_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .addRef(FeatureReferenceSpec.create("specD", SpecId.create("fp2", "specD")))
+                    .addRef(FeatureReferenceSpec.builder("specD").setDependency("fp2").build())
                     .addParam(FeatureParameterSpec.createId("a"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addRef(FeatureReferenceSpec.create("specD", SpecId.create("fp2", "specD")))
+                    .addRef(FeatureReferenceSpec.builder("specD").setDependency("fp2").build())
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", false))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup("fp2", FeatureGroupConfig.builder("fg2").excludeSpec(SpecId.create("this", "specB")).build())
+                    .addFeatureGroup("fp2", FeatureGroupConfig.builder("fg2").excludeSpec("this", "specB").build())
                     .build())
                     .getInstaller()
         .newFeaturePack(FP2_GAV)
@@ -76,8 +75,9 @@ public class ThisAsFeatureSpecOriginInSpecExcludeTestCase extends PmProvisionCon
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeature(new FeatureConfig("specD").setParam("d", "dOne")
-                    .addFeature(new FeatureConfig(SpecId.create("fp1", "specA")).setParam("a", "aOne"))
-                    .addFeature(new FeatureConfig(SpecId.create("fp1", "specB")).setParam("b", "bOne")))
+                    .addFeature("fp1", new FeatureConfig("specA").setParam("a", "aOne"))
+                    .addFeature("fp1", new FeatureConfig("specB").setParam("b", "bOne"))
+                    .addFeature("fp1", new FeatureConfig("specB").setParam("b", "bTwo")))
                     .build())
             .getInstaller()
         .install();
@@ -102,9 +102,6 @@ public class ThisAsFeatureSpecOriginInSpecExcludeTestCase extends PmProvisionCon
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP1_GAV, "specA")
                                 .setParam("d", "dOne").setParam("a", "aOne").build())
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP1_GAV, "specB")
-                                .setParam("d", "dOne").setParam("b", "bOne").build())
                                 .build())
                         .build())
                 .build();

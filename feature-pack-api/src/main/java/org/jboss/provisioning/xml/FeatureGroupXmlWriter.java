@@ -97,6 +97,17 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
         }
+        addFeatureGroupIncludeExclude(dep, ns, depE);
+        if(dep.hasExternalFeatureGroups()) {
+            for(Map.Entry<String, FeatureGroupConfig> entry : dep.getExternalFeatureGroups().entrySet()) {
+                final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
+                addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
+                addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);
+            }
+        }
+    }
+
+    private static void addFeatureGroupIncludeExclude(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
         if(dep.hasExcludedSpecs()) {
             for(SpecId spec : dep.getExcludedSpecs()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);

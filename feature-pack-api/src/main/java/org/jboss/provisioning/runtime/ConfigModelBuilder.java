@@ -149,7 +149,15 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         int i = fgConfigStack.size() - 1;
         while(i >= 0) {
             final ResolvedFeatureGroupConfig pushedFgConfig = fgConfigStack.get(i--);
-            if(pushedFgConfig.name.equals(fgConfig.name)) {
+            if(pushedFgConfig.name == null) {
+                if(fgConfig.name == null) {
+                    if(fgConfig.isSubsetOf(pushedFgConfig)) {
+                        return false;
+                    } else {
+                        break;
+                    }
+                }
+            } else if(pushedFgConfig.name.equals(fgConfig.name)) {
                 if(fgConfig.isSubsetOf(pushedFgConfig)) {
                     return false;
                 } else {

@@ -67,16 +67,16 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
 
         @Override
         public void nextFeaturePack(ArtifactCoords.Gav fpGav) {
-            System.out.println("Feature-pack " + fpGav);
+            //System.out.println("Feature-pack " + fpGav);
         }
         @Override
         public void nextSpec(ResolvedFeatureSpec spec) {
-            System.out.println(" spec " + spec.getId());
+            //System.out.println(" spec " + spec.getId());
         }
 
         @Override
         public void nextFeature(ProvisionedFeature feature) {
-            System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
+            //System.out.println("  + " + (feature.hasId() ? feature.getId() : feature.getSpecId() + " config"));
         }
     }
 

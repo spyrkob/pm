@@ -82,7 +82,7 @@ public class CustomizedInheritedConfigTestCase extends PmProvisionConfigTestBase
                             .build())
                     .build())
             .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
-                    .addFeature(new FeatureConfig("fp1#specA")
+                    .addFeature("fp1", new FeatureConfig("specA")
                             .setParam("name", "a5")
                             .setParam("p1", "fp2"))
                     .build())

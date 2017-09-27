@@ -41,20 +41,13 @@ public class FeatureId {
         int nextIndex = 0;
         char c = str.charAt(nextIndex++);
         final StringBuilder buf = new StringBuilder(length);
-        SpecId specId = null;
-        String fpDepName = null;
+        String specId = null;
         while(nextIndex < length) {
-            if(c == SpecId.SEPARATOR) {
-                if(nextIndex == 1) {
-                    formatException(str);
-                }
-                fpDepName = buf.toString();
-                buf.setLength(0);
-            } else if(c == ':') {
+            if(c == ':') {
                 if(buf.length() == 0) {
                     formatException(str);
                 }
-                specId = SpecId.create(fpDepName, buf.toString());
+                specId = buf.toString();
                 break;
             } else {
                 buf.append(c);
@@ -96,15 +89,15 @@ public class FeatureId {
     }
 
     private static void formatException(String s) throws ProvisioningDescriptionException {
-        throw new ProvisioningDescriptionException('\'' + s + "' does not follow format fp_dep_name#spec_name:param_name=value(,param_name=value)*");
+        throw new ProvisioningDescriptionException('\'' + s + "' does not follow format spec_name:param_name=value(,param_name=value)*");
     }
 
     public static class Builder {
 
-        private final SpecId specId;
+        private final String specId;
         private Map<String, String> params = Collections.emptyMap();
 
-        private Builder(SpecId specId) throws ProvisioningDescriptionException {
+        private Builder(String specId) throws ProvisioningDescriptionException {
             this.specId = specId;
         }
 
@@ -127,29 +120,21 @@ public class FeatureId {
     }
 
     public static Builder builder(String specId) throws ProvisioningDescriptionException {
-        return builder(SpecId.fromString(specId));
-    }
-
-    public static Builder builder(SpecId specId) throws ProvisioningDescriptionException {
         return new Builder(specId);
     }
 
     public static FeatureId create(String specId, String name, String value) throws ProvisioningDescriptionException {
-        return create(SpecId.fromString(specId), name, value);
-    }
-
-    public static FeatureId create(SpecId specId, String name, String value) throws ProvisioningDescriptionException {
         return new FeatureId(specId, Collections.singletonMap(name, value));
     }
 
     final SpecId specId;
     final Map<String, String> params;
 
-    public FeatureId(SpecId specName, Map<String, String> params) throws ProvisioningDescriptionException {
+    public FeatureId(String specName, Map<String, String> params) throws ProvisioningDescriptionException {
         if(params.isEmpty()) {
             throw new ProvisioningDescriptionException("ID paramaters are missing");
         }
-        this.specId = specName;
+        this.specId = SpecId.fromString(specName);
         this.params = params.size() == 1 ? params : Collections.unmodifiableMap(params);
     }
 
