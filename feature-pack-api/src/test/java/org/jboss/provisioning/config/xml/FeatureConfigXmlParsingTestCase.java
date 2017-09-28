@@ -69,7 +69,9 @@ public class FeatureConfigXmlParsingTestCase {
                                         .setParam("p1", "v1")
                                         .addFeature(
                                                 new FeatureConfig("spec10")
-                                                .addFeature(new FeatureConfig("spec11").setParentRef("spec10-ref").setParam("p1", "v1")))))
+                                                .addFeature(new FeatureConfig("spec11")
+                                                        .setParentRef("spec10-ref")
+                                                        .setParam("p1", "v1")))))
                         .excludeSpec("spec6")
                         .excludeFeature(FeatureId.create("spec8", "p1", "v1"))
                         .build())

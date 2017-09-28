@@ -19,7 +19,6 @@ package org.jboss.provisioning.config;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -233,32 +233,18 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
         buf.append('[').append(specId);
         if (!params.isEmpty()) {
             buf.append(' ');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Map.Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
-            while (i.hasNext()) {
-                entry = i.next();
-                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
-            }
+            StringUtils.append(buf, params.entrySet());
         }
         if(parentRef != null) {
             buf.append(" parentRef=").append(parentRef);
         }
         if(!dependencies.isEmpty()) {
             buf.append(" dependencies=");
-            final Iterator<FeatureId> i = dependencies.iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, dependencies);
         }
         if(!features.isEmpty()) {
             buf.append(" nested=");
-            int i = 0;
-            buf.append(features.get(i++));
-            while(i < features.size()) {
-                buf.append(',').append(features.get(i++));
-            }
+            StringUtils.appendList(buf, features);
         }
         return buf.append(']').toString();
     }

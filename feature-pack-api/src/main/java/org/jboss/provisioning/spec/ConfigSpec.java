@@ -19,12 +19,8 @@ package org.jboss.provisioning.spec;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -131,29 +127,19 @@ public class ConfigSpec extends FeatureGroupSupport {
             buf.append("model=").append(id.model).append(' ');
         }
         if(!props.isEmpty()) {
-            final Iterator<Map.Entry<String, String>> i = props.entrySet().iterator();
-            Entry<String, String> next = i.next();
-            buf.append(next.getKey()).append('=').append(next.getValue());
-            while(i.hasNext()) {
-                next = i.next();
-                buf.append(',').append(next.getKey()).append('=').append(next.getValue());
-            }
+            StringUtils.append(buf, props.entrySet());
         }
         if(!localGroups.isEmpty()) {
-            buf.append(' ').append(localGroups.get(0));
-            int i = 1;
-            while(i < localGroups.size()) {
-                final FeatureGroupConfig dep = localGroups.get(i++);
-                buf.append(',').append(dep);
-            }
+            buf.append(' ');
+            StringUtils.appendList(buf, localGroups);
+        }
+        if(!externalGroups.isEmpty()) {
+            buf.append(' ');
+            StringUtils.append(buf, externalGroups.entrySet());
         }
         if(!features.isEmpty()) {
-            buf.append(' ').append(features.get(0));
-            int i = 1;
-            while(i < features.size()) {
-                final FeatureConfig dep = features.get(i++);
-                buf.append(',').append(dep);
-            }
+            buf.append(' ');
+            StringUtils.append(buf, features);
         }
         return buf.toString();
     }

@@ -24,7 +24,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
@@ -32,7 +36,7 @@ import org.jboss.provisioning.state.ProvisionedFeature;
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedFeature implements ProvisionedFeature {
+public class ResolvedFeature extends CapabilityProvider implements ProvisionedFeature {
 
     /*
      * These states are used when the features are being ordered in the config
@@ -53,15 +57,16 @@ public class ResolvedFeature implements ProvisionedFeature {
     private byte orderingState = FREE;
     private byte batchControl;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params, Set<ResolvedFeatureId> resolvedDeps, int includeNo) throws ProvisioningDescriptionException {
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig fc, Set<ResolvedFeatureId> resolvedDeps, int includeNo) throws ProvisioningDescriptionException {
         this.includeNo = includeNo;
         this.id = id;
         this.spec = spec;
         this.dependencies = resolvedDeps;
-        if (!params.isEmpty()) {
+        if (fc.hasParams()) {
             if (!spec.xmlSpec.hasParams()) {
                 throw new ProvisioningDescriptionException("Features of type " + spec.id + " don't accept any parameters: " + params);
             }
+            final Map<String, String> params = fc.getParams();
             if(params.size() > spec.xmlSpec.getParamsTotal()) {
                 throw new ProvisioningDescriptionException("Provided parameters " + params.keySet() + " do not match " + spec.id + " parameters " + spec.xmlSpec.getParamNames());
             }
@@ -117,6 +122,8 @@ public class ResolvedFeature implements ProvisionedFeature {
             throw new IllegalStateException();
         }
         orderingState = ORDERED;
+        provided();
+        spec.provided();
     }
 
     void free() {
@@ -212,7 +219,38 @@ public class ResolvedFeature implements ProvisionedFeature {
         }
     }
 
+    void merge(FeatureConfig config) throws ProvisioningDescriptionException {
+        if(config.hasParams()) {
+            for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
+                setParam(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    void merge(ResolvedFeature config) throws ProvisioningDescriptionException {
+        if(config.hasParams()) {
+            for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
+                if(!params.containsKey(entry.getKey())) {
+                    setParam(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if(!config.dependencies.isEmpty()) {
+            for(ResolvedFeatureId id : config.dependencies) {
+                addDependency(id);
+            }
+        }
+    }
+
     List<ResolvedFeatureId> resolveRefs(ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
         return spec.resolveRefs(this, configModelBuilder);
+    }
+
+    String resolveCapability(CapabilitySpec cap) throws ProvisioningException {
+        try {
+            return cap.resolve(params);
+        } catch (ProvisioningException e) {
+            throw new ProvisioningException(Errors.failedToResolveCapability(this), e);
+        }
     }
 }

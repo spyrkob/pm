@@ -27,6 +27,14 @@
     <elem name="e1" value="v3"/>
     <elem name="e2" value="v4"/>
   </annotation>
+  <provides>
+    <capability name="a.b.c"/>
+    <capability name="d.$e.$f"/>
+  </provides>
+  <requires>
+    <capability name="$g"/>
+    <capability name="$h.i"/>
+  </requires>
   <refs>
     <ref feature="spec1"/>
     <ref feature="spec1" name="spec1-ref"/>

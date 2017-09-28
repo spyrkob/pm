@@ -20,13 +20,13 @@ package org.jboss.provisioning.state;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * Represents provisioned installation.
@@ -156,19 +156,12 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         buf.append("[state");
         if(!featurePacks.isEmpty()) {
             buf.append(" feature-packs=[");
-            final Iterator<ProvisionedFeaturePack> i = featurePacks.values().iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(", ").append(i.next());
-            }
+            StringUtils.append(buf, featurePacks.values());
             buf.append(']');
         }
         if(!configs.isEmpty()) {
             buf.append(" configs=[");
-            buf.append(configs.get(0));
-            for(int i = 1; i < configs.size(); ++i) {
-                buf.append(',').append(configs.get(i));
-            }
+            StringUtils.append(buf, configs);
             buf.append(']');
         }
         return buf.append(']').toString();

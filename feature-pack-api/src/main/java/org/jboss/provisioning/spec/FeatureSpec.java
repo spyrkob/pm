@@ -21,13 +21,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -44,6 +45,8 @@ public class FeatureSpec implements PackageDependencies {
         private List<FeatureParameterSpec> idParams = Collections.emptyList();
         private PackageDependencyGroupSpec.Builder localDeps;
         private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
+        private Set<CapabilitySpec> providedCaps = Collections.emptySet();
+        private Set<CapabilitySpec> requiredCaps = Collections.emptySet();
 
         private Builder() {
         }
@@ -150,6 +153,36 @@ public class FeatureSpec implements PackageDependencies {
             return localDeps != null || !externalDeps.isEmpty();
         }
 
+        public Builder providesCapability(String name) throws ProvisioningDescriptionException {
+            switch(providedCaps.size()) {
+                case 0:
+                    providedCaps = Collections.singleton(CapabilitySpec.fromString(name));
+                    break;
+                case 1:
+                    final CapabilitySpec first = providedCaps.iterator().next();
+                    providedCaps = new HashSet<>(2);
+                    providedCaps.add(first);
+                default:
+                    providedCaps.add(CapabilitySpec.fromString(name));
+            }
+            return this;
+        }
+
+        public Builder requiresCapability(String name) throws ProvisioningDescriptionException {
+            switch(requiredCaps.size()) {
+                case 0:
+                    requiredCaps = Collections.singleton(CapabilitySpec.fromString(name));
+                    break;
+                case 1:
+                    final CapabilitySpec first = requiredCaps.iterator().next();
+                    requiredCaps = new HashSet<>(2);
+                    requiredCaps.add(first);
+                default:
+                    requiredCaps.add(CapabilitySpec.fromString(name));
+            }
+            return this;
+        }
+
         private PackageDependencyGroupSpec.Builder getLocalPackageGroup() {
             if(localDeps == null) {
                 localDeps = PackageDependencyGroupSpec.builder();
@@ -192,9 +225,10 @@ public class FeatureSpec implements PackageDependencies {
     final Map<String, FeatureReferenceSpec> refs;
     final Map<String, FeatureParameterSpec> params;
     final List<FeatureParameterSpec> idParams;
-    private final PackageDependencyGroupSpec localDeps;
-    private final Map<String, PackageDependencyGroupSpec> externalDeps;
-
+    private final PackageDependencyGroupSpec localPkgDeps;
+    private final Map<String, PackageDependencyGroupSpec> externalPkgDeps;
+    final Set<CapabilitySpec> providedCaps;
+    final Set<CapabilitySpec> requiredCaps;
 
     private FeatureSpec(Builder builder) {
         this.name = builder.name;
@@ -202,21 +236,23 @@ public class FeatureSpec implements PackageDependencies {
         this.refs = builder.refs.size() > 1 ? Collections.unmodifiableMap(builder.refs) : builder.refs;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
         this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
+        this.providedCaps = builder.providedCaps.size() > 1 ? Collections.unmodifiableSet(builder.providedCaps) : builder.providedCaps;
+        this.requiredCaps = builder.requiredCaps.size() > 1 ? Collections.unmodifiableSet(builder.requiredCaps) : builder.requiredCaps;
 
-        this.localDeps = builder.localDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localDeps.build();
+        this.localPkgDeps = builder.localDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localDeps.build();
         if(builder.externalDeps.isEmpty()) {
-            externalDeps = Collections.emptyMap();
+            externalPkgDeps = Collections.emptyMap();
         } else {
             final int size = builder.externalDeps.size();
             if(size == 1) {
                 final Map.Entry<String, PackageDependencyGroupSpec.Builder> entry = builder.externalDeps.entrySet().iterator().next();
-                externalDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
+                externalPkgDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
             } else {
                 final Map<String, PackageDependencyGroupSpec> deps = new LinkedHashMap<>(size);
                 for(Map.Entry<String, PackageDependencyGroupSpec.Builder> entry : builder.externalDeps.entrySet()) {
                     deps.put(entry.getKey(), entry.getValue().build());
                 }
-                externalDeps = Collections.unmodifiableMap(deps);
+                externalPkgDeps = Collections.unmodifiableMap(deps);
             }
         }
     }
@@ -285,34 +321,50 @@ public class FeatureSpec implements PackageDependencies {
         return paramSpec;
     }
 
+    public boolean providesCapabilities() {
+        return !providedCaps.isEmpty();
+    }
+
+    public Set<CapabilitySpec> getProvidedCapabilities() {
+        return providedCaps;
+    }
+
+    public boolean requiresCapabilities() {
+        return !requiredCaps.isEmpty();
+    }
+
+    public Set<CapabilitySpec> getRequiredCapabilities() {
+        return requiredCaps;
+    }
+
     @Override
     public boolean dependsOnPackages() {
-        return !(localDeps.isEmpty() && externalDeps.isEmpty());
+        return !(localPkgDeps.isEmpty() && externalPkgDeps.isEmpty());
     }
 
     @Override
     public boolean dependsOnLocalPackages() {
-        return !localDeps.isEmpty();
+        return !localPkgDeps.isEmpty();
     }
 
     @Override
     public PackageDependencyGroupSpec getLocalPackageDependencies() {
-        return localDeps;
+        return localPkgDeps;
     }
 
     @Override
     public boolean dependsOnExternalPackages() {
-        return !externalDeps.isEmpty();
+        return !externalPkgDeps.isEmpty();
     }
 
     @Override
     public Collection<String> getPackageDependencySources() {
-        return externalDeps.keySet();
+        return externalPkgDeps.keySet();
     }
 
     @Override
     public PackageDependencyGroupSpec getExternalPackageDependencies(String groupName) {
-        return externalDeps.get(groupName);
+        return externalPkgDeps.get(groupName);
     }
 
     @Override
@@ -320,12 +372,14 @@ public class FeatureSpec implements PackageDependencies {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((annotations == null) ? 0 : annotations.hashCode());
-        result = prime * result + ((externalDeps == null) ? 0 : externalDeps.hashCode());
+        result = prime * result + ((externalPkgDeps == null) ? 0 : externalPkgDeps.hashCode());
         result = prime * result + ((idParams == null) ? 0 : idParams.hashCode());
-        result = prime * result + ((localDeps == null) ? 0 : localDeps.hashCode());
+        result = prime * result + ((localPkgDeps == null) ? 0 : localPkgDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
+        result = prime * result + ((providedCaps == null) ? 0 : providedCaps.hashCode());
         result = prime * result + ((refs == null) ? 0 : refs.hashCode());
+        result = prime * result + ((requiredCaps == null) ? 0 : requiredCaps.hashCode());
         return result;
     }
 
@@ -343,20 +397,20 @@ public class FeatureSpec implements PackageDependencies {
                 return false;
         } else if (!annotations.equals(other.annotations))
             return false;
-        if (externalDeps == null) {
-            if (other.externalDeps != null)
+        if (externalPkgDeps == null) {
+            if (other.externalPkgDeps != null)
                 return false;
-        } else if (!externalDeps.equals(other.externalDeps))
+        } else if (!externalPkgDeps.equals(other.externalPkgDeps))
             return false;
         if (idParams == null) {
             if (other.idParams != null)
                 return false;
         } else if (!idParams.equals(other.idParams))
             return false;
-        if (localDeps == null) {
-            if (other.localDeps != null)
+        if (localPkgDeps == null) {
+            if (other.localPkgDeps != null)
                 return false;
-        } else if (!localDeps.equals(other.localDeps))
+        } else if (!localPkgDeps.equals(other.localPkgDeps))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -368,10 +422,20 @@ public class FeatureSpec implements PackageDependencies {
                 return false;
         } else if (!params.equals(other.params))
             return false;
+        if (providedCaps == null) {
+            if (other.providedCaps != null)
+                return false;
+        } else if (!providedCaps.equals(other.providedCaps))
+            return false;
         if (refs == null) {
             if (other.refs != null)
                 return false;
         } else if (!refs.equals(other.refs))
+            return false;
+        if (requiredCaps == null) {
+            if (other.requiredCaps != null)
+                return false;
+        } else if (!requiredCaps.equals(other.requiredCaps))
             return false;
         return true;
     }
@@ -380,21 +444,21 @@ public class FeatureSpec implements PackageDependencies {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
+        if(!providedCaps.isEmpty()) {
+            buf.append(" provides=");
+            StringUtils.append(buf, providedCaps);
+        }
+        if(!requiredCaps.isEmpty()) {
+            buf.append(" requires=");
+            StringUtils.append(buf, requiredCaps);
+        }
         if(!refs.isEmpty()) {
             buf.append(" refs=");
-            final Iterator<FeatureReferenceSpec> i = refs.values().iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, refs.values());
         }
         if(!params.isEmpty()) {
             buf.append(" params=");
-            final Iterator<FeatureParameterSpec> i = params.values().iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, params.values());
         }
         return buf.append(']').toString();
     }

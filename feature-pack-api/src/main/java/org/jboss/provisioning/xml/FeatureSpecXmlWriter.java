@@ -18,7 +18,9 @@ package org.jboss.provisioning.xml;
 
 
 import java.util.Map;
+import java.util.Set;
 
+import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -64,6 +66,13 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                     }
                 }
             }
+        }
+
+        if(featureSpec.providesCapabilities()) {
+            writeCaps(addElement(specE, Element.PROVIDES), featureSpec.getProvidedCapabilities());
+        }
+        if(featureSpec.requiresCapabilities()) {
+            writeCaps(addElement(specE, Element.REQUIRES), featureSpec.getRequiredCapabilities());
         }
 
         if(featureSpec.hasRefs()) {
@@ -127,6 +136,13 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
         }
         }
         return specE;
+    }
+
+    private void writeCaps(final ElementNode parent, Set<CapabilitySpec> caps) {
+        for(CapabilitySpec cap : caps) {
+            final ElementNode capE = addElement(parent, Element.CAPABILITY);
+            addAttribute(capE, Attribute.NAME, cap.toString());
+        }
     }
 
     private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec) {

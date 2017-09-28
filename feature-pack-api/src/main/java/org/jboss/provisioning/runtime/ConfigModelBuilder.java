@@ -28,10 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 
 
@@ -40,31 +42,6 @@ import org.jboss.provisioning.state.ProvisionedConfig;
  * @author Alexey Loubyansky
  */
 public class ConfigModelBuilder implements ProvisionedConfig {
-
-    private static final byte FREE = 0;
-    private static final byte PROCESSING = 1;
-
-    private class SpecFeatures {
-        final ResolvedFeatureSpec spec;
-        List<ResolvedFeature> list = new ArrayList<>();
-        private byte state = FREE;
-
-        private SpecFeatures(ResolvedFeatureSpec spec) {
-            this.spec = spec;
-        }
-
-        boolean isFree() {
-            return state == FREE;
-        }
-
-        void schedule() {
-            state = PROCESSING;
-        }
-
-        void free() {
-            state = FREE;
-        }
-    }
 
     private static final class CircularRefInfo {
         final ResolvedFeature loopedOn;
@@ -106,6 +83,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private Map<String, String> props = Collections.emptyMap();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = new HashMap<>();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
+    private Map<String, CapabilityProviders> capProviders = Collections.emptyMap();
 
     // features in the order they should be processed by the provisioning handlers
     private List<ResolvedFeature> orderedFeatures;
@@ -184,20 +162,16 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                if(config.hasParams()) {
-                    for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
-                        feature.setParam(entry.getKey(), entry.getValue());
-                    }
-                }
+                feature.merge(config);
                 if(!resolvedDeps.isEmpty()) {
-                    for(ResolvedFeatureId depId : feature.dependencies) {
+                    for(ResolvedFeatureId depId : resolvedDeps) {
                         feature.addDependency(depId);
                     }
                 }
                 return feature;
             }
         }
-        final ResolvedFeature feature = new ResolvedFeature(id, spec, config.getParams(), resolvedDeps, ++featureIncludeCount);
+        final ResolvedFeature feature = new ResolvedFeature(id, spec, config, resolvedDeps, ++featureIncludeCount);
         if(id != null) {
             featuresById.put(id, feature);
         }
@@ -246,18 +220,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             addToSpecFeatures(feature);
             return;
         }
-        if(feature.hasParams()) {
-            for(Map.Entry<String, String> entry : feature.params.entrySet()) {
-                if(!localFeature.params.containsKey(entry.getKey())) {
-                    localFeature.setParam(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        if(!feature.dependencies.isEmpty()) {
-            for(ResolvedFeatureId depId : feature.dependencies) {
-                localFeature.addDependency(depId);
-            }
-        }
+        localFeature.merge(feature);
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
@@ -345,7 +308,14 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     }
 
     public ProvisionedConfig build() throws ProvisioningException {
+        if(featuresById.isEmpty()) {
+            orderedFeatures = Collections.emptyList();
+            featuresById = Collections.emptyMap();
+            featuresBySpec = Collections.emptyMap();
+            return this;
+        }
         for (SpecFeatures features : featuresBySpec.values()) {
+            // resolve references
             try {
                 features.spec.resolveRefMappings(this);
             } catch(ProvisioningDescriptionException e) {
@@ -359,12 +329,18 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 }
                 throw new ProvisioningException(buf.toString(), e);
             }
-        }
-        if(featuresById.isEmpty()) {
-            orderedFeatures = Collections.emptyList();
-            featuresById = Collections.emptyMap();
-            featuresBySpec = Collections.emptyMap();
-            return this;
+            // resolve and register capability providers
+            if(features.spec.xmlSpec.providesCapabilities()) {
+                for(CapabilitySpec cap : features.spec.xmlSpec.getProvidedCapabilities()) {
+                    if(cap.isStatic()) {
+                        getProviders(cap.toString(), true).add(features);
+                    } else {
+                        for(ResolvedFeature feature : features.list) {
+                            getProviders(feature.resolveCapability(cap), true).add(feature);
+                        }
+                    }
+                }
+            }
         }
         orderedFeatures = new ArrayList<>(featuresById.size());
         for(SpecFeatures features : featuresBySpec.values()) {
@@ -374,6 +350,28 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         featuresById = Collections.emptyMap();
         featuresBySpec = Collections.emptyMap();
         return this;
+    }
+
+    private CapabilityProviders getProviders(String cap, boolean add) throws ProvisioningException {
+        CapabilityProviders providers = capProviders.get(cap);
+        if(providers != null) {
+            return providers;
+        }
+        if(!add) {
+            throw new ProvisioningException(Errors.noCapabilityProvider(cap));
+        }
+        providers = new CapabilityProviders();
+        if(capProviders.isEmpty()) {
+            capProviders = Collections.singletonMap(cap, providers);
+            return providers;
+        }
+        if(capProviders.size() == 1) {
+            final Map.Entry<String, CapabilityProviders> first = capProviders.entrySet().iterator().next();
+            capProviders = new HashMap<>(2);
+            capProviders.put(first.getKey(), first.getValue());
+        }
+        capProviders.put(cap, providers);
+        return providers;
     }
 
     /**
@@ -435,27 +433,20 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         feature.schedule();
 
         List<CircularRefInfo> circularRefs = null;
+        if(feature.spec.xmlSpec.requiresCapabilities()) {
+            circularRefs = orderProviders(feature, circularRefs);
+        }
         if(!feature.dependencies.isEmpty()) {
-            circularRefs = orderRefs(feature, feature.dependencies, false);
+            circularRefs = orderRefs(feature, feature.dependencies, false, circularRefs);
         }
         List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
         if(!refIds.isEmpty()) {
-            final List<CircularRefInfo> cyclicSpecRefs = orderRefs(feature, refIds, true);
-            if(circularRefs == null) {
-                circularRefs = cyclicSpecRefs;
-            } else {
-                if(circularRefs.size() == 1) {
-                    final CircularRefInfo first = circularRefs.get(0);
-                    circularRefs = new ArrayList<>(1 + cyclicSpecRefs.size());
-                    circularRefs.add(first);
-                }
-                circularRefs.addAll(cyclicSpecRefs);
-            }
+            circularRefs = orderRefs(feature, refIds, true, circularRefs);
         }
 
         List<CircularRefInfo> initiatedCircularRefs = Collections.emptyList();
         if(circularRefs != null) {
-            // there is a circular feature reference loop
+            // there is a one or more circular feature reference loop(s)
 
             // check whether there is a loop that this feature didn't initiate
             // if there is such a loop then propagate the loops this feature didn't start to their origins
@@ -540,6 +531,61 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return null;
     }
 
+    private List<CircularRefInfo> orderProviders(ResolvedFeature feature, List<CircularRefInfo> circularRefs)
+            throws ProvisioningException {
+        for(CapabilitySpec capSpec : feature.spec.xmlSpec.getRequiredCapabilities()) {
+            final String resolvedCap = feature.resolveCapability(capSpec);
+            final CapabilityProviders providers;
+            try {
+                providers = getProviders(resolvedCap, false);
+            } catch(ProvisioningException e) {
+                throw new ProvisioningException(Errors.noCapabilityProvider(feature, capSpec, resolvedCap));
+            }
+            final List<CircularRefInfo> circles = orderProviders(providers);
+            if(circularRefs == null) {
+                circularRefs = circles;
+            } else {
+                if(circularRefs.size() == 1) {
+                    final CircularRefInfo first = circularRefs.get(0);
+                    circularRefs = new ArrayList<>(1 + circles.size());
+                    circularRefs.add(first);
+                }
+                circularRefs.addAll(circles);
+            }
+        }
+        return circularRefs;
+    }
+
+    private List<CircularRefInfo> orderProviders(CapabilityProviders providers) throws ProvisioningException {
+        if(!providers.isProvided()) {
+            List<CircularRefInfo> firstLoop = null;
+            if(!providers.specs.isEmpty()) {
+                for(SpecFeatures specFeatures : providers.specs) {
+                    final List<CircularRefInfo> loop = orderSpec(specFeatures);
+                    if(providers.isProvided()) {
+                        return null;
+                    }
+                    if(firstLoop == null) {
+                        firstLoop = loop;
+                    }
+                }
+            }
+            if (!providers.features.isEmpty()) {
+                for (ResolvedFeature provider : providers.features) {
+                    final List<CircularRefInfo> loop = orderFeature(provider);
+                    if(providers.isProvided()) {
+                        return null;
+                    }
+                    if(firstLoop == null) {
+                        firstLoop = loop;
+                    }
+                }
+            }
+            return firstLoop;
+        }
+        return null;
+    }
+
     /**
      * Attempts to order the referenced features.
      *
@@ -549,24 +595,23 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      * @return  feature ids that form circular dependency loops
      * @throws ProvisioningException
      */
-    private List<CircularRefInfo> orderRefs(ResolvedFeature feature, Collection<ResolvedFeatureId> refIds, boolean specRefs) throws ProvisioningException {
-        List<CircularRefInfo> cyclicRefs = null;
+    private List<CircularRefInfo> orderRefs(ResolvedFeature feature, Collection<ResolvedFeatureId> refIds, boolean specRefs, List<CircularRefInfo> circularRefs) throws ProvisioningException {
         for(ResolvedFeatureId refId : refIds) {
             final List<CircularRefInfo> loopedOnFeature = orderRef(feature, refId, specRefs);
             if(loopedOnFeature != null) {
-                if(cyclicRefs == null) {
-                    cyclicRefs = loopedOnFeature;
+                if(circularRefs == null) {
+                    circularRefs = loopedOnFeature;
                 } else {
-                    if(cyclicRefs.size() == 1) {
-                        final CircularRefInfo first = cyclicRefs.get(0);
-                        cyclicRefs = new ArrayList<>(1 + loopedOnFeature.size());
-                        cyclicRefs.add(first);
+                    if(circularRefs.size() == 1) {
+                        final CircularRefInfo first = circularRefs.get(0);
+                        circularRefs = new ArrayList<>(1 + loopedOnFeature.size());
+                        circularRefs.add(first);
                     }
-                    cyclicRefs.addAll(loopedOnFeature);
+                    circularRefs.addAll(loopedOnFeature);
                 }
             }
         }
-        return cyclicRefs;
+        return circularRefs;
     }
 
     /**

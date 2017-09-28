@@ -19,8 +19,7 @@ package org.jboss.provisioning.spec;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -95,26 +94,20 @@ public class FeatureGroupSpec extends FeatureGroupSupport {
             buf.append(']');
         }
         if(!localGroups.isEmpty()) {
-            final Iterator<FeatureGroupConfig> i = localGroups.iterator();
             if(space) {
                 buf.append(' ');
             } else {
                 space = true;
             }
-            buf.append("localDeps=").append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            buf.append("localDeps=");
+            StringUtils.append(buf, localGroups);
         }
         if(!features.isEmpty()) {
-            final Iterator<FeatureConfig> i = features.iterator();
             if(space) {
                 buf.append(' ');
             }
-            buf.append("features=").append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            buf.append("features=");
+            StringUtils.append(buf, features);
         }
         return buf.append(']').toString();
     }

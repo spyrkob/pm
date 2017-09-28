@@ -37,7 +37,7 @@ import org.jboss.provisioning.spec.FeatureSpec;
  *
  * @author Alexey Loubyansky
  */
-public class ResolvedFeatureSpec {
+public class ResolvedFeatureSpec extends CapabilityProvider {
 
     final ResolvedSpecId id;
     final FeatureSpec xmlSpec;
