@@ -20,10 +20,10 @@ package org.jboss.provisioning.spec;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -191,13 +191,7 @@ public class FeatureId {
         buf.append(specId);
         if (!params.isEmpty()) {
             buf.append(':');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Map.Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
-            while(i.hasNext()) {
-                entry = i.next();
-                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
-            }
+            StringUtils.append(buf, params.entrySet());
         }
         return buf.toString();
     }

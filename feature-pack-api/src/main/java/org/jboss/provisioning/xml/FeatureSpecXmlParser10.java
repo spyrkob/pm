@@ -48,6 +48,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
     enum Element implements XmlNameProvider {
 
         ANNOTATION("annotation"),
+        CAPABILITY("capability"),
         ELEM("elem"),
         FEATURE_PACK("feature-pack"),
         FEATURE_SPEC("feature-spec"),
@@ -55,8 +56,10 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         PACKAGES("packages"),
         PARAMETERS("params"),
         PARAMETER("param"),
+        PROVIDES("provides"),
         REFERENCES("refs"),
         REFERENCE("ref"),
+        REQUIRES("requires"),
 
         // default unknown element
         UNKNOWN(null);
@@ -205,6 +208,12 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                             break;
                         case PACKAGES:
                             parsePackages(reader, featureBuilder);
+                            break;
+                        case PROVIDES:
+                            parseCapabilities(reader, featureBuilder, true);
+                            break;
+                        case REQUIRES:
+                            parseCapabilities(reader, featureBuilder, false);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -563,5 +572,60 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private void parseCapabilities(XMLExtendedStreamReader reader, FeatureSpec.Builder spec, boolean provides) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case CAPABILITY:
+                            final String capStr = parseCapabilityName(reader);
+                            try {
+                                if (provides) {
+                                    spec.providesCapability(capStr);
+                                } else {
+                                    spec.requiresCapability(capStr);
+                                }
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse capability '" + capStr + "'", reader.getLocation(), e);
+                            }
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private String parseCapabilityName(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String name = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
+            }
+        }
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        }
+        ParsingUtils.parseNoContent(reader);
+        return name;
     }
 }

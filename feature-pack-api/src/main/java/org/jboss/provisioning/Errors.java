@@ -20,7 +20,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.runtime.ResolvedFeature;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.spec.CapabilitySpec;
 
 /**
  *
@@ -163,5 +165,32 @@ public interface Errors {
     static String unknownParameterInDependency(Gav gav, String srcPkg, String trgPkg, String param) {
         return "Package " + srcPkg + " from feature-pack " + gav + " overwrites a non-existing parameter " + param
                 + " in its dependency on package " + trgPkg;
+    }
+
+    static String noCapabilityProvider(String capability) {
+        return "No provider found for capability '" + capability + "'";
+    }
+
+    static String noCapabilityProvider(ResolvedFeature feature, CapabilitySpec capSpec, String resolvedCap) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("No provider found for capability ").append(resolvedCap);
+        buf.append(" required by ");
+        if(feature.hasId()) {
+            buf.append(feature.getId());
+        } else {
+            buf.append(" an instance of ").append(feature.getSpecId());
+        }
+        if(!capSpec.isStatic()) {
+            buf.append(" as ").append(capSpec.toString());
+        }
+        return buf.toString();
+    }
+
+    static String capabilityMissingParameter(CapabilitySpec cap, String param) {
+        return "Parameter " + param + " is missing value to resolve capability " + cap;
+    }
+
+    static String failedToResolveCapability(ResolvedFeature feature) {
+        return (feature.hasId() ? feature.getId() : "Instance of " + feature.getSpecId()) + " failed to resolve capability";
     }
 }

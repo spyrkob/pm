@@ -18,12 +18,11 @@ package org.jboss.provisioning.spec;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +32,7 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.util.DescrFormatter;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * This class describes the feature-pack as it is available in the repository.
@@ -74,7 +74,7 @@ public class FeaturePackSpec {
                     defPackages = Collections.singleton(packageName);
                     break;
                 case 1:
-                    defPackages = new HashSet<String>(defPackages);
+                    defPackages = new LinkedHashSet<String>(defPackages);
                 default:
                     defPackages.add(packageName);
             }
@@ -293,28 +293,15 @@ public class FeaturePackSpec {
         buf.append("[gav=").append(gav);
         if(!dependencies.isEmpty()) {
             buf.append("; dependencies: ");
-            final ArtifactCoords.Ga[] array = dependencies.keySet().toArray(new ArtifactCoords.Ga[dependencies.size()]);
-            Arrays.sort(array);
-            buf.append(dependencies.get(array[0]));
-            for(int i = 1; i < array.length; ++i) {
-                buf.append(',').append(dependencies.get(array[i]));
-            }
+            StringUtils.append(buf, dependencies.keySet());
         }
         if(!defConfigs.isEmpty()) {
             buf.append("; defaultConfigs: ");
-            buf.append(defConfigs.get(0));
-            for(int i = 1; i < defConfigs.size(); ++i) {
-                buf.append(',').append(defConfigs.get(i));
-            }
+            StringUtils.append(buf, defConfigs);
         }
         if(!defPackages.isEmpty()) {
             buf.append("; defaultPackages: ");
-            final String[] array = defPackages.toArray(new String[defPackages.size()]);
-            Arrays.sort(array);
-            buf.append(array[0]);
-            for(int i = 1; i < array.length; ++i) {
-                buf.append(',').append(array[i]);
-            }
+            StringUtils.append(buf, defPackages);
         }
         return buf.append("]").toString();
     }

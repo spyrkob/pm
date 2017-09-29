@@ -19,12 +19,12 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * Describes a feature-pack as it was provisioned.
@@ -147,12 +147,8 @@ public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
     public String toString() {
         final StringBuilder buf = new StringBuilder().append('[').append(gav);
         if(!packages.isEmpty()) {
-            final Iterator<ProvisionedPackage> i = packages.values().iterator();
-            buf.append(' ').append(i.next());
-            while(i.hasNext()) {
-                buf.append(',');
-                buf.append(i.next());
-            }
+            buf.append(' ');
+            StringUtils.append(buf, packages.values());
         }
         return buf.append(']').toString();
     }

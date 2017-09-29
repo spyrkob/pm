@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,6 +30,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * This class represents a feature-pack configuration to be installed.
@@ -481,20 +481,11 @@ public class FeaturePackConfig {
         }
         if(!includedConfigs.isEmpty()) {
             builder.append(" included configs ");
-            final Iterator<Map.Entry<ConfigId, IncludedConfig>> i = includedConfigs.entrySet().iterator();
-            IncludedConfig config = i.next().getValue();
-            builder.append(config);
-            while(i.hasNext()) {
-                builder.append(',').append(i.next().getValue());
-            }
+            StringUtils.append(builder, includedConfigs.values());
         }
         if(!definedConfigs.isEmpty()) {
-            final Iterator<ConfigSpec> configs = definedConfigs.values().iterator();
-            ConfigSpec config = configs.next();
-            builder.append(config);
-            while(configs.hasNext()) {
-                builder.append(',').append(configs.next());
-            }
+            builder.append(" defined configs ");
+            StringUtils.append(builder, definedConfigs.values());
         }
         if(!inheritPackages) {
             builder.append(" inheritPackages=false");

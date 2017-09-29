@@ -17,7 +17,6 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Map;
-
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeatureGroupConfigSupport;

@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.spec.FeatureId;
-import org.jboss.provisioning.spec.SpecId;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -82,19 +82,11 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         }
         if(!includedSpecs.isEmpty()) {
             buf.append(" includedSpecs=");
-            final Iterator<SpecId> i = includedSpecs.iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, includedSpecs);
         }
         if(!excludedSpecs.isEmpty()) {
             buf.append(" exlcudedSpecs=");
-            final Iterator<SpecId> i = excludedSpecs.iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, excludedSpecs);
         }
         if(!includedFeatures.isEmpty()) {
             buf.append(" includedFeatures=[");
@@ -115,11 +107,7 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         }
         if(!excludedFeatures.isEmpty()) {
             buf.append(" exlcudedFeatures=");
-            final Iterator<FeatureId> i = excludedFeatures.iterator();
-            buf.append(i.next());
-            while(i.hasNext()) {
-                buf.append(',').append(i.next());
-            }
+            StringUtils.append(buf, excludedFeatures);
         }
         return buf.append(']').toString();
     }

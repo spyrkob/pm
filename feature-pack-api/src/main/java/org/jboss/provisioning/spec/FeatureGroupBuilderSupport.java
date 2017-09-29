@@ -60,34 +60,11 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
 
     @SuppressWarnings("unchecked")
     public B addFeatureGroup(String fpDep, FeatureGroupConfig group) {
+        if(fpDep == null) {
+            return addFeatureGroup(group);
+        }
         getExternalFgBuilder(fpDep).addFeatureGroup(group);
         return (B) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public B addFeature(String fpDep, FeatureConfig fc) {
-        getExternalFgBuilder(fpDep).addFeature(fc);
-        return (B) this;
-    }
-
-    private FeatureGroupSpec.Builder getExternalFgBuilder(String fpDep) {
-        FeatureGroupSpec.Builder specBuilder;
-        if(externalGroups.isEmpty()) {
-            specBuilder = FeatureGroupSpec.builder();
-            externalGroups = Collections.singletonMap(fpDep, specBuilder);
-        } else {
-            specBuilder = externalGroups.get(fpDep);
-            if(specBuilder == null) {
-                specBuilder = FeatureGroupSpec.builder();
-                if(externalGroups.size() == 1) {
-                    final Map.Entry<String, FeatureGroupSpec.Builder> first = externalGroups.entrySet().iterator().next();
-                    externalGroups = new LinkedHashMap<>(2);
-                    externalGroups.put(first.getKey(), first.getValue());
-                }
-                externalGroups.put(fpDep, specBuilder);
-            }
-        }
-        return specBuilder;
     }
 
     @SuppressWarnings("unchecked")
@@ -101,6 +78,15 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
             default:
                 localGroups.add(dep);
         }
+        return (B) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public B addFeature(String fpDep, FeatureConfig fc) {
+        if(fpDep == null) {
+            return addFeature(fc);
+        }
+        getExternalFgBuilder(fpDep).addFeature(fc);
         return (B) this;
     }
 
@@ -133,6 +119,26 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
             tmp.put(entry.getKey(), entry.getValue().build());
         }
         return Collections.unmodifiableMap(tmp);
+    }
+
+    private FeatureGroupSpec.Builder getExternalFgBuilder(String fpDep) {
+        FeatureGroupSpec.Builder specBuilder;
+        if(externalGroups.isEmpty()) {
+            specBuilder = FeatureGroupSpec.builder();
+            externalGroups = Collections.singletonMap(fpDep, specBuilder);
+        } else {
+            specBuilder = externalGroups.get(fpDep);
+            if(specBuilder == null) {
+                specBuilder = FeatureGroupSpec.builder();
+                if(externalGroups.size() == 1) {
+                    final Map.Entry<String, FeatureGroupSpec.Builder> first = externalGroups.entrySet().iterator().next();
+                    externalGroups = new LinkedHashMap<>(2);
+                    externalGroups.put(first.getKey(), first.getValue());
+                }
+                externalGroups.put(fpDep, specBuilder);
+            }
+        }
+        return specBuilder;
     }
 
     @Override
