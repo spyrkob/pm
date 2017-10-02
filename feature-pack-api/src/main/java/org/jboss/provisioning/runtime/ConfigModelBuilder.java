@@ -344,7 +344,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         orderedFeatures = new ArrayList<>(featuresById.size());
         for(SpecFeatures features : featuresBySpec.values()) {
-            orderSpec(features);
+            orderSpec(features, false);
         }
 
         featuresById = Collections.emptyMap();
@@ -383,11 +383,13 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      *   returns null if no loop was detected (despite whether any feature was processed or not)
      * @throws ProvisioningException
      */
-    private List<CircularRefInfo> orderSpec(SpecFeatures features) throws ProvisioningException {
-        if(!features.isFree()) {
-            return null;
+    private List<CircularRefInfo> orderSpec(SpecFeatures features, boolean force) throws ProvisioningException {
+        if(!force) {
+            if (!features.isFree()) {
+                return null;
+            }
+            features.schedule();
         }
-        features.schedule();
 
         List<CircularRefInfo> allCircularRefs = null;
         int i = 0;
@@ -406,7 +408,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 }
             }
 */        }
-        features.free();
+        if(!force) {
+            features.free();
+        }
         return allCircularRefs;
     }
 
@@ -420,14 +424,10 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      * @throws ProvisioningException
      */
     private List<CircularRefInfo> orderFeature(ResolvedFeature feature) throws ProvisioningException {
-
         if(feature.isOrdered()) {
             return null;
         }
         if(!feature.isFree()) {
-            if(feature.id == null) {
-                throw new IllegalStateException();
-            }
             return Collections.singletonList(new CircularRefInfo(feature));
         }
         feature.schedule();
@@ -561,7 +561,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             List<CircularRefInfo> firstLoop = null;
             if(!providers.specs.isEmpty()) {
                 for(SpecFeatures specFeatures : providers.specs) {
-                    final List<CircularRefInfo> loop = orderSpec(specFeatures);
+                    final List<CircularRefInfo> loop = orderSpec(specFeatures, !specFeatures.isFree());
                     if(providers.isProvided()) {
                         return null;
                     }
@@ -629,7 +629,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             if (targetSpecFeatures == null) {
                 throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
             }
-            final List<CircularRefInfo> specLoops = orderSpec(targetSpecFeatures);
+            final List<CircularRefInfo> specLoops = orderSpec(targetSpecFeatures, false);
             if (specLoops != null) {
                 List<CircularRefInfo> featureLoops = null;
                 for (int i = 0; i < specLoops.size(); ++i) {

@@ -190,7 +190,14 @@ public interface Errors {
         return "Parameter " + param + " is missing value to resolve capability " + cap;
     }
 
-    static String failedToResolveCapability(ResolvedFeature feature) {
-        return (feature.hasId() ? feature.getId() : "Instance of " + feature.getSpecId()) + " failed to resolve capability";
+    static String failedToResolveCapability(ResolvedFeature feature, CapabilitySpec cap) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to satisfy capability requirement ").append(cap).append(" for ");
+        if(feature.hasId()) {
+            buf.append(feature.getId());
+        } else {
+            buf.append(" an instance of ").append(feature.getSpecId());
+        }
+        return buf.toString();
     }
 }
