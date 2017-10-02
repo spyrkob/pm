@@ -250,7 +250,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         try {
             return cap.resolve(params);
         } catch (ProvisioningException e) {
-            throw new ProvisioningException(Errors.failedToResolveCapability(this), e);
+            throw new ProvisioningException(Errors.failedToResolveCapability(this, cap), e);
         }
     }
 }
