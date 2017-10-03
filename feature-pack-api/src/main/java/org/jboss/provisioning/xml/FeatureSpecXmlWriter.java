@@ -142,6 +142,9 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
         for(CapabilitySpec cap : caps) {
             final ElementNode capE = addElement(parent, Element.CAPABILITY);
             addAttribute(capE, Attribute.NAME, cap.toString());
+            if(cap.isOptional()) {
+                addAttribute(capE, Attribute.OPTIONAL, TRUE);
+            }
         }
     }
 

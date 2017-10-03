@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -585,16 +586,12 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case CAPABILITY:
-                            final String capStr = parseCapabilityName(reader);
-                            try {
+                            final CapabilitySpec cap = parseCapabilityName(reader);
                                 if (provides) {
-                                    spec.providesCapability(capStr);
+                                    spec.providesCapability(cap);
                                 } else {
-                                    spec.requiresCapability(capStr);
+                                    spec.requiresCapability(cap);
                                 }
-                            } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException("Failed to parse capability '" + capStr + "'", reader.getLocation(), e);
-                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -609,14 +606,18 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private String parseCapabilityName(XMLExtendedStreamReader reader) throws XMLStreamException {
+    private CapabilitySpec parseCapabilityName(XMLExtendedStreamReader reader) throws XMLStreamException {
         String name = null;
+        boolean optional = false;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case NAME:
                     name = reader.getAttributeValue(i);
+                    break;
+                case OPTIONAL:
+                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
@@ -626,6 +627,10 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         ParsingUtils.parseNoContent(reader);
-        return name;
+        try {
+            return CapabilitySpec.fromString(name, optional);
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to parse capability '" + name + "'", reader.getLocation(), e);
+       }
     }
 }

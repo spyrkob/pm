@@ -34,6 +34,10 @@ import org.jboss.provisioning.ProvisioningException;
 public class CapabilitySpec {
 
     public static CapabilitySpec fromString(String str) throws ProvisioningDescriptionException {
+        return fromString(str, false);
+    }
+
+    public static CapabilitySpec fromString(String str, boolean optional) throws ProvisioningDescriptionException {
         if(str == null) {
             throw new ProvisioningDescriptionException("str is null");
         }
@@ -115,7 +119,7 @@ public class CapabilitySpec {
                 parts.add(buf.toString());
                 partTypes.add(staticPart);
         }
-        return new CapabilitySpec(parts, partTypes);
+        return new CapabilitySpec(parts, partTypes, optional);
     }
 
     private static void formatError(String str) throws ProvisioningDescriptionException {
@@ -124,16 +128,19 @@ public class CapabilitySpec {
 
     private final String[] parts;
     private final Boolean[] partTypes; // true - static part, false - param part
+    private final boolean optional;
 
-    private CapabilitySpec(String name) {
-        assert name != null : "Capability name is null";
-        this.parts = new String[] {name};
-        this.partTypes = new Boolean[] {true};
-    }
-
-    private CapabilitySpec(List<String> parts, List<Boolean> partTypes) {
+    private CapabilitySpec(List<String> parts, List<Boolean> partTypes, boolean optional) throws ProvisioningDescriptionException {
         this.parts = parts.toArray(new String[parts.size()]);
         this.partTypes = partTypes.toArray(new Boolean[partTypes.size()]);
+        this.optional = optional;
+        if(optional && isStatic()) {
+            throw new ProvisioningDescriptionException("Static capability cannot be optional: " + toString());
+        }
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     public boolean isStatic() {
@@ -149,7 +156,13 @@ public class CapabilitySpec {
             buf.append(parts[0]);
         } else {
             final String value = params.get(parts[0]);
-            if(value == null || value.trim().isEmpty()) {
+            if (value == null) {
+                if (optional) {
+                    return null;
+                }
+                throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[0]));
+            }
+            if (value.trim().isEmpty()) {
                 throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[0]));
             }
             buf.append(value);
@@ -160,7 +173,13 @@ public class CapabilitySpec {
                 buf.append(parts[i]);
             } else {
                 final String value = params.get(parts[i]);
-                if(value == null || value.trim().isEmpty()) {
+                if (value == null) {
+                    if (optional) {
+                        return null;
+                    }
+                    throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[i]));
+                }
+                if (value.trim().isEmpty()) {
                     throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[i]));
                 }
                 buf.append(value);
@@ -173,6 +192,7 @@ public class CapabilitySpec {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + (optional ? 1231 : 1237);
         result = prime * result + Arrays.hashCode(partTypes);
         result = prime * result + Arrays.hashCode(parts);
         return result;
@@ -187,6 +207,8 @@ public class CapabilitySpec {
         if (getClass() != obj.getClass())
             return false;
         CapabilitySpec other = (CapabilitySpec) obj;
+        if (optional != other.optional)
+            return false;
         if (!Arrays.equals(partTypes, other.partTypes))
             return false;
         if (!Arrays.equals(parts, other.parts))
