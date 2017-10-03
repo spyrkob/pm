@@ -336,7 +336,10 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         getProviders(cap.toString(), true).add(features);
                     } else {
                         for(ResolvedFeature feature : features.list) {
-                            getProviders(feature.resolveCapability(cap), true).add(feature);
+                            final String resolvedCap = feature.resolveCapability(cap);
+                            if(resolvedCap != null) {
+                                getProviders(resolvedCap, true).add(feature);
+                            }
                         }
                     }
                 }
@@ -535,6 +538,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             throws ProvisioningException {
         for(CapabilitySpec capSpec : feature.spec.xmlSpec.getRequiredCapabilities()) {
             final String resolvedCap = feature.resolveCapability(capSpec);
+            if(resolvedCap == null) {
+                continue;
+            }
             final CapabilityProviders providers;
             try {
                 providers = getProviders(resolvedCap, false);

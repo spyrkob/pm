@@ -29,11 +29,11 @@
   </annotation>
   <provides>
     <capability name="a.b.c"/>
-    <capability name="d.$e.$f"/>
+    <capability name="d.$e.$f" optional="true"/>
   </provides>
   <requires>
     <capability name="$g"/>
-    <capability name="$h.i"/>
+    <capability name="$h.i" optional="true"/>
   </requires>
   <refs>
     <ref feature="spec1"/>

@@ -67,8 +67,8 @@ public class FeatureSpecXmlParsingTestCase {
                 .addPackageDependency("fp-dep", "pkg2")
                 .addPackageDependency("fp-dep", "pkg3")
                 .addPackageDependency("pkg4")
-                .providesCapability("d.$e.$f")
-                .requiresCapability("$h.i")
+                .providesCapability("d.$e.$f", true)
+                .requiresCapability("$h.i", true)
                 .providesCapability("a.b.c")
                 .requiresCapability("$g")
                 .build(), parseFeature("full-spec.xml"));

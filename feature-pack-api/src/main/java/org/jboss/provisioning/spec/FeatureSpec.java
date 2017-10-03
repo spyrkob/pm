@@ -154,31 +154,47 @@ public class FeatureSpec implements PackageDependencies {
         }
 
         public Builder providesCapability(String name) throws ProvisioningDescriptionException {
+            return providesCapability(name, false);
+        }
+
+        public Builder providesCapability(String name, boolean optional) throws ProvisioningDescriptionException {
+            return providesCapability(CapabilitySpec.fromString(name, optional));
+        }
+
+        public Builder providesCapability(CapabilitySpec cap) {
             switch(providedCaps.size()) {
                 case 0:
-                    providedCaps = Collections.singleton(CapabilitySpec.fromString(name));
+                    providedCaps = Collections.singleton(cap);
                     break;
                 case 1:
                     final CapabilitySpec first = providedCaps.iterator().next();
                     providedCaps = new HashSet<>(2);
                     providedCaps.add(first);
                 default:
-                    providedCaps.add(CapabilitySpec.fromString(name));
+                    providedCaps.add(cap);
             }
             return this;
         }
 
         public Builder requiresCapability(String name) throws ProvisioningDescriptionException {
+            return requiresCapability(name, false);
+        }
+
+        public Builder requiresCapability(String name, boolean optional) throws ProvisioningDescriptionException {
+            return requiresCapability(CapabilitySpec.fromString(name, optional));
+        }
+
+        public Builder requiresCapability(CapabilitySpec cap) {
             switch(requiredCaps.size()) {
                 case 0:
-                    requiredCaps = Collections.singleton(CapabilitySpec.fromString(name));
+                    requiredCaps = Collections.singleton(cap);
                     break;
                 case 1:
                     final CapabilitySpec first = requiredCaps.iterator().next();
                     requiredCaps = new HashSet<>(2);
                     requiredCaps.add(first);
                 default:
-                    requiredCaps.add(CapabilitySpec.fromString(name));
+                    requiredCaps.add(cap);
             }
             return this;
         }
