@@ -159,7 +159,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             if (ref.getDependency() == null) {
                 refGav = gav;
             } else {
-                refGav = this.spec.getDependency(ref.getDependency()).getTarget().getGav();
+                refGav = spec.getDependency(ref.getDependency()).getTarget().getGav();
             }
             return new ResolvedSpecId(refGav, ref.getFeature().getName());
         }

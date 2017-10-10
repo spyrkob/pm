@@ -36,6 +36,7 @@ public class FeatureReferenceSpec {
         private final String featureSpec;
         private String name;
         private boolean nillable;
+        private boolean include;
         private Map<String, String> paramMapping = null;
 
         private Builder(String spec) {
@@ -58,6 +59,11 @@ public class FeatureReferenceSpec {
             return this;
         }
 
+        public Builder setInclude(boolean include) {
+            this.include = include;
+            return this;
+        }
+
         public Builder mapParam(String localName, String targetName) {
             if(paramMapping == null) {
                 paramMapping = Collections.singletonMap(localName, targetName);
@@ -71,7 +77,7 @@ public class FeatureReferenceSpec {
         }
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
-            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, paramMapping);
+            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, include, paramMapping);
         }
     }
 
@@ -88,7 +94,7 @@ public class FeatureReferenceSpec {
     }
 
     public static FeatureReferenceSpec create(String name, String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(null, name, feature, nillable, null);
+        return new FeatureReferenceSpec(null, name, feature, nillable, false, null);
     }
 
     private static final String[] EMPTY_ARR = new String[0];
@@ -97,14 +103,16 @@ public class FeatureReferenceSpec {
     final String name;
     final SpecId feature;
     final boolean nillable;
+    final boolean include;
     final String[] localParams;
     final String[] targetParams;
 
-    private FeatureReferenceSpec(String dependency, String name, String featureSpec, boolean nillable, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
+    private FeatureReferenceSpec(String dependency, String name, String featureSpec, boolean nillable, boolean include, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
         this.dependency = dependency;
         this.name = name;
         this.feature = SpecId.fromString(featureSpec);
         this.nillable = nillable;
+        this.include = include;
         if(paramMapping == null || paramMapping.isEmpty()) {
             this.localParams = EMPTY_ARR;
             this.targetParams = EMPTY_ARR;
@@ -135,6 +143,10 @@ public class FeatureReferenceSpec {
         return nillable;
     }
 
+    public boolean isInclude() {
+        return include;
+    }
+
     public int getParamsMapped() {
         return localParams.length;
     }
@@ -153,6 +165,7 @@ public class FeatureReferenceSpec {
         int result = 1;
         result = prime * result + ((dependency == null) ? 0 : dependency.hashCode());
         result = prime * result + ((feature == null) ? 0 : feature.hashCode());
+        result = prime * result + (include ? 1231 : 1237);
         result = prime * result + Arrays.hashCode(localParams);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (nillable ? 1231 : 1237);
@@ -179,6 +192,8 @@ public class FeatureReferenceSpec {
                 return false;
         } else if (!feature.equals(other.feature))
             return false;
+        if (include != other.include)
+            return false;
         if (!Arrays.equals(localParams, other.localParams))
             return false;
         if (name == null) {
@@ -203,6 +218,9 @@ public class FeatureReferenceSpec {
         buf.append(" feature=").append(feature);
         if(nillable) {
             buf.append(" nillable");
+        }
+        if(include) {
+            buf.append(" auto-includes ");
         }
         if(localParams.length > 0) {
             buf.append(' ');

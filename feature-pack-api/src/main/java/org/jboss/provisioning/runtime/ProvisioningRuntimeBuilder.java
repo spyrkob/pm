@@ -626,12 +626,30 @@ public class ProvisioningRuntimeBuilder {
 
         final ResolvedFeature myParent = parentFeature;
         parentFeature = modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
+
+        if(spec.xmlSpec.hasRefs()) {
+            for(FeatureReferenceSpec refSpec : spec.xmlSpec.getRefs()) {
+                if(refSpec.isInclude()) {
+                    final FeaturePackRuntime.Builder refFp = refSpec.getDependency() == null ? fp : getFpDependency(fp, refSpec.getDependency());
+                    final ResolvedFeatureId refId = spec.resolveRefId(parentFeature, refSpec, refFp.getFeatureSpec(refSpec.getFeature().getName()));
+                    if(refId == null || modelBuilder.includes(refId)) {
+                        continue;
+                    }
+                    final FeatureConfig refFc = new FeatureConfig(refId.getSpecId().getName());
+                    for(Map.Entry<String, String> param : refId.params.entrySet()) {
+                        refFc.putParam(param.getKey(), param.getValue());
+                    }
+                    resolveFeature(modelBuilder, refFp, refFc);
+                }
+            }
+        }
+
         processFeatureGroupSpec(modelBuilder, fp, fc);
         parentFeature = myParent;
         return true;
     }
 
-    private void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
+    private static void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
         final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
         final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getRef(parentRef);
         if (refSpec == null) {

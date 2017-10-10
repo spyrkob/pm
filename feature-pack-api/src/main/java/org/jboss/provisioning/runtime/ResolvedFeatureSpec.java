@@ -103,12 +103,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         if(resolvedRefTargets.size() == 1) {
             final Entry<String, ResolvedSpecId> refEntry = resolvedRefTargets.entrySet().iterator().next();
-            final ResolvedFeatureId refId = getRefTarget(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
+            final ResolvedFeatureId refId = resolveRefId(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
             return refId == null ? Collections.emptyList() : Collections.singletonList(refId);
         }
         final List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
         for(Map.Entry<String, ResolvedSpecId> refEntry : resolvedRefTargets.entrySet()) {
-            final ResolvedFeatureId refId = getRefTarget(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
+            final ResolvedFeatureId refId = resolveRefId(feature, refEntry.getValue(), xmlSpec.getRef(refEntry.getKey()), configModelBuilder);
             if(refId != null) {
                 refIds.add(refId);
             }
@@ -116,13 +116,17 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return refIds;
     }
 
-    private ResolvedFeatureId getRefTarget(final ResolvedFeature feature, final ResolvedSpecId targetSpecId, final FeatureReferenceSpec refSpec, ConfigModelBuilder configModelBuilder)
+    private ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final ResolvedSpecId targetSpecId, final FeatureReferenceSpec refSpec, ConfigModelBuilder configModelBuilder)
             throws ProvisioningDescriptionException {
+        final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(targetSpecId, !refSpec.isNillable());
+        if(targetSpec == null) {
+            return null;
+        }
+        return resolveRefId(feature, refSpec, targetSpec);
+    }
+
+    ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec) throws ProvisioningDescriptionException {
         if(refSpec.getParamsMapped() == 0) {
-            final ResolvedFeatureSpec targetSpec = configModelBuilder.getResolvedSpec(targetSpecId, !refSpec.isNillable());
-            if(targetSpec == null) {
-                return null;
-            }
             final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
             if(targetIdParams.size() == 1) {
                 final String paramName = targetIdParams.get(0).getName();
@@ -131,7 +135,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                     assertRefNotNillable(feature, refSpec);
                     return null;
                 }
-                return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(paramName, paramValue));
+                return new ResolvedFeatureId(targetSpec.id, Collections.singletonMap(paramName, paramValue));
             }
             final Map<String, String> params = new HashMap<>(targetIdParams.size());
             for(FeatureParameterSpec targetIdParam : targetIdParams) {
@@ -147,7 +151,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 assertRefNotNillable(feature, refSpec);
                 return null;
             }
-            return new ResolvedFeatureId(targetSpecId, params);
+            return new ResolvedFeatureId(targetSpec.id, params);
         }
         if(refSpec.getParamsMapped() == 1) {
             final String paramValue = feature.getParam(refSpec.getLocalParam(0));
@@ -155,7 +159,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 assertRefNotNillable(feature, refSpec);
                 return null;
             }
-            return new ResolvedFeatureId(targetSpecId, Collections.singletonMap(refSpec.getTargetParam(0), paramValue));
+            return new ResolvedFeatureId(targetSpec.id, Collections.singletonMap(refSpec.getTargetParam(0), paramValue));
         }
         Map<String, String> params = new HashMap<>(refSpec.getParamsMapped());
         for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
@@ -171,7 +175,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             assertRefNotNillable(feature, refSpec);
             return null;
         }
-        return new ResolvedFeatureId(targetSpecId, params);
+        return new ResolvedFeatureId(targetSpec.id, params);
     }
 
     private void assertRefNotNillable(final ResolvedFeature feature, final FeatureReferenceSpec refSpec)

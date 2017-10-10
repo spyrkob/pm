@@ -179,6 +179,10 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return feature;
     }
 
+    boolean includes(ResolvedFeatureId id) {
+        return featuresById.containsKey(id);
+    }
+
     private void addToSpecFeatures(final ResolvedFeature feature) {
         SpecFeatures features = featuresBySpec.get(feature.spec.id);
         if(features == null) {
