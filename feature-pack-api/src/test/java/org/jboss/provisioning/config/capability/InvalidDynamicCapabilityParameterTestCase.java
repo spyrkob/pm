@@ -77,6 +77,9 @@ public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeatureP
             super.testPmMethod(pm);
             Assert.fail("There is no cap.a provider");
         } catch(ProvisioningException e) {
+            Assert.assertEquals("Failed to build config", e.getMessage());
+            e = (ProvisioningException) e.getCause();
+            Assert.assertNotNull(e);
             Assert.assertEquals("Failed to satisfy capability requirement cap.$a for org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
             e = (ProvisioningException) e.getCause();
             Assert.assertNotNull(e);

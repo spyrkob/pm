@@ -82,6 +82,9 @@ public class NillableReferenceToAMissingFeatureTestCase extends PmInstallFeature
             super.testPmMethod(pm);
             Assert.fail("There should be an unsatisfied reference");
         } catch(ProvisioningException e) {
+            Assert.assertEquals("Failed to build config named config1", e.getMessage());
+            e = (ProvisioningException) e.getCause();
+            Assert.assertNotNull(e);
             Assert.assertEquals("org.jboss.pm.test:fp1:1.0.0.Final#specB:name=b has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:name=a", e.getMessage());
         }
     }

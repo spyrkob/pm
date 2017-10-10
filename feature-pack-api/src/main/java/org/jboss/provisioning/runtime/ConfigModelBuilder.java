@@ -318,6 +318,22 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             featuresBySpec = Collections.emptyMap();
             return this;
         }
+        try {
+            return doBuild(rt);
+        } catch(ProvisioningException e) {
+            final StringBuilder buf = new StringBuilder();
+            buf.append("Failed to build config");
+            if(model != null) {
+                buf.append(" model ").append(model);
+            }
+            if(name != null) {
+                buf.append(" named ").append(name);
+            }
+            throw new ProvisioningException(buf.toString(), e);
+        }
+    }
+
+    private ProvisionedConfig doBuild(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         for (SpecFeatures features : featuresBySpec.values()) {
             // resolve references
             try {
