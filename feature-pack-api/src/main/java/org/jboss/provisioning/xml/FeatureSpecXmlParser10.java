@@ -117,6 +117,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
+        INCLUDE("include"),
         MAPS_TO("maps-to"),
         NAME("name"),
         NILLABLE("nillable"),
@@ -328,6 +329,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         String name = null;
         String feature = null;
         boolean nillable = false;
+        boolean include = false;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
@@ -343,6 +345,9 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                 case NILLABLE:
                     nillable = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
+                case INCLUDE:
+                    include = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
@@ -353,7 +358,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if(name == null) {
             name = feature;
         }
-        FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setDependency(dependency).setName(name).setNillable(nillable);
+        final FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setDependency(dependency).setName(name).setNillable(nillable).setInclude(include);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

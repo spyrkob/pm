@@ -76,6 +76,9 @@ public class SimplestUnsatisfiedStaticCapabilityRequirementTestCase extends PmIn
             super.testPmMethod(pm);
             Assert.fail("There is no cap.a provider");
         } catch(ProvisioningException e) {
+            Assert.assertEquals("Failed to build config", e.getMessage());
+            e = (ProvisioningException) e.getCause();
+            Assert.assertNotNull(e);
             Assert.assertEquals("No provider found for capability cap.a required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
         }
     }

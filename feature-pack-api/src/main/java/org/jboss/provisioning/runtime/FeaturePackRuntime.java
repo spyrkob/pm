@@ -43,7 +43,6 @@ import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
@@ -116,7 +115,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return new FeatureGroupSpec(fgSpec);
         }
 
-        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
+        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningDescriptionException {
             ResolvedFeatureSpec resolvedSpec = null;
             if(featureSpecs == null) {
                 featureSpecs = new HashMap<>();
@@ -132,36 +131,12 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 try(BufferedReader reader = Files.newBufferedReader(specXml)) {
                     xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
                 } catch (Exception e) {
-                    throw new ProvisioningException(Errors.parseXml(specXml), e);
+                    throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
                 }
-                Map<String, ResolvedSpecId> resolvedRefTargets = Collections.emptyMap();
-                if (xmlSpec.hasRefs()) {
-                    Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
-                    if(refs.size() == 1) {
-                        final FeatureReferenceSpec refSpec = refs.iterator().next();
-                        resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolveSpecId(refSpec));
-                    } else {
-                        resolvedRefTargets = new HashMap<>(refs.size());
-                        for (FeatureReferenceSpec refSpec : refs) {
-                            resolvedRefTargets.put(refSpec.getName(), resolveSpecId(refSpec));
-                        }
-                        resolvedRefTargets = Collections.unmodifiableMap(resolvedRefTargets);
-                    }
-                }
-                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), xmlSpec, resolvedRefTargets);
+                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), xmlSpec);
                 featureSpecs.put(name, resolvedSpec);
             }
             return resolvedSpec;
-        }
-
-        private ResolvedSpecId resolveSpecId(final FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
-            final ArtifactCoords.Gav refGav;
-            if (ref.getDependency() == null) {
-                refGav = gav;
-            } else {
-                refGav = this.spec.getDependency(ref.getDependency()).getTarget().getGav();
-            }
-            return new ResolvedSpecId(refGav, ref.getFeature().getName());
         }
 
         boolean isInheritPackages() {

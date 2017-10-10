@@ -90,6 +90,9 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                 if(ref.isNillable()) {
                     addAttribute(refE, Attribute.NILLABLE, TRUE);
                 }
+                if(ref.isInclude()) {
+                    addAttribute(refE, Attribute.INCLUDE, TRUE);
+                }
                 if(ref.getParamsMapped() == 1) {
                     if(!(ref.getLocalParam(0).equals(ref.getFeature()) && ref.getTargetParam(0).equals("name"))) {
                         final ElementNode paramE = addElement(refE, Element.PARAMETER);

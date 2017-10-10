@@ -242,8 +242,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    List<ResolvedFeatureId> resolveRefs(ConfigModelBuilder configModelBuilder) throws ProvisioningDescriptionException {
-        return spec.resolveRefs(this, configModelBuilder);
+    List<ResolvedFeatureId> resolveRefs() throws ProvisioningDescriptionException {
+        return spec.resolveRefs(this);
     }
 
     String resolveCapability(CapabilitySpec cap) throws ProvisioningException {

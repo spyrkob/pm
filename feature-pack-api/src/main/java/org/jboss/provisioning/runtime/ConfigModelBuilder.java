@@ -179,6 +179,10 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return feature;
     }
 
+    boolean includes(ResolvedFeatureId id) {
+        return featuresById.containsKey(id);
+    }
+
     private void addToSpecFeatures(final ResolvedFeature feature) {
         SpecFeatures features = featuresBySpec.get(feature.spec.id);
         if(features == null) {
@@ -307,17 +311,33 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         handler.done();
     }
 
-    public ProvisionedConfig build() throws ProvisioningException {
+    public ProvisionedConfig build(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(featuresById.isEmpty()) {
             orderedFeatures = Collections.emptyList();
             featuresById = Collections.emptyMap();
             featuresBySpec = Collections.emptyMap();
             return this;
         }
+        try {
+            return doBuild(rt);
+        } catch(ProvisioningException e) {
+            final StringBuilder buf = new StringBuilder();
+            buf.append("Failed to build config");
+            if(model != null) {
+                buf.append(" model ").append(model);
+            }
+            if(name != null) {
+                buf.append(" named ").append(name);
+            }
+            throw new ProvisioningException(buf.toString(), e);
+        }
+    }
+
+    private ProvisionedConfig doBuild(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         for (SpecFeatures features : featuresBySpec.values()) {
             // resolve references
             try {
-                features.spec.resolveRefMappings(this);
+                features.spec.resolveRefMappings(rt);
             } catch(ProvisioningDescriptionException e) {
                 final StringBuilder buf = new StringBuilder();
                 buf.append("Failed to build config");
@@ -442,7 +462,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(!feature.dependencies.isEmpty()) {
             circularRefs = orderRefs(feature, feature.dependencies, false, circularRefs);
         }
-        List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
+        List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
             circularRefs = orderRefs(feature, refIds, true, circularRefs);
         }

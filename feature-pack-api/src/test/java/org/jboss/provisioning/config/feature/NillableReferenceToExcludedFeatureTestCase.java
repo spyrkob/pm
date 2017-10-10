@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.feature;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -24,8 +24,11 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -38,7 +41,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTestBase {
+public class NillableReferenceToExcludedFeatureTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,51 +50,49 @@ public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTe
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$c", true)
-                    .addParam(FeatureParameterSpec.createId("a"))
-                    .addParam(FeatureParameterSpec.create("c", true))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("a", "aOne"))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$c")
-                    .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.create("c"))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("b", false))
+                    .addParam(FeatureParameterSpec.create("a", true))
+                    .addRef(FeatureReferenceSpec.builder("specA")
+                            .setName("specA")
+                            .setNillable(true)
+                            .mapParam("a", "name")
+                            .build())
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigSpec.builder().setName("config1")
+                    .addFeature(new FeatureConfig("specA").setParam("name", "a"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("b", "b1")
-                            .setParam("c", "c1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "a1")
-                            .setParam("c", "c1"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b2")
-                            .setParam("c", "c2"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "a2"))
+                            .setParam("name", "b")
+                            .setParam("a", "a"))
                     .build())
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(FP_GAV);
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig.builder(FP_GAV)
+                .includeDefaultConfig(IncludedConfig.builder(null, "config1")
+                        .excludeFeature(FeatureId.create("specA", "name", "a"))
+                        .build())
+                .build();
     }
 
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         try {
             super.testPmMethod(pm);
-            Assert.fail("There is no cap.a provider");
+            Assert.fail("There should be an unsatisfied reference");
         } catch(ProvisioningException e) {
-            Assert.assertEquals("Failed to build config", e.getMessage());
+            Assert.assertEquals("Failed to build config named config1", e.getMessage());
             e = (ProvisioningException) e.getCause();
             Assert.assertNotNull(e);
-            Assert.assertEquals("No provider found for capability cap.c2 required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b2 as cap.$c", e.getMessage());
+            Assert.assertEquals("org.jboss.pm.test:fp1:1.0.0.Final#specB:name=b has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:name=a", e.getMessage());
         }
     }
 
