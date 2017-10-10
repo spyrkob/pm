@@ -181,7 +181,7 @@ public class ProvisioningRuntimeBuilder {
 
         final Collection<FeaturePackConfig> fpConfigs = config.getFeaturePacks();
         for (FeaturePackConfig fpConfig : fpConfigs) {
-            getRtBuilder(fpConfig.getGav()).push(fpConfig);
+            loadFpBuilder(fpConfig.getGav()).push(fpConfig);
         }
         for (FeaturePackConfig fpConfig : fpConfigs) {
             processFpConfig(fpConfig);
@@ -215,12 +215,12 @@ public class ProvisioningRuntimeBuilder {
     private void buildConfigs() throws ProvisioningException {
         if(!anonymousConfigs.isEmpty()) {
             for(ConfigModelBuilder config : anonymousConfigs) {
-                config.build();
+                config.build(this);
             }
         }
         if(!noModelNamedConfigs.isEmpty()) {
             for(Map.Entry<String, ConfigModelBuilder> entry : noModelNamedConfigs.entrySet()) {
-                entry.getValue().build();
+                entry.getValue().build(this);
             }
         }
 
@@ -230,7 +230,7 @@ public class ProvisioningRuntimeBuilder {
                 final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
                 if (targetConfigs == null) {
-                    entry.getValue().build();
+                    entry.getValue().build(this);
                 } else {
                     noNameModelConfigs = Collections.emptyMap();
                     for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
@@ -242,7 +242,7 @@ public class ProvisioningRuntimeBuilder {
                     final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                     final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
                     if (targetConfigs == null) {
-                        entry.getValue().build();
+                        entry.getValue().build(this);
                         continue;
                     }
                     i.remove();
@@ -255,13 +255,13 @@ public class ProvisioningRuntimeBuilder {
 
         for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
             for(Map.Entry<String, ConfigModelBuilder> configEntry : configMap.entrySet()) {
-                configEntry.getValue().build();
+                configEntry.getValue().build(this);
             }
         }
     }
 
     private void processFpConfig(FeaturePackConfig fpConfig) throws ProvisioningException {
-        final FeaturePackRuntime.Builder fp = getRtBuilder(fpConfig.getGav());
+        final FeaturePackRuntime.Builder fp = loadFpBuilder(fpConfig.getGav());
 
         List<FeaturePackConfig> pushedDepConfigs = Collections.emptyList();
         if(fp.spec.hasDependencies()) {
@@ -589,7 +589,7 @@ public class ProvisioningRuntimeBuilder {
         if(Constants.THIS.equals(fpDepName)) {
             return this.fpOrigin;
         }
-        return getRtBuilder(fp.spec.getDependency(fpDepName).getTarget().getGav());
+        return loadFpBuilder(fp.spec.getDependency(fpDepName).getTarget().getGav());
     }
 
     private boolean resolveFeature(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureConfig fc) throws ProvisioningException {
@@ -684,7 +684,7 @@ public class ProvisioningRuntimeBuilder {
     private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {
         for (FeaturePackConfig fpConfig : fpConfigs) {
             final Gav fpGav = fpConfig.getGav();
-            final FeaturePackRuntime.Builder fp = getRtBuilder(fpGav);
+            final FeaturePackRuntime.Builder fp = loadFpBuilder(fpGav);
             final FeaturePackConfig popped = fp.pop();
             if (popped.hasIncludedPackages()) {
                 for (PackageConfig pkgConfig : popped.getIncludedPackages()) {
@@ -700,7 +700,7 @@ public class ProvisioningRuntimeBuilder {
 
     private void pushFpConfig(List<FeaturePackConfig> pushed, FeaturePackConfig fpConfig)
             throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
-        final FeaturePackRuntime.Builder fp = getRtBuilder(fpConfig.getGav());
+        final FeaturePackRuntime.Builder fp = loadFpBuilder(fpConfig.getGav());
 
         if(fp.isStackEmpty()) {
             fp.push(fpConfig);
@@ -738,8 +738,15 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
-    private FeaturePackRuntime.Builder getRtBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException,
-            ProvisioningException, ArtifactResolutionException {
+    FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
+        final FeaturePackRuntime.Builder fpRtBuilder = fpRtBuilders.get(gav.toGa());
+        if(fpRtBuilder == null) {
+            throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(gav));
+        }
+        return fpRtBuilder;
+    }
+
+    private FeaturePackRuntime.Builder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
         FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
         if(fp == null) {
             final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
@@ -849,7 +856,7 @@ public class ProvisioningRuntimeBuilder {
             }
             for(String depName : depNames) {
                 final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
-                final FeaturePackRuntime.Builder targetFp = getRtBuilder(depSpec.getTarget().getGav());
+                final FeaturePackRuntime.Builder targetFp = loadFpBuilder(depSpec.getTarget().getGav());
                 if(targetFp == null) {
                     throw new IllegalStateException(depSpec.getName() + " " + depSpec.getTarget().getGav() + " has not been layed out yet");
                 }

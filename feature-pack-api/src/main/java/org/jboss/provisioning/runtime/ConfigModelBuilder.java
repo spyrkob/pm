@@ -311,7 +311,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         handler.done();
     }
 
-    public ProvisionedConfig build() throws ProvisioningException {
+    public ProvisionedConfig build(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(featuresById.isEmpty()) {
             orderedFeatures = Collections.emptyList();
             featuresById = Collections.emptyMap();
@@ -321,7 +321,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         for (SpecFeatures features : featuresBySpec.values()) {
             // resolve references
             try {
-                features.spec.resolveRefMappings(this);
+                features.spec.resolveRefMappings(rt);
             } catch(ProvisioningDescriptionException e) {
                 final StringBuilder buf = new StringBuilder();
                 buf.append("Failed to build config");
@@ -446,7 +446,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(!feature.dependencies.isEmpty()) {
             circularRefs = orderRefs(feature, feature.dependencies, false, circularRefs);
         }
-        List<ResolvedFeatureId> refIds = feature.resolveRefs(this);
+        List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
             circularRefs = orderRefs(feature, refIds, true, circularRefs);
         }

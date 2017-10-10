@@ -51,7 +51,7 @@ public class FeatureSpecXmlParsingTestCase {
                 .addAnnotation(new FeatureAnnotation("a2"))
                 .addAnnotation(new FeatureAnnotation("a1").setAttr("e1", "v3").setAttr("e2", "v4"))
                 .addRef(FeatureReferenceSpec.create("spec1", "spec1", false))
-                .addRef(FeatureReferenceSpec.create("spec1-ref", "spec1", false))
+                .addRef(FeatureReferenceSpec.builder("spec1").setName("spec1-ref").setNillable(false).setInclude(true).build())
                 .addRef(FeatureReferenceSpec.builder("spec2")
                         .setName("spec2-ref")
                         .setNillable(true)

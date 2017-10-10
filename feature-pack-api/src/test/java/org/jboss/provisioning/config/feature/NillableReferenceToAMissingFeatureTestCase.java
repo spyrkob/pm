@@ -24,9 +24,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -41,7 +39,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBase {
+public class NillableReferenceToAMissingFeatureTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -61,7 +59,6 @@ public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBa
                             .setName("specA")
                             .setNillable(true)
                             .mapParam("a", "name")
-                            .setInclude(true)
                             .build())
                     .build())
             .addConfig(ConfigSpec.builder().setName("config1")
@@ -76,9 +73,7 @@ public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBa
 
     @Override
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
-        return FeaturePackConfig.builder(FP_GAV)
-                .includeDefaultConfig(IncludedConfig.builder(null, "config1").excludeFeature(FeatureId.create("specA", "name", "a")).build())
-                .build();
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override

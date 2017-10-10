@@ -37,7 +37,7 @@
   </requires>
   <refs>
     <ref feature="spec1"/>
-    <ref feature="spec1" name="spec1-ref"/>
+    <ref feature="spec1" name="spec1-ref" include="true"/>
     <ref feature="spec2" name="spec2-ref" nillable="true">
       <param name="localParam1" maps-to="targetParam1"/>
       <param name="localParam2" maps-to="targetParam2"/>
