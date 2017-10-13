@@ -36,18 +36,30 @@ public abstract class PmSessionCommand implements Command<PmSession> {
             if(t instanceof RuntimeException) {
                 t.printStackTrace(session.getShell().err());
             }
-            final StringBuilder buf = new StringBuilder("Error");
+
+            session.print("Error: ");
+            println(session, t);
+
+            t = t.getCause();
+            int offset = 1;
             while(t != null) {
-                buf.append(": ");
-                if(t.getLocalizedMessage() == null) {
-                    buf.append(t.getClass().getName());
-                } else {
-                    buf.append(t.getLocalizedMessage());
+                for(int i = 0; i < offset; ++i) {
+                    session.print(" ");
                 }
+                session.print("* ");
+                println(session, t);
                 t = t.getCause();
+                ++offset;
             }
-            session.println(buf.toString());
             return CommandResult.FAILURE;
+        }
+    }
+
+    private void println(PmSession session, Throwable t) {
+        if(t.getLocalizedMessage() == null) {
+            session.println(t.getClass().getName());
+        } else {
+            session.println(t.getLocalizedMessage());
         }
     }
 

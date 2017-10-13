@@ -503,9 +503,7 @@ public class ProvisioningRuntimeBuilder {
         if (features.size() == 1) {
             final Map.Entry<FeatureId, FeatureConfig> included = features.entrySet().iterator().next();
             final FeatureConfig fc = included.getValue();
-            FeaturePackRuntime.Builder targetFp1 = fp;
-            final FeaturePackRuntime.Builder targetFp = targetFp1;
-            final ResolvedFeatureSpec resolvedSpec = targetFp.getFeatureSpec(fc.getSpecId().getName());
+            final ResolvedFeatureSpec resolvedSpec = fp.getFeatureSpec(fc.getSpecId().getName());
             if (parentFeature != null) {
                 initForeignKey(parentFeature, fc, resolvedSpec);
             }
@@ -527,8 +525,7 @@ public class ProvisioningRuntimeBuilder {
 
     private Set<ResolvedFeatureId> resolveFeatureSet(FeaturePackRuntime.Builder fp, Set<FeatureId> features) throws ProvisioningException {
         if (features.size() == 1) {
-            final FeatureId excludedId = features.iterator().next();
-            return Collections.singleton(resolveFeatureId(fp, excludedId));
+            return Collections.singleton(resolveFeatureId(fp, features.iterator().next()));
         }
         final Set<ResolvedFeatureId> tmp = new HashSet<>(features.size());
         for (FeatureId excludedId : features) {

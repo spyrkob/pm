@@ -336,19 +336,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private ProvisionedConfig doBuild(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         for (SpecFeatures features : featuresBySpec.values()) {
             // resolve references
-            try {
-                features.spec.resolveRefMappings(rt);
-            } catch(ProvisioningDescriptionException e) {
-                final StringBuilder buf = new StringBuilder();
-                buf.append("Failed to build config");
-                if(name != null) {
-                    buf.append(" name=").append(name);
-                }
-                if(model != null) {
-                    buf.append(" model=").append(model);
-                }
-                throw new ProvisioningException(buf.toString(), e);
-            }
+            features.spec.resolveRefMappings(rt);
             // resolve and register capability providers
             if(features.spec.xmlSpec.providesCapabilities()) {
                 for(CapabilitySpec cap : features.spec.xmlSpec.getProvidedCapabilities()) {
