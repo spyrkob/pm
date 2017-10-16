@@ -76,16 +76,12 @@ public class CustomizeInheritedFeatureGroupTestCase extends PmInstallFeaturePack
                             .setParam("b", "b2"))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .setProperty("prop1", "value1")
-                    .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg1")
                             .excludeFeature(FeatureId.create("specA", "name", "aOne"))
                             .excludeSpec("specB")
                             .includeFeature(FeatureId.create("specB", "name", "bTwo"))
                             .build())
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -98,12 +94,8 @@ public class CustomizeInheritedFeatureGroupTestCase extends PmInstallFeaturePack
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setProperty("prop1", "value1")
-                        .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aTwo"))
                                 .setParam("a", "a2")
                                 .build())
