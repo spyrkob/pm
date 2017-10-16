@@ -423,7 +423,11 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             throw new ProvisioningException("Failed to close " + script, e);
         }
         messageWriter.print(" Generating %s configuration", script.getFileName().toString());
-        CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
+        try {
+            CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
+        } catch(ProvisioningException e) {
+            throw new ProvisioningException("Failed to generate " + script.getFileName() + " configuration", e);
+        }
         if(tmpConfig != null) {
             final Path tmpPath = runtime.getStagedDir().resolve("domain").resolve("configuration").resolve(tmpConfig);
             if(Files.exists(tmpPath)) {

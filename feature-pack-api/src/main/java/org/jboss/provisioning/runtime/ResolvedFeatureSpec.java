@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -58,17 +59,20 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
         Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
         if (refs.size() == 1) {
-            final FeatureReferenceSpec refSpec = refs.iterator().next();
-            final FeaturePackRuntime.Builder refFp = refSpec.getDependency() == null ? ownFp
-                    : rt.getFpBuilder(ownFp.spec.getDependency(refSpec.getDependency()).getTarget().getGav());
-            final ResolvedFeatureSpec resolvedRefSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
-            assertRefParamMapping(refSpec, resolvedRefSpec);
-            resolvedRefTargets = Collections.singletonMap(refSpec.getName(), resolvedRefSpec);
+            resolvedRefTargets = Collections.singletonMap(refs.iterator().next().getName(), resolveRefMapping(rt, ownFp, refs.iterator().next()));
             return;
         }
 
         final Map<String, ResolvedFeatureSpec> tmp = new HashMap<>(refs.size());
         for (FeatureReferenceSpec refSpec : refs) {
+            tmp.put(refSpec.getName(), resolveRefMapping(rt, ownFp, refSpec));
+        }
+        this.resolvedRefTargets = Collections.unmodifiableMap(tmp);
+    }
+
+    private ResolvedFeatureSpec resolveRefMapping(ProvisioningRuntimeBuilder rt, final FeaturePackRuntime.Builder ownFp,
+            FeatureReferenceSpec refSpec) throws ProvisioningDescriptionException {
+        try {
             final ResolvedFeatureSpec resolvedRefSpec;
             if (refSpec.getDependency() == null) {
                 resolvedRefSpec = ownFp.getFeatureSpec(refSpec.getFeature().getName());
@@ -78,9 +82,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 resolvedRefSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
             }
             assertRefParamMapping(refSpec, resolvedRefSpec);
-            tmp.put(refSpec.getName(), resolvedRefSpec);
+            return resolvedRefSpec;
+        } catch (ProvisioningDescriptionException e) {
+            throw new ProvisioningDescriptionException(Errors.failedToResolveFeatureReference(refSpec, id), e);
         }
-        this.resolvedRefTargets = Collections.unmodifiableMap(tmp);
     }
 
     private void assertRefParamMapping(final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec)

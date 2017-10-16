@@ -23,6 +23,7 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.runtime.ResolvedFeature;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.CapabilitySpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 
 /**
  *
@@ -199,5 +200,9 @@ public interface Errors {
             buf.append(" an instance of ").append(feature.getSpecId());
         }
         return buf.toString();
+    }
+
+    static String failedToResolveFeatureReference(FeatureReferenceSpec refSpec, ResolvedSpecId spec) {
+        return "Failed to resolve feature reference " + refSpec.getName() + " for " + spec;
     }
 }

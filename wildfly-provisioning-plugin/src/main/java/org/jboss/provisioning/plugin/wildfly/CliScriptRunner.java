@@ -89,6 +89,7 @@ public class CliScriptRunner {
             }
 
             if(cliProcess.exitValue() != 0) {
+                final String error = errorWriter.getBuffer().toString();
                 if(echoLine != null) {
                     Path p = Paths.get(echoLine.substring("executing ".length()));
                     final String scriptName = p.getFileName().toString();
@@ -105,12 +106,17 @@ public class CliScriptRunner {
                     final String fpGroup = p.getFileName().toString();
                     messageWriter.error("Failed to execute script %s from %s package %s line # %d", scriptName,
                             ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion), pkgName, opIndex);
-                    messageWriter.error(errorWriter.getBuffer());
+                    messageWriter.error(error);
                 } else {
                     messageWriter.error("Could not locate the cause of the error in the CLI output.");
-                    messageWriter.error(errorWriter.getBuffer());
+                    messageWriter.error(error);
                 }
-                final StringBuilder buf = new StringBuilder("CLI configuration scripts failed");
+                final StringBuilder buf = new StringBuilder();
+                if(error.length() == 0) {
+                    buf.append("CLI configuration scripts failed (look for the detailed error messages above)");
+                } else {
+                    buf.append(error);
+                }
 //                try {
 //                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
 //                    IoUtils.copy(script, scriptCopy);
