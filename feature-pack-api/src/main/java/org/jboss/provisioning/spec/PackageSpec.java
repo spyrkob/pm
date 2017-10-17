@@ -181,32 +181,32 @@ public class PackageSpec implements PackageDependencies {
     }
 
     @Override
-    public boolean dependsOnPackages() {
+    public boolean hasPackageDeps() {
         return !(localDeps.isEmpty() && externalDeps.isEmpty());
     }
 
     @Override
-    public boolean dependsOnLocalPackages() {
+    public boolean hasLocalPackageDeps() {
         return !localDeps.isEmpty();
     }
 
     @Override
-    public PackageDependencyGroupSpec getLocalPackageDependencies() {
+    public PackageDependencyGroupSpec getLocalPackageDeps() {
         return localDeps;
     }
 
     @Override
-    public boolean dependsOnExternalPackages() {
+    public boolean hasExternalPackageDeps() {
         return !externalDeps.isEmpty();
     }
 
     @Override
-    public Collection<String> getPackageDependencySources() {
+    public Collection<String> getExternalPackageSources() {
         return externalDeps.keySet();
     }
 
     @Override
-    public PackageDependencyGroupSpec getExternalPackageDependencies(String groupName) {
+    public PackageDependencyGroupSpec getExternalPackageDeps(String groupName) {
         return externalDeps.get(groupName);
     }
 

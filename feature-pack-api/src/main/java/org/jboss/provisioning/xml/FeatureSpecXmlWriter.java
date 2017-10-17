@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -75,9 +76,23 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
             writeCaps(addElement(specE, Element.REQUIRES), featureSpec.getRequiredCapabilities());
         }
 
-        if(featureSpec.hasRefs()) {
+        if(featureSpec.hasFeatureDeps()) {
+            final ElementNode depsE = addElement(specE, Element.DEPENDENCIES);
+            for(FeatureDependencySpec dep : featureSpec.getFeatureDeps()) {
+                final ElementNode depE = addElement(depsE, Element.DEPENDENCY);
+                addAttribute(depE, Attribute.FEATURE_ID, dep.getFeatureId().toString());
+                if(dep.getDependency() != null) {
+                    addAttribute(depE, Attribute.DEPENDENCY, dep.getDependency());
+                }
+                if(dep.isInclude()) {
+                    addAttribute(depE, Attribute.INCLUDE, TRUE);
+                }
+            }
+        }
+
+        if(featureSpec.hasFeatureRefs()) {
             final ElementNode refsE = addElement(specE, Element.REFERENCES);
-            for(FeatureReferenceSpec ref : featureSpec.getRefs()) {
+            for(FeatureReferenceSpec ref : featureSpec.getFeatureRefs()) {
                 final ElementNode refE = addElement(refsE, Element.REFERENCE);
                 final String feature = ref.getFeature().toString();
                 if(ref.getDependency() != null) {
@@ -93,18 +108,10 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                 if(ref.isInclude()) {
                     addAttribute(refE, Attribute.INCLUDE, TRUE);
                 }
-                if(ref.getParamsMapped() == 1) {
-                    if(!(ref.getLocalParam(0).equals(ref.getFeature()) && ref.getTargetParam(0).equals("name"))) {
-                        final ElementNode paramE = addElement(refE, Element.PARAMETER);
-                        addAttribute(paramE, Attribute.NAME, ref.getLocalParam(0));
-                        addAttribute(paramE, Attribute.MAPS_TO, ref.getTargetParam(0));
-                    }
-                } else {
-                    for(int i = 0; i < ref.getParamsMapped(); ++i) {
-                        final ElementNode paramE = addElement(refE, Element.PARAMETER);
-                        addAttribute(paramE, Attribute.NAME, ref.getLocalParam(i));
-                        addAttribute(paramE, Attribute.MAPS_TO, ref.getTargetParam(i));
-                    }
+                for(int i = 0; i < ref.getParamsMapped(); ++i) {
+                    final ElementNode paramE = addElement(refE, Element.PARAMETER);
+                    addAttribute(paramE, Attribute.NAME, ref.getLocalParam(i));
+                    addAttribute(paramE, Attribute.MAPS_TO, ref.getTargetParam(i));
                 }
             }
         }
@@ -125,16 +132,16 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
             }
         }
 
-        if(featureSpec.dependsOnPackages()) {
+        if(featureSpec.hasPackageDeps()) {
         final ElementNode deps = addElement(specE, Element.PACKAGES);
-        if(featureSpec.dependsOnLocalPackages()) {
-            for(PackageDependencySpec depSpec : featureSpec.getLocalPackageDependencies().getDescriptions()) {
+        if(featureSpec.hasLocalPackageDeps()) {
+            for(PackageDependencySpec depSpec : featureSpec.getLocalPackageDeps().getDescriptions()) {
                 writePackageDependency(deps, depSpec);
             }
         }
-        if(featureSpec.dependsOnExternalPackages()) {
-            for(String name : featureSpec.getPackageDependencySources()) {
-                writeFeaturePackDependency(deps, featureSpec.getExternalPackageDependencies(name));
+        if(featureSpec.hasExternalPackageDeps()) {
+            for(String name : featureSpec.getExternalPackageSources()) {
+                writeFeaturePackDependency(deps, featureSpec.getExternalPackageDeps(name));
             }
         }
         }

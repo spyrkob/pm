@@ -80,9 +80,9 @@ public class FeaturePackLayout {
             // package dependency consistency check
             if (!packages.isEmpty()) {
                 for (PackageSpec pkg : packages.values()) {
-                    if (pkg.dependsOnLocalPackages()) {
+                    if (pkg.hasLocalPackageDeps()) {
                         List<String> notFound = null;
-                        for(PackageDependencySpec pkgDep : pkg.getLocalPackageDependencies().getDescriptions()) {
+                        for(PackageDependencySpec pkgDep : pkg.getLocalPackageDeps().getDescriptions()) {
                             final PackageSpec depSpec = packages.get(pkgDep.getName());
                             if(depSpec == null) {
                                 if(notFound == null) {
@@ -102,8 +102,8 @@ public class FeaturePackLayout {
                             throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(builtSpec.getGav(), pkg.getName(), notFound));
                         }
                     }
-                    if(pkg.dependsOnExternalPackages()) {
-                        for(String depName : pkg.getPackageDependencySources()) {
+                    if(pkg.hasExternalPackageDeps()) {
+                        for(String depName : pkg.getExternalPackageSources()) {
                             try {
                                 builtSpec.getDependency(depName);
                             } catch(ProvisioningDescriptionException e) {

@@ -17,14 +17,16 @@
 
 package org.jboss.provisioning.config;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
@@ -52,13 +54,13 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
 
     SpecId specId;
     Map<String, String> params = Collections.emptyMap();
-    Set<FeatureId> dependencies = Collections.emptySet();
+    Map<FeatureId, FeatureDependencySpec> deps = Collections.emptyMap();
     String parentRef;
 
     public FeatureConfig(FeatureConfig copy) {
         super(copy);
         specId = copy.specId;
-        dependencies = copy.dependencies;
+        deps = copy.deps;
         parentRef = copy.parentRef;
         if(copy.params.size() > 1) {
             params = new HashMap<>(copy.params);
@@ -130,47 +132,57 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
         }
     }
 
-    public FeatureConfig addDependency(FeatureId featureId) {
-        switch(dependencies.size()) {
+    public FeatureConfig addFeatureDep(FeatureId featureId) throws ProvisioningDescriptionException {
+        return addFeatureDep(FeatureDependencySpec.create(featureId));
+    }
+
+    public FeatureConfig addFeatureDep(FeatureDependencySpec dep) throws ProvisioningDescriptionException {
+        switch(deps.size()) {
             case 0:
-                dependencies = Collections.singleton(featureId);
+                deps = Collections.singletonMap(dep.getFeatureId(), dep);
                 break;
             case 1:
-                if(dependencies.contains(featureId)) {
-                    return this;
+                if(deps.containsKey(dep.getFeatureId())) {
+                    throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId());
                 }
-                dependencies = new LinkedHashSet<>(dependencies);
+                final Map.Entry<FeatureId, FeatureDependencySpec> first = deps.entrySet().iterator().next();
+                deps = new LinkedHashMap<>(2);
+                deps.put(first.getKey(), first.getValue());
             default:
-                dependencies.add(featureId);
+                deps.put(dep.getFeatureId(), dep);
         }
         return this;
     }
 
-    public boolean hasDependencies() {
-        return !dependencies.isEmpty();
+    public boolean hasFeatureDeps() {
+        return !deps.isEmpty();
     }
 
-    public Set<FeatureId> getDependencies() {
-        return dependencies;
+    public Collection<FeatureDependencySpec> getFeatureDeps() {
+        return deps.values();
+    }
+
+    public Set<FeatureId> getFeatureDepIds() {
+        return deps.keySet();
     }
 
     @Override
-    public boolean hasExternalDependencies() {
+    public boolean hasExternalGroupDeps() {
         return !externalGroups.isEmpty();
     }
 
     @Override
-    public Map<String, FeatureGroupSpec> getExternalDependencies() {
+    public Map<String, FeatureGroupSpec> getExternalGroupDeps() {
         return this.buildExternalDependencies();
     }
 
     @Override
-    public boolean hasLocalDependencies() {
+    public boolean hasLocalGroupDeps() {
         return !localGroups.isEmpty();
     }
 
     @Override
-    public List<FeatureGroupConfig> getLocalDependencies() {
+    public List<FeatureGroupConfig> getLocalGroupDeps() {
         return localGroups;
     }
 
@@ -188,7 +200,7 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((dependencies == null) ? 0 : dependencies.hashCode());
+        result = prime * result + ((deps == null) ? 0 : deps.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
@@ -204,10 +216,10 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
         if (getClass() != obj.getClass())
             return false;
         FeatureConfig other = (FeatureConfig) obj;
-        if (dependencies == null) {
-            if (other.dependencies != null)
+        if (deps == null) {
+            if (other.deps != null)
                 return false;
-        } else if (!dependencies.equals(other.dependencies))
+        } else if (!deps.equals(other.deps))
             return false;
         if (params == null) {
             if (other.params != null)
@@ -238,9 +250,9 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
         if(parentRef != null) {
             buf.append(" parentRef=").append(parentRef);
         }
-        if(!dependencies.isEmpty()) {
+        if(!deps.isEmpty()) {
             buf.append(" dependencies=");
-            StringUtils.append(buf, dependencies);
+            StringUtils.append(buf, deps.values());
         }
         if(!features.isEmpty()) {
             buf.append(" nested=");

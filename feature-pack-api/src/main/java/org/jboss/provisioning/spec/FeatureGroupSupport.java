@@ -125,7 +125,7 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
      * @see org.jboss.provisioning.feature.FeatureGroup#hasExternalDependencies()
      */
     @Override
-    public boolean hasExternalDependencies() {
+    public boolean hasExternalGroupDeps() {
         return !externalGroups.isEmpty();
     }
 
@@ -133,7 +133,7 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
      * @see org.jboss.provisioning.feature.FeatureGroup#getExternalDependencies()
      */
     @Override
-    public Map<String, FeatureGroupSpec> getExternalDependencies() {
+    public Map<String, FeatureGroupSpec> getExternalGroupDeps() {
         return externalGroups;
     }
 
@@ -141,7 +141,7 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
      * @see org.jboss.provisioning.feature.FeatureGroup#hasLocalDependencies()
      */
     @Override
-    public boolean hasLocalDependencies() {
+    public boolean hasLocalGroupDeps() {
         return !localGroups.isEmpty();
     }
 
@@ -149,7 +149,7 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
      * @see org.jboss.provisioning.feature.FeatureGroup#getLocalDependencies()
      */
     @Override
-    public List<FeatureGroupConfig> getLocalDependencies() {
+    public List<FeatureGroupConfig> getLocalGroupDeps() {
         return localGroups;
     }
 

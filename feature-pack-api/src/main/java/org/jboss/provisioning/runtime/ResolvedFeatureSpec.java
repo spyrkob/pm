@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +30,9 @@ import java.util.Map.Entry;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -43,21 +46,46 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
     final ResolvedSpecId id;
     final FeatureSpec xmlSpec;
-    Map<String, ResolvedFeatureSpec> resolvedRefTargets;
+    private Map<String, ResolvedFeatureSpec> resolvedRefTargets;
+    private Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps;
 
     public ResolvedFeatureSpec(ResolvedSpecId specId, FeatureSpec spec) {
         this.id = specId;
         this.xmlSpec = spec;
     }
 
+    Map<ResolvedFeatureId, FeatureDependencySpec> resolveFeatureDeps(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
+        if(resolvedDeps != null) {
+            return resolvedDeps;
+        }
+        if(!xmlSpec.hasFeatureDeps()) {
+            resolvedDeps = Collections.emptyMap();
+            return resolvedDeps;
+        }
+        final FeaturePackRuntime.Builder ownFp = rt.getFpBuilder(id.gav);
+        final Collection<FeatureDependencySpec> depSpecs = xmlSpec.getFeatureDeps();
+        if(depSpecs.size() == 1) {
+            final FeatureDependencySpec depSpec = depSpecs.iterator().next();
+            final ResolvedFeatureId depId = rt.resolveFeatureId(depSpec.getDependency() == null ? ownFp : rt.getFpDependency(ownFp, depSpec.getDependency()), depSpec.getFeatureId());
+            resolvedDeps = Collections.singletonMap(depId, depSpec);
+        } else {
+            resolvedDeps = new LinkedHashMap<>(depSpecs.size());
+            for(FeatureDependencySpec depSpec : depSpecs) {
+                final ResolvedFeatureId depId = rt.resolveFeatureId(ownFp, depSpec.getFeatureId());
+                resolvedDeps.put(depId, depSpec);
+            }
+        }
+        return resolvedDeps;
+    }
+
     void resolveRefMappings(ProvisioningRuntimeBuilder rt) throws ProvisioningDescriptionException {
-        if(!xmlSpec.hasRefs()) {
+        if(!xmlSpec.hasFeatureRefs()) {
             resolvedRefTargets = Collections.emptyMap();
             return;
         }
         final FeaturePackRuntime.Builder ownFp = rt.getFpBuilder(id.gav);
 
-        Collection<FeatureReferenceSpec> refs = xmlSpec.getRefs();
+        Collection<FeatureReferenceSpec> refs = xmlSpec.getFeatureRefs();
         if (refs.size() == 1) {
             resolvedRefTargets = Collections.singletonMap(refs.iterator().next().getName(), resolveRefMapping(rt, ownFp, refs.iterator().next()));
             return;
@@ -128,12 +156,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         if(resolvedRefTargets.size() == 1) {
             final Entry<String, ResolvedFeatureSpec> refEntry = resolvedRefTargets.entrySet().iterator().next();
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getRef(refEntry.getKey()), refEntry.getValue());
+            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue());
             return refId == null ? Collections.emptyList() : Collections.singletonList(refId);
         }
         final List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
         for(Map.Entry<String, ResolvedFeatureSpec> refEntry : resolvedRefTargets.entrySet()) {
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getRef(refEntry.getKey()), refEntry.getValue());
+            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue());
             if(refId != null) {
                 refIds.add(refId);
             }

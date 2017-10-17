@@ -46,18 +46,18 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
         addAttribute(pkg, Attribute.NAME, pkgSpec.getName());
 
         ElementNode deps = null;
-        if(pkgSpec.dependsOnLocalPackages()) {
+        if(pkgSpec.hasLocalPackageDeps()) {
             deps = addElement(pkg, Element.DEPENDENCIES);
-            for(PackageDependencySpec depSpec : pkgSpec.getLocalPackageDependencies().getDescriptions()) {
+            for(PackageDependencySpec depSpec : pkgSpec.getLocalPackageDeps().getDescriptions()) {
                 writePackageDependency(deps, depSpec);
             }
         }
-        if(pkgSpec.dependsOnExternalPackages()) {
+        if(pkgSpec.hasExternalPackageDeps()) {
             if(deps == null) {
                 deps = addElement(pkg, Element.DEPENDENCIES);
             }
-            for(String name : pkgSpec.getPackageDependencySources()) {
-                writeFeaturePackDependency(deps, pkgSpec.getExternalPackageDependencies(name));
+            for(String name : pkgSpec.getExternalPackageSources()) {
+                writeFeaturePackDependency(deps, pkgSpec.getExternalPackageDeps(name));
             }
         }
         if(pkgSpec.hasParameters()) {

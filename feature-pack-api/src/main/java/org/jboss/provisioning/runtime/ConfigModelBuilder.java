@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -34,6 +33,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.spec.CapabilitySpec;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 
 
@@ -158,15 +158,13 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Set<ResolvedFeatureId> resolvedDeps) throws ProvisioningDescriptionException {
+    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps) throws ProvisioningDescriptionException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                feature.merge(config);
+                feature.mergeParams(config);
                 if(!resolvedDeps.isEmpty()) {
-                    for(ResolvedFeatureId depId : resolvedDeps) {
-                        feature.addDependency(depId);
-                    }
+                    feature.addAllDependencies(resolvedDeps);
                 }
                 return feature;
             }
@@ -439,8 +437,8 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(feature.spec.xmlSpec.requiresCapabilities()) {
             circularRefs = orderProviders(feature, circularRefs);
         }
-        if(!feature.dependencies.isEmpty()) {
-            circularRefs = orderRefs(feature, feature.dependencies, false, circularRefs);
+        if(!feature.deps.isEmpty()) {
+            circularRefs = orderRefs(feature, feature.deps.keySet(), false, circularRefs);
         }
         List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
@@ -633,7 +631,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(orderReferencedSpec && specRef && !feature.spec.id.equals(refId.specId)) {
             final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
             if (targetSpecFeatures == null) {
-                throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
+                throw new ProvisioningDescriptionException(Errors.unresolvedFeatureDep(feature, refId));
             }
             final List<CircularRefInfo> specLoops = orderSpec(targetSpecFeatures, false);
             if (specLoops != null) {
@@ -660,18 +658,8 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         final ResolvedFeature dep = featuresById.get(refId);
         if (dep == null) {
-            throw new ProvisioningDescriptionException(errorFor(feature).append(" has unresolved dependency on ").append(refId).toString());
+            throw new ProvisioningDescriptionException(Errors.unresolvedFeatureDep(feature, refId));
         }
         return orderFeature(dep);
-    }
-
-    private static StringBuilder errorFor(ResolvedFeature feature) {
-        final StringBuilder buf = new StringBuilder();
-        if (feature.id != null) {
-            buf.append(feature.id);
-        } else {
-            buf.append(feature.spec.id).append(" configuration");
-        }
-        return buf;
     }
 }

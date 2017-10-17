@@ -57,8 +57,8 @@ public class FeatureGroupParsingTestCase {
                         .includeFeature(
                                 FeatureId.fromString("spec3:p1=v1"),
                                 new FeatureConfig("spec3")
-                                .addDependency(FeatureId.fromString("spec4:p1=v1,p2=v2"))
-                                .addDependency(FeatureId.fromString("spec5:p1=v1,p2=v2"))
+                                .addFeatureDep(FeatureId.fromString("spec4:p1=v1,p2=v2"))
+                                .addFeatureDep(FeatureId.fromString("spec5:p1=v1,p2=v2"))
                                 .setParam("p1", "v1")
                                 .setParam("p2", "v2")
                                 .addFeature(
@@ -78,12 +78,12 @@ public class FeatureGroupParsingTestCase {
                         new FeatureConfig("spec1")
                         .setParam("p1", "v1")
                         .setParam("p2", "v2")
-                        .addDependency(FeatureId.builder("spec2").addParam("p1", "v1").addParam("p2", "v2").build())
-                        .addDependency(FeatureId.create("spec3", "p3", "v3")))
+                        .addFeatureDep(FeatureId.builder("spec2").addParam("p1", "v1").addParam("p2", "v2").build())
+                        .addFeatureDep(FeatureId.create("spec3", "p3", "v3")))
                 .addFeature(
                         new FeatureConfig("spec1")
-                        .addDependency(FeatureId.fromString("spec2:p1=v1,p2=v2"))
-                        .addDependency(FeatureId.fromString("spec3:p3=v3"))
+                        .addFeatureDep(FeatureId.fromString("spec2:p1=v1,p2=v2"))
+                        .addFeatureDep(FeatureId.fromString("spec3:p3=v3"))
                         .setParam("p1", "v1")
                         .setParam("p2", "v2"))
                 .addFeature(

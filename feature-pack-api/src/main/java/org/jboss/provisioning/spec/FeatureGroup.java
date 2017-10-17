@@ -28,13 +28,13 @@ import org.jboss.provisioning.config.FeatureGroupConfig;
  */
 public interface FeatureGroup {
 
-    boolean hasExternalDependencies();
+    boolean hasExternalGroupDeps();
 
-    Map<String, FeatureGroupSpec> getExternalDependencies();
+    Map<String, FeatureGroupSpec> getExternalGroupDeps();
 
-    boolean hasLocalDependencies();
+    boolean hasLocalGroupDeps();
 
-    List<FeatureGroupConfig> getLocalDependencies();
+    List<FeatureGroupConfig> getLocalGroupDeps();
 
     boolean hasFeatures();
 

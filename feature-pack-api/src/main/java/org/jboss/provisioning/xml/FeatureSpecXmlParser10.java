@@ -30,6 +30,8 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -50,6 +52,8 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
 
         ANNOTATION("annotation"),
         CAPABILITY("capability"),
+        DEPENDENCIES("deps"),
+        DEPENDENCY("dep"),
         ELEM("elem"),
         FEATURE_PACK("feature-pack"),
         FEATURE_SPEC("feature-spec"),
@@ -202,6 +206,9 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                         case ANNOTATION:
                             parseAnnotation(reader, featureBuilder);
                             break;
+                        case DEPENDENCIES:
+                            parseDependencies(reader, featureBuilder);
+                            break;
                         case REFERENCES:
                             parseReferences(reader, featureBuilder);
                             break;
@@ -294,6 +301,67 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         fa.setAttr(name, value);
     }
 
+    private void parseDependencies(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName());
+                    switch (element) {
+                        case DEPENDENCY:
+                            try {
+                                specBuilder.addFeatureDep(parseDependency(reader));
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse feature reference", e);
+                            }
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private FeatureDependencySpec parseDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String dependency = null;
+        boolean include = false;
+        String featureId = null;
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case DEPENDENCY:
+                    dependency = reader.getAttributeValue(i);
+                    break;
+                case FEATURE_ID:
+                    featureId = reader.getAttributeValue(i);
+                    break;
+                case INCLUDE:
+                    include = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
+            }
+        }
+        if(featureId == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.FEATURE_ID));
+        }
+        ParsingUtils.parseNoContent(reader);
+        try {
+            return FeatureDependencySpec.create(FeatureId.fromString(featureId), dependency, include);
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to parse feature dependency", reader.getLocation(), e);
+        }
+    }
+
     private void parseReferences(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
@@ -306,7 +374,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                     switch (element) {
                         case REFERENCE:
                             try {
-                                specBuilder.addRef(parseReference(reader));
+                                specBuilder.addFeatureRef(parseReference(reader));
                             } catch (ProvisioningDescriptionException e) {
                                 throw new XMLStreamException("Failed to parse feature reference", e);
                             }

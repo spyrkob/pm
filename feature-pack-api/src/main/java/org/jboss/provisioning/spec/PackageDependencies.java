@@ -25,17 +25,17 @@ import java.util.Collection;
  */
 public interface PackageDependencies {
 
-    default boolean dependsOnPackages() {
-        return dependsOnLocalPackages() || dependsOnExternalPackages();
+    default boolean hasPackageDeps() {
+        return hasLocalPackageDeps() || hasExternalPackageDeps();
     }
 
-    boolean dependsOnLocalPackages();
+    boolean hasLocalPackageDeps();
 
-    PackageDependencyGroupSpec getLocalPackageDependencies();
+    PackageDependencyGroupSpec getLocalPackageDeps();
 
-    boolean dependsOnExternalPackages();
+    boolean hasExternalPackageDeps();
 
-    Collection<String> getPackageDependencySources();
+    Collection<String> getExternalPackageSources();
 
-    PackageDependencyGroupSpec getExternalPackageDependencies(String src);
+    PackageDependencyGroupSpec getExternalPackageDeps(String src);
 }

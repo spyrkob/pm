@@ -18,17 +18,16 @@ package org.jboss.provisioning.runtime;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.spec.CapabilitySpec;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
@@ -52,16 +51,21 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, String> params;
-    Set<ResolvedFeatureId> dependencies;
+    Map<ResolvedFeatureId, FeatureDependencySpec> deps;
 
     private byte orderingState = FREE;
     private byte batchControl;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig fc, Set<ResolvedFeatureId> resolvedDeps, int includeNo) throws ProvisioningDescriptionException {
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig fc, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps, int includeNo)
+            throws ProvisioningDescriptionException {
         this.includeNo = includeNo;
         this.id = id;
         this.spec = spec;
-        this.dependencies = resolvedDeps;
+        this.deps = resolvedDeps;
+        initParams(spec, fc);
+    }
+
+    private void initParams(ResolvedFeatureSpec spec, FeatureConfig fc) throws ProvisioningDescriptionException {
         if (fc.hasParams()) {
             if (!spec.xmlSpec.hasParams()) {
                 throw new ProvisioningDescriptionException("Features of type " + spec.id + " don't accept any parameters: " + params);
@@ -146,20 +150,26 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return batchControl == BATCH_END;
     }
 
-    public void addDependency(ResolvedFeatureId id) {
-        if(dependencies.isEmpty()) {
-            dependencies = Collections.singleton(id);
+    public void addAllDependencies(Map<ResolvedFeatureId, FeatureDependencySpec> deps) throws ProvisioningDescriptionException {
+        for(Map.Entry<ResolvedFeatureId, FeatureDependencySpec> dep : deps.entrySet()) {
+            addDependency(dep.getKey(), dep.getValue());
+        }
+    }
+
+    public void addDependency(ResolvedFeatureId id, FeatureDependencySpec depSpec) throws ProvisioningDescriptionException {
+        if(deps.isEmpty()) {
+            deps = Collections.singletonMap(id, depSpec);
             return;
         }
-        if(dependencies.contains(id)) {
-            return;
+        if(deps.containsKey(id)) {
+            throw new ProvisioningDescriptionException("Duplicate dependency on " + id + " from " + this.id); // TODO
         }
-        if(dependencies.size() == 1) {
-            final ResolvedFeatureId first = dependencies.iterator().next();
-            dependencies = new LinkedHashSet<>();
-            dependencies.add(first);
+        if(deps.size() == 1) {
+            final Map.Entry<ResolvedFeatureId, FeatureDependencySpec> first = deps.entrySet().iterator().next();
+            deps = new LinkedHashMap<>(2);
+            deps.put(first.getKey(), first.getValue());
         }
-        dependencies.add(id);
+        deps.put(id, depSpec);
     }
 
     @Override
@@ -219,7 +229,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    void merge(FeatureConfig config) throws ProvisioningDescriptionException {
+    void mergeParams(FeatureConfig config) throws ProvisioningDescriptionException {
         if(config.hasParams()) {
             for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
                 setParam(entry.getKey(), entry.getValue());
@@ -227,18 +237,16 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    void merge(ResolvedFeature config) throws ProvisioningDescriptionException {
-        if(config.hasParams()) {
-            for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
+    void merge(ResolvedFeature other) throws ProvisioningDescriptionException {
+        if(other.hasParams()) {
+            for(Map.Entry<String, String> entry : other.getParams().entrySet()) {
                 if(!params.containsKey(entry.getKey())) {
                     setParam(entry.getKey(), entry.getValue());
                 }
             }
         }
-        if(!config.dependencies.isEmpty()) {
-            for(ResolvedFeatureId id : config.dependencies) {
-                addDependency(id);
-            }
+        if(!other.deps.isEmpty()) {
+            addAllDependencies(other.deps);
         }
     }
 

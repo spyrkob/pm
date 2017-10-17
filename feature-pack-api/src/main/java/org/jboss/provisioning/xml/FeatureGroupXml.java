@@ -31,6 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeatureGroupConfigBuilderSupport;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
@@ -119,6 +120,7 @@ public class FeatureGroupXml {
         DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
+        INCLUDE("include"),
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         OPTIONAL("optional"),
@@ -531,12 +533,20 @@ public class FeatureGroupXml {
 
     private static void readFeatureDependency(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {
         String id = null;
+        String fpDep = null;
+        boolean include = false;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case FEATURE_ID:
                     id = reader.getAttributeValue(i);
+                    break;
+                case DEPENDENCY:
+                    fpDep = reader.getAttributeValue(i);
+                    break;
+                case INCLUDE:
+                    include = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
@@ -546,7 +556,11 @@ public class FeatureGroupXml {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.FEATURE_ID));
         }
         ParsingUtils.parseNoContent(reader);
-        config.addDependency(parseFeatureId(id));
+        try {
+            config.addFeatureDep(FeatureDependencySpec.create(parseFeatureId(id), fpDep, include));
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException(e);
+        }
     }
 
     private static FeatureId parseFeatureId(String id) throws XMLStreamException {

@@ -55,6 +55,7 @@ import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
@@ -538,8 +539,7 @@ public class ProvisioningRuntimeBuilder {
         return tmp;
     }
 
-    private ResolvedFeatureId resolveFeatureId(FeaturePackRuntime.Builder fp, final FeatureId featureId)
-            throws ProvisioningException {
+    ResolvedFeatureId resolveFeatureId(FeaturePackRuntime.Builder fp, final FeatureId featureId) {
         return new ResolvedFeatureId(new ResolvedSpecId(fp.gav, featureId.getSpec().getName()), featureId.getParams());
     }
 
@@ -561,13 +561,13 @@ public class ProvisioningRuntimeBuilder {
         if(featureGroup.isResetFeaturePackOrigin()) {
             this.fpOrigin = fp;
         }
-        if(featureGroup.hasExternalDependencies()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
+        if(featureGroup.hasExternalGroupDeps()) {
+            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalGroupDeps().entrySet()) {
                 resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getFpDependency(fp, entry.getKey()), entry.getValue());
             }
         }
-        if(featureGroup.hasLocalDependencies()) {
-            for(FeatureGroupConfig nestedFg : featureGroup.getLocalDependencies()) {
+        if(featureGroup.hasLocalGroupDeps()) {
+            for(FeatureGroupConfig nestedFg : featureGroup.getLocalGroupDeps()) {
                 resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg, fp.getFeatureGroupSpec(nestedFg.getName()));
             }
         }
@@ -585,7 +585,7 @@ public class ProvisioningRuntimeBuilder {
         return resolvedFeatures;
     }
 
-    private FeaturePackRuntime.Builder getFpDependency(FeaturePackRuntime.Builder fp, final String fpDepName)
+    FeaturePackRuntime.Builder getFpDependency(FeaturePackRuntime.Builder fp, final String fpDepName)
             throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
         if(Constants.THIS.equals(fpDepName)) {
             return this.fpOrigin;
@@ -602,7 +602,7 @@ public class ProvisioningRuntimeBuilder {
             return false;
         }
 
-        if(spec.xmlSpec.dependsOnPackages()) {
+        if(spec.xmlSpec.hasPackageDeps()) {
             try {
                 processPackageDeps(fp, specId.toString(), spec.xmlSpec);
             } catch(ProvisioningException e) {
@@ -610,37 +610,18 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        final Set<ResolvedFeatureId> resolvedDeps;
-        if(fc.hasDependencies()) {
-            final Set<FeatureId> userDeps = fc.getDependencies();
-            if(userDeps.size() == 1) {
-                resolvedDeps = Collections.singleton(resolveFeatureId(fp, userDeps.iterator().next()));
-            } else {
-                resolvedDeps = new HashSet<>(userDeps.size());
-                for(FeatureId featureId : userDeps) {
-                    resolvedDeps.add(resolveFeatureId(fp, featureId));
-                }
-            }
-        } else {
-            resolvedDeps = Collections.emptySet();
-        }
-
         final ResolvedFeature myParent = parentFeature;
-        parentFeature = modelBuilder.includeFeature(resolvedId, spec, fc, resolvedDeps);
+        parentFeature = modelBuilder.includeFeature(resolvedId, spec, fc, resolveFeatureDeps(modelBuilder, fp, fc, spec));
 
-        if(spec.xmlSpec.hasRefs()) {
-            for(FeatureReferenceSpec refSpec : spec.xmlSpec.getRefs()) {
+        if(spec.xmlSpec.hasFeatureRefs()) {
+            for(FeatureReferenceSpec refSpec : spec.xmlSpec.getFeatureRefs()) {
                 if(refSpec.isInclude()) {
                     final FeaturePackRuntime.Builder refFp = refSpec.getDependency() == null ? fp : getFpDependency(fp, refSpec.getDependency());
                     final ResolvedFeatureId refId = spec.resolveRefId(parentFeature, refSpec, refFp.getFeatureSpec(refSpec.getFeature().getName()));
                     if(refId == null || modelBuilder.includes(refId)) {
                         continue;
                     }
-                    final FeatureConfig refFc = new FeatureConfig(refId.getSpecId().getName());
-                    for(Map.Entry<String, String> param : refId.params.entrySet()) {
-                        refFc.putParam(param.getKey(), param.getValue());
-                    }
-                    resolveFeature(modelBuilder, refFp, refFc);
+                    resolveFeature(modelBuilder, refFp, initFeatureConfig(refId));
                 }
             }
         }
@@ -650,9 +631,49 @@ public class ProvisioningRuntimeBuilder {
         return true;
     }
 
+    private Map<ResolvedFeatureId, FeatureDependencySpec> resolveFeatureDeps(ConfigModelBuilder modelBuilder,
+            FeaturePackRuntime.Builder fp, FeatureConfig fc, final ResolvedFeatureSpec spec)
+            throws ProvisioningException {
+        Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps = spec.resolveFeatureDeps(this);
+        if(fc.hasFeatureDeps()) {
+            final Collection<FeatureDependencySpec> userDeps = fc.getFeatureDeps();
+            if(resolvedDeps.isEmpty()) {
+                resolvedDeps = new LinkedHashMap<>(userDeps.size());
+            } else {
+                resolvedDeps = new LinkedHashMap<>(resolvedDeps);
+            }
+            for (FeatureDependencySpec userDep : userDeps) {
+                final ResolvedFeatureId depId = resolveFeatureId(userDep.getDependency() == null ? fp : getFpDependency(fp, userDep.getDependency()), userDep.getFeatureId());
+                final FeatureDependencySpec specDep = resolvedDeps.put(depId, userDep);
+                if(specDep != null) {
+                    if(!userDep.isInclude() && specDep.isInclude()) {
+                        resolvedDeps.put(depId, specDep);
+                    }
+                }
+            }
+        }
+        if(!resolvedDeps.isEmpty()) {
+            for(Map.Entry<ResolvedFeatureId, FeatureDependencySpec> dep : resolvedDeps.entrySet()) {
+                final FeatureDependencySpec depSpec = dep.getValue();
+                if(depSpec.isInclude() && !modelBuilder.includes(dep.getKey())) {
+                    resolveFeature(modelBuilder, depSpec.getDependency() == null ? fp : getFpDependency(fp, depSpec.getDependency()), initFeatureConfig(dep.getKey()));
+                }
+            }
+        }
+        return resolvedDeps;
+    }
+
+    FeatureConfig initFeatureConfig(ResolvedFeatureId id) throws ProvisioningException {
+        final FeatureConfig fc = new FeatureConfig(id.getSpecId().getName());
+        for(Map.Entry<String, String> param : id.params.entrySet()) {
+            fc.putParam(param.getKey(), param.getValue());
+        }
+        return fc;
+    }
+
     private static void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
         final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
-        final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getRef(parentRef);
+        final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getFeatureRef(parentRef);
         if (refSpec == null) {
             throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
         }
@@ -813,7 +834,7 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if(pkg.spec.dependsOnPackages()) {
+        if(pkg.spec.hasPackageDeps()) {
             try {
                 processPackageDeps(fp, pkgName, pkg.spec);
             } catch(ProvisioningException e) {
@@ -831,8 +852,8 @@ public class ProvisioningRuntimeBuilder {
 
     private void processPackageDeps(FeaturePackRuntime.Builder fp, final String pkgName, final PackageDependencies pkg)
             throws ProvisioningException {
-        if (pkg.dependsOnLocalPackages()) {
-            PackageDependencyGroupSpec localDeps = pkg.getLocalPackageDependencies();
+        if (pkg.hasLocalPackageDeps()) {
+            PackageDependencyGroupSpec localDeps = pkg.getLocalPackageDeps();
             for (PackageDependencySpec dep : localDeps.getDescriptions()) {
                 if(fp.isPackageExcluded(dep.getName())) {
                     if(!dep.isOptional()) {
@@ -851,8 +872,8 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
-        if(pkg.dependsOnExternalPackages()) {
-            final Collection<String> depNames = pkg.getPackageDependencySources();
+        if(pkg.hasExternalPackageDeps()) {
+            final Collection<String> depNames = pkg.getExternalPackageSources();
             final List<FeaturePackConfig> pushedConfigs = new ArrayList<>(depNames.size());
             for(String depName : depNames) {
                 pushFpConfig(pushedConfigs, fp.spec.getDependency(depName).getTarget());
@@ -863,7 +884,7 @@ public class ProvisioningRuntimeBuilder {
                 if(targetFp == null) {
                     throw new IllegalStateException(depSpec.getName() + " " + depSpec.getTarget().getGav() + " has not been layed out yet");
                 }
-                final PackageDependencyGroupSpec pkgDeps = pkg.getExternalPackageDependencies(depName);
+                final PackageDependencyGroupSpec pkgDeps = pkg.getExternalPackageDeps(depName);
                 boolean resolvedPackages = false;
                 for(PackageDependencySpec pkgDep : pkgDeps.getDescriptions()) {
                     if(targetFp.isPackageExcluded(pkgDep.getName())) {

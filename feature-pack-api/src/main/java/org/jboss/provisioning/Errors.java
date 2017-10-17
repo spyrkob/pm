@@ -21,6 +21,7 @@ import java.util.Collection;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.runtime.ResolvedFeature;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -209,18 +210,30 @@ public interface Errors {
     static String failedToResolveConfigSpec(String model, String name) {
         final StringBuilder buf = new StringBuilder();
         buf.append("Failed to resolve config");
-        appendConfig(model, name, buf);
+        appendConfig(buf, model, name);
         return buf.toString();
     }
 
     static String failedToBuildConfigSpec(String model, String name) {
         final StringBuilder buf = new StringBuilder();
         buf.append("Failed to build config");
-        appendConfig(model, name, buf);
+        appendConfig(buf, model, name);
         return buf.toString();
     }
 
-    static void appendConfig(String model, String name, final StringBuilder buf) {
+    static String idParamForeignKeyInitConflict(ResolvedSpecId specId, String param, String prevValue, String newValue) {
+        return "Value '" + prevValue + "' of ID parameter " + param + " of " + specId
+                + " conflicts with the corresponding parent ID value '" + newValue + "'";
+    }
+
+    static String unresolvedFeatureDep(ResolvedFeature feature, ResolvedFeatureId dep) {
+        final StringBuilder buf = new StringBuilder();
+        appendFeature(buf, feature);
+        buf.append(" has unresolved dependency on ").append(dep);
+        return buf.toString();
+    }
+
+    static void appendConfig(final StringBuilder buf, String model, String name) {
         if (model != null) {
             buf.append(" model ").append(model);
         }
@@ -229,8 +242,11 @@ public interface Errors {
         }
     }
 
-    static String idParamForeignKeyInitConflict(ResolvedSpecId specId, String param, String prevValue, String newValue) {
-        return "Value '" + prevValue + "' of ID parameter " + param + " of " + specId
-                + " conflicts with the corresponding parent ID value '" + newValue + "'";
+    static void appendFeature(StringBuilder buf, ResolvedFeature feature) {
+        if (feature.hasId()) {
+            buf.append(feature.getId());
+        } else {
+            buf.append(feature.getSpecId()).append(" configuration");
+        }
     }
 }
