@@ -205,4 +205,32 @@ public interface Errors {
     static String failedToResolveFeatureReference(FeatureReferenceSpec refSpec, ResolvedSpecId spec) {
         return "Failed to resolve feature reference " + refSpec.getName() + " for " + spec;
     }
+
+    static String failedToResolveConfigSpec(String model, String name) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to resolve config");
+        appendConfig(model, name, buf);
+        return buf.toString();
+    }
+
+    static String failedToBuildConfigSpec(String model, String name) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to build config");
+        appendConfig(model, name, buf);
+        return buf.toString();
+    }
+
+    static void appendConfig(String model, String name, final StringBuilder buf) {
+        if (model != null) {
+            buf.append(" model ").append(model);
+        }
+        if (name != null) {
+            buf.append(" named ").append(name);
+        }
+    }
+
+    static String idParamForeignKeyInitConflict(ResolvedSpecId specId, String param, String prevValue, String newValue) {
+        return "Value '" + prevValue + "' of ID parameter " + param + " of " + specId
+                + " conflicts with the corresponding parent ID value '" + newValue + "'";
+    }
 }

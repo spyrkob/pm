@@ -352,7 +352,11 @@ public class ProvisioningRuntimeBuilder {
     private boolean processConfigSpec(FeaturePackRuntime.Builder fp, ConfigSpec config) throws ProvisioningException {
         final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
         configBuilder.overwriteProps(config.getProperties());
-        return processFeatureGroupSpec(configBuilder, fp, config);
+        try {
+            return processFeatureGroupSpec(configBuilder, fp, config);
+        } catch (ProvisioningException e) {
+            throw new ProvisioningException(Errors.failedToResolveConfigSpec(config.getModel(), config.getName()), e);
+        }
     }
 
     private ConfigModelBuilder getConfigModelBuilder(ConfigId config) {
@@ -656,9 +660,10 @@ public class ProvisioningRuntimeBuilder {
             for(Map.Entry<String, String> idEntry : parentFc.id.params.entrySet()) {
                 final String prevValue = childFc.putParam(idEntry.getKey(), idEntry.getValue());
                 if (prevValue != null && !prevValue.equals(idEntry.getValue())) {
-                    throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
-                            + idEntry.getKey() + " of " + childSpec.id
-                            + " conflicts with the corresponding parent ID value '" + idEntry.getValue() + "'");
+                    final FeatureParameterSpec fkParam = childSpec.xmlSpec.getParam(idEntry.getKey());
+                    if (fkParam.isFeatureId()) {
+                        throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(childSpec.id, idEntry.getKey(), prevValue, idEntry.getValue()));
+                    }
                 }
             }
         } else {
@@ -670,9 +675,10 @@ public class ProvisioningRuntimeBuilder {
                 }
                 final String prevValue = childFc.putParam(refSpec.getLocalParam(i), paramValue);
                 if (prevValue != null && !prevValue.equals(paramValue)) {
-                    throw new ProvisioningDescriptionException("Value '" + prevValue + "' of ID parameter "
-                            + refSpec.getLocalParam(i) + " of " + childSpec.id
-                            + " conflicts with the corresponding parent ID value '" + paramValue + "'");
+                    final FeatureParameterSpec fkParam = childSpec.xmlSpec.getParam(refSpec.getLocalParam(i));
+                    if (fkParam.isFeatureId()) {
+                        throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(childSpec.id, refSpec.getLocalParam(i), prevValue, paramValue));
+                    }
                 }
             }
         }

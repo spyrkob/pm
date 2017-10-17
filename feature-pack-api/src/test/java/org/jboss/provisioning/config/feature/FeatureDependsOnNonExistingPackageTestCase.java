@@ -74,10 +74,14 @@ public class FeatureDependsOnNonExistingPackageTestCase extends PmInstallFeature
         try {
             super.testPmMethod(pm);
             Assert.fail();
-        } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), e.getLocalizedMessage());
-            Assert.assertNotNull(e.getCause());
-            Assert.assertEquals(Errors.packageNotFound(FP_GAV, "specA.pkg"), e.getCause().getLocalizedMessage());
+        } catch(ProvisioningException e) {
+            Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
+            Throwable t = e.getCause();
+            Assert.assertNotNull(t);
+            Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), t.getLocalizedMessage());
+            t = e.getCause();
+            Assert.assertNotNull(t);
+            Assert.assertEquals(Errors.packageNotFound(FP_GAV, "specA.pkg"), t.getCause().getLocalizedMessage());
         }
     }
 

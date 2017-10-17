@@ -24,10 +24,13 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
@@ -37,10 +40,12 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Assert;
 
 /**
+ * An id param may have a default value but it can be initialized to a different one.
+ * It cannot be overwritten afterwards.
  *
  * @author Alexey Loubyansky
  */
-public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFeaturePackTestBase {
+public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -49,41 +54,48 @@ public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFe
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("a", true))
-                    .addPackageDependency("specA.pkg")
+                    .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.create("p1", "spec"))
+                    .build())
+            .addSpec(FeatureSpec.builder("specC")
+                    .addRef(FeatureReferenceSpec.builder("specA").mapParam("a", "id").build())
+                    .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.create("a", true, false, "def"))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("groupC")
+                    .addFeature(
+                            new FeatureConfig("specC")
+                            .setParam("id", "c1")
+                            .setParam("a", "a2"))
+                    .addFeature(
+                            new FeatureConfig("specC")
+                            .setParam("id", "c2"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("name", "a"))
+                            .setParam("id", "a1")
+                            .addFeatureGroup(FeatureGroupConfig.forGroup("groupC")))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
-            .newPackage("specA.pkg")
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
-        return FeaturePackConfig.builder(FP_GAV).excludePackage("specA.pkg").build();
+    protected FeaturePackConfig featurePackConfig() {
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override
     protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
         try {
             super.testPmMethod(pm);
-            Assert.fail();
+            Assert.fail("There should be an id param conflict");
         } catch(ProvisioningException e) {
-            Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-            Throwable t = e.getCause();
-            Assert.assertNotNull(t);
-            Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), t.getLocalizedMessage());
-            t = t.getCause();
-            Assert.assertNotNull(t);
-            Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "specA.pkg"), t.getLocalizedMessage());
+            Assert.assertEquals("Failed to resolve config", e.getMessage());
+            e = (ProvisioningException) e.getCause();
+            Assert.assertNotNull(e);
+            Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());
         }
     }
 

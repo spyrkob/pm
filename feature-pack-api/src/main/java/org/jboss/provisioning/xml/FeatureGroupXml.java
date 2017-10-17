@@ -177,7 +177,7 @@ public class FeatureGroupXml {
                     name = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (name == null) {
@@ -226,7 +226,7 @@ public class FeatureGroupXml {
                     dependency = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (dependency == null) {
@@ -276,7 +276,7 @@ public class FeatureGroupXml {
                     inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (name == null && inheritFeatures != null) {
@@ -328,7 +328,7 @@ public class FeatureGroupXml {
                     dependency = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (dependency == null) {
@@ -372,7 +372,7 @@ public class FeatureGroupXml {
                     spec = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
 
@@ -448,7 +448,7 @@ public class FeatureGroupXml {
                     spec = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
 
@@ -539,7 +539,7 @@ public class FeatureGroupXml {
                     id = reader.getAttributeValue(i);
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
         if (id == null) {

@@ -321,15 +321,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         try {
             return doBuild(rt);
         } catch(ProvisioningException e) {
-            final StringBuilder buf = new StringBuilder();
-            buf.append("Failed to build config");
-            if(model != null) {
-                buf.append(" model ").append(model);
-            }
-            if(name != null) {
-                buf.append(" named ").append(name);
-            }
-            throw new ProvisioningException(buf.toString(), e);
+            throw new ProvisioningException(Errors.failedToBuildConfigSpec(model, name), e);
         }
     }
 
