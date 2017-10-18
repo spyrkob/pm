@@ -63,13 +63,13 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
             }
         }
 
-        if(config.hasExternalDependencies()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : config.getExternalDependencies().entrySet()) {
+        if(config.hasExternalGroupDeps()) {
+            for(Map.Entry<String, FeatureGroupSpec> entry : config.getExternalGroupDeps().entrySet()) {
                 final ElementNode fpE = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
                 final FeatureGroupSpec externalDep = entry.getValue();
-                if (externalDep.hasLocalDependencies()) {
-                    for (FeatureGroupConfig fg : externalDep.getLocalDependencies()) {
+                if (externalDep.hasLocalGroupDeps()) {
+                    for (FeatureGroupConfig fg : externalDep.getLocalGroupDeps()) {
                         FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
                     }
                 }
@@ -81,8 +81,8 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
             }
         }
 
-        if(config.hasLocalDependencies()) {
-            for(FeatureGroupConfig fg : config.getLocalDependencies()) {
+        if(config.hasLocalGroupDeps()) {
+            for(FeatureGroupConfig fg : config.getLocalGroupDeps()) {
                 FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(configE, Element.FEATURE_GROUP.getLocalName(), ns));
             }
         }

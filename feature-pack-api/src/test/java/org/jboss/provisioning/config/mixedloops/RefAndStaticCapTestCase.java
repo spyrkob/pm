@@ -79,7 +79,7 @@ public class RefAndStaticCapTestCase extends PmInstallFeaturePackTestBase {
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .providesCapability("cap.b")
-                    .addRef(FeatureReferenceSpec.create("specA"))
+                    .addFeatureRef(FeatureReferenceSpec.create("specA"))
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.create("a"))
                     .build())

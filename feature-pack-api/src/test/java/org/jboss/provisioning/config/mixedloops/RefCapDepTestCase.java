@@ -83,7 +83,7 @@ public class RefCapDepTestCase extends PmInstallFeaturePackTestBase {
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .addRef(FeatureReferenceSpec.create("specB"))
+                    .addFeatureRef(FeatureReferenceSpec.create("specB"))
                     .addParam(FeatureParameterSpec.createId("a"))
                     .addParam(FeatureParameterSpec.create("b"))
                     .build())
@@ -107,7 +107,7 @@ public class RefCapDepTestCase extends PmInstallFeaturePackTestBase {
                             .setParam("g", "c1"))
                     .addFeature(
                             new FeatureConfig("specC")
-                            .addDependency(FeatureId.create("specA", "a", "a1"))
+                            .addFeatureDep(FeatureId.create("specA", "a", "a1"))
                             .setParam("c", "c1"))
 
                     .addFeature(
@@ -116,7 +116,7 @@ public class RefCapDepTestCase extends PmInstallFeaturePackTestBase {
                             .setParam("g", "c2"))
                     .addFeature(
                             new FeatureConfig("specC")
-                            .addDependency(FeatureId.create("specA", "a", "a2"))
+                            .addFeatureDep(FeatureId.create("specA", "a", "a2"))
                             .setParam("c", "c2"))
                     .addFeature(
                             new FeatureConfig("specA")
@@ -125,7 +125,7 @@ public class RefCapDepTestCase extends PmInstallFeaturePackTestBase {
 
                     .addFeature(
                             new FeatureConfig("specC")
-                            .addDependency(FeatureId.create("specA", "a", "a3"))
+                            .addFeatureDep(FeatureId.create("specA", "a", "a3"))
                             .setParam("c", "c3"))
                     .addFeature(
                             new FeatureConfig("specA")

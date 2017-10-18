@@ -40,6 +40,7 @@ public class FeatureSpec implements PackageDependencies {
 
         private String name;
         private List<FeatureAnnotation> annotations = Collections.emptyList();
+        private Map<FeatureId, FeatureDependencySpec> featureDeps = Collections.emptyMap();
         private Map<String, FeatureReferenceSpec> refs = Collections.emptyMap();
         private Map<String, FeatureParameterSpec> params = Collections.emptyMap();
         private List<FeatureParameterSpec> idParams = Collections.emptyList();
@@ -75,13 +76,29 @@ public class FeatureSpec implements PackageDependencies {
             return this;
         }
 
-        public Builder addRef(FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
+        public Builder addFeatureDep(FeatureDependencySpec dep) throws ProvisioningDescriptionException {
+            switch(featureDeps.size()) {
+                case 0:
+                    featureDeps = Collections.singletonMap(dep.getFeatureId(), dep);
+                    break;
+                case 1:
+                    if(featureDeps.containsKey(dep.getFeatureId())) {
+                        throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId() + " from feature spec " + name);
+                    }
+                    featureDeps = new LinkedHashMap<>(featureDeps);
+                default:
+                    featureDeps.put(dep.getFeatureId(), dep);
+            }
+            return this;
+        }
+
+        public Builder addFeatureRef(FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
             if(refs.isEmpty()) {
                 refs = Collections.singletonMap(ref.name, ref);
                 return this;
             }
             if(refs.containsKey(ref.name)) {
-                throw new ProvisioningDescriptionException("Duplicate reference " + ref.name + " for feature " + name);
+                throw new ProvisioningDescriptionException("Duplicate reference " + ref.name + " in feature spec " + name);
             }
             if(refs.size() == 1) {
                 final Map.Entry<String, FeatureReferenceSpec> entry = refs.entrySet().iterator().next();
@@ -120,37 +137,33 @@ public class FeatureSpec implements PackageDependencies {
         }
 
         public Builder addPackageDependency(String packageName) {
-            getLocalPackageGroup().addDependency(packageName);
+            getLocalPackageDeps().addDependency(packageName);
             return this;
         }
 
         public Builder addPackageDependency(String packageName, boolean optional) {
-            getLocalPackageGroup().addDependency(packageName, optional);
+            getLocalPackageDeps().addDependency(packageName, optional);
             return this;
         }
 
         public Builder addPackageDependency(PackageDependencySpec dep) {
-            getLocalPackageGroup().addDependency(dep);
+            getLocalPackageDeps().addDependency(dep);
             return this;
         }
 
-        public Builder addPackageDependency(String groupName, String packageName) {
-            getExternalPackageGroup(groupName).addDependency(packageName);
+        public Builder addPackageDependency(String fpDep, String packageName) {
+            getExternalPackageDeps(fpDep).addDependency(packageName);
             return this;
         }
 
-        public Builder addPackageDependency(String groupName, String packageName, boolean optional) {
-            getExternalPackageGroup(groupName).addDependency(packageName, optional);
+        public Builder addPackageDependency(String fpDep, String packageName, boolean optional) {
+            getExternalPackageDeps(fpDep).addDependency(packageName, optional);
             return this;
         }
 
-        public Builder addPackageDependency(String groupName, PackageDependencySpec dep) {
-            getExternalPackageGroup(groupName).addDependency(dep);
+        public Builder addPackageDependency(String fpDep, PackageDependencySpec dep) {
+            getExternalPackageDeps(fpDep).addDependency(dep);
             return this;
-        }
-
-        public boolean hasDependencies() {
-            return localDeps != null || !externalDeps.isEmpty();
         }
 
         public Builder providesCapability(String name) throws ProvisioningDescriptionException {
@@ -199,25 +212,25 @@ public class FeatureSpec implements PackageDependencies {
             return this;
         }
 
-        private PackageDependencyGroupSpec.Builder getLocalPackageGroup() {
+        private PackageDependencyGroupSpec.Builder getLocalPackageDeps() {
             if(localDeps == null) {
                 localDeps = PackageDependencyGroupSpec.builder();
             }
             return localDeps;
         }
 
-        private PackageDependencyGroupSpec.Builder getExternalPackageGroup(String groupName) {
-            PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(groupName);
+        private PackageDependencyGroupSpec.Builder getExternalPackageDeps(String fpDep) {
+            PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(fpDep);
             if(groupBuilder == null) {
-                groupBuilder = PackageDependencyGroupSpec.builder(groupName);
+                groupBuilder = PackageDependencyGroupSpec.builder(fpDep);
                 switch(externalDeps.size()) {
                     case 0:
-                        externalDeps = Collections.singletonMap(groupName, groupBuilder);
+                        externalDeps = Collections.singletonMap(fpDep, groupBuilder);
                         break;
                     case 1:
                         externalDeps = new LinkedHashMap<>(externalDeps);
                     default:
-                        externalDeps.put(groupName, groupBuilder);
+                        externalDeps.put(fpDep, groupBuilder);
                 }
             }
             return groupBuilder;
@@ -238,7 +251,8 @@ public class FeatureSpec implements PackageDependencies {
 
     final String name;
     final List<FeatureAnnotation> annotations;
-    final Map<String, FeatureReferenceSpec> refs;
+    final Map<FeatureId, FeatureDependencySpec> featureDeps;
+    final Map<String, FeatureReferenceSpec> featureRefs;
     final Map<String, FeatureParameterSpec> params;
     final List<FeatureParameterSpec> idParams;
     private final PackageDependencyGroupSpec localPkgDeps;
@@ -249,7 +263,8 @@ public class FeatureSpec implements PackageDependencies {
     private FeatureSpec(Builder builder) {
         this.name = builder.name;
         this.annotations = builder.annotations.size() > 1 ? Collections.unmodifiableList(builder.annotations) : builder.annotations;
-        this.refs = builder.refs.size() > 1 ? Collections.unmodifiableMap(builder.refs) : builder.refs;
+        this.featureDeps = builder.featureDeps.size() > 1 ? Collections.unmodifiableMap(builder.featureDeps) : builder.featureDeps;
+        this.featureRefs = builder.refs.size() > 1 ? Collections.unmodifiableMap(builder.refs) : builder.refs;
         this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
         this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
         this.providedCaps = builder.providedCaps.size() > 1 ? Collections.unmodifiableSet(builder.providedCaps) : builder.providedCaps;
@@ -293,16 +308,24 @@ public class FeatureSpec implements PackageDependencies {
         return idParams;
     }
 
-    public boolean hasRefs() {
-        return !refs.isEmpty();
+    public boolean hasFeatureDeps() {
+        return !featureDeps.isEmpty();
     }
 
-    public Collection<FeatureReferenceSpec> getRefs() {
-        return refs.values();
+    public Collection<FeatureDependencySpec> getFeatureDeps() {
+        return featureDeps.values();
     }
 
-    public FeatureReferenceSpec getRef(String name) throws ProvisioningDescriptionException {
-        final FeatureReferenceSpec ref = refs.get(name);
+    public boolean hasFeatureRefs() {
+        return !featureRefs.isEmpty();
+    }
+
+    public Collection<FeatureReferenceSpec> getFeatureRefs() {
+        return featureRefs.values();
+    }
+
+    public FeatureReferenceSpec getFeatureRef(String name) throws ProvisioningDescriptionException {
+        final FeatureReferenceSpec ref = featureRefs.get(name);
         if(ref == null) {
             throw new ProvisioningDescriptionException("Feature reference '" + name + "' not found in feature spec " + this.name);
         }
@@ -354,33 +377,33 @@ public class FeatureSpec implements PackageDependencies {
     }
 
     @Override
-    public boolean dependsOnPackages() {
+    public boolean hasPackageDeps() {
         return !(localPkgDeps.isEmpty() && externalPkgDeps.isEmpty());
     }
 
     @Override
-    public boolean dependsOnLocalPackages() {
+    public boolean hasLocalPackageDeps() {
         return !localPkgDeps.isEmpty();
     }
 
     @Override
-    public PackageDependencyGroupSpec getLocalPackageDependencies() {
+    public PackageDependencyGroupSpec getLocalPackageDeps() {
         return localPkgDeps;
     }
 
     @Override
-    public boolean dependsOnExternalPackages() {
+    public boolean hasExternalPackageDeps() {
         return !externalPkgDeps.isEmpty();
     }
 
     @Override
-    public Collection<String> getPackageDependencySources() {
+    public Collection<String> getExternalPackageSources() {
         return externalPkgDeps.keySet();
     }
 
     @Override
-    public PackageDependencyGroupSpec getExternalPackageDependencies(String groupName) {
-        return externalPkgDeps.get(groupName);
+    public PackageDependencyGroupSpec getExternalPackageDeps(String fpDep) {
+        return externalPkgDeps.get(fpDep);
     }
 
     @Override
@@ -389,12 +412,13 @@ public class FeatureSpec implements PackageDependencies {
         int result = 1;
         result = prime * result + ((annotations == null) ? 0 : annotations.hashCode());
         result = prime * result + ((externalPkgDeps == null) ? 0 : externalPkgDeps.hashCode());
+        result = prime * result + ((featureDeps == null) ? 0 : featureDeps.hashCode());
         result = prime * result + ((idParams == null) ? 0 : idParams.hashCode());
         result = prime * result + ((localPkgDeps == null) ? 0 : localPkgDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((providedCaps == null) ? 0 : providedCaps.hashCode());
-        result = prime * result + ((refs == null) ? 0 : refs.hashCode());
+        result = prime * result + ((featureRefs == null) ? 0 : featureRefs.hashCode());
         result = prime * result + ((requiredCaps == null) ? 0 : requiredCaps.hashCode());
         return result;
     }
@@ -417,6 +441,11 @@ public class FeatureSpec implements PackageDependencies {
             if (other.externalPkgDeps != null)
                 return false;
         } else if (!externalPkgDeps.equals(other.externalPkgDeps))
+            return false;
+        if (featureDeps == null) {
+            if (other.featureDeps != null)
+                return false;
+        } else if (!featureDeps.equals(other.featureDeps))
             return false;
         if (idParams == null) {
             if (other.idParams != null)
@@ -443,10 +472,10 @@ public class FeatureSpec implements PackageDependencies {
                 return false;
         } else if (!providedCaps.equals(other.providedCaps))
             return false;
-        if (refs == null) {
-            if (other.refs != null)
+        if (featureRefs == null) {
+            if (other.featureRefs != null)
                 return false;
-        } else if (!refs.equals(other.refs))
+        } else if (!featureRefs.equals(other.featureRefs))
             return false;
         if (requiredCaps == null) {
             if (other.requiredCaps != null)
@@ -468,9 +497,13 @@ public class FeatureSpec implements PackageDependencies {
             buf.append(" requires=");
             StringUtils.append(buf, requiredCaps);
         }
-        if(!refs.isEmpty()) {
+        if(!featureDeps.isEmpty()) {
+            buf.append(" deps=");
+            StringUtils.append(buf, featureDeps.values());
+        }
+        if(!featureRefs.isEmpty()) {
             buf.append(" refs=");
-            StringUtils.append(buf, refs.values());
+            StringUtils.append(buf, featureRefs.values());
         }
         if(!params.isEmpty()) {
             buf.append(" params=");

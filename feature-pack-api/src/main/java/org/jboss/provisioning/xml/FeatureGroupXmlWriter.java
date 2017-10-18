@@ -20,6 +20,7 @@ import java.util.Map;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeatureGroupConfigSupport;
+import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
@@ -35,6 +36,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
 public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
 
     private static final String FALSE = "false";
+    private static final String TRUE = "true";
 
     private static final FeatureGroupXmlWriter INSTANCE = new FeatureGroupXmlWriter();
 
@@ -61,14 +63,14 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroup featureGroup, String ns) {
-        if(featureGroup.hasExternalDependencies()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalDependencies().entrySet()) {
+        if(featureGroup.hasExternalGroupDeps()) {
+            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalGroupDeps().entrySet()) {
                 writeExternalGroupDependency(configE, entry.getKey(), entry.getValue(), ns);
             }
         }
 
-        if(featureGroup.hasLocalDependencies()) {
-            for(FeatureGroupConfig dep : featureGroup.getLocalDependencies()) {
+        if(featureGroup.hasLocalGroupDeps()) {
+            for(FeatureGroupConfig dep : featureGroup.getLocalGroupDeps()) {
                 writeFeatureGroupDependency(configE, dep, ns);
             }
         }
@@ -138,10 +140,16 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     private static void addFeatureConfigBody(ElementNode fcE, FeatureConfig fc, String ns) {
-        if(fc.hasDependencies()) {
-            for(FeatureId featureId : fc.getDependencies()) {
+        if(fc.hasFeatureDeps()) {
+            for(FeatureDependencySpec depSpec : fc.getFeatureDeps()) {
                 final ElementNode depE = addElement(fcE, Element.DEPENDS.getLocalName(), ns);
-                addAttribute(depE, Attribute.FEATURE_ID, featureId.toString());
+                if(depSpec.getDependency() != null) {
+                    addAttribute(depE, Attribute.DEPENDENCY, depSpec.getDependency());
+                }
+                addAttribute(depE, Attribute.FEATURE_ID, depSpec.getFeatureId().toString());
+                if(depSpec.isInclude()) {
+                    addAttribute(depE, Attribute.INCLUDE, TRUE);
+                }
             }
         }
         if(fc.hasParams()) {
