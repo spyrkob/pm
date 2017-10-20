@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.featuregroup;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -40,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
@@ -99,8 +99,10 @@ public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
                     .build())
                 .addConfig(ConfigSpec.builder()
                         .setName("config1")
-                        .addFeatureGroup(FeatureGroupConfig.builder("fg2")
-                                .excludeSpec("fp1", "specA")
+                        .addFeatureGroup(FeatureGroupConfig.builder("fg2", false)
+                                .includeSpec("fp1", "specA")
+                                .includeSpec("specC")
+                                .includeSpec("specD")
                                 .build())
                         .build())
             .getInstaller()
@@ -117,11 +119,11 @@ public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder().setName("config1")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "bOne"))
-                                .setParam("b", "b1")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "aOne"))
+                                .setParam("a", "a1")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "bTwo"))
-                                .setParam("b", "b2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "aTwo"))
+                                .setParam("a", "a2")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specC", "name", "cOne"))
                                 .setParam("c", "c1")

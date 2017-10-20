@@ -15,14 +15,16 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.featuregroup;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -32,17 +34,20 @@ import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+public class InheritSimpleFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+
+    private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-        .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+        .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", true))
@@ -57,24 +62,14 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
                             .setParam("name", "aOne")
                             .setParam("a", "a1"))
                     .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aTwo")
-                            .setParam("a", "a2"))
-                    .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "bOne")
                             .setParam("b", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "bTwo")
-                            .setParam("b", "b2"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1")
-                            .inheritFeatures(false)
-                            .build())
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .build())
             .newPackage("p1", true)
                 .getFeaturePack()
@@ -84,18 +79,24 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
 
     @Override
     protected FeaturePackConfig featurePackConfig() {
-        return FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"));
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
                         .addPackage("p1")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
+                                .setParam("a", "a1")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bOne"))
+                                .setParam("b", "b1")
+                                .build())
                         .build())
                 .build();
     }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.featuregroup;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -27,7 +27,6 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
-import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -41,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupMergingTestCase extends PmInstallFeaturePackTestBase {
+public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -62,56 +61,31 @@ public class FeatureGroupMergingTestCase extends PmInstallFeaturePackTestBase {
                     .addParam(FeatureParameterSpec.create("c", false))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .inheritFeatures(false)
-                            .includeSpec("specA")
-                            .build())
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne")
                             .setParam("a", "a1"))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg3"))
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "bOne")
                             .setParam("b", "b1"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .inheritFeatures(true)
-                            .excludeSpec("specA")
-                            .excludeFeature(FeatureId.create("specC", "name", "cThree"))
-                            .build())
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aTwo")
-                            .setParam("a", "a2"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "bTwo")
-                            .setParam("b", "b2"))
-                    .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg3")
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aThree")
-                            .setParam("a", "a3"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "bThree")
-                            .setParam("b", "b3"))
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .addFeature(
                             new FeatureConfig("specC")
-                            .setParam("name", "cThree")
-                            .setParam("c", "c3"))
+                            .setParam("name", "cOne")
+                            .setParam("c", "c1"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -125,28 +99,18 @@ public class FeatureGroupMergingTestCase extends PmInstallFeaturePackTestBase {
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aThree"))
-                                .setParam("a", "a3")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
-                                .setParam("a", "a1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aTwo"))
-                                .setParam("a", "a2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specC", "name", "cOne"))
+                                .setParam("c", "c1")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bOne"))
                                 .setParam("b", "b1")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bThree"))
-                                .setParam("b", "b3")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bTwo"))
-                                .setParam("b", "b2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
+                                .setParam("a", "a1")
                                 .build())
                         .build())
                 .build();
