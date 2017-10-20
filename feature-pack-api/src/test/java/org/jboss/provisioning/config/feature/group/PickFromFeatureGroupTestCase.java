@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.featuregroup;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -27,6 +27,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -40,7 +41,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeaturePackTestBase {
+public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -56,36 +57,36 @@ public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeatur
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("b", false))
                     .build())
-            .addSpec(FeatureSpec.builder("specC")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("c", false))
-                    .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne")
                             .setParam("a", "a1"))
-                    .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg3"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "aTwo")
+                            .setParam("a", "a2"))
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "bOne")
                             .setParam("b", "b1"))
-                    .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg3")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .addFeature(
-                            new FeatureConfig("specC")
-                            .setParam("name", "cOne")
-                            .setParam("c", "c1"))
+                            new FeatureConfig("specB")
+                            .setParam("name", "bTwo")
+                            .setParam("b", "b2"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                            .inheritFeatures(false)
+                            .includeFeature(FeatureId.create("specA", "name", "aTwo"))
+                            .includeSpec("specB")
+                            .excludeFeature(FeatureId.create("specB", "name", "bOne"))
+                            .build())
                     .build())
+            .newPackage("p1", true)
+                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -99,18 +100,16 @@ public class BasicCircularFeatureGroupDependencyTestCase extends PmInstallFeatur
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("p1")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specC", "name", "cOne"))
-                                .setParam("c", "c1")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aTwo"))
+                                .setParam("a", "a2")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bOne"))
-                                .setParam("b", "b1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
-                                .setParam("a", "a1")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bTwo"))
+                                .setParam("b", "b2")
                                 .build())
                         .build())
                 .build();
