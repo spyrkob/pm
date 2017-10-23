@@ -16,9 +16,6 @@
  */
 package org.jboss.provisioning.spec;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import org.jboss.provisioning.util.StringUtils;
 
 /**
@@ -78,36 +75,14 @@ public class FeatureGroupSpec extends FeatureGroupSupport {
             buf.append(name);
             space = true;
         }
-        if(!externalGroups.isEmpty()) {
-            final Iterator<Map.Entry<String, FeatureGroupSpec>> i = externalGroups.entrySet().iterator();
+        if(!items.isEmpty()) {
             if(space) {
                 buf.append(' ');
             } else {
                 space = true;
             }
-            Map.Entry<String, FeatureGroupSpec> entry = i.next();
-            buf.append("extDeps=[").append(entry.getKey()).append(':').append(entry.getValue());
-            while(i.hasNext()) {
-                entry = i.next();
-                buf.append(entry.getKey()).append(':').append(entry.getValue());
-            }
-            buf.append(']');
-        }
-        if(!localGroups.isEmpty()) {
-            if(space) {
-                buf.append(' ');
-            } else {
-                space = true;
-            }
-            buf.append("localDeps=");
-            StringUtils.append(buf, localGroups);
-        }
-        if(!features.isEmpty()) {
-            if(space) {
-                buf.append(' ');
-            }
-            buf.append("features=");
-            StringUtils.append(buf, features);
+            buf.append("items=");
+            StringUtils.append(buf, items);
         }
         return buf.append(']').toString();
     }

@@ -27,6 +27,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -40,7 +41,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+public class PreservedConfigOrderOfFeatureGroupsTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
@@ -55,54 +56,55 @@ public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("b", false))
+                    .addParam(FeatureParameterSpec.create("b", true))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("name", "aOne")
-                            .setParam("a", "a1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aTwo")
-                            .setParam("a", "a2"))
+                            .setParam("name", "fg1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("name", "bOne")
-                            .setParam("b", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "bTwo")
-                            .setParam("b", "b2"))
+                            .setParam("name", "fg1"))
                     .build())
             .getInstaller()
-            .newFeaturePack(FP2_GAV)
-                .addDependency("fp1", FP1_GAV)
-                .addSpec(FeatureSpec.builder("specC")
+        .newFeaturePack(FP2_GAV)
+            .addDependency("fp1", FP1_GAV)
+            .addSpec(FeatureSpec.builder("specC")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("c", true))
                     .build())
-                .addSpec(FeatureSpec.builder("specD")
+            .addSpec(FeatureSpec.builder("specD")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("d", false))
+                    .addParam(FeatureParameterSpec.create("d", true))
                     .build())
-                .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fp1", "fg1"))
+            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeature(
                             new FeatureConfig("specC")
-                            .setParam("name", "cOne")
-                            .setParam("c", "c1"))
+                            .setParam("name", "fg2"))
                     .addFeature(
                             new FeatureConfig("specD")
-                            .setParam("name", "dOne")
-                            .setParam("d", "d1"))
+                            .setParam("name", "fg2"))
                     .build())
-                .addConfig(ConfigSpec.builder()
-                        .setName("config1")
-                        .addFeatureGroup(FeatureGroupConfig.builder("fg2")
-                                .excludeSpec("fp1", "specA")
-                                .build())
-                        .build())
+            .addConfig(ConfigSpec.builder()
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                            .inheritFeatures(false)
+                            .includeSpec("specD")
+                            .build())
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg1").setFpDep("fp1")
+                            .excludeSpec("specA")
+                            .build())
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                            .excludeFeature(FeatureId.create("specD", "name", "fg2"))
+                            .build())
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg1").setFpDep("fp1")
+                            .inheritFeatures(false)
+                            .includeFeature(FeatureId.create("specA", "name", "fg1"))
+                            .build())
+                    .addFeature(new FeatureConfig("specA").setFpDep("fp1").setParam("name", "config1"))
+                    .addFeature(new FeatureConfig("specC").setParam("name", "config1"))
+                    .addFeature(new FeatureConfig("specB").setFpDep("fp1").setParam("name", "config1"))
+                    .addFeature(new FeatureConfig("specD").setParam("name", "config1"))
+            .build())
             .getInstaller()
         .install();
     }
@@ -116,19 +118,15 @@ public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder().setName("config1")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "bOne"))
-                                .setParam("b", "b1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "bTwo"))
-                                .setParam("b", "b2")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specC", "name", "cOne"))
-                                .setParam("c", "c1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specD", "name", "dOne"))
-                                .setParam("d", "d1")
-                                .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specD", "name", "fg2")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specD", "name", "config1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "fg1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "config1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specC", "name", "fg2")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specC", "name", "config1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "fg1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "config1")).build())
                         .build())
                 .build();
     }

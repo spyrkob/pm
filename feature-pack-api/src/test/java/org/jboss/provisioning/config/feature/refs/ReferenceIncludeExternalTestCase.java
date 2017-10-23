@@ -60,7 +60,7 @@ public class ReferenceIncludeExternalTestCase extends PmInstallFeaturePackTestBa
                     .addParam(FeatureParameterSpec.create("b", false))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setDependency("fp1")
+                            .setFpDep("fp1")
                             .setName("specA")
                             .mapParam("a", "name")
                             .setInclude(true)

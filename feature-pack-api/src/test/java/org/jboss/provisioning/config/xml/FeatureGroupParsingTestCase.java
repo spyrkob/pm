@@ -45,6 +45,7 @@ public class FeatureGroupParsingTestCase {
     public void testMain() throws Exception {
         final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
         final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
+                .setResetFeaturePackOrigin(true)
                 .addFeatureGroup(FeatureGroupConfig.builder("dep1").inheritFeatures(true).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep2").inheritFeatures(false).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
@@ -73,9 +74,10 @@ public class FeatureGroupParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addFeatureGroup("source4", FeatureGroupConfig.forGroup("dep4"))
-                .addFeature("source4",
+                .addFeatureGroup(FeatureGroupConfig.forGroup("source4", "dep4"))
+                .addFeature(
                         new FeatureConfig("spec1")
+                        .setFpDep("source4")
                         .setParam("p1", "v1")
                         .setParam("p2", "v2")
                         .addFeatureDep(FeatureId.builder("spec2").addParam("p1", "v1").addParam("p2", "v2").build())

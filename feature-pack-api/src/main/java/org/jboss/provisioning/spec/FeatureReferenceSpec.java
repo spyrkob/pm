@@ -44,7 +44,7 @@ public class FeatureReferenceSpec {
             this.name = featureSpec.toString();
         }
 
-        public Builder setDependency(String fpDep) {
+        public Builder setFpDep(String fpDep) {
             this.dependency = fpDep;
             return this;
         }

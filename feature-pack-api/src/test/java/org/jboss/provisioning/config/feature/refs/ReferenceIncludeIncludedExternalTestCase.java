@@ -61,15 +61,16 @@ public class ReferenceIncludeIncludedExternalTestCase extends PmInstallFeaturePa
                     .addParam(FeatureParameterSpec.create("b", false))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setDependency("fp1")
+                            .setFpDep("fp1")
                             .setName("specA")
                             .mapParam("a", "name")
                             .setInclude(true)
                             .build())
                     .build())
                 .addConfig(ConfigSpec.builder()
-                        .addFeature("fp1",
+                        .addFeature(
                                 new FeatureConfig("specA")
+                                .setFpDep("fp1")
                                 .setParam("name", "a")
                                 .setParam("a", "aConfig")
                                 .setParam("p", "pConfig"))

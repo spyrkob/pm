@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 
@@ -29,8 +30,9 @@ import org.jboss.provisioning.spec.SpecId;
  *
  * @author Alexey Loubyansky
  */
-public abstract class FeatureGroupConfigSupport {
+public abstract class FeatureGroupConfigSupport implements ConfigItem {
 
+    final String fpDep;
     final String name;
     final boolean inheritFeatures;
     final Set<SpecId> includedSpecs;
@@ -39,7 +41,8 @@ public abstract class FeatureGroupConfigSupport {
     final Set<FeatureId> excludedFeatures;
     final Map<String, FeatureGroupConfig> externalFgConfigs;
 
-    protected FeatureGroupConfigSupport(String name) {
+    protected FeatureGroupConfigSupport(String fpDep, String name) {
+        this.fpDep = fpDep;
         this.name = name;
         this.inheritFeatures = true;
         this.includedSpecs = Collections.emptySet();
@@ -50,6 +53,7 @@ public abstract class FeatureGroupConfigSupport {
     }
 
     protected FeatureGroupConfigSupport(FeatureGroupConfigBuilderSupport<?, ?> builder) {
+        this.fpDep = builder.fpDep;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
         this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
@@ -69,6 +73,16 @@ public abstract class FeatureGroupConfigSupport {
             }
             this.externalFgConfigs = Collections.unmodifiableMap(tmp);
         }
+    }
+
+    @Override
+    public String getFpDep() {
+        return fpDep;
+    }
+
+    @Override
+    public boolean isGroup() {
+        return true;
     }
 
     public String getName() {
@@ -139,6 +153,8 @@ public abstract class FeatureGroupConfigSupport {
         int result = 1;
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
+        result = prime * result + ((externalFgConfigs == null) ? 0 : externalFgConfigs.hashCode());
+        result = prime * result + ((fpDep == null) ? 0 : fpDep.hashCode());
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
         result = prime * result + ((includedSpecs == null) ? 0 : includedSpecs.hashCode());
         result = prime * result + (inheritFeatures ? 1231 : 1237);
@@ -164,6 +180,16 @@ public abstract class FeatureGroupConfigSupport {
             if (other.excludedSpecs != null)
                 return false;
         } else if (!excludedSpecs.equals(other.excludedSpecs))
+            return false;
+        if (externalFgConfigs == null) {
+            if (other.externalFgConfigs != null)
+                return false;
+        } else if (!externalFgConfigs.equals(other.externalFgConfigs))
+            return false;
+        if (fpDep == null) {
+            if (other.fpDep != null)
+                return false;
+        } else if (!fpDep.equals(other.fpDep))
             return false;
         if (includedFeatures == null) {
             if (other.includedFeatures != null)

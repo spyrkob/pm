@@ -65,8 +65,8 @@ public class SimplestExternalFeatureDependencyTestCase extends PmInstallFeatureP
                             new FeatureConfig("specB")
                             .setParam("id", "b")
                             .addFeatureDep(FeatureDependencySpec.create(FeatureId.create("specA", "id", "a"), "fp1", false)))
-                    .addFeature("fp1",
-                            new FeatureConfig("specA")
+                    .addFeature(new FeatureConfig("specA")
+                            .setFpDep("fp1")
                             .setParam("id", "a"))
                     .build())
             .getInstaller()

@@ -14,33 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.spec;
 
-import java.util.List;
-import java.util.Map;
-
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public interface FeatureGroup {
+public interface ConfigItem {
 
-    boolean hasExternalGroupDeps();
+    String getFpDep();
 
-    Map<String, FeatureGroupSpec> getExternalGroupDeps();
-
-    boolean hasLocalGroupDeps();
-
-    List<FeatureGroupConfig> getLocalGroupDeps();
-
-    boolean hasFeatures();
-
-    List<FeatureConfig> getFeatures();
-
-    default boolean isResetFeaturePackOrigin() {
-        return false;
-    }
+    boolean isGroup();
 }

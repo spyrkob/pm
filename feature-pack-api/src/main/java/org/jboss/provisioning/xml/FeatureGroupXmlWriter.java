@@ -21,8 +21,9 @@ import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeatureGroupConfigSupport;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.FeatureGroup;
+import org.jboss.provisioning.spec.ConfigItemContainer;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.xml.FeatureGroupXml.Attribute;
@@ -62,30 +63,30 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         return configE;
     }
 
-    private static void writeFeatureGroupSpecBody(final ElementNode configE, FeatureGroup featureGroup, String ns) {
-        if(featureGroup.hasExternalGroupDeps()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalGroupDeps().entrySet()) {
-                writeExternalGroupDependency(configE, entry.getKey(), entry.getValue(), ns);
+    static void writeFeatureGroupSpecBody(final ElementNode configE, ConfigItemContainer featureGroup, String ns) {
+        if(!featureGroup.hasItems()) {
+            return;
+        }
+        String currentFpDep = null;
+        ElementNode parent = configE;
+        for(ConfigItem item : featureGroup.getItems()) {
+            final String itemFpDep = item.getFpDep();
+            if(itemFpDep != null) {
+                if (!itemFpDep.equals(currentFpDep)) {
+                    parent = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
+                    addAttribute(parent, Attribute.DEPENDENCY, itemFpDep);
+                    currentFpDep = itemFpDep;
+                }
+            } else if(currentFpDep != null) {
+                currentFpDep = null;
+                parent = configE;
+            }
+            if(item.isGroup()) {
+                writeFeatureGroupDependency(parent, (FeatureGroupConfig) item, ns);
+            } else {
+                addFeatureConfig(parent, (FeatureConfig) item, ns);
             }
         }
-
-        if(featureGroup.hasLocalGroupDeps()) {
-            for(FeatureGroupConfig dep : featureGroup.getLocalGroupDeps()) {
-                writeFeatureGroupDependency(configE, dep, ns);
-            }
-        }
-
-        if(featureGroup.hasFeatures()) {
-            for(FeatureConfig fc : featureGroup.getFeatures()) {
-                addFeatureConfig(configE, fc, ns);
-            }
-        }
-    }
-
-    private static void writeExternalGroupDependency(ElementNode depsE, String fpDep, FeatureGroupSpec group, String ns) {
-        final ElementNode depE = addElement(depsE, Element.FEATURE_PACK.getLocalName(), ns);
-        addAttribute(depE, Attribute.DEPENDENCY, fpDep);
-        writeFeatureGroupSpecBody(depE, group, ns);
     }
 
     private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroupConfig dep, String ns) {

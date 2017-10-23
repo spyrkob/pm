@@ -56,8 +56,8 @@ import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.FeatureGroup;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.ConfigItemContainer;
+import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -435,7 +435,7 @@ public class ProvisioningRuntimeBuilder {
         return modelBuilder;
     }
 
-    private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfigSupport fgConfig, final FeatureGroup fgSpec)
+    private boolean processFeatureGroupConfig(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroupConfigSupport fgConfig, final ConfigItemContainer fgSpec)
             throws ProvisioningException {
         List<FeaturePackRuntime.Builder> pushedConfigs = Collections.emptyList();
         if(fgConfig.hasExternalFeatureGroups()) {
@@ -555,30 +555,25 @@ public class ProvisioningRuntimeBuilder {
         return tmp;
     }
 
-    private boolean processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, FeatureGroup featureGroup) throws ProvisioningException {
+    private boolean processFeatureGroupSpec(ConfigModelBuilder modelBuilder, FeaturePackRuntime.Builder fp, ConfigItemContainer featureGroup) throws ProvisioningException {
         boolean resolvedFeatures = false;
         final FeaturePackRuntime.Builder prevFpOrigin = this.fpOrigin;
         if(featureGroup.isResetFeaturePackOrigin()) {
             this.fpOrigin = fp;
         }
-        if(featureGroup.hasExternalGroupDeps()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : featureGroup.getExternalGroupDeps().entrySet()) {
-                resolvedFeatures |= processFeatureGroupSpec(modelBuilder, getFpDependency(fp, entry.getKey()), entry.getValue());
-            }
-        }
-        if(featureGroup.hasLocalGroupDeps()) {
-            for(FeatureGroupConfig nestedFg : featureGroup.getLocalGroupDeps()) {
-                resolvedFeatures |= processFeatureGroupConfig(modelBuilder, fp, nestedFg, fp.getFeatureGroupSpec(nestedFg.getName()));
-            }
-        }
-        if(featureGroup.hasFeatures()) {
-            for (FeatureConfig fc : featureGroup.getFeatures()) {
-                FeaturePackRuntime.Builder targetFp = fp;
-                final FeaturePackRuntime.Builder nestedFp = targetFp;
-                if (parentFeature != null) {
-                    initForeignKey(parentFeature, fc, nestedFp.getFeatureSpec(fc.getSpecId().getName()));
+        if(featureGroup.hasItems()) {
+            for(ConfigItem item : featureGroup.getItems()) {
+                final FeaturePackRuntime.Builder itemFp = item.getFpDep() == null ? fp : getFpDependency(fp, item.getFpDep());
+                if(item.isGroup()) {
+                    final FeatureGroupConfig nestedFg = (FeatureGroupConfig) item;
+                    resolvedFeatures |= processFeatureGroupConfig(modelBuilder, itemFp, nestedFg, itemFp.getFeatureGroupSpec(nestedFg.getName()));
+                } else {
+                    final FeatureConfig fc = (FeatureConfig) item;
+                    if (parentFeature != null) {
+                        initForeignKey(parentFeature, fc, itemFp.getFeatureSpec(fc.getSpecId().getName()));
+                    }
+                    resolvedFeatures |= resolveFeature(modelBuilder, itemFp, fc);
                 }
-                resolvedFeatures |= resolveFeature(modelBuilder, nestedFp, fc);
             }
         }
         this.fpOrigin = prevFpOrigin;

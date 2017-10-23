@@ -35,6 +35,7 @@ import org.jboss.provisioning.spec.SpecId;
  */
 public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupConfigSupport, B extends FeatureGroupConfigBuilderSupport<T, B>> {
 
+    String fpDep;
     String name;
     boolean inheritFeatures = true;
     Set<SpecId> includedSpecs = Collections.emptySet();
@@ -48,6 +49,12 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
 
     protected FeatureGroupConfigBuilderSupport(String name) {
         this.name = name;
+    }
+
+    @SuppressWarnings("unchecked")
+    public B setFpDep(String fpDep) {
+        this.fpDep = fpDep;
+        return (B) this;
     }
 
     @SuppressWarnings("unchecked")

@@ -87,7 +87,7 @@ public class IncludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
                     .addParam(FeatureParameterSpec.create("d", false))
                     .build())
                 .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup("fp1", FeatureGroupConfig.forGroup("fg1"))
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fp1", "fg1"))
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("name", "cOne")

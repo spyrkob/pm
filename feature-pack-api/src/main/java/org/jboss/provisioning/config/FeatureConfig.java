@@ -27,9 +27,9 @@ import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.FeatureGroup;
-import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.ConfigItemContainer;
+import org.jboss.provisioning.spec.ConfigItemContainerBuilder;
+import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.StringUtils;
@@ -38,7 +38,7 @@ import org.jboss.provisioning.util.StringUtils;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> implements FeatureGroup, Cloneable {
+public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> implements ConfigItem, ConfigItemContainer, Cloneable {
 
     public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
         final FeatureConfig config = new FeatureConfig(id.getSpec());
@@ -56,10 +56,12 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     Map<String, String> params = Collections.emptyMap();
     Map<FeatureId, FeatureDependencySpec> deps = Collections.emptyMap();
     String parentRef;
+    String fpDep;
 
     public FeatureConfig(FeatureConfig copy) {
         super(copy);
         specId = copy.specId;
+        fpDep = copy.fpDep;
         deps = copy.deps;
         parentRef = copy.parentRef;
         if(copy.params.size() > 1) {
@@ -78,6 +80,21 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
 
     public FeatureConfig(SpecId specId) throws ProvisioningDescriptionException {
         this.specId = specId;
+    }
+
+    @Override
+    public String getFpDep() {
+        return fpDep;
+    }
+
+    @Override
+    public boolean isGroup() {
+        return false;
+    }
+
+    public FeatureConfig setFpDep(String fpDep) {
+        this.fpDep = fpDep;
+        return this;
     }
 
     public FeatureConfig setSpecName(String specName) throws ProvisioningDescriptionException {
@@ -167,33 +184,13 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     }
 
     @Override
-    public boolean hasExternalGroupDeps() {
-        return !externalGroups.isEmpty();
+    public boolean hasItems() {
+        return !items.isEmpty();
     }
 
     @Override
-    public Map<String, FeatureGroupSpec> getExternalGroupDeps() {
-        return this.buildExternalDependencies();
-    }
-
-    @Override
-    public boolean hasLocalGroupDeps() {
-        return !localGroups.isEmpty();
-    }
-
-    @Override
-    public List<FeatureGroupConfig> getLocalGroupDeps() {
-        return localGroups;
-    }
-
-    @Override
-    public boolean hasFeatures() {
-        return !features.isEmpty();
-    }
-
-    @Override
-    public List<FeatureConfig> getFeatures() {
-        return features;
+    public List<ConfigItem> getItems() {
+        return items;
     }
 
     @Override
@@ -201,6 +198,7 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ((deps == null) ? 0 : deps.hashCode());
+        result = prime * result + ((fpDep == null) ? 0 : fpDep.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
@@ -220,6 +218,11 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
             if (other.deps != null)
                 return false;
         } else if (!deps.equals(other.deps))
+            return false;
+        if (fpDep == null) {
+            if (other.fpDep != null)
+                return false;
+        } else if (!fpDep.equals(other.fpDep))
             return false;
         if (params == null) {
             if (other.params != null)
@@ -243,6 +246,9 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(specId);
+        if(fpDep != null) {
+            buf.append(" fp=").append(fpDep);
+        }
         if (!params.isEmpty()) {
             buf.append(' ');
             StringUtils.append(buf, params.entrySet());
@@ -254,9 +260,9 @@ public class FeatureConfig extends FeatureGroupBuilderSupport<FeatureConfig> imp
             buf.append(" dependencies=");
             StringUtils.append(buf, deps.values());
         }
-        if(!features.isEmpty()) {
-            buf.append(" nested=");
-            StringUtils.appendList(buf, features);
+        if(!items.isEmpty()) {
+            buf.append(" items=");
+            StringUtils.appendList(buf, items);
         }
         return buf.append(']').toString();
     }

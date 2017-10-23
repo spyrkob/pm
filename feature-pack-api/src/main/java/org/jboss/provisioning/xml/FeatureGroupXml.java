@@ -32,7 +32,7 @@ import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeatureGroupConfigBuilderSupport;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.FeatureGroupBuilderSupport;
+import org.jboss.provisioning.spec.ConfigItemContainerBuilder;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -195,7 +195,7 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(readFeatureGroupDependency(reader));
+                            config.addFeatureGroup(readFeatureGroupDependency(null, reader));
                             break;
                         case FEATURE_PACK:
                             readFeaturePackDependency(reader, config);
@@ -218,20 +218,20 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> groupBuilder) throws XMLStreamException {
-        String dependency = null;
+    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, ConfigItemContainerBuilder<?> groupBuilder) throws XMLStreamException {
+        String fpDep = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case DEPENDENCY:
-                    dependency = reader.getAttributeValue(i);
+                    fpDep = reader.getAttributeValue(i);
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
-        if (dependency == null) {
+        if (fpDep == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
         }
 
@@ -244,12 +244,12 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            groupBuilder.addFeatureGroup(dependency, readFeatureGroupDependency(reader));
+                            groupBuilder.addFeatureGroup(readFeatureGroupDependency(fpDep, reader));
                             break;
                         case FEATURE:
-                            final FeatureConfig nested = new FeatureConfig();
+                            final FeatureConfig nested = new FeatureConfig().setFpDep(fpDep);
                             readFeatureConfig(reader, nested);
-                            groupBuilder.addFeature(dependency, nested);
+                            groupBuilder.addFeature(nested);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -264,7 +264,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static FeatureGroupConfig readFeatureGroupDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
+    public static FeatureGroupConfig readFeatureGroupDependency(String fpDep, XMLExtendedStreamReader reader) throws XMLStreamException {
         String name = null;
         Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
@@ -284,7 +284,7 @@ public class FeatureGroupXml {
         if (name == null && inheritFeatures != null) {
             throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.NAME);
         }
-        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name);
+        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name).setFpDep(fpDep);
         if(inheritFeatures != null) {
             depBuilder.inheritFeatures(inheritFeatures);
         }
@@ -515,7 +515,7 @@ public class FeatureGroupXml {
                             config.addFeature(child);
                             break;
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(readFeatureGroupDependency(reader));
+                            config.addFeatureGroup(readFeatureGroupDependency(null, reader));
                             break;
                         case FEATURE_PACK:
                             readFeaturePackDependency(reader, config);

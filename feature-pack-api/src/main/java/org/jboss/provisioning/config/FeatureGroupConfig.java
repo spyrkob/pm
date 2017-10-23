@@ -59,11 +59,15 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
     }
 
     public static FeatureGroupConfig forGroup(String featureGroupName) {
-        return new FeatureGroupConfig(featureGroupName);
+        return new FeatureGroupConfig(null, featureGroupName);
     }
 
-    private FeatureGroupConfig(String name) {
-        super(name);
+    public static FeatureGroupConfig forGroup(String fpDep, String featureGroupName) {
+        return new FeatureGroupConfig(fpDep, featureGroupName);
+    }
+
+    private FeatureGroupConfig(String fpDep, String name) {
+        super(fpDep, name);
     }
 
     private FeatureGroupConfig(Builder builder) {
@@ -76,6 +80,9 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         buf.append('[');
         if(name != null) {
             buf.append(name);
+        }
+        if(fpDep != null) {
+            buf.append(" fp=").append(fpDep);
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");

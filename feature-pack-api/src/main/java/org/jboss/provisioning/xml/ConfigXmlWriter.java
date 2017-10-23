@@ -18,10 +18,7 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.xml.ConfigXml.Attribute;
 import org.jboss.provisioning.xml.ConfigXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -63,36 +60,7 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
             }
         }
 
-        if(config.hasExternalGroupDeps()) {
-            for(Map.Entry<String, FeatureGroupSpec> entry : config.getExternalGroupDeps().entrySet()) {
-                final ElementNode fpE = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
-                addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
-                final FeatureGroupSpec externalDep = entry.getValue();
-                if (externalDep.hasLocalGroupDeps()) {
-                    for (FeatureGroupConfig fg : externalDep.getLocalGroupDeps()) {
-                        FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(fpE, Element.FEATURE_GROUP.getLocalName(), ns));
-                    }
-                }
-                if (externalDep.hasFeatures()) {
-                    for (FeatureConfig fc : externalDep.getFeatures()) {
-                        FeatureGroupXmlWriter.addFeatureConfig(fpE, fc, ns);
-                    }
-                }
-            }
-        }
-
-        if(config.hasLocalGroupDeps()) {
-            for(FeatureGroupConfig fg : config.getLocalGroupDeps()) {
-                FeatureGroupXmlWriter.addFeatureGroupDepBody(fg, ns, addElement(configE, Element.FEATURE_GROUP.getLocalName(), ns));
-            }
-        }
-
-        if(config.hasFeatures()) {
-            for(FeatureConfig fc : config.getFeatures()) {
-                FeatureGroupXmlWriter.addFeatureConfig(configE, fc, ns);
-            }
-        }
-
+        FeatureGroupXmlWriter.writeFeatureGroupSpecBody(configE, config, ns);
         return configE;
     }
 }
