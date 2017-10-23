@@ -54,6 +54,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private static final String TMP_DOMAIN_XML = "pm-tmp-domain.xml";
     private static final String TMP_HOST_XML = "pm-tmp-host.xml";
 
+    private static final ArtifactCoords.Ga WF_CORE_GA = ArtifactCoords.newGa("org.wildfly.core", "wildfly-core-feature-pack-new");
+    private static final byte LOOK_FOR_HOST = 1;
+    private static final byte LOOK_FOR_HOST_IN_SPEC = 1;
+
     private interface NameFilter {
         boolean accepts(String name);
     }
@@ -155,37 +159,34 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private ManagedOp[] ops = new ManagedOp[]{new ManagedOp()};
     private NameFilter paramFilter;
 
-    private Path script;
+    private StringBuilder embedBuf = new StringBuilder();
+    private String scriptName;
     private String tmpConfig;
-    private BufferedWriter opsWriter;
+    private List<String> opList = new ArrayList<>();
+
+    private String hostName;
+    private byte lookForHost;
 
     WfProvisionedConfigHandler(ProvisioningRuntime runtime) {
         this.runtime = runtime;
         this.messageWriter = runtime.getMessageWriter();
     }
 
-    private void initOpsWriter(String name, String op) throws ProvisioningException {
-        script = runtime.getTmpPath("cli", name);
-        try {
-            Files.createDirectories(script.getParent());
-            opsWriter = Files.newBufferedWriter(script);
-            writeOp(op);
-        } catch (IOException e) {
-            throw new ProvisioningException(Errors.openFile(script));
-        }
+    private void reset() {
+        embedBuf.setLength(0);
+        scriptName = null;
+        opList.clear();
+        hostName = null;
+        lookForHost = 0;
     }
 
     private void writeOp(String op) throws ProvisioningException {
-        try {
-            opsWriter.write(op);
-            opsWriter.newLine();
-        } catch (IOException e) {
-            throw new ProvisioningException("Failed to write operation to a file", e);
-        }
+        opList.add(op);
     }
 
     @Override
     public void prepare(ProvisionedConfig config) throws ProvisioningException {
+        reset();
         final String logFile;
         if("standalone".equals(config.getModel())) {
             logFile = config.getProperties().get("config-name");
@@ -193,10 +194,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
 
-            final StringBuilder buf = new StringBuilder();
-            buf.append("embed-server --admin-only=true --empty-config --remove-existing --server-config=")
+            embedBuf.append("embed-server --admin-only=true --empty-config --remove-existing --server-config=")
             .append(logFile).append(" --jboss-home=").append(runtime.getStagedDir());
-            initOpsWriter(logFile, buf.toString());
 
             paramFilter = new NameFilter() {
                 @Override
@@ -213,12 +212,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
 
                 tmpConfig = TMP_HOST_XML;
-                final StringBuilder buf = new StringBuilder();
-                buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
+                embedBuf.append("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
                 .append(TMP_HOST_XML)
                 .append(" --domain-config=").append(logFile)
                 .append(" --jboss-home=").append(runtime.getStagedDir());
-                initOpsWriter(logFile, buf.toString());
 
                 paramFilter = new NameFilter() {
                     @Override
@@ -232,19 +229,18 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
                             + " is missing property host-config-name");
                 }
+                lookForHost = LOOK_FOR_HOST;
 
-                final StringBuilder buf = new StringBuilder();
-                buf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
+                embedBuf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
                         .append(logFile);
                 final String domainConfig = config.getProperties().get("domain-config-name");
                 if (domainConfig == null) {
                     tmpConfig = TMP_DOMAIN_XML;
-                    buf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=").append(TMP_DOMAIN_XML);
+                    embedBuf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=").append(TMP_DOMAIN_XML);
                 } else {
-                    buf.append(" --domain-config=").append(domainConfig);
+                    embedBuf.append(" --domain-config=").append(domainConfig);
                 }
-                buf.append(" --jboss-home=").append(runtime.getStagedDir());
-                initOpsWriter(logFile, buf.toString());
+                embedBuf.append(" --jboss-home=").append(runtime.getStagedDir());
 
                 paramFilter = new NameFilter() {
                     @Override
@@ -256,6 +252,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 throw new ProvisioningException("Unsupported config model " + config.getModel());
             }
         }
+        scriptName = logFile;
     }
 
     @Override
@@ -266,6 +263,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     @Override
     public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
         messageWriter.print("    SPEC " + spec.getName());
+        if(lookForHost == LOOK_FOR_HOST && "host".equals(spec.getName()) && spec.getId().getGav().toGa().equals(WF_CORE_GA)) {
+            lookForHost = LOOK_FOR_HOST_IN_SPEC;
+        }
         if(!spec.hasAnnotations()) {
             opsTotal = 0;
             return;
@@ -392,6 +392,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     @Override
     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
+        if(lookForHost == LOOK_FOR_HOST_IN_SPEC) {
+            lookForHost = 0;
+            hostName = feature.getParam("host");
+        }
         if (opsTotal == 0) {
             messageWriter.print("      " + feature.getParams());
             return;
@@ -417,11 +421,27 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     @Override
     public void done() throws ProvisioningException {
-        try {
-            opsWriter.close();
-        } catch (IOException e) {
-            throw new ProvisioningException("Failed to close " + script, e);
+        if(opList.isEmpty()) {
+            messageWriter.print(" %s configuration is empty", scriptName);
         }
+        if(hostName != null) {
+            embedBuf.append(" --temp-host-controller-name=").append(hostName);
+        }
+        final Path script = runtime.getTmpPath("cli", scriptName);
+        try {
+            Files.createDirectories(script.getParent());
+            try(BufferedWriter opsWriter = Files.newBufferedWriter(script)) {
+                opsWriter.write(embedBuf.toString());
+                opsWriter.newLine();
+                for(String op : opList) {
+                    opsWriter.write(op);
+                    opsWriter.newLine();
+                }
+            }
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.writeFile(script), e);
+        }
+
         messageWriter.print(" Generating %s configuration", script.getFileName().toString());
         try {
             CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
@@ -437,6 +457,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
             tmpConfig = null;
         }
+        reset();
     }
 
     private static Set<String> parseSet(String str) throws ProvisioningDescriptionException {
