@@ -129,17 +129,9 @@ public class ConfigSpec extends FeatureGroupSupport {
         if(!props.isEmpty()) {
             StringUtils.append(buf, props.entrySet());
         }
-        if(!localGroups.isEmpty()) {
+        if(!items.isEmpty()) {
             buf.append(' ');
-            StringUtils.appendList(buf, localGroups);
-        }
-        if(!externalGroups.isEmpty()) {
-            buf.append(' ');
-            StringUtils.append(buf, externalGroups.entrySet());
-        }
-        if(!features.isEmpty()) {
-            buf.append(' ');
-            StringUtils.append(buf, features);
+            StringUtils.append(buf, items);
         }
         return buf.toString();
     }

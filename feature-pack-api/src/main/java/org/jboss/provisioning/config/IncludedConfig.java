@@ -90,6 +90,9 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append("[model=").append(id.getModel()).append(" name=").append(id.getName());
+        if(fpDep != null) {
+            buf.append(" fp=").append(fpDep);
+        }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");
         }

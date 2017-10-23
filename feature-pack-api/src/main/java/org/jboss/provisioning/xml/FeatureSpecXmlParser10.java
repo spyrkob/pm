@@ -426,7 +426,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         if(name == null) {
             name = feature;
         }
-        final FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setDependency(dependency).setName(name).setNillable(nillable).setInclude(include);
+        final FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(feature).setFpDep(dependency).setName(name).setNillable(nillable).setInclude(include);
 
         while (reader.hasNext()) {
             switch (reader.nextTag()) {

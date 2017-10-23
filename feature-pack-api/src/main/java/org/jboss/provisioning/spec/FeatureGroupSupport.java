@@ -18,22 +18,16 @@ package org.jboss.provisioning.spec;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public abstract class FeatureGroupSupport implements FeatureGroup {
+public abstract class FeatureGroupSupport implements ConfigItemContainer {
 
-    abstract static class Builder<T extends FeatureGroupSupport, B extends Builder<T, B>> extends FeatureGroupBuilderSupport<B> {
+    abstract static class Builder<T extends FeatureGroupSupport, B extends Builder<T, B>> extends ConfigItemContainerBuilder<B> {
 
         String name;
         boolean resetFeaturePackOrigin;
@@ -62,54 +56,37 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
 
     protected final String name;
     protected final boolean resetFeaturePackOrigin;
-    protected final Map<String, FeatureGroupSpec> externalGroups;
-    protected final List<FeatureGroupConfig> localGroups;
-    protected final List<FeatureConfig> features;
+
+    protected final List<ConfigItem> items;
 
     protected FeatureGroupSupport(FeatureGroupSupport copy) {
         name = copy.name;
         resetFeaturePackOrigin = copy.resetFeaturePackOrigin;
-        switch(copy.externalGroups.size()) {
-            case 0:
-                externalGroups = Collections.emptyMap();
-                break;
-            case 1: {
-                final Entry<String, FeatureGroupSpec> entry = copy.externalGroups.entrySet().iterator().next();
-                externalGroups = Collections.singletonMap(entry.getKey(), new FeatureGroupSpec(entry.getValue()));
-                break;
+
+        if(copy.items.isEmpty()) {
+            items = Collections.emptyList();
+        } else if(copy.items.size() == 1) {
+            ConfigItem item = copy.items.get(0);
+            if(!item.isGroup()) {
+                item = new FeatureConfig((FeatureConfig) item);
             }
-            default:
-                final Map<String, FeatureGroupSpec> tmp = new LinkedHashMap<>(copy.externalGroups.size());
-                final Iterator<Map.Entry<String, FeatureGroupSpec>> i = copy.externalGroups.entrySet().iterator();
-                while(i.hasNext()) {
-                    final Entry<String, FeatureGroupSpec> entry = i.next();
-                    tmp.put(entry.getKey(), new FeatureGroupSpec(entry.getValue()));
+            items = Collections.singletonList(item);
+        } else {
+            final List<ConfigItem> tmp = new ArrayList<>(copy.items.size());
+            for(ConfigItem item : copy.items) {
+                if(!item.isGroup()) {
+                    item = new FeatureConfig((FeatureConfig) item);
                 }
-                externalGroups = Collections.unmodifiableMap(tmp);
-        }
-        localGroups = copy.localGroups;
-        switch(copy.features.size()) {
-            case 0:
-                features = Collections.emptyList();
-                break;
-            case 1:
-                features = Collections.singletonList(new FeatureConfig(copy.features.get(0)));
-                break;
-            default:
-                final List<FeatureConfig> tmp = new ArrayList<>(copy.features.size());
-                for(FeatureConfig fc : copy.features) {
-                    tmp.add(new FeatureConfig(fc));
-                }
-                features = Collections.unmodifiableList(tmp);
+                tmp.add(item);
+            }
+            items = Collections.unmodifiableList(tmp);
         }
     }
 
     protected FeatureGroupSupport(Builder<?, ?> builder) {
         name = builder.name;
         resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
-        this.localGroups = builder.localGroups.size() > 1 ? Collections.unmodifiableList(builder.localGroups) : builder.localGroups;
-        this.features = builder.features.size() > 1 ? Collections.unmodifiableList(builder.features) : builder.features;
-        this.externalGroups = builder.buildExternalDependencies();
+        this.items = builder.items.size() > 1 ? Collections.unmodifiableList(builder.items) : builder.items;
     }
 
     public String getName() {
@@ -117,66 +94,27 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
     }
 
     @Override
+    public boolean hasItems() {
+        return !items.isEmpty();
+    }
+
+    @Override
+    public List<ConfigItem> getItems() {
+        return items;
+    }
+
+    @Override
     public boolean isResetFeaturePackOrigin() {
         return resetFeaturePackOrigin;
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#hasExternalDependencies()
-     */
-    @Override
-    public boolean hasExternalGroupDeps() {
-        return !externalGroups.isEmpty();
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#getExternalDependencies()
-     */
-    @Override
-    public Map<String, FeatureGroupSpec> getExternalGroupDeps() {
-        return externalGroups;
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#hasLocalDependencies()
-     */
-    @Override
-    public boolean hasLocalGroupDeps() {
-        return !localGroups.isEmpty();
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#getLocalDependencies()
-     */
-    @Override
-    public List<FeatureGroupConfig> getLocalGroupDeps() {
-        return localGroups;
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#hasFeatures()
-     */
-    @Override
-    public boolean hasFeatures() {
-        return !features.isEmpty();
-    }
-
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.feature.FeatureGroup#getFeatures()
-     */
-    @Override
-    public List<FeatureConfig> getFeatures() {
-        return features;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((externalGroups == null) ? 0 : externalGroups.hashCode());
-        result = prime * result + ((features == null) ? 0 : features.hashCode());
-        result = prime * result + ((localGroups == null) ? 0 : localGroups.hashCode());
+        result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (resetFeaturePackOrigin ? 1231 : 1237);
         return result;
     }
 
@@ -189,25 +127,17 @@ public abstract class FeatureGroupSupport implements FeatureGroup {
         if (getClass() != obj.getClass())
             return false;
         FeatureGroupSupport other = (FeatureGroupSupport) obj;
-        if (externalGroups == null) {
-            if (other.externalGroups != null)
+        if (items == null) {
+            if (other.items != null)
                 return false;
-        } else if (!externalGroups.equals(other.externalGroups))
-            return false;
-        if (features == null) {
-            if (other.features != null)
-                return false;
-        } else if (!features.equals(other.features))
-            return false;
-        if (localGroups == null) {
-            if (other.localGroups != null)
-                return false;
-        } else if (!localGroups.equals(other.localGroups))
+        } else if (!items.equals(other.items))
             return false;
         if (name == null) {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
+            return false;
+        if (resetFeaturePackOrigin != other.resetFeaturePackOrigin)
             return false;
         return true;
     }
