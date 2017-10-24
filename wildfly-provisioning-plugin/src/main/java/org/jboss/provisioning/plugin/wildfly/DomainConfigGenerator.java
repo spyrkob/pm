@@ -34,7 +34,7 @@ class DomainConfigGenerator extends ScriptCollector {
 
     DomainConfigGenerator(ProvisioningRuntime ctx) throws ProvisioningException {
         super(ctx);
-        init("domain", "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config");
+        init("domain", "embed-host-controller --empty-host-config --empty-domain-config --remove-existing-host-config --remove-existing-domain-config --temp-host-controller-name=master");
     }
 
     @Override
