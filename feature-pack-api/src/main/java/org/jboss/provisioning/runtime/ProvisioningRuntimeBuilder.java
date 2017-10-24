@@ -517,9 +517,7 @@ public class ProvisioningRuntimeBuilder {
         final Map<ResolvedFeatureId, FeatureConfig> tmp = new HashMap<>(features.size());
         for (Map.Entry<FeatureId, FeatureConfig> included : features.entrySet()) {
             final FeatureConfig fc = new FeatureConfig(included.getValue());
-            FeaturePackRuntime.Builder targetFp1 = fp;
-            final FeaturePackRuntime.Builder targetFp = targetFp1;
-            final ResolvedFeatureSpec resolvedSpec = targetFp.getFeatureSpec(fc.getSpecId().getName());
+            final ResolvedFeatureSpec resolvedSpec = fp.getFeatureSpec(fc.getSpecId().getName());
             if (parentFeature != null) {
                 initForeignKey(parentFeature, fc, resolvedSpec);
             }
@@ -530,11 +528,17 @@ public class ProvisioningRuntimeBuilder {
 
     private Set<ResolvedFeatureId> resolveFeatureSet(FeaturePackRuntime.Builder fp, Set<FeatureId> features) throws ProvisioningException {
         if (features.size() == 1) {
-            return Collections.singleton(resolveFeatureId(fp, features.iterator().next()));
+            FeatureId excludedId = features.iterator().next();
+            if(parentFeature != null) {
+                return Collections.singleton(initForeignKey(parentFeature.id, excludedId, fp.getFeatureSpec(excludedId.getSpec().getName())));
+            }
+            return Collections.singleton(resolveFeatureId(fp, excludedId));
         }
         final Set<ResolvedFeatureId> tmp = new HashSet<>(features.size());
         for (FeatureId excludedId : features) {
-            tmp.add(resolveFeatureId(fp, excludedId));
+            final ResolvedFeatureId resolvedId = parentFeature == null ? resolveFeatureId(fp, excludedId) : initForeignKey(
+                    parentFeature.id, excludedId, fp.getFeatureSpec(excludedId.getSpec().getName()));
+            tmp.add(resolvedId);
         }
         return tmp;
     }
@@ -698,6 +702,44 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
+    }
+
+    private static ResolvedFeatureId initForeignKey(ResolvedFeatureId parentId, FeatureId childId, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
+        // TODO final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
+        final String parentRef = parentId.getSpecId().getName();
+        final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getFeatureRef(parentRef);
+        if (refSpec == null) {
+            throw new ProvisioningDescriptionException("Parent reference " + parentRef + " not found in " + childSpec.id);
+        }
+        final Map<String, String> resolvedParams = new HashMap<>(parentId.params.size());
+        resolvedParams.putAll(childId.getParams());
+        if(refSpec.getParamsMapped() == 0) {
+            for(Map.Entry<String, String> idEntry : parentId.params.entrySet()) {
+                final String prevValue = resolvedParams.put(idEntry.getKey(), idEntry.getValue());
+                if (prevValue != null && !prevValue.equals(idEntry.getValue())) {
+                    final FeatureParameterSpec fkParam = childSpec.xmlSpec.getParam(idEntry.getKey());
+                    if (fkParam.isFeatureId()) {
+                        throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(childSpec.id, idEntry.getKey(), prevValue, idEntry.getValue()));
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
+                final String paramValue = parentId.params.get(refSpec.getTargetParam(i));
+                if (paramValue == null) {
+                    throw new ProvisioningDescriptionException(childSpec.id + " expects ID parameter '"
+                            + refSpec.getTargetParam(i) + "' in " + parentId);
+                }
+                final String prevValue = resolvedParams.put(refSpec.getLocalParam(i), paramValue);
+                if (prevValue != null && !prevValue.equals(paramValue)) {
+                    final FeatureParameterSpec fkParam = childSpec.xmlSpec.getParam(refSpec.getLocalParam(i));
+                    if (fkParam.isFeatureId()) {
+                        throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(childSpec.id, refSpec.getLocalParam(i), prevValue, paramValue));
+                    }
+                }
+            }
+        }
+        return new ResolvedFeatureId(childSpec.id, resolvedParams);
     }
 
     private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {

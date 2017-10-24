@@ -133,20 +133,6 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         return externalFgConfigs;
     }
 
-    boolean isExcluded(SpecId spec) {
-        return excludedSpecs.contains(spec);
-    }
-
-    boolean isExcluded(FeatureId featureId) {
-        if (excludedFeatures.contains(featureId)) {
-            return true;
-        }
-        if (excludedSpecs.contains(featureId.getSpec())) {
-            return !includedFeatures.containsKey(featureId);
-        }
-        return false;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
