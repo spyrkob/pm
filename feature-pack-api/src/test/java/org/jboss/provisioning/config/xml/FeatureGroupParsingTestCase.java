@@ -46,10 +46,10 @@ public class FeatureGroupParsingTestCase {
         final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
         final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
                 .setResetFeaturePackOrigin(true)
-                .addFeatureGroup(FeatureGroupConfig.builder("dep1").inheritFeatures(true).build())
-                .addFeatureGroup(FeatureGroupConfig.builder("dep2").inheritFeatures(false).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
+                .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")
-                        .inheritFeatures(false)
+                        .setInheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"),
                                 new FeatureConfig("spec2")
@@ -80,7 +80,7 @@ public class FeatureGroupParsingTestCase {
                         .setFpDep("source4")
                         .setParam("p1", "v1")
                         .setParam("p2", "v2")
-                        .addFeatureDep(FeatureId.builder("spec2").addParam("p1", "v1").addParam("p2", "v2").build())
+                        .addFeatureDep(FeatureId.builder("spec2").setParam("p1", "v1").setParam("p2", "v2").build())
                         .addFeatureDep(FeatureId.create("spec3", "p3", "v3")))
                 .addFeature(
                         new FeatureConfig("spec1")

@@ -73,7 +73,7 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg1")
-                            .inheritFeatures(false)
+                            .setInheritFeatures(false)
                             .build())
                     .build())
             .newPackage("p1", true)

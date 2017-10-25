@@ -29,6 +29,7 @@ import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -41,7 +42,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeFeaturesWithIncompleteIdsAndParentRefTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,43 +51,41 @@ public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("parent").setNillable(true).mapParam("a", "id").build())
+                    .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("b", false))
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("left").mapParam("left-a", "id").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("right").mapParam("right-a", "id").build())
+                    .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.createId("left-a"))
+                    .addParam(FeatureParameterSpec.createId("right-a"))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aOne")
-                            .setParam("a", "a1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "aTwo")
-                            .setParam("a", "a2"))
+                    .addFeature(FeatureConfig.newConfig("specA")
+                            .setParentRef("parent")
+                            .setParam("id", "a1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("name", "bOne")
-                            .setParam("b", "b1"))
+                            .setParentRef("left")
+                            .setParam("id", "b1")
+                            .setParam("right-a", "a1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("name", "bTwo")
-                            .setParam("b", "b2"))
+                            .setParentRef("right")
+                            .setParam("id", "b1")
+                            .setParam("left-a", "a1"))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .setProperty("prop1", "value1")
-                    .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1")
-                            .setInheritFeatures(false)
-                            .includeFeature(FeatureId.create("specA", "name", "aTwo"))
-                            .includeSpec("specB")
-                            .excludeFeature(FeatureId.create("specB", "name", "bOne"))
-                            .build())
+                    .addFeature(FeatureConfig.newConfig("specA")
+                            .setParam("id", "a2")
+                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                                    .setInheritFeatures(false)
+                                    .includeFeature(FeatureId.create("specA", "id", "a1"), new FeatureConfig().setParentRef("parent"))
+                                    .includeFeature(FeatureId.builder("specB").setParam("id", "b1").setParam("right-a", "a1").build(), new FeatureConfig().setParentRef("left"))
+                                    .build()))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -99,17 +98,14 @@ public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setProperty("prop1", "value1")
-                        .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aTwo"))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a2"))
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
                                 .setParam("a", "a2")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bTwo"))
-                                .setParam("b", "b2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b1").setParam("left-a", "a2").setParam("right-a", "a1").build())
                                 .build())
                         .build())
                 .build();

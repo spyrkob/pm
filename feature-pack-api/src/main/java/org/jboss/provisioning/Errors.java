@@ -226,6 +226,10 @@ public interface Errors {
                 + " conflicts with the corresponding parent ID value '" + newValue + "'";
     }
 
+    static String featureRefNotInSpec(String featureRefName, String featureSpec) {
+        return "Feature spec " + featureSpec + " does not include a feature reference named " + featureRefName;
+    }
+
     static String unresolvedFeatureDep(ResolvedFeature feature, ResolvedFeatureId dep) {
         final StringBuilder buf = new StringBuilder();
         appendFeature(buf, feature);

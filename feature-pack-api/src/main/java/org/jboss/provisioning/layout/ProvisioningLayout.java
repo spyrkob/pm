@@ -123,11 +123,11 @@ public class ProvisioningLayout {
     }
 
     public boolean contains(ArtifactCoords.Gav fpGav) {
-        return featurePacks.containsKey(fpGav);
+        return featurePacks.containsKey(fpGav.toGa());
     }
 
     public FeaturePackLayout getFeaturePack(ArtifactCoords.Gav fpGav) {
-        return featurePacks.get(fpGav);
+        return featurePacks.get(fpGav.toGa());
     }
 
     public Collection<FeaturePackLayout> getFeaturePacks() {

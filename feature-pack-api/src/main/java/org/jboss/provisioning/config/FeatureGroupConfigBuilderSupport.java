@@ -18,6 +18,7 @@
 package org.jboss.provisioning.config;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -41,7 +42,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
     Set<SpecId> includedSpecs = Collections.emptySet();
     Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
     Set<SpecId> excludedSpecs = Collections.emptySet();
-    Set<FeatureId> excludedFeatures = Collections.emptySet();
+    Map<FeatureId, String> excludedFeatures = Collections.emptyMap();
     Map<String, FeatureGroupConfig.Builder> externalFgConfigs = Collections.emptyMap();
 
     protected FeatureGroupConfigBuilderSupport() {
@@ -64,7 +65,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
     }
 
     @SuppressWarnings("unchecked")
-    public B inheritFeatures(boolean inheritFeatures) {
+    public B setInheritFeatures(boolean inheritFeatures) {
         this.inheritFeatures = inheritFeatures;
         return (B) this;
     }
@@ -115,7 +116,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
 
     @SuppressWarnings("unchecked")
     public B includeFeature(FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
-        if(excludedFeatures.contains(featureId)) {
+        if(excludedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
         }
         if(feature == null) {
@@ -172,30 +173,38 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return (B) this;
     }
 
-    @SuppressWarnings("unchecked")
     public B excludeFeature(String fpDep, FeatureId featureId) throws ProvisioningDescriptionException {
-        if(fpDep == null) {
-            return excludeFeature(featureId);
-        }
-        getExternalFgConfig(fpDep).excludeFeature(featureId);
-        return (B) this;
+        return excludeFeature(fpDep, featureId, null);
     }
 
     @SuppressWarnings("unchecked")
+    public B excludeFeature(String fpDep, FeatureId featureId, String parentRef) throws ProvisioningDescriptionException {
+        if(fpDep == null) {
+            return excludeFeature(featureId, parentRef);
+        }
+        getExternalFgConfig(fpDep).excludeFeature(featureId, parentRef);
+        return (B) this;
+    }
+
     public B excludeFeature(FeatureId featureId) throws ProvisioningDescriptionException {
+        return excludeFeature(featureId, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public B excludeFeature(FeatureId featureId, String parentRef) throws ProvisioningDescriptionException {
         if(includedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly included");
         }
         switch(excludedFeatures.size()) {
             case 0:
-                excludedFeatures = Collections.singleton(featureId);
+                excludedFeatures = Collections.singletonMap(featureId, parentRef);
                 break;
             case 1:
-                final FeatureId first = excludedFeatures.iterator().next();
-                excludedFeatures = new HashSet<>(2);
-                excludedFeatures.add(first);
+                final Map.Entry<FeatureId, String> first = excludedFeatures.entrySet().iterator().next();
+                excludedFeatures = new HashMap<>(2);
+                excludedFeatures.put(first.getKey(), first.getValue());
             default:
-                excludedFeatures.add(featureId);
+                excludedFeatures.put(featureId, parentRef);
         }
         return (B) this;
     }

@@ -15,39 +15,38 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Assert;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
- * An id param may have a default value but it can be initialized to a different one.
- * It cannot be overwritten afterwards.
  *
  * @author Alexey Loubyansky
  */
-public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInstallFeaturePackTestBase {
+//@Ignore
+public class ExcludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -55,27 +54,39 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("id"))
-                    .addParam(FeatureParameterSpec.create("p1", "spec"))
+                    .build())
+            .addSpec(FeatureSpec.builder("specB")
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").mapParam("a", "id").build())
+                    .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.createId("a"))
                     .build())
             .addSpec(FeatureSpec.builder("specC")
                     .addFeatureRef(FeatureReferenceSpec.builder("specA").mapParam("a", "id").build())
                     .addParam(FeatureParameterSpec.createId("id"))
-                    .addParam(FeatureParameterSpec.create("a", true, false, "def"))
+                    .addParam(FeatureParameterSpec.createId("a"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("groupC")
+            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("id", "b1"))
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("id", "b2"))
                     .addFeature(
                             new FeatureConfig("specC")
-                            .setParam("id", "c1")
-                            .setParam("a", "a2"))
+                            .setParam("id", "c1"))
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("id", "c2"))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeature(
-                            new FeatureConfig("specA")
+                    .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a1")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("groupC")))
+                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                                    .setInheritFeatures(true)
+                                    .excludeFeature(FeatureId.create("specB", "id", "b1"))
+                                    .excludeFeature(FeatureId.create("specC", "id", "c1"))
+                                    .build()))
                     .build())
             .getInstaller()
         .install();
@@ -87,33 +98,17 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("There should be an id param conflict");
-        } catch(ProvisioningException e) {
-            Assert.assertEquals("Failed to resolve config", e.getMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals("Failed to initialize foreign key parameters of [specC a=a2,id=c1] referencing org.jboss.pm.test:fp1:1.0.0.Final#specA:id=a1", e.getLocalizedMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());
-        }
-    }
-
-    @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
-    }
-
-    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b2").setParam("a", "a1").build())
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("id", "c2").setParam("a", "a1").build())
+                                .build())
+                        .build())
+                .build();
     }
 }
