@@ -42,9 +42,11 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
+//@Ignore
 public class ExcludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
 
     @Override
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
@@ -81,7 +83,7 @@ public class ExcludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a1")
                             .addFeatureGroup(FeatureGroupConfig.builder("fg1")
-                                    .inheritFeatures(true)
+                                    .setInheritFeatures(true)
                                     .excludeFeature(FeatureId.create("specB", "id", "b1"))
                                     .excludeFeature(FeatureId.create("specC", "id", "c1"))
                                     .build()))

@@ -39,10 +39,13 @@ import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
+ * Features that are included using incomplete IDs are actually stored in the group config
+ * under incomplete resolved feature IDs (in ProvisioningRuntimeBuilder.resolveFeatureMap()). This test verifies that it's ok to do that.
+ * It works because the included features are handled in the scope of the group they belong to.
  *
  * @author Alexey Loubyansky
  */
-public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePackTestBase {
+public class ResolvedFeatureMapWithIncompleteResolvedIdAsKeysTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -77,7 +80,7 @@ public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                             new FeatureConfig("specC")
                             .setParam("id", "c2"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a1")
                             .addFeatureGroup(FeatureGroupConfig.builder("fg1")
@@ -85,6 +88,21 @@ public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                                     .includeFeature(FeatureId.create("specB", "id", "b1"))
                                     .includeFeature(FeatureId.create("specC", "id", "c1"))
                                     .build()))
+                    .addFeature(FeatureConfig.newConfig("specA")
+                            .setParam("id", "a2")
+                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                                    .setInheritFeatures(false)
+                                    .includeFeature(FeatureId.create("specB", "id", "b1"))
+                                    .includeFeature(FeatureId.create("specC", "id", "c1"))
+                                    .build()))
+                    .build())
+            .addConfig(ConfigSpec.builder()
+                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                            .excludeSpec("specB")
+                            .includeFeature(FeatureId.builder("specB").setParam("id", "b1").setParam("a", "a1").build())
+                            .excludeSpec("specC")
+                            .includeFeature(FeatureId.builder("specC").setParam("id", "c1").setParam("a", "a2").build())
+                            .build())
                     .build())
             .getInstaller()
         .install();
@@ -102,9 +120,11 @@ public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
                                 .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a2"))
+                                .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b1").setParam("a", "a1").build())
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("id", "c1").setParam("a", "a1").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("id", "c1").setParam("a", "a2").build())
                                 .build())
                         .build())
                 .build();

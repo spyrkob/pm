@@ -42,7 +42,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeFeaturesWithIncompleteIdsAndParentRefTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -51,39 +51,39 @@ public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("parent").setNillable(true).mapParam("a", "id").build())
                     .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.create("a", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA").mapParam("a", "id").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("left").mapParam("left-a", "id").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setName("right").mapParam("right-a", "id").build())
                     .addParam(FeatureParameterSpec.createId("id"))
-                    .addParam(FeatureParameterSpec.createId("a"))
-                    .build())
-            .addSpec(FeatureSpec.builder("specC")
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA").mapParam("a", "id").build())
-                    .addParam(FeatureParameterSpec.createId("id"))
-                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addParam(FeatureParameterSpec.createId("left-a"))
+                    .addParam(FeatureParameterSpec.createId("right-a"))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+                    .addFeature(FeatureConfig.newConfig("specA")
+                            .setParentRef("parent")
+                            .setParam("id", "a1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("id", "b1"))
+                            .setParentRef("left")
+                            .setParam("id", "b1")
+                            .setParam("right-a", "a1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("id", "b2"))
-                    .addFeature(
-                            new FeatureConfig("specC")
-                            .setParam("id", "c1"))
-                    .addFeature(
-                            new FeatureConfig("specC")
-                            .setParam("id", "c2"))
+                            .setParentRef("right")
+                            .setParam("id", "b1")
+                            .setParam("left-a", "a1"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(FeatureConfig.newConfig("specA")
-                            .setParam("id", "a1")
+                            .setParam("id", "a2")
                             .addFeatureGroup(FeatureGroupConfig.builder("fg1")
                                     .setInheritFeatures(false)
-                                    .includeFeature(FeatureId.create("specB", "id", "b1"))
-                                    .includeFeature(FeatureId.create("specC", "id", "c1"))
+                                    .includeFeature(FeatureId.create("specA", "id", "a1"), new FeatureConfig().setParentRef("parent"))
+                                    .includeFeature(FeatureId.builder("specB").setParam("id", "b1").setParam("right-a", "a1").build(), new FeatureConfig().setParentRef("left"))
                                     .build()))
                     .build())
             .getInstaller()
@@ -100,11 +100,12 @@ public class IncludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a2"))
+                                .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
+                                .setParam("a", "a2")
                                 .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b1").setParam("a", "a1").build())
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("id", "c1").setParam("a", "a1").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b1").setParam("left-a", "a2").setParam("right-a", "a1").build())
                                 .build())
                         .build())
                 .build();

@@ -286,7 +286,7 @@ public class FeatureGroupXml {
         }
         final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name).setFpDep(fpDep);
         if(inheritFeatures != null) {
-            depBuilder.inheritFeatures(inheritFeatures);
+            depBuilder.setInheritFeatures(inheritFeatures);
         }
         readFeatureGroupConfigBody(reader, depBuilder);
         return depBuilder.build();
@@ -363,6 +363,8 @@ public class FeatureGroupXml {
     private static void readInclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupConfigBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
         String spec = null;
         String featureIdStr = null;
+        String parentRef = null;
+        FeatureConfig fc = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -373,6 +375,10 @@ public class FeatureGroupXml {
                 case SPEC:
                     spec = reader.getAttributeValue(i);
                     break;
+                case PARENT_REF:
+                    parentRef = reader.getAttributeValue(i);
+                    fc = new FeatureConfig().setParentRef(parentRef);
+                    break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
@@ -380,7 +386,10 @@ public class FeatureGroupXml {
 
         if(spec != null) {
             if(featureIdStr != null) {
-                throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
+                attributesCantBeCombined(Attribute.SPEC, Attribute.FEATURE_ID, reader);
+            }
+            if(parentRef != null) {
+                attributesCantBeCombined(Attribute.SPEC, Attribute.PARENT_REF, reader);
             }
             try {
                 depBuilder.includeSpec(dependency, spec);
@@ -394,7 +403,6 @@ public class FeatureGroupXml {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
         final FeatureId featureId = parseFeatureId(featureIdStr);
-        FeatureConfig fc = null;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
@@ -439,6 +447,7 @@ public class FeatureGroupXml {
     private static void readExclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupConfigBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
         String spec = null;
         String featureIdStr = null;
+        String parentRef = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -449,6 +458,9 @@ public class FeatureGroupXml {
                 case SPEC:
                     spec = reader.getAttributeValue(i);
                     break;
+                case PARENT_REF:
+                    parentRef = reader.getAttributeValue(i);
+                    break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
@@ -456,7 +468,10 @@ public class FeatureGroupXml {
 
         if(spec != null) {
             if(featureIdStr != null) {
-                throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
+                attributesCantBeCombined(Attribute.SPEC, Attribute.FEATURE_ID, reader);
+            }
+            if(parentRef != null) {
+                attributesCantBeCombined(Attribute.SPEC, Attribute.PARENT_REF, reader);
             }
             try {
                 depBuilder.excludeSpec(dependency, spec);
@@ -465,7 +480,7 @@ public class FeatureGroupXml {
             }
         } else if(featureIdStr != null) {
             try {
-                depBuilder.excludeFeature(dependency, parseFeatureId(featureIdStr));
+                depBuilder.excludeFeature(dependency, parseFeatureId(featureIdStr), parentRef);
             } catch (ProvisioningDescriptionException e) {
                 throw new XMLStreamException("Failed to parse config", e);
             }
@@ -473,6 +488,10 @@ public class FeatureGroupXml {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
         ParsingUtils.parseNoContent(reader);
+    }
+
+    private static void attributesCantBeCombined(Attribute a1, Attribute a2, XMLExtendedStreamReader reader) throws XMLStreamException {
+        throw new XMLStreamException(a1 + " attribute and " + a1 + " cannot be used in combination", reader.getLocation());
     }
 
     public static void readFeatureConfig(XMLExtendedStreamReader reader, FeatureConfig config) throws XMLStreamException {

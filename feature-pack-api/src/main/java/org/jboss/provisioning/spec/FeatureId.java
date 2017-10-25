@@ -75,7 +75,7 @@ public class FeatureId {
             if(equals < 0 || equals == str.length() - 1) {
                 formatException(str);
             }
-            builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1, endIndex));
+            builder.setParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1, endIndex));
             lastComma = endIndex;
             endIndex = str.indexOf(',', endIndex + 1);
         }
@@ -84,7 +84,7 @@ public class FeatureId {
         if(equals < 0 || equals == str.length() - 1) {
             formatException(str);
         }
-        builder.addParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1));
+        builder.setParam(str.substring(lastComma + 1, equals),  str.substring(equals + 1));
         return builder.build();
     }
 
@@ -101,7 +101,7 @@ public class FeatureId {
             this.specId = specId;
         }
 
-        public Builder addParam(String name, String value) {
+        public Builder setParam(String name, String value) {
             switch(params.size()) {
                 case 0:
                     params = Collections.singletonMap(name, value);

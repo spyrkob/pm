@@ -123,7 +123,7 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
         }
         if(!excludedFeatures.isEmpty()) {
             buf.append(" exlcudedFeatures=");
-            StringUtils.append(buf, excludedFeatures);
+            StringUtils.append(buf, excludedFeatures.keySet());
         }
         return buf.append(']').toString();
     }

@@ -71,7 +71,7 @@ public class MergingSubsetsOfSameFeatureGroupTestCase extends PmInstallFeaturePa
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
                     .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
                     .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .inheritFeatures(true)
+                            .setInheritFeatures(true)
                             .excludeSpec("specA")
                             .excludeSpec("specC")
                             .includeFeature(FeatureId.create("specB", "name", "fg3b1"),
@@ -99,7 +99,7 @@ public class MergingSubsetsOfSameFeatureGroupTestCase extends PmInstallFeaturePa
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg2")
                     .addFeatureGroup(FeatureGroupConfig.builder("fg3")
-                            .inheritFeatures(false)
+                            .setInheritFeatures(false)
                             .includeSpec("specB")
                             .includeFeature(FeatureId.create("specB", "name", "fg3b1"),
                                     new FeatureConfig("specB").setParam("name", "fg3b1").setParam("p2", "fg2").setParam("p1", "fg2")

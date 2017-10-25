@@ -117,9 +117,12 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
             }
         }
         if(dep.hasExcludedFeatures()) {
-            for(FeatureId featureId : dep.getExcludedFeatures()) {
+            for(Map.Entry<FeatureId, String> excluded : dep.getExcludedFeatures().entrySet()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);
-                addAttribute(excludeE, Attribute.FEATURE_ID, featureId.toString());
+                addAttribute(excludeE, Attribute.FEATURE_ID, excluded.getKey().toString());
+                if(excluded.getValue() != null) {
+                    addAttribute(excludeE, Attribute.PARENT_REF, excluded.getValue());
+                }
             }
         }
         if(dep.hasIncludedSpecs()) {
@@ -132,9 +135,12 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
             for(Map.Entry<FeatureId, FeatureConfig> entry : dep.getIncludedFeatures().entrySet()) {
                 final ElementNode includeE = addElement(depE, Element.INCLUDE.getLocalName(), ns);
                 addAttribute(includeE, Attribute.FEATURE_ID, entry.getKey().toString());
-                final FeatureConfig featureConfig = entry.getValue();
-                if(featureConfig != null) {
-                    addFeatureConfigBody(includeE, featureConfig, ns);
+                final FeatureConfig fc = entry.getValue();
+                if(fc.getParentRef() != null) {
+                    addAttribute(includeE, Attribute.PARENT_REF, fc.getParentRef());
+                }
+                if(fc != null) {
+                    addFeatureConfigBody(includeE, fc, ns);
                 }
             }
         }

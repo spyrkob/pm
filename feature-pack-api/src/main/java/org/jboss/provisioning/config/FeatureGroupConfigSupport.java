@@ -38,7 +38,7 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
     final Set<SpecId> includedSpecs;
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<SpecId> excludedSpecs;
-    final Set<FeatureId> excludedFeatures;
+    final Map<FeatureId, String> excludedFeatures; // featureId and optional parent-ref
     final Map<String, FeatureGroupConfig> externalFgConfigs;
 
     protected FeatureGroupConfigSupport(String fpDep, String name) {
@@ -48,7 +48,7 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.includedSpecs = Collections.emptySet();
         this.includedFeatures = Collections.emptyMap();
         this.excludedSpecs = Collections.emptySet();
-        this.excludedFeatures = Collections.emptySet();
+        this.excludedFeatures = Collections.emptyMap();
         this.externalFgConfigs = Collections.emptyMap();
     }
 
@@ -59,7 +59,7 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
         this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
         this.includedFeatures = builder.includedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.includedFeatures) : builder.includedFeatures;
-        this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableSet(builder.excludedFeatures) : builder.excludedFeatures;
+        this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.excludedFeatures) : builder.excludedFeatures;
 
         if(builder.externalFgConfigs.isEmpty()) {
             this.externalFgConfigs = Collections.emptyMap();
@@ -113,7 +113,7 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         return !excludedFeatures.isEmpty();
     }
 
-    public Set<FeatureId> getExcludedFeatures() {
+    public Map<FeatureId, String> getExcludedFeatures() {
         return excludedFeatures;
     }
 

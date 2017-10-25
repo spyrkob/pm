@@ -327,7 +327,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 } else {
                     final IncludedConfig.Builder configBuilder = IncludedConfig.builder(model, name);
                     if(inheritFeatures != null) {
-                        configBuilder.inheritFeatures(inheritFeatures);
+                        configBuilder.setInheritFeatures(inheritFeatures);
                     }
                     FeatureGroupXml.readFeatureGroupConfigBody(reader, configBuilder);
                     fpBuilder.includeDefaultConfig(configBuilder.build());

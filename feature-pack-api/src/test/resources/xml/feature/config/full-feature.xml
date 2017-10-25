@@ -52,12 +52,12 @@
   </feature>
   <feature-pack dependency="fp2">
     <feature-group name="group2">
-      <include feature-id="spec1:p1=v1">
+      <include feature-id="spec1:p1=v1" parent-ref="parent1">
         <depends feature-id="spec4:p1=v1,p2=v2"/>
         <param name="p1" value="v1"/>
         <param name="p2" value="v2"/>
       </include>
-      <exclude feature-id="spec2:p1=v1"/>
+      <exclude feature-id="spec2:p1=v1" parent-ref="parent2"/>
     </feature-group>
     <feature spec="spec2">
       <param name="p1" value="v1"/>

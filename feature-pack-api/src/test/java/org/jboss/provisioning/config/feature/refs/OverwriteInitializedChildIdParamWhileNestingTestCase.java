@@ -95,6 +95,9 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
             Assert.assertEquals("Failed to resolve config", e.getMessage());
             e = (ProvisioningException) e.getCause();
             Assert.assertNotNull(e);
+            Assert.assertEquals("Failed to initialize foreign key parameters of [specC a=a2,id=c1] referencing org.jboss.pm.test:fp1:1.0.0.Final#specA:id=a1", e.getLocalizedMessage());
+            e = (ProvisioningException) e.getCause();
+            Assert.assertNotNull(e);
             Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());
         }
     }

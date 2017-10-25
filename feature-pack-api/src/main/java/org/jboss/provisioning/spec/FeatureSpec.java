@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.StringUtils;
 
@@ -327,7 +328,7 @@ public class FeatureSpec implements PackageDependencies {
     public FeatureReferenceSpec getFeatureRef(String name) throws ProvisioningDescriptionException {
         final FeatureReferenceSpec ref = featureRefs.get(name);
         if(ref == null) {
-            throw new ProvisioningDescriptionException("Feature reference '" + name + "' not found in feature spec " + this.name);
+            throw new ProvisioningDescriptionException(Errors.featureRefNotInSpec(name, this.name));
         }
         return ref;
     }
