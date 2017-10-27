@@ -73,18 +73,18 @@ public class PackageSpec implements PackageDependencies {
             return this;
         }
 
-        public Builder addDependency(String groupName, String packageName) {
-            getExternalGroupBuilder(groupName).addDependency(packageName);
+        public Builder addDependency(String fpDep, String packageName) {
+            getExternalGroupBuilder(fpDep).addDependency(packageName);
             return this;
         }
 
-        public Builder addDependency(String groupName, String packageName, boolean optional) {
-            getExternalGroupBuilder(groupName).addDependency(packageName, optional);
+        public Builder addDependency(String fpDep, String packageName, boolean optional) {
+            getExternalGroupBuilder(fpDep).addDependency(packageName, optional);
             return this;
         }
 
-        public Builder addDependency(String groupName, PackageDependencySpec dep) {
-            getExternalGroupBuilder(groupName).addDependency(dep);
+        public Builder addDependency(String fpDep, PackageDependencySpec dep) {
+            getExternalGroupBuilder(fpDep).addDependency(dep);
             return this;
         }
 

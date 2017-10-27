@@ -380,6 +380,6 @@ abstract class ScriptCollector {
         this.lastLoggedGav = null;
         this.lastLoggedPackage = null;
 
-        CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
+        //CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
     }
 }
