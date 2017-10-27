@@ -174,7 +174,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             domainScriptCollector.run();
         }
 
-        //generateConfigs(runtime, messageWriter);
+        generateConfigs(runtime, messageWriter);
 
         // TODO this needs to be revisited
         for(FeaturePackRuntime fp : runtime.getFeaturePacks()) {

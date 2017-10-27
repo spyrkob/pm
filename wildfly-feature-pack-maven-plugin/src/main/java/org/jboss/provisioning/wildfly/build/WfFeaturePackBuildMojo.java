@@ -225,6 +225,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to process modules content", e);
         }
+        if(!fpDependencies.isEmpty()) {
+            for(Map.Entry<String, FeaturePackLayout> fpDep : fpDependencies.entrySet()) {
+                if (fpDep.getValue().hasPackage(WfConstants.MODULES_ALL)) {
+                    modulesAll.addDependency(fpDep.getKey(), WfConstants.MODULES_ALL);
+                }
+            }
+        }
         try {
             final PackageSpec modulesAllPkg = modulesAll.build();
             PackageXmlWriter.getInstance().write(modulesAllPkg, fpPackagesDir.resolve(modulesAllPkg.getName()).resolve(Constants.PACKAGE_XML));
