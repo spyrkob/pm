@@ -44,13 +44,13 @@ public class UnsatisfiedLocalPackageDependenciesTestCase {
                 .builder(FeaturePackSpec.builder(fpGav)
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
-                                .addDependency("p2", true)
+                                .addPackageDep("p2", true)
                                 .build())
                         .addPackage(PackageSpec.builder("p2")
-                                .addDependency("p3", true)
+                                .addPackageDep("p3", true)
                                 .build())
                         .addPackage(PackageSpec.builder("p3")
-                                .addDependency("p4")
+                                .addPackageDep("p4")
                                 .build());
 
         try {
@@ -68,13 +68,13 @@ public class UnsatisfiedLocalPackageDependenciesTestCase {
                 .builder(FeaturePackSpec.builder(fpGav)
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
-                                .addDependency("p2", true)
+                                .addPackageDep("p2", true)
                                 .build())
                         .addPackage(PackageSpec.builder("p2")
-                                .addDependency("p3", true)
+                                .addPackageDep("p3", true)
                                 .build())
                         .addPackage(PackageSpec.builder("p3")
-                                .addDependency("p4", true)
+                                .addPackageDep("p4", true)
                                 .build());
 
         try {

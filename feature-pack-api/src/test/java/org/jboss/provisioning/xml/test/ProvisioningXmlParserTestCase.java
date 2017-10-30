@@ -76,7 +76,7 @@ public class ProvisioningXmlParserTestCase {
     public void readNoFp() throws Exception {
         validator.validateAndParse("xml/provisioning/provisioning-1.0-no-fp.xml",
                 "cvc-complex-type.2.4.b: The content of element 'installation' is not complete. One of '{\"urn:wildfly:pm-provisioning:1.0\":feature-pack}' is expected.",
-                "There must be at least one feature-pack under installation");
+                "The content of element 'installation' is not complete. One of 'feature-pack' is expected.");
     }
 
     @Test

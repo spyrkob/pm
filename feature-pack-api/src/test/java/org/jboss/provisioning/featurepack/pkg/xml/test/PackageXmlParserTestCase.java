@@ -74,7 +74,7 @@ public class PackageXmlParserTestCase {
     public void readEmptyDependencies() throws Exception {
         validator.validateAndParse("xml/package/package-1.0-empty-dependencies.xml",
                 "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":package, \"urn:wildfly:pm-package:1.0\":feature-pack}' is expected.",
-                "There must be at least one package under dependencies");
+                "The content of element 'dependencies' is not complete. One of 'package', 'feature-pack' is expected.");
     }
 
     @Test
@@ -87,10 +87,10 @@ public class PackageXmlParserTestCase {
     public void readValid() throws Exception {
         PackageSpec found = validator.validateAndParse("xml/package/package-1.0.xml", null, null);
         PackageSpec expected = PackageSpec.builder("package1")
-                .addDependency("dep1")
-                .addDependency("dep2")
-                .addDependency("fp-dep", "dep1")
-                .addDependency("fp-dep", "dep2")
+                .addPackageDep("dep1")
+                .addPackageDep("dep2")
+                .addPackageDep("fp-dep", "dep1")
+                .addPackageDep("fp-dep", "dep2")
                 .build();
         Assert.assertEquals(expected, found);
     }
@@ -99,9 +99,9 @@ public class PackageXmlParserTestCase {
     public void readOptionalDependencies() throws Exception {
         PackageSpec found = validator.validateAndParse("xml/package/package-1.0-optional-dependencies.xml", null, null);
         PackageSpec expected = PackageSpec.builder("package1")
-                .addDependency("dep1")
-                .addDependency("dep2")
-                .addDependency("dep3", true)
+                .addPackageDep("dep1")
+                .addPackageDep("dep2")
+                .addPackageDep("dep3", true)
                 .build();
         Assert.assertEquals(expected, found);
     }

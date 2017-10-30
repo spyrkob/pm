@@ -228,7 +228,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         if(!fpDependencies.isEmpty()) {
             for(Map.Entry<String, FeaturePackLayout> fpDep : fpDependencies.entrySet()) {
                 if (fpDep.getValue().hasPackage(WfConstants.MODULES_ALL)) {
-                    modulesAll.addDependency(fpDep.getKey(), WfConstants.MODULES_ALL);
+                    modulesAll.addPackageDep(fpDep.getKey(), WfConstants.MODULES_ALL);
                 }
             }
         }
@@ -250,7 +250,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             addDocsSchemas(fpPackagesDir, fpBuilder);
         }
 
-        if(docsBuilder.hasDependencies()) {
+        if(docsBuilder.hasPackageDeps()) {
             final PackageSpec docsSpec = docsBuilder.build();
             fpBuilder.addPackage(docsSpec);
             writeXml(docsSpec, fpPackagesDir.resolve(WfConstants.DOCS));
@@ -356,7 +356,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
 
     private void addDocsSchemas(final Path fpPackagesDir, final FeaturePackLayout.Builder fpBuilder)
             throws MojoExecutionException {
-        docsBuilder.addDependency(WfConstants.DOCS_SCHEMA, true);
+        docsBuilder.addPackageDep(WfConstants.DOCS_SCHEMA, true);
         final Path schemasPackageDir = fpPackagesDir.resolve(WfConstants.DOCS_SCHEMA);
         final Path schemaGroupsTxt = schemasPackageDir.resolve(WfConstants.PM).resolve(WfConstants.WILDFLY).resolve(WfConstants.SCHEMA_GROUPS_TXT);
         BufferedWriter writer = null;
@@ -495,7 +495,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                             final PackageSpec docSpec = builder.build();
                             fpBuilder.addPackage(docSpec);
                             writeXml(docSpec, docDir);
-                            docsBuilder.addDependency(docName, true);
+                            docsBuilder.addPackageDep(docName, true);
                         }
                     }
                 } else if(pkgName.equals("bin")) {
@@ -522,11 +522,11 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     fpBuilder.addPackage(binSpec);
                     writeXml(binSpec, packagesDir.resolve(pkgName));
 
-                    binSpec = standaloneBinBuilder.addDependency(pkgName).build();
+                    binSpec = standaloneBinBuilder.addPackageDep(pkgName).build();
                     fpBuilder.addPackage(binSpec);
                     writeXml(binSpec, packagesDir.resolve(binSpec.getName()));
 
-                    binSpec = domainBinBuilder.addDependency(pkgName).build();
+                    binSpec = domainBinBuilder.addPackageDep(pkgName).build();
                     fpBuilder.addPackage(binSpec);
                     writeXml(binSpec, packagesDir.resolve(binSpec.getName()));
                 } else {
@@ -595,7 +595,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         buf.append(moduleDep.getModuleId().getName()).append('.').append(moduleDep.getModuleId().getSlot());
                         final String depName = buf.toString();
                         if (moduleXmlByPkgName.containsKey(depName)) {
-                            pkgSpecBuilder.addDependency(depName, moduleDep.isOptional());
+                            pkgSpecBuilder.addPackageDep(depName, moduleDep.isOptional());
                         } else {
                             Map.Entry<String, FeaturePackLayout> depSrc = null;
                             if (!fpDependencies.isEmpty()) {
@@ -611,7 +611,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                                 }
                             }
                             if(depSrc != null) {
-                                pkgSpecBuilder.addDependency(depSrc.getKey(), depName, moduleDep.isOptional());
+                                pkgSpecBuilder.addPackageDep(depSrc.getKey(), depName, moduleDep.isOptional());
                             } else if(moduleDep.isOptional()){
                                 //getLog().warn("UNSATISFIED EXTERNAL OPTIONAL DEPENDENCY " + packageName + " -> " + depName);
                             } else {
@@ -630,7 +630,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
             } catch (XMLStreamException e) {
                 throw new IOException(Errors.writeFile(packageDir.resolve(Constants.PACKAGE_XML)), e);
             }
-            modulesAll.addDependency(packageName, true);
+            modulesAll.addPackageDep(packageName, true);
             fpBuilder.addPackage(pkgSpec);
 
             if (!OS_WINDOWS) {

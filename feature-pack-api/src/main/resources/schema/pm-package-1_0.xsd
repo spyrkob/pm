@@ -31,7 +31,6 @@
     </xs:annotation>
     <xs:sequence minOccurs="0" maxOccurs="1">
       <xs:element name="dependencies" type="dependenciesType" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="parameters" type="parametersType" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
@@ -93,7 +92,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
-      <xs:element name="package" type="externalPackageDependencyType" />
+      <xs:element name="package" type="packageDependencyType" />
     </xs:choice>
     <xs:attribute name="dependency" type="xs:string" use="required">
       <xs:annotation>
@@ -103,49 +102,6 @@
           which will be used as a source for external package dependencies
           specified as children of the element of this type. 
         </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-
-  <xs:complexType name="externalPackageDependencyType">
-    <xs:annotation>
-      <xs:documentation>
-        Describes a package dependency on a package from another feature-pack.
-        External dependencies are assumed to be required ones.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:attribute name="name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          Name of a package, the package declaring dependency depends on. 
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-
-  <xs:complexType name="parametersType">
-    <xs:annotation>
-      <xs:documentation>
-        Describes package configuration parameters.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice maxOccurs="unbounded" minOccurs="1">
-      <xs:element name="parameter" type="parameterType" />
-    </xs:choice>
-  </xs:complexType>
-
-  <xs:complexType name="parameterType" mixed="true">
-    <xs:annotation>
-      <xs:documentation>
-        Describes a package configuration parameter.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence minOccurs="0">
-      <xs:any processContents="skip"/>
-    </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>Parameter name.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>

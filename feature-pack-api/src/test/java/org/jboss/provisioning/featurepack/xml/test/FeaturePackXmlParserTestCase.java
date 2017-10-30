@@ -86,14 +86,14 @@ public class FeaturePackXmlParserTestCase  {
     public void readEmptyDependencies() throws Exception {
         validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-dependencies.xml",
                 "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":dependency}' is expected.",
-                "There must be at least one dependency under dependencies");
+                "The content of element 'dependencies' is not complete. One of 'dependency' is expected.");
     }
 
     @Test
     public void readEmptyPackages() throws Exception {
         validator.validateAndParse("xml/feature-pack/feature-pack-1.0-empty-packages.xml",
                 "cvc-complex-type.2.4.b: The content of element 'default-packages' is not complete. One of '{\"urn:wildfly:pm-feature-pack:1.0\":package}' is expected.",
-                "There must be at least one package under packages");
+                "The content of element 'default-packages' is not complete. One of 'package' is expected.");
     }
 
     @Test
@@ -237,6 +237,10 @@ public class FeaturePackXmlParserTestCase  {
                         .addFeature(new FeatureConfig("spec6")
                         .setParentRef("spec5-ref")
                         .setParam("p1", "v1"))))
+                        .addPackageDep("p1")
+                        .addPackageDep("p2", true)
+                        .addPackageDep("fp1", "p2")
+                        .addPackageDep("fp1", "p3", true)
                         .build())
                 .addDefaultPackage("package1")
                 .addDefaultPackage("package2")

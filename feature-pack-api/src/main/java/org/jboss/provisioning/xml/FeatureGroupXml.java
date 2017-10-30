@@ -61,30 +61,17 @@ public class FeatureGroupXml {
         FEATURE_GROUP_SPEC("feature-group-spec"),
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
+        PACKAGES("packages"),
         PARAMETER("param"),
 
         // default unknown element
         UNKNOWN(null);
 
-        private static final Map<QName, Element> elements;
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
             elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
                     .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
-        }
-
-        static Element of(QName qName) {
-            QName name;
-            if (qName.getNamespaceURI().equals("")) {
-                name = new QName(NAMESPACE_1_0, qName.getLocalPart());
-            } else {
-                name = qName;
-            }
-            final Element element = elements.get(name);
-            return element == null ? UNKNOWN : element;
         }
 
         static Element of(String localName) {
@@ -169,7 +156,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readFeatureGroupSpec(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder config) throws XMLStreamException {
+    public static void readFeatureGroupSpec(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder groupBuilder) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -185,7 +172,7 @@ public class FeatureGroupXml {
         if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
-        config.setName(name);
+        groupBuilder.setName(name);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
@@ -195,15 +182,18 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case FEATURE_GROUP:
-                            config.addFeatureGroup(readFeatureGroupDependency(null, reader));
+                            groupBuilder.addFeatureGroup(readFeatureGroupDependency(null, reader));
                             break;
                         case FEATURE_PACK:
-                            readFeaturePackDependency(reader, config);
+                            readFeaturePackDependency(reader, groupBuilder);
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
                             readFeatureConfig(reader, nested);
-                            config.addFeature(nested);
+                            groupBuilder.addFeature(nested);
+                            break;
+                        case PACKAGES:
+                            PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, groupBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

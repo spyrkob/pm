@@ -72,7 +72,7 @@ public class XmlParserValidator<T> {
         try {
             validate(p);
             if(xsdValidationExceptionMessage != null) {
-                Assert.fail("Schema validation passed while expected to fail with error: " + xsdValidationExceptionMessage);
+                Assert.fail("Schema validation passed while expected to fail with the error: " + xsdValidationExceptionMessage);
             }
         } catch (SAXException e) {
             if (xsdValidationExceptionMessage == null) {
@@ -85,7 +85,7 @@ public class XmlParserValidator<T> {
         try {
             result = parser.parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
             if(parseExceptionMessage != null) {
-                Assert.fail("Parsing succeeded while expected to failed with error: " + parseExceptionMessage);
+                Assert.fail("Parsing succeeded while expected to fail with the error: " + parseExceptionMessage);
             }
         } catch (XMLStreamException e) {
             String m = String.format("[%s] should contain [%s]", e.getMessage(), parseExceptionMessage);

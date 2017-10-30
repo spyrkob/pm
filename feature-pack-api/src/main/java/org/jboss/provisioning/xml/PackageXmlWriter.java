@@ -18,6 +18,7 @@ package org.jboss.provisioning.xml;
 
 import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageDepsSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.xml.PackageXmlParser10.Attribute;
 import org.jboss.provisioning.xml.PackageXmlParser10.Element;
@@ -44,36 +45,36 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
 
         final ElementNode pkg = addElement(null, Element.PACKAGE_SPEC);
         addAttribute(pkg, Attribute.NAME, pkgSpec.getName());
-
-        ElementNode deps = null;
-        if(pkgSpec.hasLocalPackageDeps()) {
-            deps = addElement(pkg, Element.DEPENDENCIES);
-            for(PackageDependencySpec depSpec : pkgSpec.getLocalPackageDeps().getDescriptions()) {
-                writePackageDependency(deps, depSpec);
-            }
-        }
-        if(pkgSpec.hasExternalPackageDeps()) {
-            if(deps == null) {
-                deps = addElement(pkg, Element.DEPENDENCIES);
-            }
-            for(String name : pkgSpec.getExternalPackageSources()) {
-                writeFeaturePackDependency(deps, pkgSpec.getExternalPackageDeps(name));
-            }
+        if(pkgSpec.hasPackageDeps()) {
+            writePackageDeps(pkgSpec, addElement(pkg, Element.DEPENDENCIES.getLocalName(), Element.DEPENDENCIES.getNamespace()));
         }
 
         return pkg;
     }
 
-    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec) {
-        final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK);
-        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
-        for(PackageDependencySpec depSpec : depGroupSpec.getDescriptions()) {
-            writePackageDependency(fpElement, depSpec);
+    static void writePackageDeps(PackageDepsSpec pkgDeps, ElementNode deps) {
+        if(pkgDeps.hasLocalPackageDeps()) {
+            for(PackageDependencySpec depSpec : pkgDeps.getLocalPackageDeps().getDescriptions()) {
+                writePackageDependency(deps, depSpec, deps.getNamespace());
+            }
+        }
+        if(pkgDeps.hasExternalPackageDeps()) {
+            for(String name : pkgDeps.getExternalPackageSources()) {
+                writeFeaturePackDependency(deps, pkgDeps.getExternalPackageDeps(name), deps.getNamespace());
+            }
         }
     }
 
-    private static void writePackageDependency(ElementNode deps, PackageDependencySpec depSpec) {
-        final ElementNode depElement = addElement(deps, Element.PACKAGE);
+    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec, String ns) {
+        final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK.getLocalName(), ns);
+        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
+        for(PackageDependencySpec depSpec : depGroupSpec.getDescriptions()) {
+            writePackageDependency(fpElement, depSpec, ns);
+        }
+    }
+
+    private static void writePackageDependency(ElementNode deps, PackageDependencySpec depSpec, String ns) {
+        final ElementNode depElement = addElement(deps, Element.PACKAGE.getLocalName(), ns);
         addAttribute(depElement, Attribute.NAME, depSpec.getName());
         if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);

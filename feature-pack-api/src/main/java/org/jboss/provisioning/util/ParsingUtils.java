@@ -168,7 +168,16 @@ public class ParsingUtils {
 
     }
 
-    public static XMLStreamException expectedAtLeastOneChild(XmlNameProvider parent, XmlNameProvider child) {
-        return new XMLStreamException(String.format("There must be at least one %s under %s", child.getLocalName(), parent.getLocalName()));
+    public static XMLStreamException expectedAtLeastOneChild(final XMLExtendedStreamReader reader, XmlNameProvider parent, XmlNameProvider... child) {
+        final StringBuilder buf = new StringBuilder("The content of element '").append(parent.getLocalName()).append("' is not complete. One of ");
+        XmlNameProvider c = child[0];
+        buf.append('\'').append(c.getLocalName()).append('\'');
+        if(child.length > 1) {
+            for(int i = 1; i < child.length; ++i) {
+                buf.append(", '").append(child[i].getLocalName()).append('\'');
+            }
+        }
+        buf.append(" is expected.");
+        return new XMLStreamException(buf.toString(), reader.getLocation());
     }
 }

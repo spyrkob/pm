@@ -74,27 +74,27 @@ public class PackageBuilder {
     }
 
     public PackageBuilder addDependency(String pkgName, boolean optional) {
-        this.pkg.addDependency(pkgName, optional);
+        this.pkg.addPackageDep(pkgName, optional);
         return this;
     }
 
     public PackageBuilder addDependency(PackageDependencySpec dep) {
-        this.pkg.addDependency(dep);
+        this.pkg.addPackageDep(dep);
         return this;
     }
 
     public PackageBuilder addDependency(String fpDepName, PackageDependencySpec dep) {
-        this.pkg.addDependency(fpDepName, dep);
+        this.pkg.addPackageDep(fpDepName, dep);
         return this;
     }
 
     public PackageBuilder addDependency(String fpDepName, String pkgName) {
-        this.pkg.addDependency(fpDepName, pkgName);
+        this.pkg.addPackageDep(fpDepName, pkgName);
         return this;
     }
 
     public PackageBuilder addDependency(String fpDepName, String pkgName, boolean optional) {
-        this.pkg.addDependency(fpDepName, pkgName, optional);
+        this.pkg.addPackageDep(fpDepName, pkgName, optional);
         return this;
     }
 

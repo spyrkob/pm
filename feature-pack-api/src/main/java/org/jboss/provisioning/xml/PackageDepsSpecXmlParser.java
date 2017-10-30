@@ -18,17 +18,15 @@ package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.PackageDependencySpec;
+import org.jboss.provisioning.spec.PackageDepsSpecBuilder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -36,25 +34,20 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigXml {
+public class PackageDepsSpecXmlParser {
 
-    private static final ConfigXml INSTANCE = new ConfigXml();
+    private static final PackageDepsSpecXmlParser INSTANCE = new PackageDepsSpecXmlParser();
 
-    public static ConfigXml getInstance() {
+    public static final String NAMESPACE_1_0 = PackageXmlParser10.NAMESPACE_1_0;
+
+    public static PackageDepsSpecXmlParser getInstance() {
         return INSTANCE;
     }
 
-    public static final String NAMESPACE_1_0 = "urn:wildfly:pm-config:1.0";
-
     public enum Element implements XmlNameProvider {
 
-        CONFIG("config"),
-        FEATURE("feature"),
-        FEATURE_GROUP("feature-group"),
         FEATURE_PACK("feature-pack"),
-        PACKAGES("packages"),
-        PROP("prop"),
-        PROPS("props"),
+        PACKAGE("package"),
 
         // default unknown element
         UNKNOWN(null);
@@ -97,11 +90,8 @@ public class ConfigXml {
     protected enum Attribute implements XmlNameProvider {
 
         DEPENDENCY("dependency"),
-        INHERIT_FEATURES("inherit-features"),
         NAME("name"),
-        MODEL("model"),
-        SOURCE("source"),
-        VALUE("value"),
+        OPTIONAL("optional"),
 
         // default unknown attribute
         UNKNOWN(null);
@@ -140,49 +130,30 @@ public class ConfigXml {
         }
     }
 
-    public ConfigXml() {
+    public PackageDepsSpecXmlParser() {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, ConfigSpec.Builder configBuilder) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    configBuilder.setName(reader.getAttributeValue(i));
-                    break;
-                case MODEL:
-                    configBuilder.setModel(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
+    public static void parsePackageDeps(XmlNameProvider parent, XMLExtendedStreamReader reader, PackageDepsSpecBuilder<?> pkgDeps) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        boolean empty = true;
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
+                    if(empty) {
+                        throw ParsingUtils.expectedAtLeastOneChild(reader, parent, Element.PACKAGE, Element.FEATURE_PACK);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName().getLocalPart());
+                    empty = false;
+                    final Element element = Element.of(reader.getLocalName());
                     switch (element) {
-                        case PROPS:
-                            readProps(reader, configBuilder);
-                            break;
-                        case FEATURE_GROUP:
-                            configBuilder.addFeatureGroup(FeatureGroupXml.readFeatureGroupDependency(null, reader));
+                        case PACKAGE:
+                            pkgDeps.addPackageDep(parsePackageDependency(reader));
                             break;
                         case FEATURE_PACK:
-                            FeatureGroupXml.readFeaturePackDependency(reader, configBuilder);
-                            break;
-                        case FEATURE:
-                            final FeatureConfig fc = new FeatureConfig();
-                            FeatureGroupXml.readFeatureConfig(reader, fc);
-                            configBuilder.addFeature(fc);
-                            break;
-                        case PACKAGES:
-                            PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, configBuilder);
+                            parseFeaturePackDependency(reader, pkgDeps);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -197,35 +168,9 @@ public class ConfigXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProps(XMLExtendedStreamReader reader, ConfigSpec.Builder config) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName().getLocalPart());
-                    switch (element) {
-                        case PROP:
-                            readProp(reader, config);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private static void readProp(XMLExtendedStreamReader reader, ConfigSpec.Builder config) throws XMLStreamException {
+    private static PackageDependencySpec parsePackageDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
         String name = null;
-        String value = null;
+        boolean optional = false;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -233,25 +178,58 @@ public class ConfigXml {
                 case NAME:
                     name = reader.getAttributeValue(i);
                     break;
-                case VALUE:
-                    value = reader.getAttributeValue(i);
+                case OPTIONAL:
+                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:
-                    throw ParsingUtils.unexpectedContent(reader);
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
-        if(name == null) {
-            if(value == null) {
-                final Set<Attribute> attrs = new HashSet<>();
-                attrs.add(Attribute.NAME);
-                attrs.add(Attribute.VALUE);
-                throw ParsingUtils.missingAttributes(reader.getLocation(), attrs);
-            }
+        if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
-        } else if(value == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
         }
-        config.setProperty(name, value);
         ParsingUtils.parseNoContent(reader);
+        return PackageDependencySpec.create(name, optional);
+    }
+
+    private static void parseFeaturePackDependency(XMLExtendedStreamReader reader, PackageDepsSpecBuilder<?> pkgDeps) throws XMLStreamException {
+        String name = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case DEPENDENCY:
+                    name = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
+            }
+        }
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+        }
+
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getLocalName());
+                    switch (element) {
+                        case PACKAGE:
+                            pkgDeps.addPackageDep(name, parsePackageDependency(reader));
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 }

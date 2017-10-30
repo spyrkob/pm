@@ -17,11 +17,6 @@
 package org.jboss.provisioning.spec;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -29,17 +24,15 @@ import org.jboss.provisioning.util.DescrFormatter;
  *
  * @author Alexey Loubyansky
  */
-public class PackageSpec implements PackageDependencies {
+public class PackageSpec extends PackageDepsSpec {
 
     public static PackageSpec forName(String name) {
         return new PackageSpec(name);
     }
 
-    public static class Builder {
+    public static class Builder extends PackageDepsSpecBuilder<Builder> {
 
         private String name;
-        private PackageDependencyGroupSpec.Builder localDeps;
-        private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -52,64 +45,6 @@ public class PackageSpec implements PackageDependencies {
         public Builder setName(String name) {
             this.name = name;
             return this;
-        }
-
-        public Builder addDependency(String packageName) {
-            getLocalGroupBuilder().addDependency(packageName);
-            return this;
-        }
-
-        public Builder addDependency(String packageName, boolean optional) {
-            getLocalGroupBuilder().addDependency(packageName, optional);
-            return this;
-        }
-
-        public Builder addDependency(PackageDependencySpec dep) {
-            getLocalGroupBuilder().addDependency(dep);
-            return this;
-        }
-
-        public Builder addDependency(String fpDep, String packageName) {
-            getExternalGroupBuilder(fpDep).addDependency(packageName);
-            return this;
-        }
-
-        public Builder addDependency(String fpDep, String packageName, boolean optional) {
-            getExternalGroupBuilder(fpDep).addDependency(packageName, optional);
-            return this;
-        }
-
-        public Builder addDependency(String fpDep, PackageDependencySpec dep) {
-            getExternalGroupBuilder(fpDep).addDependency(dep);
-            return this;
-        }
-
-        public boolean hasDependencies() {
-            return localDeps != null || !externalDeps.isEmpty();
-        }
-
-        private PackageDependencyGroupSpec.Builder getLocalGroupBuilder() {
-            if(localDeps == null) {
-                localDeps = PackageDependencyGroupSpec.builder();
-            }
-            return localDeps;
-        }
-
-        private PackageDependencyGroupSpec.Builder getExternalGroupBuilder(String groupName) {
-            PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(groupName);
-            if(groupBuilder == null) {
-                groupBuilder = PackageDependencyGroupSpec.builder(groupName);
-                switch(externalDeps.size()) {
-                    case 0:
-                        externalDeps = Collections.singletonMap(groupName, groupBuilder);
-                        break;
-                    case 1:
-                        externalDeps = new LinkedHashMap<>(externalDeps);
-                    default:
-                        externalDeps.put(groupName, groupBuilder);
-                }
-            }
-            return groupBuilder;
         }
 
         public PackageSpec build() {
@@ -126,77 +61,29 @@ public class PackageSpec implements PackageDependencies {
     }
 
     private final String name;
-    private final PackageDependencyGroupSpec localDeps;
-    private final Map<String, PackageDependencyGroupSpec> externalDeps;
 
     protected PackageSpec(String name) {
+        super();
         this.name = name;
-        localDeps = PackageDependencyGroupSpec.EMPTY_LOCAL;
-        externalDeps = Collections.emptyMap();
     }
 
     protected PackageSpec(Builder builder) {
+        super(builder);
         this.name = builder.name;
-        this.localDeps = builder.localDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localDeps.build();
-        if(builder.externalDeps.isEmpty()) {
-            externalDeps = Collections.emptyMap();
-        } else {
-            final int size = builder.externalDeps.size();
-            if(size == 1) {
-                final Map.Entry<String, PackageDependencyGroupSpec.Builder> entry = builder.externalDeps.entrySet().iterator().next();
-                externalDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
-            } else {
-                final Map<String, PackageDependencyGroupSpec> deps = new LinkedHashMap<>(size);
-                for(Map.Entry<String, PackageDependencyGroupSpec.Builder> entry : builder.externalDeps.entrySet()) {
-                    deps.put(entry.getKey(), entry.getValue().build());
-                }
-                externalDeps = Collections.unmodifiableMap(deps);
-            }
-        }
     }
 
     public String getName() {
         return name;
     }
 
-    @Override
-    public boolean hasPackageDeps() {
-        return !(localDeps.isEmpty() && externalDeps.isEmpty());
-    }
-
-    @Override
-    public boolean hasLocalPackageDeps() {
-        return !localDeps.isEmpty();
-    }
-
-    @Override
-    public PackageDependencyGroupSpec getLocalPackageDeps() {
-        return localDeps;
-    }
-
-    @Override
-    public boolean hasExternalPackageDeps() {
-        return !externalDeps.isEmpty();
-    }
-
-    @Override
-    public Collection<String> getExternalPackageSources() {
-        return externalDeps.keySet();
-    }
-
-    @Override
-    public PackageDependencyGroupSpec getExternalPackageDeps(String groupName) {
-        return externalDeps.get(groupName);
-    }
-
     void logContent(DescrFormatter logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
-        if(!localDeps.isEmpty()) {
+        if(!localPkgDeps.isEmpty()) {
             logger.increaseOffset();
             logger.println("Dependencies");
             logger.increaseOffset();
-            for(PackageDependencySpec dependency : localDeps.getDescriptions()) {
+            for(PackageDependencySpec dependency : localPkgDeps.getDescriptions()) {
                 logger.println(dependency.toString());
             }
             logger.decreaseOffset();
@@ -207,9 +94,7 @@ public class PackageSpec implements PackageDependencies {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
-        result = prime * result + ((externalDeps == null) ? 0 : externalDeps.hashCode());
-        result = prime * result + ((localDeps == null) ? 0 : localDeps.hashCode());
+        int result = super.hashCode();
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -218,21 +103,11 @@ public class PackageSpec implements PackageDependencies {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
         PackageSpec other = (PackageSpec) obj;
-        if (externalDeps == null) {
-            if (other.externalDeps != null)
-                return false;
-        } else if (!externalDeps.equals(other.externalDeps))
-            return false;
-        if (localDeps == null) {
-            if (other.localDeps != null)
-                return false;
-        } else if (!localDeps.equals(other.localDeps))
-            return false;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -245,11 +120,11 @@ public class PackageSpec implements PackageDependencies {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
-        if(!localDeps.isEmpty()) {
-            buf.append(" depends on ").append(localDeps);
+        if(!localPkgDeps.isEmpty()) {
+            buf.append(" depends on ").append(localPkgDeps);
         }
-        if(!externalDeps.isEmpty()) {
-            buf.append(", ").append(externalDeps);
+        if(!externalPkgDeps.isEmpty()) {
+            buf.append(", ").append(externalPkgDeps);
         }
         buf.append(']');
         return buf.toString();

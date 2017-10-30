@@ -25,11 +25,12 @@ import org.jboss.provisioning.config.FeatureConfig;
  *
  * @author Alexey Loubyansky
  */
-public abstract class FeatureGroupSupport implements ConfigItemContainer {
+public abstract class FeatureGroupSupport extends PackageDepsSpec implements ConfigItemContainer {
 
-    abstract static class Builder<T extends FeatureGroupSupport, B extends Builder<T, B>> extends ConfigItemContainerBuilder<B> {
+    abstract static class Builder<T extends FeatureGroupSupport, B extends Builder<T, B>> extends PackageDepsSpecBuilder<B> implements ConfigItemContainerBuilder<B> {
 
         String name;
+        protected List<ConfigItem> items = Collections.emptyList();
         boolean resetFeaturePackOrigin;
 
         protected Builder() {
@@ -51,6 +52,56 @@ public abstract class FeatureGroupSupport implements ConfigItemContainer {
             return (B) this;
         }
 
+        @Override
+        @SuppressWarnings("unchecked")
+        public B addConfigItem(ConfigItem item) {
+            switch (items.size()) {
+                case 0:
+                    items = Collections.singletonList(item);
+                    break;
+                case 1:
+                    items = new ArrayList<>(items);
+                default:
+                    items.add(item);
+            }
+            return (B) this;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((items == null) ? 0 : items.hashCode());
+            result = prime * result + ((name == null) ? 0 : name.hashCode());
+            result = prime * result + (resetFeaturePackOrigin ? 1231 : 1237);
+            return result;
+        }
+
+        @SuppressWarnings("rawtypes")
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Builder other = (Builder) obj;
+            if (items == null) {
+                if (other.items != null)
+                    return false;
+            } else if (!items.equals(other.items))
+                return false;
+            if (name == null) {
+                if (other.name != null)
+                    return false;
+            } else if (!name.equals(other.name))
+                return false;
+            if (resetFeaturePackOrigin != other.resetFeaturePackOrigin)
+                return false;
+            return true;
+        }
+
         public abstract T build();
     }
 
@@ -60,6 +111,7 @@ public abstract class FeatureGroupSupport implements ConfigItemContainer {
     protected final List<ConfigItem> items;
 
     protected FeatureGroupSupport(FeatureGroupSupport copy) {
+        super(copy);
         name = copy.name;
         resetFeaturePackOrigin = copy.resetFeaturePackOrigin;
 
@@ -84,6 +136,7 @@ public abstract class FeatureGroupSupport implements ConfigItemContainer {
     }
 
     protected FeatureGroupSupport(Builder<?, ?> builder) {
+        super(builder);
         name = builder.name;
         resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
         this.items = builder.items.size() > 1 ? Collections.unmodifiableList(builder.items) : builder.items;
@@ -111,7 +164,7 @@ public abstract class FeatureGroupSupport implements ConfigItemContainer {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (resetFeaturePackOrigin ? 1231 : 1237);
@@ -122,7 +175,7 @@ public abstract class FeatureGroupSupport implements ConfigItemContainer {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;

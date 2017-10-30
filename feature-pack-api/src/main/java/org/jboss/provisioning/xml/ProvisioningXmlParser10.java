@@ -163,7 +163,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     if (!hasFp) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.INSTALLATION, Element.FEATURE_PACK);
+                        throw ParsingUtils.expectedAtLeastOneChild(reader, Element.INSTALLATION, Element.FEATURE_PACK);
                     }
                     return;
                 }
