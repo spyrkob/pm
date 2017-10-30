@@ -92,7 +92,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         } catch (XMLStreamException | IOException e) {
             throw new FeaturePackInstallException(Errors.writeFile(PathsUtils.getProvisionedStateXml(runtime.stagedDir)), e);
         }
-        runtime.messageWriter.verbose("Moving provisioned installation from staged directory to %s", runtime.installDir);
+        runtime.messageWriter.verbose("Moving the provisioned installation from the staged directory to %s", runtime.installDir);
         // copy from the staged to the target installation directory
         if (Files.exists(runtime.installDir)) {
             IoUtils.recursiveDelete(runtime.installDir);
