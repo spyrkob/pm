@@ -17,10 +17,6 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collection;
-
-import org.jboss.provisioning.parameters.PackageParameter;
-
 /**
  *
  * @author Alexey Loubyansky
@@ -28,8 +24,4 @@ import org.jboss.provisioning.parameters.PackageParameter;
 public interface FeaturePackPackage {
 
     String getName();
-
-    boolean hasParameters();
-
-    Collection<PackageParameter> getParameters();
 }

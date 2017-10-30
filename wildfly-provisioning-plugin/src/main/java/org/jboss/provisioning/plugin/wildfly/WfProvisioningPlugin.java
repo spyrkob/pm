@@ -54,7 +54,6 @@ import org.jboss.provisioning.plugin.wildfly.config.CopyArtifact;
 import org.jboss.provisioning.plugin.wildfly.config.CopyPath;
 import org.jboss.provisioning.plugin.wildfly.config.DeletePath;
 import org.jboss.provisioning.plugin.wildfly.config.FilePermission;
-import org.jboss.provisioning.plugin.wildfly.config.GeneratorConfig;
 import org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasks;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
 import org.jboss.provisioning.runtime.PackageRuntime;
@@ -78,9 +77,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private boolean thinServer;
     private Set<String> schemaGroups = Collections.emptySet();
-
-    private StandaloneConfigGenerator standaloneGenerator;
-    private DomainConfigGenerator domainScriptCollector;
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.util.plugin.ProvisioningPlugin#execute()
@@ -170,10 +166,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
             processPackages(fp);
         }
 
-        if(domainScriptCollector != null) {
-            domainScriptCollector.run();
-        }
-
         generateConfigs(runtime, messageWriter);
 
         // TODO this needs to be revisited
@@ -234,23 +226,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 }
                 if (pkgTasks.hasFilePermissions() && !PropertyUtils.isWindows()) {
                     processFeaturePackFilePermissions(pkgTasks, this.runtime.getStagedDir());
-                }
-                final GeneratorConfig genConfig = pkgTasks.getGeneratorConfig();
-                if(genConfig != null) {
-                    if(genConfig.hasStandaloneConfig()) {
-                        if(standaloneGenerator == null) {
-                            standaloneGenerator = new StandaloneConfigGenerator(this.runtime);
-                        }
-                        standaloneGenerator.init(genConfig.getStandaloneConfig().getServerConfig());
-                        standaloneGenerator.collectScripts(fp, pkg, null);
-                        standaloneGenerator.run();
-                    }
-                    if(genConfig.hasDomainProfile()) {
-                        if(domainScriptCollector == null) {
-                            domainScriptCollector = new DomainConfigGenerator(this.runtime);
-                        }
-                        domainScriptCollector.collectScripts(fp, pkg, genConfig.getDomainProfileConfig().getProfile());
-                    }
                 }
                 if(pkgTasks.hasDeletePaths()) {
                     deletePaths(pkgTasks, pmWfDir);

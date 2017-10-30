@@ -26,21 +26,4 @@
     </feature-pack>
     <package name="dep2" />
   </dependencies>
-  <parameters>
-    <parameter name="p1">def1</parameter>
-    <parameter name="p2">
-      def2
-    </parameter>
-    <parameter name="p3">
-      <custom-config id="1" xmlns="custom:schema">
-        <option name="a"/>
-        <option name="b">text</option>
-        <option name="c">
-          <r:random xmlns:r="random:schema">
-            content
-          </r:random>
-        </option>
-      </custom-config>
-    </parameter>
-  </parameters>
 </package-spec>

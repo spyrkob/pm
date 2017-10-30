@@ -51,8 +51,6 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.parameters.PackageParameter;
-import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
@@ -127,7 +125,6 @@ public class ProvisioningRuntimeBuilder {
     String encoding;
     ArtifactResolver artifactResolver;
     ProvisioningConfig config;
-    PackageParameterResolver paramResolver;
     Path installDir;
     final Path workDir;
     final Path layoutDir;
@@ -168,11 +165,6 @@ public class ProvisioningRuntimeBuilder {
         return this;
     }
 
-    public ProvisioningRuntimeBuilder setParameterResolver(PackageParameterResolver paramResolver) {
-        this.paramResolver = paramResolver;
-        return this;
-    }
-
     public ProvisioningRuntimeBuilder setInstallDir(Path installDir) {
         this.installDir = installDir;
         return this;
@@ -197,14 +189,14 @@ public class ProvisioningRuntimeBuilder {
             case 1: {
                 final FeaturePackRuntime.Builder builder = fpRtBuildersOrdered.get(0);
                 copyResources(builder);
-                fpRuntimes = Collections.singletonMap(builder.gav, builder.build(paramResolver));
+                fpRuntimes = Collections.singletonMap(builder.gav, builder.build());
                 break;
             }
             default: {
                 fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
                 for(FeaturePackRuntime.Builder builder : fpRtBuildersOrdered) {
                     copyResources(builder);
-                    fpRuntimes.put(builder.gav, builder.build(paramResolver));
+                    fpRuntimes.put(builder.gav, builder.build());
                 }
                 fpRuntimes = Collections.unmodifiableMap(fpRuntimes);
             }
@@ -310,7 +302,7 @@ public class ProvisioningRuntimeBuilder {
         if(fpConfig.isInheritPackages()) {
             for(String packageName : fp.spec.getDefaultPackageNames()) {
                 if(!fp.isPackageExcluded(packageName)) {
-                    resolvePackage(fp, packageName, Collections.emptyList());
+                    resolvePackage(fp, packageName);
                     contributed = true;
                 }
             }
@@ -318,7 +310,7 @@ public class ProvisioningRuntimeBuilder {
         if (fpConfig.hasIncludedPackages()) {
             for (PackageConfig pkgConfig : fpConfig.getIncludedPackages()) {
                 if (!fp.isPackageExcluded(pkgConfig.getName())) {
-                    resolvePackage(fp, pkgConfig.getName(), pkgConfig.getParameters());
+                    resolvePackage(fp, pkgConfig.getName());
                     contributed = true;
                 } else {
                     throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, pkgConfig.getName()));
@@ -765,7 +757,7 @@ public class ProvisioningRuntimeBuilder {
             if (popped.hasIncludedPackages()) {
                 for (PackageConfig pkgConfig : popped.getIncludedPackages()) {
                     if (!fp.isPackageExcluded(pkgConfig.getName())) {
-                        resolvePackage(fp, pkgConfig.getName(), pkgConfig.getParameters());
+                        resolvePackage(fp, pkgConfig.getName());
                     } else {
                         throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, pkgConfig.getName()));
                     }
@@ -788,7 +780,7 @@ public class ProvisioningRuntimeBuilder {
         if(fp.isInheritPackages()) {
             if(fpConfig.hasExcludedPackages()) {
                 for(String excluded : fpConfig.getExcludedPackages()) {
-                    if(!fp.isPackageExcluded(excluded) && !fp.isPackageIncluded(excluded, Collections.emptyList())) {
+                    if(!fp.isPackageExcluded(excluded) && !fp.isPackageIncluded(excluded)) {
                         doPush = true;
                         break;
                     }
@@ -796,7 +788,7 @@ public class ProvisioningRuntimeBuilder {
             }
             if(!doPush && fpConfig.hasIncludedPackages()) {
                 for(PackageConfig included : fpConfig.getIncludedPackages()) {
-                    if(!fp.isPackageIncluded(included.getName(), included.getParameters()) && !fp.isPackageExcluded(included.getName())) {
+                    if(!fp.isPackageIncluded(included.getName()) && !fp.isPackageExcluded(included.getName())) {
                         doPush = true;
                         break;
                     }
@@ -852,15 +844,10 @@ public class ProvisioningRuntimeBuilder {
         return fp;
     }
 
-    private void resolvePackage(FeaturePackRuntime.Builder fp, final String pkgName, Collection<PackageParameter> params)
+    private void resolvePackage(FeaturePackRuntime.Builder fp, final String pkgName)
             throws ProvisioningException {
         final PackageRuntime.Builder pkgRt = fp.pkgBuilders.get(pkgName);
         if(pkgRt != null) {
-            if(!params.isEmpty()) {
-                for(PackageParameter param : params) {
-                    pkgRt.configBuilder.addParameter(param);
-                }
-            }
             return;
         }
 
@@ -878,25 +865,11 @@ public class ProvisioningRuntimeBuilder {
             throw new ProvisioningException(Errors.parseXml(pkgXml), e);
         }
 
-        final PackageConfig.Builder pkgConfig = pkg.configBuilder;
-        // set parameters set in the package spec first
-        if(pkg.spec.hasParameters()) {
-            for(PackageParameter param : pkg.spec.getParameters()) {
-                pkgConfig.addParameter(param);
-            }
-        }
-
         if(pkg.spec.hasPackageDeps()) {
             try {
                 processPackageDeps(fp, pkgName, pkg.spec);
             } catch(ProvisioningException e) {
                 throw new ProvisioningDescriptionException(Errors.resolvePackage(fp.gav, pkg.spec.getName()), e);
-            }
-        }
-
-        if(!params.isEmpty()) {
-            for(PackageParameter param : params) {
-                pkgConfig.addParameter(param);
             }
         }
         fp.addPackage(pkgName);
@@ -914,7 +887,7 @@ public class ProvisioningRuntimeBuilder {
                     continue;
                 }
                 try {
-                    resolvePackage(fp, dep.getName(), dep.getParameters());
+                    resolvePackage(fp, dep.getName());
                 } catch(ProvisioningDescriptionException e) {
                     if(dep.isOptional()) {
                         continue;
@@ -946,7 +919,7 @@ public class ProvisioningRuntimeBuilder {
                         continue;
                     }
                     try {
-                        resolvePackage(targetFp, pkgDep.getName(), pkgDep.getParameters());
+                        resolvePackage(targetFp, pkgDep.getName());
                         resolvedPackages = true;
                     } catch(ProvisioningDescriptionException e) {
                         if(pkgDep.isOptional()) {

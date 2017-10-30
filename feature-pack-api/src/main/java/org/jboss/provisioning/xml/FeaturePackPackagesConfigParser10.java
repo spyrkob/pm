@@ -95,27 +95,8 @@ public class FeaturePackPackagesConfigParser10 {
                     return NAME;
                 }}));
         }
-
-        final PackageConfig.Builder pkgBuilder =  PackageConfig.builder(name);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return pkgBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    if(reader.getName().getLocalPart().equals(PackageParametersXml.PARAMETERS)) {
-                        PackageParametersXml.read(reader, pkgBuilder);
-                    } else {
-                        throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
+        ParsingUtils.parseNoContent(reader);
+        return PackageConfig.forName(name);
     }
 
     private static String parseName(final XMLStreamReader reader) throws XMLStreamException {

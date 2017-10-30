@@ -17,50 +17,12 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.provisioning.parameters.BuilderWithParameters;
-import org.jboss.provisioning.parameters.PackageParameter;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 public interface ProvisionedPackage extends FeaturePackPackage {
-
-    class Builder implements BuilderWithParameters<Builder> {
-
-        private final String name;
-        private Map<String, PackageParameter> params = Collections.emptyMap();
-
-        private Builder(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public Builder addParameter(PackageParameter param) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(param.getName(), param);
-                    break;
-                case 1:
-                    params = new HashMap<>(params);
-                default:
-                    params.put(param.getName(), param);
-            }
-            return this;
-        }
-
-        public ProvisionedPackage build() {
-            return new ProvisionedPackageImpl(name, params.size() > 1 ? Collections.unmodifiableMap(params) : params);
-        }
-    }
-
-    static Builder builder(String name) {
-        return new Builder(name);
-    }
 
     static ProvisionedPackage newInstance(String name) {
         return new ProvisionedPackageImpl(name);

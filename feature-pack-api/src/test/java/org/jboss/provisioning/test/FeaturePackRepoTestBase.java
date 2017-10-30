@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.TestUtils;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
@@ -87,12 +86,7 @@ public class FeaturePackRepoTestBase {
         return ProvisioningManager.builder()
                 .setArtifactResolver(getRepoManager())
                 .setInstallationHome(installHome)
-                .setPackageParameterResolver(getParameterResolver())
                 .build();
-    }
-
-    protected PackageParameterResolver getParameterResolver() {
-        return null;
     }
 
     protected Path resolve(String relativePath) {

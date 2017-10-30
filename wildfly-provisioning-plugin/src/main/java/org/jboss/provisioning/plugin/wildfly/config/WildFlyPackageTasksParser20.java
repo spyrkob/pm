@@ -45,7 +45,6 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
 
     enum Element {
 
-        CONFIG_GENERATOR(GeneratorConfigParser20.ELEMENT_LOCAL_NAME),
         COPY_ARTIFACTS(CopyArtifactsModelParser20.ELEMENT_LOCAL_NAME),
         COPY_PATHS(CopyPathsModelParser20.ELEMENT_LOCAL_NAME),
         DELETE_PATHS(DeletePathsModelParser20.ELEMENT_LOCAL_NAME),
@@ -65,7 +64,6 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
 
         static {
             Map<QName, Element> elementsMap = new HashMap<QName, Element>();
-            elementsMap.put(new QName(NAMESPACE_2_0, Element.CONFIG_GENERATOR.getLocalName()), Element.CONFIG_GENERATOR);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_ARTIFACTS.getLocalName()), Element.COPY_ARTIFACTS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.COPY_PATHS.getLocalName()), Element.COPY_PATHS);
             elementsMap.put(new QName(NAMESPACE_2_0, Element.DELETE_PATHS.getLocalName()), Element.DELETE_PATHS);
@@ -149,7 +147,6 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
         }
     }
 
-    private final GeneratorConfigParser20 configGenParser;
     private final CopyArtifactsModelParser20 copyArtifactsModelParser;
     private final CopyPathsModelParser20 copyPathsModelParser;
     private final FileFilterModelParser20 fileFilterModelParser;
@@ -157,7 +154,6 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
     private final DeletePathsModelParser20 deletePathsModelParser;
 
     WildFlyPackageTasksParser20() {
-        this.configGenParser = new GeneratorConfigParser20();
         this.fileFilterModelParser = new FileFilterModelParser20();
         this.copyArtifactsModelParser = new CopyArtifactsModelParser20(this.fileFilterModelParser);
         this.copyPathsModelParser = new CopyPathsModelParser20();
@@ -185,9 +181,6 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
                     final Element element = Element.of(reader.getName());
 
                     switch (element) {
-                        case CONFIG_GENERATOR:
-                            builder.setGeneratorConfig(configGenParser.parseGeneratorConfig(reader));
-                            break;
                         case COPY_ARTIFACTS:
                             builder.addCopyArtifacts(copyArtifactsModelParser.parseCopyArtifacts(reader));
                             break;
@@ -328,5 +321,4 @@ class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTask
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
-
 }

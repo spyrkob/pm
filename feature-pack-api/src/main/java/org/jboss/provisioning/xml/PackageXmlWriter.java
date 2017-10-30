@@ -60,9 +60,6 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
                 writeFeaturePackDependency(deps, pkgSpec.getExternalPackageDeps(name));
             }
         }
-        if(pkgSpec.hasParameters()) {
-            PackageParametersXml.write(pkg, pkgSpec.getParameters());
-        }
 
         return pkg;
     }
@@ -80,9 +77,6 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
         addAttribute(depElement, Attribute.NAME, depSpec.getName());
         if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);
-        }
-        if(depSpec.hasParams()) {
-            PackageParametersXml.write(depElement, depSpec.getParameters());
         }
     }
 }

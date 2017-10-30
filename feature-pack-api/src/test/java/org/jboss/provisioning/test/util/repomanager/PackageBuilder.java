@@ -113,11 +113,6 @@ public class PackageBuilder {
         return this;
     }
 
-    public PackageBuilder addParameter(String name, String defaultValue) {
-        this.pkg.addParameter(name, defaultValue);
-        return this;
-    }
-
     public PackageSpec build(Path fpDir) {
         final PackageSpec pkgSpec = pkg.build();
         final Path pkgDir;

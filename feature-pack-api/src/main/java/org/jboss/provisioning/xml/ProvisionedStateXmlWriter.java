@@ -74,9 +74,6 @@ public class ProvisionedStateXmlWriter extends BaseXmlWriter<FeaturePackSet<?>> 
             for (FeaturePackPackage pkg : featurePack.getPackages()) {
                 final ElementNode pkgElement = addElement(packages, Element.PACKAGE);
                 addAttribute(pkgElement, Attribute.NAME, pkg.getName());
-                if(pkg.hasParameters()) {
-                    PackageParametersXml.write(pkgElement, pkg.getParameters());
-                }
             }
         }
     }

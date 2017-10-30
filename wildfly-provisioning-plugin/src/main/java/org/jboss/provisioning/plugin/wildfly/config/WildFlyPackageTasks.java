@@ -44,14 +44,8 @@ public class WildFlyPackageTasks {
         private List<String> mkDirs = Collections.emptyList();
         private List<FileFilter> windowsLineEndFilters = Collections.emptyList();
         private List<FileFilter> unixLineEndFilters = Collections.emptyList();
-        private GeneratorConfig generatorConfig;
 
         private Builder() {
-        }
-
-        public Builder setGeneratorConfig(GeneratorConfig genConfig) {
-            this.generatorConfig = genConfig;
-            return this;
         }
 
         public Builder addCopyArtifact(CopyArtifact copy) {
@@ -220,7 +214,6 @@ public class WildFlyPackageTasks {
     private final List<String> mkDirs;
     private final List<FileFilter> windowsLineEndFilters;
     private final List<FileFilter> unixLineEndFilters;
-    private final GeneratorConfig generatorConfig;
 
     private WildFlyPackageTasks(Builder builder) {
         this.copyArtifacts = Collections.unmodifiableList(builder.copyArtifacts);
@@ -230,7 +223,6 @@ public class WildFlyPackageTasks {
         this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
         this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
         this.unixLineEndFilters = Collections.unmodifiableList(builder.unixLineEndFilters);
-        this.generatorConfig = builder.generatorConfig;
     }
 
     public boolean hasCopyArtifacts() {
@@ -279,9 +271,5 @@ public class WildFlyPackageTasks {
 
     public List<FileFilter> getUnixLineEndFilters() {
         return unixLineEndFilters;
-    }
-
-    public GeneratorConfig getGeneratorConfig() {
-        return generatorConfig;
     }
 }

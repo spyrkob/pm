@@ -172,8 +172,5 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
         if(depSpec.isOptional()) {
             addAttribute(depElement, Attribute.OPTIONAL, TRUE);
         }
-        if(depSpec.hasParams()) {
-            PackageParametersXml.write(depElement, depSpec.getParameters());
-        }
     }
 }

@@ -18,15 +18,8 @@
 package org.jboss.provisioning.runtime;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.config.PackageConfig;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.state.ProvisionedPackage;
 
@@ -38,25 +31,10 @@ public class PackageRuntime implements ProvisionedPackage {
 
     static class Builder {
         final Path dir;
-        final PackageConfig.Builder configBuilder;
         PackageSpec spec;
-        private Map<String, PackageParameter> params = Collections.emptyMap();
 
         private Builder(String name, Path dir) {
             this.dir = dir;
-            this.configBuilder = PackageConfig.builder(name);
-        }
-
-        void addParameter(PackageParameter param) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(param.getName(), param);
-                    break;
-                case 1:
-                    params = new HashMap<>(params);
-                default:
-                    params.put(param.getName(), param);
-            }
         }
 
         PackageRuntime build() {
@@ -70,12 +48,10 @@ public class PackageRuntime implements ProvisionedPackage {
 
     private final PackageSpec spec;
     private final Path layoutDir;
-    private final Map<String, PackageParameter> params;
 
     private PackageRuntime(Builder builder) {
         this.spec = builder.spec;
         this.layoutDir = builder.dir;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public PackageSpec getSpec() {
@@ -85,20 +61,6 @@ public class PackageRuntime implements ProvisionedPackage {
     @Override
     public String getName() {
         return spec.getName();
-    }
-
-    @Override
-    public boolean hasParameters() {
-        return !params.isEmpty();
-    }
-
-    @Override
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
-    }
-
-    public PackageParameter getParameter(String name) {
-        return params.get(name);
     }
 
     /**
