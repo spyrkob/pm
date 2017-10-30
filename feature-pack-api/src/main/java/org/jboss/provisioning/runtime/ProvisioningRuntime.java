@@ -63,7 +63,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         // copy package content
         for(FeaturePackRuntime fp : runtime.fpRuntimes.values()) {
             final ArtifactCoords.Gav fpGav = fp.getGav();
-            runtime.messageWriter.verbose("Installing %s", fpGav);
+            runtime.messageWriter.print("Installing %s", fpGav);
             for(PackageRuntime pkg : fp.getPackages()) {
                 final Path pkgSrcDir = pkg.getContentDir();
                 if (Files.exists(pkgSrcDir)) {
@@ -366,9 +366,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         IoUtils.recursiveDelete(workDir);
         final long time = System.currentTimeMillis() - startTime;
         final long seconds = time / 1000;
-        if(messageWriter.isVerboseEnabled()) {
-            messageWriter.print("Done in %d.%d seconds", seconds, (time - seconds*1000));
-        }
+        messageWriter.print("Done in %d.%d seconds", seconds, (time - seconds*1000));
     }
 
     private void executeDiffPlugins(Path target, Path customizedInstallation) throws ProvisioningException {

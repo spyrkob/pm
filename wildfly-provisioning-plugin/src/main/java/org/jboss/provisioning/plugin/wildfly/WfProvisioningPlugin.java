@@ -181,19 +181,20 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
         if(runtime.hasConfigs()) {
             final WfProvisionedConfigHandler configHandler = new WfProvisionedConfigHandler(runtime);
             for (ProvisionedConfig config : runtime.getConfigs()) {
-                final StringBuilder msg = new StringBuilder(64)
-                        .append("Feature config");
-                if(config.getModel() != null) {
-                    msg.append(" model=").append(config.getModel());
-                }
-                if(config.getName() != null) {
-                    msg.append(" name=").append(config.getName());
-                }
-                messageWriter.print(msg);
-                if (config.hasProperties()) {
-                    messageWriter.print("  properties");
-                    for (Map.Entry<String, String> entry : config.getProperties().entrySet()) {
-                        messageWriter.print("    %s=%s", entry.getKey(), entry.getValue());
+                if(messageWriter.isVerboseEnabled()) {
+                    final StringBuilder msg = new StringBuilder(64).append("Feature config");
+                    if (config.getModel() != null) {
+                        msg.append(" model=").append(config.getModel());
+                    }
+                    if (config.getName() != null) {
+                        msg.append(" name=").append(config.getName());
+                    }
+                    messageWriter.verbose(msg);
+                    if (config.hasProperties()) {
+                        messageWriter.verbose("  properties");
+                        for (Map.Entry<String, String> entry : config.getProperties().entrySet()) {
+                            messageWriter.verbose("    %s=%s", entry.getKey(), entry.getValue());
+                        }
                     }
                 }
                 config.handle(configHandler);

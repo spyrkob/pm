@@ -257,12 +257,12 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     @Override
     public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
-        messageWriter.print("  " + fpGav);
+        messageWriter.verbose("  " + fpGav);
     }
 
     @Override
     public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
-        messageWriter.print("    SPEC " + spec.getName());
+        messageWriter.verbose("    SPEC " + spec.getName());
         if(lookForHost == LOOK_FOR_HOST && "host".equals(spec.getName()) && spec.getId().getGav().toGa().equals(WF_CORE_GA)) {
             lookForHost = LOOK_FOR_HOST_IN_SPEC;
         }
@@ -287,7 +287,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         int i = 0;
         while (i < opsTotal) {
             final FeatureAnnotation annotation = annotations.get(i);
-            messageWriter.print("      Annotation: " + annotation);
+            messageWriter.verbose("      Annotation: " + annotation);
             final ManagedOp mop = ops[i++];
             mop.reset();
             mop.line = annotation.getElem(WfConstants.LINE);
@@ -397,32 +397,34 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             hostName = feature.getParam("host");
         }
         if (opsTotal == 0) {
-            messageWriter.print("      " + feature.getParams());
+            messageWriter.verbose("      " + feature.getParams());
             return;
         }
         for(int i = 0; i < opsTotal; ++i) {
             final String line = ops[i].toCommandLine(feature);
-            messageWriter.print("      " + line);
+            messageWriter.verbose("      " + line);
             writeOp(line);
         }
     }
 
     @Override
     public void startBatch() throws ProvisioningException {
-        messageWriter.print("      START BATCH");
+        messageWriter.verbose("      START BATCH");
         writeOp("batch");
     }
 
     @Override
     public void endBatch() throws ProvisioningException {
-        messageWriter.print("      END BATCH");
+        messageWriter.verbose("      END BATCH");
         writeOp("run-batch");
     }
 
     @Override
     public void done() throws ProvisioningException {
         if(opList.isEmpty()) {
-            messageWriter.print(" %s configuration is empty", scriptName);
+            messageWriter.verbose(" %s configuration is empty", scriptName);
+            reset();
+            return;
         }
         if(hostName != null) {
             embedBuf.append(" --temp-host-controller-name=").append(hostName);
@@ -442,7 +444,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             throw new ProvisioningException(Errors.writeFile(script), e);
         }
 
-        messageWriter.print(" Generating %s configuration", script.getFileName().toString());
+        messageWriter.verbose(" Generating %s configuration", script.getFileName().toString());
         try {
             CliScriptRunner.runCliScript(runtime.getStagedDir(), script, messageWriter);
         } catch(ProvisioningException e) {
