@@ -150,9 +150,6 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             for (PackageConfig included : featurePack.getIncludedPackages()) {
                 final ElementNode include = addElement(packages, Element.INCLUDE);
                 addAttribute(include, Attribute.NAME, included.getName());
-                if(included.hasParams()) {
-                    PackageParametersXml.write(include, included.getParameters());
-                }
             }
         }
     }

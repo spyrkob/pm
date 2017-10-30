@@ -49,7 +49,6 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
         INSTALLATION("installation"),
         PACKAGES("packages"),
         PACKAGE("package"),
-        PARAMETERS(PackageParametersXml.PARAMETERS),
         PARAM("param"),
         PROP("prop"),
         PROPS("props"),
@@ -290,29 +289,7 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
 
-        final ProvisionedPackage.Builder pkgBuilder = ProvisionedPackage.builder(name);
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return pkgBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PARAMETERS:
-                            PackageParametersXml.read(reader, pkgBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
+        ParsingUtils.parseNoContent(reader);
+        return ProvisionedPackage.newInstance(name);
     }
 }

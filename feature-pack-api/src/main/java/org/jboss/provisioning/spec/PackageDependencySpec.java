@@ -17,14 +17,6 @@
 
 package org.jboss.provisioning.spec;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.provisioning.parameters.BuilderWithParameters;
-import org.jboss.provisioning.parameters.PackageParameter;
-
 /**
  * Describes dependency on a single package.
  *
@@ -32,11 +24,10 @@ import org.jboss.provisioning.parameters.PackageParameter;
  */
 public class PackageDependencySpec implements Comparable<PackageDependencySpec> {
 
-    public static class Builder implements BuilderWithParameters<Builder> {
+    public static class Builder {
 
         private final String name;
         private final boolean optional;
-        private Map<String, PackageParameter> params = Collections.emptyMap();
 
         protected Builder(String name) {
             this(name, false);
@@ -45,24 +36,6 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         protected Builder(String name, boolean optional) {
             this.name = name;
             this.optional = optional;
-        }
-
-        @Override
-        public Builder addParameter(PackageParameter param) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(param.getName(), param);
-                    break;
-                case 1:
-                    if(params.containsKey(param.getName())) {
-                        params = Collections.singletonMap(param.getName(), param);
-                        break;
-                    }
-                    params = new HashMap<>(params);
-                default:
-                    params.put(param.getName(), param);
-            }
-            return this;
         }
 
         public PackageDependencySpec build() {
@@ -101,18 +74,15 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
 
     private final String name;
     private final boolean optional;
-    private final Map<String, PackageParameter> params;
 
     protected PackageDependencySpec(String name, boolean optional) {
         this.name = name;
         this.optional = optional;
-        params = Collections.emptyMap();
     }
 
     protected PackageDependencySpec(Builder builder) {
         this.name = builder.name;
         this.optional = builder.optional;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public String getName() {
@@ -123,25 +93,12 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         return optional;
     }
 
-    public boolean hasParams() {
-        return !params.isEmpty();
-    }
-
-    public PackageParameter getParameter(String name) {
-        return params.get(name);
-    }
-
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (optional ? 1231 : 1237);
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
         return result;
     }
 
@@ -161,11 +118,6 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
             return false;
         if (optional != other.optional)
             return false;
-        if (params == null) {
-            if (other.params != null)
-                return false;
-        } else if (!params.equals(other.params))
-            return false;
         return true;
     }
 
@@ -175,9 +127,6 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
         buf.append('[')
             .append(name)
             .append(optional ? " optional]" : " required");
-        if(hasParams()) {
-            buf.append(" params=").append(params);
-        }
         return buf.append(']').toString();
     }
 

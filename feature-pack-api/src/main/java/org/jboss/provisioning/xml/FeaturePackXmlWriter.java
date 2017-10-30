@@ -120,9 +120,6 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             for (PackageConfig included : target.getIncludedPackages()) {
                 final ElementNode include = addElement(packages, Element.INCLUDE);
                 addAttribute(include, Attribute.NAME, included.getName());
-                if(included.hasParams()) {
-                    PackageParametersXml.write(include, included.getParameters());
-                }
             }
         }
 

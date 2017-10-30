@@ -17,14 +17,6 @@
 
 package org.jboss.provisioning.config;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.provisioning.parameters.BuilderWithParameters;
-import org.jboss.provisioning.parameters.PackageParameter;
-
 /**
  * Package configuration.
  *
@@ -32,82 +24,18 @@ import org.jboss.provisioning.parameters.PackageParameter;
  */
 public class PackageConfig {
 
-    public static class Builder implements BuilderWithParameters<Builder> {
-
-        private String name;
-        private Map<String, PackageParameter> params = Collections.emptyMap();
-
-        protected Builder(String name) {
-            this.name = name;
-        }
-
-        protected Builder(PackageConfig config) {
-            this.name = config.name;
-            params = config.params.size() > 1 ? new HashMap<>(config.params) : config.params;
-        }
-
-        @Override
-        public Builder addParameter(PackageParameter param) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(param.getName(), param);
-                    break;
-                case 1:
-                    if(params.containsKey(param.getName())) {
-                        params = Collections.singletonMap(param.getName(), param);
-                        break;
-                    }
-                    params = new HashMap<>(params);
-                default:
-                    params.put(param.getName(), param);
-            }
-            return this;
-        }
-
-        public PackageConfig build() {
-            return new PackageConfig(this);
-        }
-    }
-
-    public static Builder builder(String name) {
-        return new Builder(name);
-    }
-
-    public static Builder builder(PackageConfig config) {
-        return new Builder(config);
-    }
-
-    public static PackageConfig newInstance(String name) {
+    public static PackageConfig forName(String name) {
         return new PackageConfig(name);
     }
 
     private final String name;
-    private final Map<String, PackageParameter> params;
 
     private PackageConfig(String name) {
         this.name = name;
-        params = Collections.emptyMap();
-    }
-
-    private PackageConfig(Builder builder) {
-        this.name = builder.name;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean hasParams() {
-        return !params.isEmpty();
-    }
-
-    public PackageParameter getParameter(String name) {
-        return params.get(name);
-    }
-
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
     }
 
     @Override
@@ -115,7 +43,6 @@ public class PackageConfig {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
         return result;
     }
 
@@ -132,11 +59,6 @@ public class PackageConfig {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
-            return false;
-        if (params == null) {
-            if (other.params != null)
-                return false;
-        } else if (!params.equals(other.params))
             return false;
         return true;
     }

@@ -29,7 +29,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.parameters.PackageParameterResolver;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -48,7 +47,6 @@ public class ProvisioningManager {
         private String encoding = "UTF-8";
         private Path installationHome;
         private ArtifactResolver artifactResolver;
-        private PackageParameterResolver paramResolver;
         private MessageWriter messageWriter;
 
         private Builder() {
@@ -74,11 +72,6 @@ public class ProvisioningManager {
             return this;
         }
 
-        public Builder setPackageParameterResolver(PackageParameterResolver paramResolver) {
-            this.paramResolver = paramResolver;
-            return this;
-        }
-
         public ProvisioningManager build() {
             return new ProvisioningManager(this);
         }
@@ -91,7 +84,6 @@ public class ProvisioningManager {
     private final String encoding;
     private final Path installationHome;
     private final ArtifactResolver artifactResolver;
-    private final PackageParameterResolver paramResolver;
     private final MessageWriter messageWriter;
 
     private ProvisioningConfig provisioningConfig;
@@ -100,7 +92,6 @@ public class ProvisioningManager {
         this.encoding = builder.encoding;
         this.installationHome = builder.installationHome;
         this.artifactResolver = builder.artifactResolver;
-        this.paramResolver = builder.paramResolver == null ? PackageParameterResolver.NULL_RESOLVER : builder.paramResolver;
         this.messageWriter = builder.messageWriter == null ? DefaultMessageWriter.getDefaultInstance() : builder.messageWriter;
     }
 
@@ -248,7 +239,6 @@ public class ProvisioningManager {
                 .setArtifactResolver(artifactResolver)
                 .setConfig(provisioningConfig)
                 .setEncoding(encoding)
-                .setParameterResolver(paramResolver)
                 .setInstallDir(installationHome)
                 .build()) {
             // install the software
@@ -333,14 +323,12 @@ public class ProvisioningManager {
                         public void close() throws Exception {
                             return;
                         }
-                    })
-                    .setPackageParameterResolver(this.getPackageParameterResolver()));
+                    }));
             reference.provision(configuration);
             final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())
-                    .setParameterResolver(this.getPackageParameterResolver())
                     .setInstallDir(tempInstallationDir);
             parameters.entrySet().forEach(entry -> builder.addParameter(entry.getKey(), entry.getValue()));
             try (ProvisioningRuntime runtime = builder.build()) {
@@ -360,10 +348,6 @@ public class ProvisioningManager {
 
     ArtifactResolver getArtifactResolver() {
         return artifactResolver;
-    }
-
-    PackageParameterResolver getPackageParameterResolver() {
-        return paramResolver;
     }
 
     private ProvisioningConfig readProvisioningConfig(Path path) throws ProvisioningException {

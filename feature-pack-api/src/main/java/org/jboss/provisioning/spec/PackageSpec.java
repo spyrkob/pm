@@ -19,12 +19,9 @@ package org.jboss.provisioning.spec;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jboss.provisioning.parameters.BuilderWithParameters;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.util.DescrFormatter;
 
 /**
@@ -38,12 +35,11 @@ public class PackageSpec implements PackageDependencies {
         return new PackageSpec(name);
     }
 
-    public static class Builder implements BuilderWithParameters<Builder> {
+    public static class Builder {
 
         private String name;
         private PackageDependencyGroupSpec.Builder localDeps;
         private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
-        private Map<String, PackageParameter> params = Collections.emptyMap();
 
         protected Builder() {
             this(null);
@@ -92,20 +88,6 @@ public class PackageSpec implements PackageDependencies {
             return localDeps != null || !externalDeps.isEmpty();
         }
 
-        @Override
-        public Builder addParameter(PackageParameter param) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(param.getName(), param);
-                    break;
-                case 1:
-                    params = new HashMap<>(params);
-                default:
-                    params.put(param.getName(), param);
-            }
-            return this;
-        }
-
         private PackageDependencyGroupSpec.Builder getLocalGroupBuilder() {
             if(localDeps == null) {
                 localDeps = PackageDependencyGroupSpec.builder();
@@ -146,13 +128,11 @@ public class PackageSpec implements PackageDependencies {
     private final String name;
     private final PackageDependencyGroupSpec localDeps;
     private final Map<String, PackageDependencyGroupSpec> externalDeps;
-    private final Map<String, PackageParameter> params;
 
     protected PackageSpec(String name) {
         this.name = name;
         localDeps = PackageDependencyGroupSpec.EMPTY_LOCAL;
         externalDeps = Collections.emptyMap();
-        params = Collections.emptyMap();
     }
 
     protected PackageSpec(Builder builder) {
@@ -173,7 +153,6 @@ public class PackageSpec implements PackageDependencies {
                 externalDeps = Collections.unmodifiableMap(deps);
             }
         }
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
     }
 
     public String getName() {
@@ -210,18 +189,6 @@ public class PackageSpec implements PackageDependencies {
         return externalDeps.get(groupName);
     }
 
-    public boolean hasParameters() {
-        return !params.isEmpty();
-    }
-
-    public boolean hasParameter(String name) {
-        return params.containsKey(name);
-    }
-
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
-    }
-
     void logContent(DescrFormatter logger) throws IOException {
         logger.print("Package ");
         logger.println(name);
@@ -244,7 +211,6 @@ public class PackageSpec implements PackageDependencies {
         result = prime * result + ((externalDeps == null) ? 0 : externalDeps.hashCode());
         result = prime * result + ((localDeps == null) ? 0 : localDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
         return result;
     }
 
@@ -272,11 +238,6 @@ public class PackageSpec implements PackageDependencies {
                 return false;
         } else if (!name.equals(other.name))
             return false;
-        if (params == null) {
-            if (other.params != null)
-                return false;
-        } else if (!params.equals(other.params))
-            return false;
         return true;
     }
 
@@ -289,9 +250,6 @@ public class PackageSpec implements PackageDependencies {
         }
         if(!externalDeps.isEmpty()) {
             buf.append(", ").append(externalDeps);
-        }
-        if(!params.isEmpty()) {
-            buf.append(" parameters ").append(params);
         }
         buf.append(']');
         return buf.toString();

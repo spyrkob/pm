@@ -160,15 +160,6 @@ public interface Errors {
         return "Package " + name + " already exists in feature-pack " + gav;
     }
 
-    static String packageParameterResolverNotProvided(Gav gav, String pkgName) {
-        return "Package parameter resolver not provided for package " + pkgName + " in feature-pack " + gav;
-    }
-
-    static String unknownParameterInDependency(Gav gav, String srcPkg, String trgPkg, String param) {
-        return "Package " + srcPkg + " from feature-pack " + gav + " overwrites a non-existing parameter " + param
-                + " in its dependency on package " + trgPkg;
-    }
-
     static String noCapabilityProvider(String capability) {
         return "No provider found for capability '" + capability + "'";
     }

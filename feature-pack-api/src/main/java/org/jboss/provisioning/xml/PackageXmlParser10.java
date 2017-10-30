@@ -47,7 +47,6 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
         FEATURE_PACK("feature-pack"),
         PACKAGE("package"),
         PACKAGE_SPEC("package-spec"),
-        PARAMETERS(PackageParametersXml.PARAMETERS),
 
         // default unknown element
         UNKNOWN(null);
@@ -154,9 +153,6 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
                         case DEPENDENCIES:
                             readDependencies(reader, pkgBuilder);
                             break;
-                        case PARAMETERS:
-                            PackageParametersXml.read(reader, pkgBuilder);
-                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
@@ -225,30 +221,8 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
         if (name == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
-
-        final PackageDependencySpec.Builder depBuilder = PackageDependencySpec.builder(name, optional);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return depBuilder.build();
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PARAMETERS:
-                            PackageParametersXml.read(reader, depBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
+        ParsingUtils.parseNoContent(reader);
+        return PackageDependencySpec.create(name, optional);
     }
 
     private void readFeaturePackDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {

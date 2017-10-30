@@ -27,7 +27,6 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.util.StringUtils;
@@ -107,7 +106,7 @@ public class FeaturePackConfig {
         }
 
         public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
-            return includePackage(PackageConfig.newInstance(packageName));
+            return includePackage(PackageConfig.forName(packageName));
         }
 
         public Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
@@ -120,29 +119,12 @@ public class FeaturePackConfig {
                 return this;
             }
 
-            PackageConfig included = includedPackages.get(packageConfig.getName());
-            if(included == null) {
+            if(!includedPackages.containsKey(packageConfig.getName())) {
                 if(includedPackages.size() == 1) {
                     includedPackages = new HashMap<>(includedPackages);
                 }
                 includedPackages.put(packageConfig.getName(), packageConfig);
                 return this;
-            }
-
-            if(!packageConfig.hasParams()) {
-                return this;
-            }
-
-            final PackageConfig.Builder builder = PackageConfig.builder(included);
-            for (PackageParameter param : packageConfig.getParameters()) {
-                builder.addParameter(param);
-            }
-            included = builder.build();
-
-            if(includedPackages.size() == 1) {
-                includedPackages = Collections.singletonMap(included.getName(), included);
-            } else {
-                includedPackages.put(included.getName(), included);
             }
             return this;
         }

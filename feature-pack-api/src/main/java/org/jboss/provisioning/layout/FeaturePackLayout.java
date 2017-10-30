@@ -28,7 +28,6 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.parameters.PackageParameter;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -89,13 +88,6 @@ public class FeaturePackLayout {
                                     notFound = new ArrayList<>();
                                 }
                                 notFound.add(pkgDep.getName());
-                            } else if(pkgDep.hasParams()) {
-                                for(PackageParameter depParam : pkgDep.getParameters()) {
-                                    if(!depSpec.hasParameter(depParam.getName())) {
-                                        throw new ProvisioningDescriptionException(
-                                                Errors.unknownParameterInDependency(builtSpec.getGav(), pkg.getName(), pkgDep.getName(), depParam.getName()));
-                                    }
-                                }
                             }
                         }
                         if (notFound != null) {

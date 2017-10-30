@@ -37,9 +37,6 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
-import org.jboss.provisioning.parameters.PackageParameter;
-import org.jboss.provisioning.parameters.PackageParameterResolver;
-import org.jboss.provisioning.parameters.ParameterResolver;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -190,26 +187,13 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return popped;
         }
 
-        boolean isPackageIncluded(String packageName, Collection<PackageParameter> params) {
+        boolean isPackageIncluded(String packageName) {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
                 final PackageConfig stackedPkg = fpConfig.getIncludedPackage(packageName);
                 if(stackedPkg != null) {
-                    if(!params.isEmpty()) {
-                        boolean allParamsOverwritten = true;
-                        for(PackageParameter param : params) {
-                            if(stackedPkg.getParameter(param.getName()) == null) {
-                                allParamsOverwritten = false;
-                                break;
-                            }
-                        }
-                        if(allParamsOverwritten) {
-                            return true;
-                        }
-                    } else {
-                       return true;
-                    }
+                    return true;
                 }
             }
             return false;
@@ -259,8 +243,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return false;
         }
 
-        FeaturePackRuntime build(PackageParameterResolver paramResolver) throws ProvisioningException {
-            return new FeaturePackRuntime(this, paramResolver);
+        FeaturePackRuntime build() throws ProvisioningException {
+            return new FeaturePackRuntime(this);
         }
     }
 
@@ -272,27 +256,13 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     private final Path dir;
     private final Map<String, PackageRuntime> packages;
 
-    private FeaturePackRuntime(Builder builder, PackageParameterResolver paramResolver) throws ProvisioningException {
+    private FeaturePackRuntime(Builder builder) throws ProvisioningException {
         this.spec = builder.spec;
         this.dir = builder.dir;
 
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
         for(String pkgName : builder.pkgOrder) {
             final PackageRuntime.Builder pkgRtBuilder = builder.pkgBuilders.get(pkgName);
-            final PackageConfig pkgConfig = pkgRtBuilder.configBuilder.build();
-            if(pkgConfig.hasParams()) {
-                final ParameterResolver pkgParamResolver = paramResolver.getResolver(builder.gav, pkgName);
-                if(pkgParamResolver == null) {
-                    throw new ProvisioningException(Errors.packageParameterResolverNotProvided(builder.gav, pkgName));
-                }
-                for(PackageParameter param : pkgConfig.getParameters()) {
-                    final String resolved = pkgParamResolver.resolve(param.getName(), param.getValue());
-                    if(!param.getValue().equals(resolved)) {
-                        param = PackageParameter.newInstance(param.getName(), resolved);
-                    }
-                    pkgRtBuilder.addParameter(param);
-                }
-            }
             tmpPackages.put(pkgName, pkgRtBuilder.build());
         }
 

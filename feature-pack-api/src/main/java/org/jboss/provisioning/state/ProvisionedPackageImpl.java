@@ -17,13 +17,6 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.jboss.provisioning.parameters.PackageParameter;
-
 /**
  *
  * @author Alexey Loubyansky
@@ -31,16 +24,9 @@ import org.jboss.provisioning.parameters.PackageParameter;
 class ProvisionedPackageImpl implements ProvisionedPackage {
 
     private final String name;
-    private final Map<String, PackageParameter> params;
-
-    ProvisionedPackageImpl(String name, Map<String, PackageParameter> params) {
-        this.name = name;
-        this.params = params;
-    }
 
     ProvisionedPackageImpl(String name) {
         this.name = name;
-        this.params = Collections.emptyMap();
     }
 
     @Override
@@ -49,20 +35,10 @@ class ProvisionedPackageImpl implements ProvisionedPackage {
     }
 
     @Override
-    public boolean hasParameters() {
-        return !params.isEmpty();
-    }
-
-    @Override
-    public Collection<PackageParameter> getParameters() {
-        return params.values();
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
 
@@ -75,28 +51,16 @@ class ProvisionedPackageImpl implements ProvisionedPackage {
         if (getClass() != obj.getClass())
             return false;
         ProvisionedPackageImpl other = (ProvisionedPackageImpl) obj;
-        if (params == null) {
-            if (other.params != null)
+        if (name == null) {
+            if (other.name != null)
                 return false;
-        } else if (!params.equals(other.params))
+        } else if (!name.equals(other.name))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        final StringBuilder buf = new StringBuilder().append(name);
-        if(!params.isEmpty()) {
-            buf.append('(');
-            final Iterator<PackageParameter> i = params.values().iterator();
-            PackageParameter param = i.next();
-            buf.append(param.getName()).append('=').append(param.getValue());
-            while(i.hasNext()) {
-                param = i.next();
-                buf.append(',').append(param.getName()).append('=').append(param.getValue());
-            }
-            buf.append(')');
-        }
-        return buf.toString();
+        return name;
     }
 }
