@@ -16,7 +16,8 @@
  */
 package org.jboss.provisioning.xml;
 
-import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
+import java.util.Collection;
+
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageDepsSpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -54,21 +55,21 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
 
     static void writePackageDeps(PackageDepsSpec pkgDeps, ElementNode deps) {
         if(pkgDeps.hasLocalPackageDeps()) {
-            for(PackageDependencySpec depSpec : pkgDeps.getLocalPackageDeps().getDescriptions()) {
+            for(PackageDependencySpec depSpec : pkgDeps.getLocalPackageDeps()) {
                 writePackageDependency(deps, depSpec, deps.getNamespace());
             }
         }
         if(pkgDeps.hasExternalPackageDeps()) {
-            for(String name : pkgDeps.getExternalPackageSources()) {
-                writeFeaturePackDependency(deps, pkgDeps.getExternalPackageDeps(name), deps.getNamespace());
+            for(String fpDep : pkgDeps.getExternalPackageSources()) {
+                writeFeaturePackDependency(deps, fpDep, pkgDeps.getExternalPackageDeps(fpDep), deps.getNamespace());
             }
         }
     }
 
-    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec, String ns) {
+    private static void writeFeaturePackDependency(ElementNode deps, String fpDep, Collection<PackageDependencySpec> depGroup, String ns) {
         final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK.getLocalName(), ns);
-        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
-        for(PackageDependencySpec depSpec : depGroupSpec.getDescriptions()) {
+        addAttribute(fpElement, Attribute.DEPENDENCY, fpDep);
+        for(PackageDependencySpec depSpec : depGroup) {
             writePackageDependency(fpElement, depSpec, ns);
         }
     }

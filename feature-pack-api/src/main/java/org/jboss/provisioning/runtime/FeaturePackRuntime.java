@@ -36,7 +36,6 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -191,8 +190,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                final PackageConfig stackedPkg = fpConfig.getIncludedPackage(packageName);
-                if(stackedPkg != null) {
+                if(fpConfig.isPackageIncluded(packageName)) {
                     return true;
                 }
             }
@@ -202,7 +200,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         boolean isPackageExcluded(String packageName) {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
-                if(fpConfigStack.get(i--).isExcluded(packageName)) {
+                if(fpConfigStack.get(i--).isPackageExcluded(packageName)) {
                     return true;
                 }
             }

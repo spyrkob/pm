@@ -30,6 +30,7 @@ import java.util.Set;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.StringUtils;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -206,13 +207,13 @@ public class FeatureSpec extends PackageDepsSpec {
     private FeatureSpec(Builder builder) {
         super(builder);
         this.name = builder.name;
-        this.annotations = builder.annotations.size() > 1 ? Collections.unmodifiableList(builder.annotations) : builder.annotations;
-        this.featureDeps = builder.featureDeps.size() > 1 ? Collections.unmodifiableMap(builder.featureDeps) : builder.featureDeps;
-        this.featureRefs = builder.refs.size() > 1 ? Collections.unmodifiableMap(builder.refs) : builder.refs;
-        this.params = builder.params.size() > 1 ? Collections.unmodifiableMap(builder.params) : builder.params;
-        this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
-        this.providedCaps = builder.providedCaps.size() > 1 ? Collections.unmodifiableSet(builder.providedCaps) : builder.providedCaps;
-        this.requiredCaps = builder.requiredCaps.size() > 1 ? Collections.unmodifiableSet(builder.requiredCaps) : builder.requiredCaps;
+        this.annotations = Unmodifiable.list(builder.annotations);
+        this.featureDeps = Unmodifiable.map(builder.featureDeps);
+        this.featureRefs = Unmodifiable.map(builder.refs);
+        this.params = Unmodifiable.map(builder.params);
+        this.idParams = Unmodifiable.list(builder.idParams);
+        this.providedCaps = Unmodifiable.set(builder.providedCaps);
+        this.requiredCaps = Unmodifiable.set(builder.requiredCaps);
     }
 
     public String getName() {

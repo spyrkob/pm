@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.util.StringUtils;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  * Describes a feature-pack as it was provisioned.
@@ -63,7 +64,7 @@ public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
         }
 
         public ProvisionedFeaturePack build() {
-            return new ProvisionedFeaturePack(gav, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages);
+            return new ProvisionedFeaturePack(gav, Unmodifiable.map(packages));
         }
     }
 

@@ -17,10 +17,14 @@
 
 package org.jboss.provisioning.spec;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -28,11 +32,11 @@ import java.util.Map;
  */
 public abstract class PackageDepsSpec {
 
-    protected final PackageDependencyGroupSpec localPkgDeps;
-    protected final Map<String, PackageDependencyGroupSpec> externalPkgDeps;
+    protected final List<PackageDependencySpec> localPkgDeps;
+    protected final Map<String, List<PackageDependencySpec>> externalPkgDeps;
 
     protected PackageDepsSpec() {
-        localPkgDeps = PackageDependencyGroupSpec.EMPTY_LOCAL;
+        localPkgDeps = Collections.emptyList();
         externalPkgDeps = Collections.emptyMap();
     }
 
@@ -42,22 +46,35 @@ public abstract class PackageDepsSpec {
     }
 
     protected PackageDepsSpec(PackageDepsSpecBuilder<?> builder) {
-        this.localPkgDeps = builder.localPkgDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localPkgDeps.build();
+        this.localPkgDeps = getValueList(builder.localPkgDeps);
         if(builder.externalPkgDeps.isEmpty()) {
             externalPkgDeps = Collections.emptyMap();
+        } else if(builder.externalPkgDeps.size() == 1) {
+            final Map.Entry<String, Map<String, PackageDependencySpec>> first = builder.externalPkgDeps.entrySet().iterator().next();
+            externalPkgDeps = Collections.singletonMap(first.getKey(), getValueList(first.getValue()));
         } else {
-            final int size = builder.externalPkgDeps.size();
-            if(size == 1) {
-                final Map.Entry<String, PackageDependencyGroupSpec.Builder> entry = builder.externalPkgDeps.entrySet().iterator().next();
-                externalPkgDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
-            } else {
-                final Map<String, PackageDependencyGroupSpec> deps = new LinkedHashMap<>(size);
-                for(Map.Entry<String, PackageDependencyGroupSpec.Builder> entry : builder.externalPkgDeps.entrySet()) {
-                    deps.put(entry.getKey(), entry.getValue().build());
-                }
-                externalPkgDeps = Collections.unmodifiableMap(deps);
+            final Map<String, List<PackageDependencySpec>> tmp = new HashMap<>(builder.externalPkgDeps.size());
+            for(Map.Entry<String, Map<String, PackageDependencySpec>> externalEntry : builder.externalPkgDeps.entrySet()) {
+                tmp.put(externalEntry.getKey(), getValueList(externalEntry.getValue()));
             }
+            externalPkgDeps = Unmodifiable.map(tmp);
         }
+    }
+
+    private List<PackageDependencySpec> getValueList(Map<String, PackageDependencySpec> localPkgDeps2) {
+        final List<PackageDependencySpec> list;
+        if(localPkgDeps2.isEmpty()) {
+            list = Collections.emptyList();
+        } else if(localPkgDeps2.size() == 1) {
+            list = Collections.singletonList(localPkgDeps2.entrySet().iterator().next().getValue());
+        } else {
+            final List<PackageDependencySpec> tmp = new ArrayList<>(localPkgDeps2.size());
+            for(Map.Entry<String, PackageDependencySpec> entry : localPkgDeps2.entrySet()) {
+                tmp.add(entry.getValue());
+            }
+            list = Collections.unmodifiableList(tmp);
+        }
+        return list;
     }
 
     public boolean hasPackageDeps() {
@@ -68,7 +85,7 @@ public abstract class PackageDepsSpec {
         return !localPkgDeps.isEmpty();
     }
 
-    public PackageDependencyGroupSpec getLocalPackageDeps() {
+    public Collection<PackageDependencySpec> getLocalPackageDeps() {
         return localPkgDeps;
     }
 
@@ -80,8 +97,9 @@ public abstract class PackageDepsSpec {
         return externalPkgDeps.keySet();
     }
 
-    public PackageDependencyGroupSpec getExternalPackageDeps(String groupName) {
-        return externalPkgDeps.get(groupName);
+    public Collection<PackageDependencySpec> getExternalPackageDeps(String fpDep) {
+        final List<PackageDependencySpec> fpDeps = externalPkgDeps.get(fpDep);
+        return fpDeps == null ? Collections.emptyList() : fpDeps;
     }
 
     @Override

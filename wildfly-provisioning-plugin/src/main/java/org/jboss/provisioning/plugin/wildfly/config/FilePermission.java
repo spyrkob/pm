@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.provisioning.util.Unmodifiable;
+
 /**
  * Represents a set of file permissions that should be applied to the final build.
  *
@@ -59,7 +61,7 @@ public class FilePermission {
         }
 
         public FilePermission build() {
-            return new FilePermission(value, Collections.unmodifiableList(filters));
+            return new FilePermission(value, Unmodifiable.list(filters));
         }
     }
 

@@ -25,6 +25,7 @@ import java.util.Set;
 import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -56,10 +57,10 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.fpDep = builder.fpDep;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
-        this.includedSpecs = builder.includedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.includedSpecs) : builder.includedSpecs;
-        this.excludedSpecs = builder.excludedSpecs.size() > 1 ? Collections.unmodifiableSet(builder.excludedSpecs) : builder.excludedSpecs;
-        this.includedFeatures = builder.includedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.includedFeatures) : builder.includedFeatures;
-        this.excludedFeatures = builder.excludedFeatures.size() > 1 ? Collections.unmodifiableMap(builder.excludedFeatures) : builder.excludedFeatures;
+        this.includedSpecs = Unmodifiable.set(builder.includedSpecs);
+        this.excludedSpecs = Unmodifiable.set(builder.excludedSpecs);
+        this.includedFeatures = Unmodifiable.map(builder.includedFeatures);
+        this.excludedFeatures = Unmodifiable.map(builder.excludedFeatures);
 
         if(builder.externalFgConfigs.isEmpty()) {
             this.externalFgConfigs = Collections.emptyMap();
