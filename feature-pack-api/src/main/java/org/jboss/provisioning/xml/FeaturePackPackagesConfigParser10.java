@@ -25,7 +25,6 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.util.ParsingUtils;
 
 /**
@@ -74,7 +73,7 @@ public class FeaturePackPackagesConfigParser10 {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static PackageConfig parseInclude(final XMLStreamReader reader) throws XMLStreamException {
+    private static String parseInclude(final XMLStreamReader reader) throws XMLStreamException {
 
         String name = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
@@ -96,7 +95,7 @@ public class FeaturePackPackagesConfigParser10 {
                 }}));
         }
         ParsingUtils.parseNoContent(reader);
-        return PackageConfig.forName(name);
+        return name;
     }
 
     private static String parseName(final XMLStreamReader reader) throws XMLStreamException {

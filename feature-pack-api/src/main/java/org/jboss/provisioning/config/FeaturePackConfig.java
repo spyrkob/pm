@@ -109,7 +109,7 @@ public class FeaturePackConfig {
             return includePackage(PackageConfig.forName(packageName));
         }
 
-        public Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
+        private Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
             if(excludedPackages.contains(packageConfig.getName())) {
                 throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageConfig.getName()));
             }
