@@ -35,7 +35,6 @@ import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -216,7 +215,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
                             parseParameters(reader, featureBuilder);
                             break;
                         case PACKAGES:
-                            parsePackages(reader, featureBuilder);
+                            PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, featureBuilder);
                             break;
                         case PROVIDES:
                             parseCapabilities(reader, featureBuilder, true);
@@ -552,100 +551,6 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         } catch (ProvisioningDescriptionException e) {
             throw new XMLStreamException("Failed to create feature parameter", reader.getLocation(), e);
         }
-    }
-
-    private void parsePackages(XMLExtendedStreamReader reader, FeatureSpec.Builder spec) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGE:
-                            spec.addPackageDependency(parsePackageDependency(reader));
-                            break;
-                        case FEATURE_PACK:
-                            parseFeaturePackDependency(reader, spec);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private PackageDependencySpec parsePackageDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String name = null;
-        boolean optional = false;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
-                    break;
-                case OPTIONAL:
-                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedAttribute(reader, i);
-            }
-        }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
-        }
-        ParsingUtils.parseNoContent(reader);
-        return PackageDependencySpec.create(name, optional);
-    }
-
-    private void parseFeaturePackDependency(XMLExtendedStreamReader reader, FeatureSpec.Builder spec) throws XMLStreamException {
-        String name = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case DEPENDENCY:
-                    name = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedAttribute(reader, i);
-            }
-        }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGE:
-                            spec.addPackageDependency(name, parsePackageDependency(reader));
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
     private void parseCapabilities(XMLExtendedStreamReader reader, FeatureSpec.Builder spec, boolean provides) throws XMLStreamException {

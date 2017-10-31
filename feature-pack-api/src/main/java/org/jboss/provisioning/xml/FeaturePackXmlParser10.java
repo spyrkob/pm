@@ -236,7 +236,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.DEPENDENCY);
+                        throw ParsingUtils.expectedAtLeastOneChild(reader, Element.DEPENDENCIES, Element.DEPENDENCY);
                     }
                     return;
                 }
@@ -325,7 +325,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.PACKAGES, Element.PACKAGE);
+                        throw ParsingUtils.expectedAtLeastOneChild(reader, Element.DEFAULT_PACKAGES, Element.PACKAGE);
                     }
                     return;
                 }

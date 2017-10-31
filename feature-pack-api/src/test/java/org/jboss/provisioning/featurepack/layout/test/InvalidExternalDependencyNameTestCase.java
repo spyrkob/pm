@@ -44,7 +44,7 @@ public class InvalidExternalDependencyNameTestCase {
                         .addDependency(FeaturePackConfig.forGav(fp2Gav))
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
-                                .addDependency("fp2dep", "p2")
+                                .addPackageDep("fp2dep", "p2")
                                 .build());
 
         try {
@@ -62,7 +62,7 @@ public class InvalidExternalDependencyNameTestCase {
                 .addDependency(FeaturePackConfig.forGav(fp2Gav))
                 .addDefaultPackage("p1"))
                 .addPackage(PackageSpec.builder("p1")
-                        .addDependency("fp2dep", "p2", true)
+                        .addPackageDep("fp2dep", "p2", true)
                         .build());
 
         try {

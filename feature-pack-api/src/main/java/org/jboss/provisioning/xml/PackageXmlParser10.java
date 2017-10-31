@@ -25,9 +25,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.spec.PackageSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -151,107 +149,7 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
                     final Element element = Element.of(reader.getName());
                     switch (element) {
                         case DEPENDENCIES:
-                            readDependencies(reader, pkgBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private void readDependencies(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
-        ParsingUtils.parseNoAttributes(reader);
-        boolean hasChildren = false;
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    if (!hasChildren) {
-                        throw ParsingUtils.expectedAtLeastOneChild(Element.DEPENDENCIES, Element.PACKAGE);
-                    }
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGE:
-                            pkgBuilder.addDependency(readPackageDependency(reader));
-                            hasChildren = true;
-                            break;
-                        case FEATURE_PACK:
-                            readFeaturePackDependency(reader, pkgBuilder);
-                            hasChildren = true;
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
-    }
-
-    private PackageDependencySpec readPackageDependency(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String name = null;
-        boolean optional = false;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case NAME:
-                    name = reader.getAttributeValue(i);
-                    break;
-                case OPTIONAL:
-                    optional = Boolean.parseBoolean(reader.getAttributeValue(i));
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
-        }
-        ParsingUtils.parseNoContent(reader);
-        return PackageDependencySpec.create(name, optional);
-    }
-
-    private void readFeaturePackDependency(XMLExtendedStreamReader reader, Builder pkgBuilder) throws XMLStreamException {
-        String name = null;
-        final int count = reader.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            switch (attribute) {
-                case DEPENDENCY:
-                    name = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
-        }
-
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGE:
-                            pkgBuilder.addDependency(name, readPackageDependency(reader));
+                            PackageDepsSpecXmlParser.parsePackageDeps(Element.DEPENDENCIES, reader, pkgBuilder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

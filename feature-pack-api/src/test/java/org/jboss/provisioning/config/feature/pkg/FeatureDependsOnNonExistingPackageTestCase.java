@@ -51,7 +51,7 @@ public class FeatureDependsOnNonExistingPackageTestCase extends PmInstallFeature
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", true))
-                    .addPackageDependency("specA.pkg")
+                    .addPackageDep("specA.pkg")
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(

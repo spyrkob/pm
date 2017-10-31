@@ -26,8 +26,6 @@ import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
-import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser10.Attribute;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -133,17 +131,7 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
         }
 
         if(featureSpec.hasPackageDeps()) {
-        final ElementNode deps = addElement(specE, Element.PACKAGES);
-        if(featureSpec.hasLocalPackageDeps()) {
-            for(PackageDependencySpec depSpec : featureSpec.getLocalPackageDeps().getDescriptions()) {
-                writePackageDependency(deps, depSpec);
-            }
-        }
-        if(featureSpec.hasExternalPackageDeps()) {
-            for(String name : featureSpec.getExternalPackageSources()) {
-                writeFeaturePackDependency(deps, featureSpec.getExternalPackageDeps(name));
-            }
-        }
+            PackageXmlWriter.writePackageDeps(featureSpec, addElement(specE, Element.PACKAGES));
         }
         return specE;
     }
@@ -155,22 +143,6 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
             if(cap.isOptional()) {
                 addAttribute(capE, Attribute.OPTIONAL, TRUE);
             }
-        }
-    }
-
-    private static void writeFeaturePackDependency(ElementNode deps, PackageDependencyGroupSpec depGroupSpec) {
-        final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK);
-        addAttribute(fpElement, Attribute.DEPENDENCY, depGroupSpec.getGroupName());
-        for(PackageDependencySpec depSpec : depGroupSpec.getDescriptions()) {
-            writePackageDependency(fpElement, depSpec);
-        }
-    }
-
-    private static void writePackageDependency(ElementNode deps, PackageDependencySpec depSpec) {
-        final ElementNode depElement = addElement(deps, Element.PACKAGE);
-        addAttribute(depElement, Attribute.NAME, depSpec.getName());
-        if(depSpec.isOptional()) {
-            addAttribute(depElement, Attribute.OPTIONAL, TRUE);
         }
     }
 }

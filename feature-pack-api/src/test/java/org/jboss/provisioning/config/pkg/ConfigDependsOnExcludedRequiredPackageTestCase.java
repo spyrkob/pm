@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.pkg;
+package org.jboss.provisioning.config.pkg;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -40,7 +39,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFeaturePackTestBase {
+public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -51,16 +50,13 @@ public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFe
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", true))
-                    .addPackageDep("specA.pkg")
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "a"))
+                    .addFeature(new FeatureConfig("specA")
+                            .setParam("name", "config1"))
+                    .addPackageDep("config1.pkg1")
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
-            .newPackage("specA.pkg")
+            .newPackage("config1.pkg1")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -68,7 +64,9 @@ public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFe
 
     @Override
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
-        return FeaturePackConfig.builder(FP_GAV).excludePackage("specA.pkg").build();
+        return FeaturePackConfig.builder(FP_GAV)
+                .excludePackage("config1.pkg1")
+                .build();
     }
 
     @Override
@@ -80,10 +78,7 @@ public class FeatureDependsOnRequiredExcludedPackageTestCase extends PmInstallFe
             Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
             Throwable t = e.getCause();
             Assert.assertNotNull(t);
-            Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), t.getLocalizedMessage());
-            t = t.getCause();
-            Assert.assertNotNull(t);
-            Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "specA.pkg"), t.getLocalizedMessage());
+            Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "config1.pkg1"), t.getLocalizedMessage());
         }
     }
 

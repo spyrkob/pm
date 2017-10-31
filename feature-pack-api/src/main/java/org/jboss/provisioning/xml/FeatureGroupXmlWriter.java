@@ -53,14 +53,17 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     }
 
     protected ElementNode toElement(FeatureGroupSpec featureGroup, String ns) {
-        final ElementNode configE = addElement(null, Element.FEATURE_GROUP_SPEC.getLocalName(), ns);
+        final ElementNode fgE = addElement(null, Element.FEATURE_GROUP_SPEC.getLocalName(), ns);
         if(featureGroup.getName() != null) {
-            addAttribute(configE, Attribute.NAME, featureGroup.getName());
+            addAttribute(fgE, Attribute.NAME, featureGroup.getName());
         }
 
-        writeFeatureGroupSpecBody(configE, featureGroup, ns);
+        writeFeatureGroupSpecBody(fgE, featureGroup, ns);
 
-        return configE;
+        if(featureGroup.hasPackageDeps()) {
+            PackageXmlWriter.writePackageDeps(featureGroup, addElement(fgE, Element.PACKAGES));
+        }
+        return fgE;
     }
 
     static void writeFeatureGroupSpecBody(final ElementNode configE, ConfigItemContainer featureGroup, String ns) {

@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.pkg;
+package org.jboss.provisioning.config.feature.group.pkg;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
-import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -39,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ExcludeOptionalFeaturePackageDependencyTestCase extends PmInstallFeaturePackTestBase {
+public class FeatureGroupOptionalPackageDependenciesTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,36 +51,38 @@ public class ExcludeOptionalFeaturePackageDependencyTestCase extends PmInstallFe
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", true))
-                    .addPackageDep("specA.pkg", true)
                     .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("b", false))
-                    .addParam(FeatureParameterSpec.create("a", true))
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setName("specA")
-                            .setNillable(false)
-                            .mapParam("a", "name")
-                            .build())
-                    .addPackageDep("specB.pkg", true)
+            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+                    .addFeature(new FeatureConfig("specA")
+                            .setParam("name", "afg1"))
+                    .addPackageDep("fg1.pkg1")
+                    .addPackageDep("fg1.pkg2", true)
+                    .addPackageDep("fg1.pkg3", true)
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
+                    .addFeature(new FeatureConfig("specA")
+                            .setParam("name", "afg2"))
+                    .addPackageDep("fg2.pkg1")
+                    .addPackageDep("fg2.pkg2", true)
+                    .addPackageDep("fg2.pkg3", true)
                     .build())
             .addConfig(ConfigSpec.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "b")
-                            .setParam("a", "a"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "a"))
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
                     .build())
-            .newPackage("specA.pkg")
+            .newPackage("fg1.pkg1")
                 .getFeaturePack()
-            .newPackage("specB.pkg")
-                .addDependency("p2")
+            .newPackage("fg1.pkg2")
                 .getFeaturePack()
-            .newPackage("p2")
+            .newPackage("fg1.pkg3")
+                .getFeaturePack()
+            .newPackage("fg2.pkg1")
+                .getFeaturePack()
+            .newPackage("fg2.pkg2")
+                .getFeaturePack()
+            .newPackage("fg2.pkg3")
                 .getFeaturePack()
             .getInstaller()
         .install();
@@ -88,7 +91,8 @@ public class ExcludeOptionalFeaturePackageDependencyTestCase extends PmInstallFe
     @Override
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
         return FeaturePackConfig.builder(FP_GAV)
-                .excludePackage("specA.pkg")
+                .excludePackage("fg1.pkg2")
+                .excludePackage("fg2.pkg3")
                 .build();
     }
 
@@ -96,16 +100,16 @@ public class ExcludeOptionalFeaturePackageDependencyTestCase extends PmInstallFe
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("specB.pkg")
-                        .addPackage("p2")
+                        .addPackage("fg1.pkg1")
+                        .addPackage("fg1.pkg3")
+                        .addPackage("fg2.pkg1")
+                        .addPackage("fg2.pkg2")
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
-                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "afg1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "afg2")).build())
                         .build())
                 .build();
     }

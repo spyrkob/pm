@@ -61,6 +61,10 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
         }
 
         FeatureGroupXmlWriter.writeFeatureGroupSpecBody(configE, config, ns);
+
+        if(config.hasPackageDeps()) {
+            PackageXmlWriter.writePackageDeps(config, addElement(configE, Element.PACKAGES));
+        }
         return configE;
     }
 }

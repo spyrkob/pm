@@ -95,6 +95,10 @@ public class FeatureGroupParsingTestCase {
                                 .addFeature(FeatureConfig.newConfig("spec6")
                                         .setParentRef("spec5-ref")
                                         .setParam("p1", "v1"))))
+                .addPackageDep("p1")
+                .addPackageDep("p2", true)
+                .addPackageDep("fp1", "p2")
+                .addPackageDep("fp1", "p3", true)
                 .build();
         assertEquals(expected, xmlConfig);
     }

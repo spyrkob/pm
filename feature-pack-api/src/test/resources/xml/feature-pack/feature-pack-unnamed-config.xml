@@ -57,6 +57,14 @@
         </feature>
       </feature>
     </feature>
+    <packages>
+      <package name="p1"/>
+      <package name="p2" optional="true"/>
+      <feature-pack dependency="fp1">
+        <package name="p2"/>
+        <package name="p3" optional="true"/>
+      </feature-pack>
+    </packages>
   </config>
   
   <default-packages>

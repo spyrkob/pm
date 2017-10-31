@@ -228,6 +228,10 @@ public interface Errors {
         return buf.toString();
     }
 
+    static String resolveFeatureGroupConfig(ArtifactCoords.Gav gav, String groupName) {
+        return "Failed to resolve configuration of feature-group " + groupName + " from " + gav;
+    }
+
     static void appendConfig(final StringBuilder buf, String model, String name) {
         if (model != null) {
             buf.append(" model ").append(model);

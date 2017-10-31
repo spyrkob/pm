@@ -35,9 +35,9 @@ import org.jboss.provisioning.util.StringUtils;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureSpec implements PackageDependencies {
+public class FeatureSpec extends PackageDepsSpec {
 
-    public static class Builder {
+    public static class Builder extends PackageDepsSpecBuilder<Builder> {
 
         private String name;
         private List<FeatureAnnotation> annotations = Collections.emptyList();
@@ -45,8 +45,6 @@ public class FeatureSpec implements PackageDependencies {
         private Map<String, FeatureReferenceSpec> refs = Collections.emptyMap();
         private Map<String, FeatureParameterSpec> params = Collections.emptyMap();
         private List<FeatureParameterSpec> idParams = Collections.emptyList();
-        private PackageDependencyGroupSpec.Builder localDeps;
-        private Map<String, PackageDependencyGroupSpec.Builder> externalDeps = Collections.emptyMap();
         private Set<CapabilitySpec> providedCaps = Collections.emptySet();
         private Set<CapabilitySpec> requiredCaps = Collections.emptySet();
 
@@ -137,36 +135,6 @@ public class FeatureSpec implements PackageDependencies {
             return this;
         }
 
-        public Builder addPackageDependency(String packageName) {
-            getLocalPackageDeps().addDependency(packageName);
-            return this;
-        }
-
-        public Builder addPackageDependency(String packageName, boolean optional) {
-            getLocalPackageDeps().addDependency(packageName, optional);
-            return this;
-        }
-
-        public Builder addPackageDependency(PackageDependencySpec dep) {
-            getLocalPackageDeps().addDependency(dep);
-            return this;
-        }
-
-        public Builder addPackageDependency(String fpDep, String packageName) {
-            getExternalPackageDeps(fpDep).addDependency(packageName);
-            return this;
-        }
-
-        public Builder addPackageDependency(String fpDep, String packageName, boolean optional) {
-            getExternalPackageDeps(fpDep).addDependency(packageName, optional);
-            return this;
-        }
-
-        public Builder addPackageDependency(String fpDep, PackageDependencySpec dep) {
-            getExternalPackageDeps(fpDep).addDependency(dep);
-            return this;
-        }
-
         public Builder providesCapability(String name) throws ProvisioningDescriptionException {
             return providesCapability(name, false);
         }
@@ -213,30 +181,6 @@ public class FeatureSpec implements PackageDependencies {
             return this;
         }
 
-        private PackageDependencyGroupSpec.Builder getLocalPackageDeps() {
-            if(localDeps == null) {
-                localDeps = PackageDependencyGroupSpec.builder();
-            }
-            return localDeps;
-        }
-
-        private PackageDependencyGroupSpec.Builder getExternalPackageDeps(String fpDep) {
-            PackageDependencyGroupSpec.Builder groupBuilder = externalDeps.get(fpDep);
-            if(groupBuilder == null) {
-                groupBuilder = PackageDependencyGroupSpec.builder(fpDep);
-                switch(externalDeps.size()) {
-                    case 0:
-                        externalDeps = Collections.singletonMap(fpDep, groupBuilder);
-                        break;
-                    case 1:
-                        externalDeps = new LinkedHashMap<>(externalDeps);
-                    default:
-                        externalDeps.put(fpDep, groupBuilder);
-                }
-            }
-            return groupBuilder;
-        }
-
         public FeatureSpec build() throws ProvisioningDescriptionException {
             return new FeatureSpec(this);
         }
@@ -256,12 +200,11 @@ public class FeatureSpec implements PackageDependencies {
     final Map<String, FeatureReferenceSpec> featureRefs;
     final Map<String, FeatureParameterSpec> params;
     final List<FeatureParameterSpec> idParams;
-    private final PackageDependencyGroupSpec localPkgDeps;
-    private final Map<String, PackageDependencyGroupSpec> externalPkgDeps;
     final Set<CapabilitySpec> providedCaps;
     final Set<CapabilitySpec> requiredCaps;
 
     private FeatureSpec(Builder builder) {
+        super(builder);
         this.name = builder.name;
         this.annotations = builder.annotations.size() > 1 ? Collections.unmodifiableList(builder.annotations) : builder.annotations;
         this.featureDeps = builder.featureDeps.size() > 1 ? Collections.unmodifiableMap(builder.featureDeps) : builder.featureDeps;
@@ -270,23 +213,6 @@ public class FeatureSpec implements PackageDependencies {
         this.idParams = builder.idParams.size() > 1 ? Collections.unmodifiableList(builder.idParams) : builder.idParams;
         this.providedCaps = builder.providedCaps.size() > 1 ? Collections.unmodifiableSet(builder.providedCaps) : builder.providedCaps;
         this.requiredCaps = builder.requiredCaps.size() > 1 ? Collections.unmodifiableSet(builder.requiredCaps) : builder.requiredCaps;
-
-        this.localPkgDeps = builder.localDeps == null ? PackageDependencyGroupSpec.EMPTY_LOCAL : builder.localDeps.build();
-        if(builder.externalDeps.isEmpty()) {
-            externalPkgDeps = Collections.emptyMap();
-        } else {
-            final int size = builder.externalDeps.size();
-            if(size == 1) {
-                final Map.Entry<String, PackageDependencyGroupSpec.Builder> entry = builder.externalDeps.entrySet().iterator().next();
-                externalPkgDeps = Collections.singletonMap(entry.getKey(), entry.getValue().build());
-            } else {
-                final Map<String, PackageDependencyGroupSpec> deps = new LinkedHashMap<>(size);
-                for(Map.Entry<String, PackageDependencyGroupSpec.Builder> entry : builder.externalDeps.entrySet()) {
-                    deps.put(entry.getKey(), entry.getValue().build());
-                }
-                externalPkgDeps = Collections.unmodifiableMap(deps);
-            }
-        }
     }
 
     public String getName() {
@@ -378,48 +304,16 @@ public class FeatureSpec implements PackageDependencies {
     }
 
     @Override
-    public boolean hasPackageDeps() {
-        return !(localPkgDeps.isEmpty() && externalPkgDeps.isEmpty());
-    }
-
-    @Override
-    public boolean hasLocalPackageDeps() {
-        return !localPkgDeps.isEmpty();
-    }
-
-    @Override
-    public PackageDependencyGroupSpec getLocalPackageDeps() {
-        return localPkgDeps;
-    }
-
-    @Override
-    public boolean hasExternalPackageDeps() {
-        return !externalPkgDeps.isEmpty();
-    }
-
-    @Override
-    public Collection<String> getExternalPackageSources() {
-        return externalPkgDeps.keySet();
-    }
-
-    @Override
-    public PackageDependencyGroupSpec getExternalPackageDeps(String fpDep) {
-        return externalPkgDeps.get(fpDep);
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((annotations == null) ? 0 : annotations.hashCode());
-        result = prime * result + ((externalPkgDeps == null) ? 0 : externalPkgDeps.hashCode());
         result = prime * result + ((featureDeps == null) ? 0 : featureDeps.hashCode());
+        result = prime * result + ((featureRefs == null) ? 0 : featureRefs.hashCode());
         result = prime * result + ((idParams == null) ? 0 : idParams.hashCode());
-        result = prime * result + ((localPkgDeps == null) ? 0 : localPkgDeps.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((providedCaps == null) ? 0 : providedCaps.hashCode());
-        result = prime * result + ((featureRefs == null) ? 0 : featureRefs.hashCode());
         result = prime * result + ((requiredCaps == null) ? 0 : requiredCaps.hashCode());
         return result;
     }
@@ -428,7 +322,7 @@ public class FeatureSpec implements PackageDependencies {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
@@ -438,25 +332,20 @@ public class FeatureSpec implements PackageDependencies {
                 return false;
         } else if (!annotations.equals(other.annotations))
             return false;
-        if (externalPkgDeps == null) {
-            if (other.externalPkgDeps != null)
-                return false;
-        } else if (!externalPkgDeps.equals(other.externalPkgDeps))
-            return false;
         if (featureDeps == null) {
             if (other.featureDeps != null)
                 return false;
         } else if (!featureDeps.equals(other.featureDeps))
             return false;
+        if (featureRefs == null) {
+            if (other.featureRefs != null)
+                return false;
+        } else if (!featureRefs.equals(other.featureRefs))
+            return false;
         if (idParams == null) {
             if (other.idParams != null)
                 return false;
         } else if (!idParams.equals(other.idParams))
-            return false;
-        if (localPkgDeps == null) {
-            if (other.localPkgDeps != null)
-                return false;
-        } else if (!localPkgDeps.equals(other.localPkgDeps))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -472,11 +361,6 @@ public class FeatureSpec implements PackageDependencies {
             if (other.providedCaps != null)
                 return false;
         } else if (!providedCaps.equals(other.providedCaps))
-            return false;
-        if (featureRefs == null) {
-            if (other.featureRefs != null)
-                return false;
-        } else if (!featureRefs.equals(other.featureRefs))
             return false;
         if (requiredCaps == null) {
             if (other.requiredCaps != null)

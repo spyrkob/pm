@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.config;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ import org.jboss.provisioning.util.StringUtils;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> implements ConfigItem, ConfigItemContainer, Cloneable {
+public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigItemContainerBuilder<FeatureConfig>, Cloneable {
 
     public static FeatureConfig newConfig(FeatureId id) throws ProvisioningDescriptionException {
         final FeatureConfig config = new FeatureConfig(id.getSpec());
@@ -55,11 +56,11 @@ public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> imp
     SpecId specId;
     Map<String, String> params = Collections.emptyMap();
     Map<FeatureId, FeatureDependencySpec> deps = Collections.emptyMap();
+    protected List<ConfigItem> items = Collections.emptyList();
     String parentRef;
     String fpDep;
 
     public FeatureConfig(FeatureConfig copy) {
-        super(copy);
         specId = copy.specId;
         fpDep = copy.fpDep;
         deps = copy.deps;
@@ -68,6 +69,24 @@ public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> imp
             params = new HashMap<>(copy.params);
         } else {
             params = copy.params;
+        }
+        if(copy.items.isEmpty()) {
+            items = Collections.emptyList();
+        } else if(copy.items.size() == 1) {
+            ConfigItem item = copy.items.get(0);
+            if(!item.isGroup()) {
+                item = new FeatureConfig((FeatureConfig) item);
+            }
+            items = Collections.singletonList(item);
+        } else {
+            final List<ConfigItem> tmp = new ArrayList<>(copy.items.size());
+            for(ConfigItem item : copy.items) {
+                if(!item.isGroup()) {
+                    item = new FeatureConfig((FeatureConfig) item);
+                }
+                tmp.add(item);
+            }
+            items = Collections.unmodifiableList(tmp);
         }
     }
 
@@ -194,11 +213,26 @@ public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> imp
     }
 
     @Override
+    public FeatureConfig addConfigItem(ConfigItem item) {
+        switch (items.size()) {
+            case 0:
+                items = Collections.singletonList(item);
+                break;
+            case 1:
+                items = new ArrayList<>(items);
+            default:
+                items.add(item);
+        }
+        return this;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
-        int result = super.hashCode();
+        int result = 1;
         result = prime * result + ((deps == null) ? 0 : deps.hashCode());
         result = prime * result + ((fpDep == null) ? 0 : fpDep.hashCode());
+        result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
@@ -209,7 +243,7 @@ public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> imp
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (!super.equals(obj))
+        if (obj == null)
             return false;
         if (getClass() != obj.getClass())
             return false;
@@ -223,6 +257,11 @@ public class FeatureConfig extends ConfigItemContainerBuilder<FeatureConfig> imp
             if (other.fpDep != null)
                 return false;
         } else if (!fpDep.equals(other.fpDep))
+            return false;
+        if (items == null) {
+            if (other.items != null)
+                return false;
+        } else if (!items.equals(other.items))
             return false;
         if (params == null) {
             if (other.params != null)
