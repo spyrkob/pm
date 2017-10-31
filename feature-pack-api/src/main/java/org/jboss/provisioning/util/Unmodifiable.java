@@ -15,15 +15,31 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config;
+package org.jboss.provisioning.util;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public abstract class PackageDepsConfig {
+public class Unmodifiable {
 
-    protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(Map<? extends K, ? extends V> m) {
+        return m.size() > 1 ? Collections.unmodifiableMap(m) : (Map<K, V>) m;
+    }
 
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> list(List<? extends T> l) {
+        return l.size() > 1 ? Collections.unmodifiableList(l) : (List<T>) l;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Set<T> set(Set<? extends T> s) {
+        return s.size() > 1 ? Collections.unmodifiableSet(s) : (Set<T>) s;
     }
 }

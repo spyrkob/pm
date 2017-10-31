@@ -62,7 +62,6 @@ import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.PackageDepsSpec;
-import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.IoUtils;
@@ -890,8 +889,7 @@ public class ProvisioningRuntimeBuilder {
     private void processPackageDeps(FeaturePackRuntime.Builder fp, final PackageDepsSpec pkgDeps)
             throws ProvisioningException {
         if (pkgDeps.hasLocalPackageDeps()) {
-            PackageDependencyGroupSpec localDeps = pkgDeps.getLocalPackageDeps();
-            for (PackageDependencySpec dep : localDeps.getDescriptions()) {
+            for (PackageDependencySpec dep : pkgDeps.getLocalPackageDeps()) {
                 if(fp.isPackageExcluded(dep.getName())) {
                     if(!dep.isOptional()) {
                         throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, dep.getName()));
@@ -921,9 +919,8 @@ public class ProvisioningRuntimeBuilder {
                 if(targetFp == null) {
                     throw new IllegalStateException(depSpec.getName() + " " + depSpec.getTarget().getGav() + " has not been layed out yet");
                 }
-                final PackageDependencyGroupSpec externalDeps = pkgDeps.getExternalPackageDeps(depName);
                 boolean resolvedPackages = false;
-                for(PackageDependencySpec pkgDep : externalDeps.getDescriptions()) {
+                for(PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
                     if(targetFp.isPackageExcluded(pkgDep.getName())) {
                         if(!pkgDep.isOptional()) {
                             throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(targetFp.gav, pkgDep.getName()));

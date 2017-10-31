@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  * Representation of the feature pack build config
@@ -120,10 +121,10 @@ public class WildFlyFeaturePackBuild {
     private final List<ConfigSpec> configs;
 
     private WildFlyFeaturePackBuild(Builder builder) {
-        this.dependencies = builder.dependencies.size() > 1 ? Collections.unmodifiableList(builder.dependencies) : builder.dependencies;
-        this.schemaGroups = builder.schemaGroups.size() > 1 ? Collections.unmodifiableSet(builder.schemaGroups) : builder.schemaGroups;
-        this.defaultPackages = builder.defaultPackages.size() > 1 ? Collections.unmodifiableSet(builder.defaultPackages) : builder.defaultPackages;
-        this.configs = builder.configs.size() > 1 ? Collections.unmodifiableList(builder.configs) : builder.configs;
+        this.dependencies = Unmodifiable.list(builder.dependencies);
+        this.schemaGroups = Unmodifiable.set(builder.schemaGroups);
+        this.defaultPackages = Unmodifiable.set(builder.defaultPackages);
+        this.configs = Unmodifiable.list(builder.configs);
     }
 
     public Collection<String> getDefaultPackages() {

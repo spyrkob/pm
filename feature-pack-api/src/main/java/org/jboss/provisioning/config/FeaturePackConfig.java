@@ -30,6 +30,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.util.StringUtils;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  * This class represents a feature-pack configuration to be installed.
@@ -266,14 +267,14 @@ public class FeaturePackConfig {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
         this.inheritConfigs = builder.inheritConfigs;
-        this.includedModels = builder.includedModels.size() > 1 ? Collections.unmodifiableSet(builder.includedModels) : builder.includedModels;
-        this.excludedModels = builder.excludedModels.size() > 1 ? Collections.unmodifiableSet(builder.excludedModels) : builder.excludedModels;
-        this.includedConfigs = builder.includedConfigs;
-        this.excludedConfigs = builder.excludedConfigs;
-        this.definedConfigs = builder.definedConfigs;
+        this.includedModels = Unmodifiable.set(builder.includedModels);
+        this.excludedModels = Unmodifiable.set(builder.excludedModels);
+        this.includedConfigs = Unmodifiable.map(builder.includedConfigs);
+        this.excludedConfigs = Unmodifiable.map(builder.excludedConfigs);
+        this.definedConfigs = Unmodifiable.map(builder.definedConfigs);
         this.inheritPackages = builder.inheritPackages;
-        this.excludedPackages = builder.excludedPackages.size() > 1 ? Collections.unmodifiableSet(builder.excludedPackages) : builder.excludedPackages;
-        this.includedPackages = builder.includedPackages.size() > 1 ? Collections.unmodifiableMap(builder.includedPackages) : builder.includedPackages;
+        this.excludedPackages = Unmodifiable.set(builder.excludedPackages);
+        this.includedPackages = Unmodifiable.map(builder.includedPackages);
     }
 
     public ArtifactCoords.Gav getGav() {

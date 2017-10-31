@@ -30,6 +30,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.util.Unmodifiable;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
@@ -90,7 +91,7 @@ public class ProvisioningConfig {
         }
 
         public ProvisioningConfig build() {
-            return new ProvisioningConfig(featurePacks.size() > 1 ? Collections.unmodifiableMap(featurePacks) : featurePacks);
+            return new ProvisioningConfig(Unmodifiable.map(featurePacks));
         }
 
         public void exportToXml(Path location) throws IOException {

@@ -23,10 +23,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.util.Unmodifiable;
 
 
 /**
@@ -216,13 +218,13 @@ public class WildFlyPackageTasks {
     private final List<FileFilter> unixLineEndFilters;
 
     private WildFlyPackageTasks(Builder builder) {
-        this.copyArtifacts = Collections.unmodifiableList(builder.copyArtifacts);
-        this.copyPaths = Collections.unmodifiableList(builder.copyPaths);
-        this.deletePaths = Collections.unmodifiableList(builder.deletePaths);
-        this.filePermissions = Collections.unmodifiableList(builder.filePermissions);
-        this.mkDirs = Collections.unmodifiableList(builder.mkDirs);
-        this.windowsLineEndFilters = Collections.unmodifiableList(builder.windowsLineEndFilters);
-        this.unixLineEndFilters = Collections.unmodifiableList(builder.unixLineEndFilters);
+        this.copyArtifacts = Unmodifiable.list(builder.copyArtifacts);
+        this.copyPaths = Unmodifiable.list(builder.copyPaths);
+        this.deletePaths = Unmodifiable.list(builder.deletePaths);
+        this.filePermissions = Unmodifiable.list(builder.filePermissions);
+        this.mkDirs = Unmodifiable.list(builder.mkDirs);
+        this.windowsLineEndFilters = Unmodifiable.list(builder.windowsLineEndFilters);
+        this.unixLineEndFilters = Unmodifiable.list(builder.unixLineEndFilters);
     }
 
     public boolean hasCopyArtifacts() {

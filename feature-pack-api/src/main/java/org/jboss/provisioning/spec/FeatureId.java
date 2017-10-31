@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.StringUtils;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -135,7 +136,7 @@ public class FeatureId {
             throw new ProvisioningDescriptionException("ID paramaters are missing");
         }
         this.specId = SpecId.fromString(specName);
-        this.params = params.size() == 1 ? params : Collections.unmodifiableMap(params);
+        this.params = Unmodifiable.map(params);
     }
 
     public SpecId getSpec() {

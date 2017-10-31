@@ -17,6 +17,7 @@
 package org.jboss.provisioning.spec;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,70 +27,85 @@ import java.util.Map;
  */
 public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>> {
 
-    protected PackageDependencyGroupSpec.Builder localPkgDeps;
-    protected Map<String, PackageDependencyGroupSpec.Builder> externalPkgDeps = Collections.emptyMap();
+    protected Map<String, PackageDependencySpec> localPkgDeps = Collections.emptyMap();
+    protected Map<String, Map<String, PackageDependencySpec>> externalPkgDeps = Collections.emptyMap();
 
-    @SuppressWarnings("unchecked")
     public T addPackageDep(String packageName) {
-        getLocalGroupBuilder().addDependency(packageName);
-        return (T) this;
+        return addPackageDep(packageName, false);
     }
 
-    @SuppressWarnings("unchecked")
     public T addPackageDep(String packageName, boolean optional) {
-        getLocalGroupBuilder().addDependency(packageName, optional);
-        return (T) this;
+        return addPackageDep(PackageDependencySpec.create(packageName, optional));
     }
 
     @SuppressWarnings("unchecked")
     public T addPackageDep(PackageDependencySpec dep) {
-        getLocalGroupBuilder().addDependency(dep);
+        switch(localPkgDeps.size()) {
+            case 0:
+                localPkgDeps = Collections.singletonMap(dep.getName(), dep);
+                break;
+            case 1:
+                if(localPkgDeps.containsKey(dep.getName())) {
+                    localPkgDeps = Collections.singletonMap(dep.getName(), dep);
+                    return (T) this;
+                }
+                final Map.Entry<String, PackageDependencySpec> first = localPkgDeps.entrySet().iterator().next();
+                localPkgDeps = new LinkedHashMap<>(2);
+                localPkgDeps.put(first.getKey(), first.getValue());
+            default:
+                localPkgDeps.put(dep.getName(), dep);
+        }
         return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
     public T addPackageDep(String fpDep, String packageName) {
-        getExternalGroupBuilder(fpDep).addDependency(packageName);
-        return (T) this;
+        return addPackageDep(fpDep, packageName, false);
     }
 
-    @SuppressWarnings("unchecked")
     public T addPackageDep(String fpDep, String packageName, boolean optional) {
-        getExternalGroupBuilder(fpDep).addDependency(packageName, optional);
-        return (T) this;
+        return addPackageDep(fpDep, PackageDependencySpec.create(packageName, optional));
     }
 
     @SuppressWarnings("unchecked")
     public T addPackageDep(String fpDep, PackageDependencySpec dep) {
-        getExternalGroupBuilder(fpDep).addDependency(dep);
+        if(fpDep == null) {
+            return addPackageDep(dep);
+        }
+        if(externalPkgDeps.isEmpty()) {
+            externalPkgDeps = Collections.singletonMap(fpDep, Collections.singletonMap(dep.getName(), dep));
+            return (T) this;
+        }
+        Map<String, PackageDependencySpec> deps = externalPkgDeps.get(fpDep);
+        if(deps == null) {
+            if(externalPkgDeps.size() == 1) {
+                final Map.Entry<String, Map<String, PackageDependencySpec>> first = externalPkgDeps.entrySet().iterator().next();
+                externalPkgDeps = new HashMap<>(2);
+                externalPkgDeps.put(first.getKey(), first.getValue());
+            }
+            externalPkgDeps.put(fpDep, Collections.singletonMap(dep.getName(), dep));
+            return (T) this;
+        }
+        if(deps.size() == 1) {
+            if(deps.containsKey(dep.getName())) {
+                deps = externalPkgDeps.put(fpDep, Collections.singletonMap(dep.getName(), dep));
+            } else {
+                final Map.Entry<String, PackageDependencySpec> first = deps.entrySet().iterator().next();
+                deps = new HashMap<>(2);
+                deps.put(first.getKey(), first.getValue());
+                deps.put(dep.getName(), dep);
+            }
+            if(externalPkgDeps.size() == 1) {
+                externalPkgDeps = Collections.singletonMap(fpDep, deps);
+            } else {
+                externalPkgDeps.put(fpDep, deps);
+            }
+            return (T) this;
+        }
+        deps.put(dep.getName(), dep);
         return (T) this;
     }
 
     public boolean hasPackageDeps() {
         return localPkgDeps != null || !externalPkgDeps.isEmpty();
-    }
-
-    private PackageDependencyGroupSpec.Builder getLocalGroupBuilder() {
-        if(localPkgDeps == null) {
-            localPkgDeps = PackageDependencyGroupSpec.builder();
-        }
-        return localPkgDeps;
-    }
-
-    private PackageDependencyGroupSpec.Builder getExternalGroupBuilder(String groupName) {
-        PackageDependencyGroupSpec.Builder groupBuilder = externalPkgDeps.get(groupName);
-        if(groupBuilder == null) {
-            groupBuilder = PackageDependencyGroupSpec.builder(groupName);
-            switch(externalPkgDeps.size()) {
-                case 0:
-                    externalPkgDeps = Collections.singletonMap(groupName, groupBuilder);
-                    break;
-                case 1:
-                    externalPkgDeps = new LinkedHashMap<>(externalPkgDeps);
-                default:
-                    externalPkgDeps.put(groupName, groupBuilder);
-            }
-        }
-        return groupBuilder;
     }
 }

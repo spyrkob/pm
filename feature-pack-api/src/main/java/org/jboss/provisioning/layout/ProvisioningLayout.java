@@ -28,9 +28,9 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.PackageDependencyGroupSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  * This class describes a layout of feature-packs from which
@@ -87,8 +87,7 @@ public class ProvisioningLayout {
                                 if(fpDepLayout == null) {
                                     throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDepConfig.getGav()));
                                 }
-                                final PackageDependencyGroupSpec pkgDepGroup = pkg.getExternalPackageDeps(depName);
-                                for(PackageDependencySpec pkgDep : pkgDepGroup.getDescriptions()) {
+                                for(PackageDependencySpec pkgDep : pkg.getExternalPackageDeps(depName)) {
                                     final String pkgDepName = pkgDep.getName();
                                     if(!fpDepLayout.hasPackage(pkgDepName)) {
                                         throw new ProvisioningDescriptionException(
@@ -115,7 +114,7 @@ public class ProvisioningLayout {
     private final Map<ArtifactCoords.Ga, FeaturePackLayout> featurePacks;
 
     private ProvisioningLayout(Builder builder) {
-        featurePacks = builder.featurePacks.size() > 1 ? Collections.unmodifiableMap(builder.featurePacks) : builder.featurePacks;
+        featurePacks = Unmodifiable.map(builder.featurePacks);
     }
 
     public boolean hasFeaturePacks() {

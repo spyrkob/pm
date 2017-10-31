@@ -21,9 +21,6 @@ package org.jboss.provisioning.config;
  *
  * @author Alexey Loubyansky
  */
-public abstract class PackageDepsConfig {
+public class PackageDepGroupConfig {
 
-    protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
-
-    }
 }

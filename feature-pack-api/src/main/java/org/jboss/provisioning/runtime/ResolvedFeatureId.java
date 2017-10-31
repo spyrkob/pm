@@ -25,6 +25,7 @@ import java.util.Map;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -180,7 +181,7 @@ public class ResolvedFeatureId {
         if(filtered.isEmpty()) {
             filtered = params;
         }
-        this.params = filtered.size() > 1 ? Collections.unmodifiableMap(filtered) : filtered;
+        this.params = Unmodifiable.map(filtered);
     }
 
     public ResolvedSpecId getSpecId() {

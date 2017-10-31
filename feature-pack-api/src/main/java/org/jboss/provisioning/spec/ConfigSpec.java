@@ -20,7 +20,9 @@ package org.jboss.provisioning.spec;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.jboss.provisioning.util.StringUtils;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  *
@@ -67,7 +69,7 @@ public class ConfigSpec extends FeatureGroupSupport {
     private ConfigSpec(Builder builder) {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
-        this.props = builder.props.size() > 1 ? Collections.unmodifiableMap(builder.props) : builder.props;
+        this.props = Unmodifiable.map(builder.props);
     }
 
     public ConfigId getId() {

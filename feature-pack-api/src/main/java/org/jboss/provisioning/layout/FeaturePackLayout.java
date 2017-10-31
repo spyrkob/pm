@@ -31,6 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
+import org.jboss.provisioning.util.Unmodifiable;
 
 /**
  * This class combines the feature-pack and the package specs that belong
@@ -81,7 +82,7 @@ public class FeaturePackLayout {
                 for (PackageSpec pkg : packages.values()) {
                     if (pkg.hasLocalPackageDeps()) {
                         List<String> notFound = null;
-                        for(PackageDependencySpec pkgDep : pkg.getLocalPackageDeps().getDescriptions()) {
+                        for(PackageDependencySpec pkgDep : pkg.getLocalPackageDeps()) {
                             final PackageSpec depSpec = packages.get(pkgDep.getName());
                             if(depSpec == null) {
                                 if(notFound == null) {
@@ -106,7 +107,7 @@ public class FeaturePackLayout {
                     }
                 }
             }
-            return new FeaturePackLayout(builtSpec, packages.size() > 1 ? Collections.unmodifiableMap(packages) : packages, externalPackageDependencies);
+            return new FeaturePackLayout(builtSpec, Unmodifiable.map(packages), externalPackageDependencies);
         }
     }
 
