@@ -35,7 +35,7 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
     }
 
     public T addPackageDep(String packageName, boolean optional) {
-        return addPackageDep(PackageDependencySpec.create(packageName, optional));
+        return addPackageDep(PackageDependencySpec.forPackage(packageName, optional));
     }
 
     @SuppressWarnings("unchecked")
@@ -63,7 +63,7 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
     }
 
     public T addPackageDep(String fpDep, String packageName, boolean optional) {
-        return addPackageDep(fpDep, PackageDependencySpec.create(packageName, optional));
+        return addPackageDep(fpDep, PackageDependencySpec.forPackage(packageName, optional));
     }
 
     @SuppressWarnings("unchecked")

@@ -24,40 +24,13 @@ package org.jboss.provisioning.spec;
  */
 public class PackageDependencySpec implements Comparable<PackageDependencySpec> {
 
-    public static class Builder {
-
-        private final String name;
-        private final boolean optional;
-
-        protected Builder(String name) {
-            this(name, false);
-        }
-
-        protected Builder(String name, boolean optional) {
-            this.name = name;
-            this.optional = optional;
-        }
-
-        public PackageDependencySpec build() {
-            return new PackageDependencySpec(this);
-        }
-    }
-
-    public static Builder builder(String packageName) {
-        return new Builder(packageName);
-    }
-
-    public static Builder builder(String packageName, boolean optional) {
-        return new Builder(packageName, optional);
-    }
-
     /**
      * Creates a required dependency on the provided package name.
      *
      * @param name  target package name
      * @return  dependency description
      */
-    public static PackageDependencySpec create(String name) {
+    public static PackageDependencySpec forPackage(String name) {
         return new PackageDependencySpec(name, false);
     }
 
@@ -68,7 +41,7 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
      * @param optional  whether the dependency should be optional
      * @return  dependency description
      */
-    public static PackageDependencySpec create(String name, boolean optional) {
+    public static PackageDependencySpec forPackage(String name, boolean optional) {
         return new PackageDependencySpec(name, optional);
     }
 
@@ -78,11 +51,6 @@ public class PackageDependencySpec implements Comparable<PackageDependencySpec> 
     protected PackageDependencySpec(String name, boolean optional) {
         this.name = name;
         this.optional = optional;
-    }
-
-    protected PackageDependencySpec(Builder builder) {
-        this.name = builder.name;
-        this.optional = builder.optional;
     }
 
     public String getName() {

@@ -83,7 +83,7 @@ public class PackageSpec extends PackageDepsSpec {
             logger.increaseOffset();
             logger.println("Dependencies");
             logger.increaseOffset();
-            for(PackageDependencySpec dependency : localPkgDeps.values()) {
+            for(PackageDependencySpec dependency : localPkgDeps) {
                 logger.println(dependency.toString());
             }
             logger.decreaseOffset();

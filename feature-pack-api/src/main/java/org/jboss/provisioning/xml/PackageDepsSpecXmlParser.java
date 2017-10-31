@@ -189,7 +189,7 @@ public class PackageDepsSpecXmlParser {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         ParsingUtils.parseNoContent(reader);
-        return PackageDependencySpec.create(name, optional);
+        return PackageDependencySpec.forPackage(name, optional);
     }
 
     private static void parseFeaturePackDependency(XMLExtendedStreamReader reader, PackageDepsSpecBuilder<?> pkgDeps) throws XMLStreamException {

@@ -17,9 +17,11 @@
 
 package org.jboss.provisioning.spec;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.provisioning.util.Unmodifiable;
@@ -30,11 +32,11 @@ import org.jboss.provisioning.util.Unmodifiable;
  */
 public abstract class PackageDepsSpec {
 
-    protected final Map<String, PackageDependencySpec> localPkgDeps;
-    protected final Map<String, Map<String, PackageDependencySpec>> externalPkgDeps;
+    protected final List<PackageDependencySpec> localPkgDeps;
+    protected final Map<String, List<PackageDependencySpec>> externalPkgDeps;
 
     protected PackageDepsSpec() {
-        localPkgDeps = Collections.emptyMap();
+        localPkgDeps = Collections.emptyList();
         externalPkgDeps = Collections.emptyMap();
     }
 
@@ -44,19 +46,35 @@ public abstract class PackageDepsSpec {
     }
 
     protected PackageDepsSpec(PackageDepsSpecBuilder<?> builder) {
-        this.localPkgDeps = Unmodifiable.map(builder.localPkgDeps);
+        this.localPkgDeps = getValueList(builder.localPkgDeps);
         if(builder.externalPkgDeps.isEmpty()) {
             externalPkgDeps = Collections.emptyMap();
         } else if(builder.externalPkgDeps.size() == 1) {
             final Map.Entry<String, Map<String, PackageDependencySpec>> first = builder.externalPkgDeps.entrySet().iterator().next();
-            externalPkgDeps = Collections.singletonMap(first.getKey(), Unmodifiable.map(first.getValue()));
+            externalPkgDeps = Collections.singletonMap(first.getKey(), getValueList(first.getValue()));
         } else {
-            final Map<String, Map<String, PackageDependencySpec>> tmp = new HashMap<>(builder.externalPkgDeps);
+            final Map<String, List<PackageDependencySpec>> tmp = new HashMap<>(builder.externalPkgDeps.size());
             for(Map.Entry<String, Map<String, PackageDependencySpec>> externalEntry : builder.externalPkgDeps.entrySet()) {
-                tmp.put(externalEntry.getKey(), Unmodifiable.map(externalEntry.getValue()));
+                tmp.put(externalEntry.getKey(), getValueList(externalEntry.getValue()));
             }
             externalPkgDeps = Unmodifiable.map(tmp);
         }
+    }
+
+    private List<PackageDependencySpec> getValueList(Map<String, PackageDependencySpec> localPkgDeps2) {
+        final List<PackageDependencySpec> list;
+        if(localPkgDeps2.isEmpty()) {
+            list = Collections.emptyList();
+        } else if(localPkgDeps2.size() == 1) {
+            list = Collections.singletonList(localPkgDeps2.entrySet().iterator().next().getValue());
+        } else {
+            final List<PackageDependencySpec> tmp = new ArrayList<>(localPkgDeps2.size());
+            for(Map.Entry<String, PackageDependencySpec> entry : localPkgDeps2.entrySet()) {
+                tmp.add(entry.getValue());
+            }
+            list = Collections.unmodifiableList(tmp);
+        }
+        return list;
     }
 
     public boolean hasPackageDeps() {
@@ -68,7 +86,7 @@ public abstract class PackageDepsSpec {
     }
 
     public Collection<PackageDependencySpec> getLocalPackageDeps() {
-        return localPkgDeps.values();
+        return localPkgDeps;
     }
 
     public boolean hasExternalPackageDeps() {
@@ -80,8 +98,8 @@ public abstract class PackageDepsSpec {
     }
 
     public Collection<PackageDependencySpec> getExternalPackageDeps(String fpDep) {
-        final Map<String, PackageDependencySpec> fpDeps = externalPkgDeps.get(fpDep);
-        return fpDeps == null ? Collections.emptyList() : fpDeps.values();
+        final List<PackageDependencySpec> fpDeps = externalPkgDeps.get(fpDep);
+        return fpDeps == null ? Collections.emptyList() : fpDeps;
     }
 
     @Override
