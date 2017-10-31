@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.ConfigSpec;
@@ -37,9 +36,9 @@ import org.jboss.provisioning.util.Unmodifiable;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackConfig {
+public class FeaturePackConfig extends PackageDepsConfig {
 
-    public static class Builder {
+    public static class Builder extends PackageDepsConfigBuilder<Builder> {
 
         protected final ArtifactCoords.Gav gav;
         protected boolean inheritConfigs = true;
@@ -48,9 +47,6 @@ public class FeaturePackConfig {
         protected Set<String> excludedModels = Collections.emptySet();
         protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
         protected Map<ConfigId, ConfigSpec> definedConfigs = Collections.emptyMap();
-        protected boolean inheritPackages = true;
-        protected Set<String> excludedPackages = Collections.emptySet();
-        protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -63,70 +59,6 @@ public class FeaturePackConfig {
 
         public Builder setInheritConfigs(boolean inherit) {
             this.inheritConfigs = inherit;
-            return this;
-        }
-
-        public Builder setInheritPackages(boolean inheritSelectedPackages) {
-            this.inheritPackages = inheritSelectedPackages;
-            return this;
-        }
-
-        public Builder excludePackage(String packageName) throws ProvisioningDescriptionException {
-            if(includedPackages.containsKey(packageName)) {
-                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
-            }
-            if(!excludedPackages.contains(packageName)) {
-                switch(excludedPackages.size()) {
-                    case 0:
-                        excludedPackages = Collections.singleton(packageName);
-                        break;
-                    case 1:
-                        if(excludedPackages.contains(packageName)) {
-                            return this;
-                        }
-                        excludedPackages = new HashSet<>(excludedPackages);
-                    default:
-                        excludedPackages.add(packageName);
-                }
-            }
-            return this;
-        }
-
-        public Builder excludeAllPackages(Collection<String> packageNames) throws ProvisioningDescriptionException {
-            for(String packageName : packageNames) {
-                excludePackage(packageName);
-            }
-            return this;
-        }
-
-        public Builder includeAllPackages(Collection<PackageConfig> packageConfigs) throws ProvisioningDescriptionException {
-            for(PackageConfig packageConfig : packageConfigs) {
-                includePackage(packageConfig);
-            }
-            return this;
-        }
-
-        public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
-            return includePackage(PackageConfig.forName(packageName));
-        }
-
-        private Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
-            if(excludedPackages.contains(packageConfig.getName())) {
-                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageConfig.getName()));
-            }
-
-            if(includedPackages.isEmpty()) {
-                includedPackages = Collections.singletonMap(packageConfig.getName(), packageConfig);
-                return this;
-            }
-
-            if(!includedPackages.containsKey(packageConfig.getName())) {
-                if(includedPackages.size() == 1) {
-                    includedPackages = new HashMap<>(includedPackages);
-                }
-                includedPackages.put(packageConfig.getName(), packageConfig);
-                return this;
-            }
             return this;
         }
 
@@ -259,11 +191,9 @@ public class FeaturePackConfig {
     private final Map<ConfigId, IncludedConfig> includedConfigs;
     private final Map<String, Set<String>> excludedConfigs;
     private final Map<ConfigId, ConfigSpec> definedConfigs;
-    private final boolean inheritPackages;
-    private final Set<String> excludedPackages;
-    private final Map<String, PackageConfig> includedPackages;
 
     protected FeaturePackConfig(Builder builder) {
+        super(builder);
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
         this.inheritConfigs = builder.inheritConfigs;
@@ -272,9 +202,6 @@ public class FeaturePackConfig {
         this.includedConfigs = Unmodifiable.map(builder.includedConfigs);
         this.excludedConfigs = Unmodifiable.map(builder.excludedConfigs);
         this.definedConfigs = Unmodifiable.map(builder.definedConfigs);
-        this.inheritPackages = builder.inheritPackages;
-        this.excludedPackages = Unmodifiable.set(builder.excludedPackages);
-        this.includedPackages = Unmodifiable.map(builder.includedPackages);
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -350,52 +277,17 @@ public class FeaturePackConfig {
         return definedConfigs.values();
     }
 
-    public boolean isInheritPackages() {
-        return inheritPackages;
-    }
-
-    public boolean hasIncludedPackages() {
-        return !includedPackages.isEmpty();
-    }
-
-    public boolean isIncluded(String packageName) {
-        return includedPackages.containsKey(packageName);
-    }
-
-    public PackageConfig getIncludedPackage(String packageName) {
-        return includedPackages.get(packageName);
-    }
-
-    public Collection<PackageConfig> getIncludedPackages() {
-        return includedPackages.values();
-    }
-
-    public boolean hasExcludedPackages() {
-        return !excludedPackages.isEmpty();
-    }
-
-    public boolean isExcluded(String packageName) {
-        return excludedPackages.contains(packageName);
-    }
-
-    public Set<String> getExcludedPackages() {
-        return excludedPackages;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((definedConfigs == null) ? 0 : definedConfigs.hashCode());
         result = prime * result + ((excludedConfigs == null) ? 0 : excludedConfigs.hashCode());
         result = prime * result + ((excludedModels == null) ? 0 : excludedModels.hashCode());
-        result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
         result = prime * result + ((includedConfigs == null) ? 0 : includedConfigs.hashCode());
         result = prime * result + ((includedModels == null) ? 0 : includedModels.hashCode());
-        result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
         result = prime * result + (inheritConfigs ? 1231 : 1237);
-        result = prime * result + (inheritPackages ? 1231 : 1237);
         return result;
     }
 
@@ -403,7 +295,7 @@ public class FeaturePackConfig {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
@@ -423,11 +315,6 @@ public class FeaturePackConfig {
                 return false;
         } else if (!excludedModels.equals(other.excludedModels))
             return false;
-        if (excludedPackages == null) {
-            if (other.excludedPackages != null)
-                return false;
-        } else if (!excludedPackages.equals(other.excludedPackages))
-            return false;
         if (gav == null) {
             if (other.gav != null)
                 return false;
@@ -443,14 +330,7 @@ public class FeaturePackConfig {
                 return false;
         } else if (!includedModels.equals(other.includedModels))
             return false;
-        if (includedPackages == null) {
-            if (other.includedPackages != null)
-                return false;
-        } else if (!includedPackages.equals(other.includedPackages))
-            return false;
         if (inheritConfigs != other.inheritConfigs)
-            return false;
-        if (inheritPackages != other.inheritPackages)
             return false;
         return true;
     }

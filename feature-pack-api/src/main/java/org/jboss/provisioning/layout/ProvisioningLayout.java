@@ -93,7 +93,7 @@ public class ProvisioningLayout {
                                         throw new ProvisioningDescriptionException(
                                                 Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
                                     }
-                                    if(fpDepConfig.isExcluded(pkgDepName) && !pkgDep.isOptional()) {
+                                    if(fpDepConfig.isPackageExcluded(pkgDepName) && !pkgDep.isOptional()) {
                                         throw new ProvisioningDescriptionException(
                                                 Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
                                     }

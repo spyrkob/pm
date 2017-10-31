@@ -17,13 +17,87 @@
 
 package org.jboss.provisioning.config;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import org.jboss.provisioning.util.Unmodifiable;
+
 /**
  *
  * @author Alexey Loubyansky
  */
 public abstract class PackageDepsConfig {
 
-    protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
+    protected final boolean inheritPackages;
+    protected final Set<String> excludedPackages;
+    protected final Map<String, PackageConfig> includedPackages;
 
+    protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
+        this.inheritPackages = builder.inheritPackages;
+        this.excludedPackages = Unmodifiable.set(builder.excludedPackages);
+        this.includedPackages = Unmodifiable.map(builder.includedPackages);
+    }
+
+    public boolean isInheritPackages() {
+        return inheritPackages;
+    }
+
+    public boolean hasIncludedPackages() {
+        return !includedPackages.isEmpty();
+    }
+
+    public boolean isPackageIncluded(String packageName) {
+        return includedPackages.containsKey(packageName);
+    }
+
+    public Collection<PackageConfig> getIncludedPackages() {
+        return includedPackages.values();
+    }
+
+    public boolean hasExcludedPackages() {
+        return !excludedPackages.isEmpty();
+    }
+
+    public boolean isPackageExcluded(String packageName) {
+        return excludedPackages.contains(packageName);
+    }
+
+    public Set<String> getExcludedPackages() {
+        return excludedPackages;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
+        result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
+        result = prime * result + (inheritPackages ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PackageDepsConfig other = (PackageDepsConfig) obj;
+        if (excludedPackages == null) {
+            if (other.excludedPackages != null)
+                return false;
+        } else if (!excludedPackages.equals(other.excludedPackages))
+            return false;
+        if (includedPackages == null) {
+            if (other.includedPackages != null)
+                return false;
+        } else if (!includedPackages.equals(other.includedPackages))
+            return false;
+        if (inheritPackages != other.inheritPackages)
+            return false;
+        return true;
     }
 }
