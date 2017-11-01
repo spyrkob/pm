@@ -28,7 +28,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 
 /**
@@ -218,13 +218,13 @@ public class WildFlyPackageTasks {
     private final List<FileFilter> unixLineEndFilters;
 
     private WildFlyPackageTasks(Builder builder) {
-        this.copyArtifacts = Unmodifiable.list(builder.copyArtifacts);
-        this.copyPaths = Unmodifiable.list(builder.copyPaths);
-        this.deletePaths = Unmodifiable.list(builder.deletePaths);
-        this.filePermissions = Unmodifiable.list(builder.filePermissions);
-        this.mkDirs = Unmodifiable.list(builder.mkDirs);
-        this.windowsLineEndFilters = Unmodifiable.list(builder.windowsLineEndFilters);
-        this.unixLineEndFilters = Unmodifiable.list(builder.unixLineEndFilters);
+        this.copyArtifacts = PmCollections.list(builder.copyArtifacts);
+        this.copyPaths = PmCollections.list(builder.copyPaths);
+        this.deletePaths = PmCollections.list(builder.deletePaths);
+        this.filePermissions = PmCollections.list(builder.filePermissions);
+        this.mkDirs = PmCollections.list(builder.mkDirs);
+        this.windowsLineEndFilters = PmCollections.list(builder.windowsLineEndFilters);
+        this.unixLineEndFilters = PmCollections.list(builder.unixLineEndFilters);
     }
 
     public boolean hasCopyArtifacts() {

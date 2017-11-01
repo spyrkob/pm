@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.util.StringUtils;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -69,7 +69,7 @@ public class ConfigSpec extends FeatureGroupSupport {
     private ConfigSpec(Builder builder) {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
-        this.props = Unmodifiable.map(builder.props);
+        this.props = PmCollections.map(builder.props);
     }
 
     public ConfigId getId() {

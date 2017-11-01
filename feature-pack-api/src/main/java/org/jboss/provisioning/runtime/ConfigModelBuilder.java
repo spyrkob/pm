@@ -213,11 +213,12 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     private void merge(ResolvedFeature feature) throws ProvisioningException {
         if(feature.id == null) {
-            addToSpecFeatures(feature);
+            addToSpecFeatures(feature.copy(++featureIncludeCount));
             return;
         }
         final ResolvedFeature localFeature = featuresById.get(feature.id);
         if(localFeature == null) {
+            feature = feature.copy(++featureIncludeCount);
             featuresById.put(feature.id, feature);
             addToSpecFeatures(feature);
             return;
@@ -311,9 +312,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     public ProvisionedConfig build(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(featuresById.isEmpty()) {
-            orderedFeatures = Collections.emptyList();
-            featuresById = Collections.emptyMap();
-            featuresBySpec = Collections.emptyMap();
             return this;
         }
         try {

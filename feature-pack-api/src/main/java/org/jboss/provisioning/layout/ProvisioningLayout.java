@@ -30,7 +30,7 @@ import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * This class describes a layout of feature-packs from which
@@ -114,7 +114,7 @@ public class ProvisioningLayout {
     private final Map<ArtifactCoords.Ga, FeaturePackLayout> featurePacks;
 
     private ProvisioningLayout(Builder builder) {
-        featurePacks = Unmodifiable.map(builder.featurePacks);
+        featurePacks = PmCollections.map(builder.featurePacks);
     }
 
     public boolean hasFeaturePacks() {

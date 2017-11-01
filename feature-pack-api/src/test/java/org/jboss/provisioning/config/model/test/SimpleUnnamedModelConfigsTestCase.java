@@ -64,6 +64,8 @@ public class SimpleUnnamedModelConfigsTestCase extends PmInstallFeaturePackTestB
                             .setParam("name", "a1")
                             .setParam("p1", "config2"))
                     .build())
+            .addConfig(ConfigSpec.builder().setName("config-a").setModel("config1").build())
+            .addConfig(ConfigSpec.builder().setName("config-b").setModel("config1").build())
             .getInstaller()
         .install();
     }
@@ -78,6 +80,7 @@ public class SimpleUnnamedModelConfigsTestCase extends PmInstallFeaturePackTestB
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
+                        .setName("config-a")
                         .setModel("config1")
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
@@ -86,11 +89,12 @@ public class SimpleUnnamedModelConfigsTestCase extends PmInstallFeaturePackTestB
                                 .build())
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setModel("config2")
-                        .setProperty("prop1", "value3")
-                        .setProperty("prop2", "value4")
+                        .setName("config-b")
+                        .setModel("config1")
+                        .setProperty("prop1", "value1")
+                        .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config2")
+                                .setParam("p1", "config1")
                                 .build())
                         .build())
                 .build();

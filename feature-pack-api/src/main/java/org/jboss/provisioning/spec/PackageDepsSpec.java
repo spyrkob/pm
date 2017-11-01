@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -57,7 +57,7 @@ public abstract class PackageDepsSpec {
             for(Map.Entry<String, Map<String, PackageDependencySpec>> externalEntry : builder.externalPkgDeps.entrySet()) {
                 tmp.put(externalEntry.getKey(), getValueList(externalEntry.getValue()));
             }
-            externalPkgDeps = Unmodifiable.map(tmp);
+            externalPkgDeps = PmCollections.map(tmp);
         }
     }
 

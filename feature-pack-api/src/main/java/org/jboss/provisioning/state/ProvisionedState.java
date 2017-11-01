@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.util.StringUtils;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * Represents provisioned installation.
@@ -86,8 +86,8 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     private final List<ProvisionedConfig> configs;
 
     ProvisionedState(Builder builder) {
-        this.featurePacks = Unmodifiable.map(builder.featurePacks);
-        this.configs = Unmodifiable.list(builder.configs);
+        this.featurePacks = PmCollections.map(builder.featurePacks);
+        this.configs = PmCollections.list(builder.configs);
     }
 
     @Override

@@ -222,10 +222,7 @@ public class ProvisioningRuntimeBuilder {
             if(noNameModelConfigs.size() == 1) {
                 final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                 final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
-                if (targetConfigs == null) {
-                    entry.getValue().build(this);
-                } else {
-                    noNameModelConfigs = Collections.emptyMap();
+                if (targetConfigs != null) {
                     for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
                         targetConfig.getValue().merge(entry.getValue());
                     }
@@ -234,16 +231,14 @@ public class ProvisioningRuntimeBuilder {
                 while (i.hasNext()) {
                     final Map.Entry<String, ConfigModelBuilder> entry = i.next();
                     final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
-                    if (targetConfigs == null) {
-                        entry.getValue().build(this);
-                        continue;
-                    }
-                    i.remove();
-                    for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
-                        targetConfig.getValue().merge(entry.getValue());
+                    if (targetConfigs != null) {
+                        for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
+                            targetConfig.getValue().merge(entry.getValue());
+                        }
                     }
                 }
             }
+            noNameModelConfigs = Collections.emptyMap();
         }
 
         for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
@@ -324,9 +319,6 @@ public class ProvisioningRuntimeBuilder {
 
         if (fpConfig.hasDefinedConfigs()) {
             for (ConfigSpec config : fpConfig.getDefinedConfigs()) {
-                if (fp.isConfigExcluded(config.getId())) {
-                    continue;
-                }
                 contributed |= processConfigSpec(fp, config);
             }
         }
@@ -418,7 +410,7 @@ public class ProvisioningRuntimeBuilder {
         ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
         if (modelBuilder == null) {
             if (namedConfigs.size() == 1) {
-                namedConfigs = new HashMap<>(namedConfigs);
+                namedConfigs = new LinkedHashMap<>(namedConfigs);
                 if (modelConfigs.size() == 1) {
                     modelConfigs = new LinkedHashMap<>(modelConfigs);
                 }

@@ -17,6 +17,7 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -37,6 +38,8 @@ import org.jboss.provisioning.xml.util.TextNode;
 public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
 
     private static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
+
+    private static final String FALSE = "false";
 
     public static FeaturePackXmlWriter getInstance() {
         return INSTANCE;
@@ -132,9 +135,12 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             if (defaultConfigs == null) {
                 defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
             }
-            for (String excluded : target.getFullModelsExcluded()) {
+            for (Map.Entry<String, Boolean> excluded : target.getFullModelsExcluded().entrySet()) {
                 final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
-                addAttribute(exclude, Attribute.MODEL, excluded);
+                addAttribute(exclude, Attribute.MODEL, excluded.getKey());
+                if(!excluded.getValue()) {
+                    addAttribute(exclude, Attribute.NAMED_CONFIGS_ONLY, FALSE);
+                }
             }
         }
         if (target.hasFullModelsIncluded()) {

@@ -31,7 +31,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * This class combines the feature-pack and the package specs that belong
@@ -107,7 +107,7 @@ public class FeaturePackLayout {
                     }
                 }
             }
-            return new FeaturePackLayout(builtSpec, Unmodifiable.map(packages), externalPackageDependencies);
+            return new FeaturePackLayout(builtSpec, PmCollections.map(packages), externalPackageDependencies);
         }
     }
 

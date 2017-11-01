@@ -65,6 +65,19 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         initParams(spec, fc);
     }
 
+    private ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params,
+            Map<ResolvedFeatureId, FeatureDependencySpec> deps, int includeNo) {
+        this.includeNo = includeNo;
+        this.id = id;
+        this.spec = spec;
+        this.params = params;
+        this.deps = deps;
+    }
+
+    ResolvedFeature copy(int includeNo) {
+        return new ResolvedFeature(id, spec, params.size() > 1 ? new HashMap<>(params) : params, deps.size() > 1 ? new LinkedHashMap<>(deps) : deps, includeNo);
+    }
+
     private void initParams(ResolvedFeatureSpec spec, FeatureConfig fc) throws ProvisioningDescriptionException {
         if (fc.hasParams()) {
             if (!spec.xmlSpec.hasParams()) {

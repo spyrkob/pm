@@ -17,6 +17,7 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.IncludedConfig;
@@ -36,6 +37,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
     private static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
 
     private static final String[] EMPTY_ARRAY = new String[0];
+    private static final String FALSE = "false";
 
     public static ProvisioningXmlWriter getInstance() {
         return INSTANCE;
@@ -74,11 +76,12 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             if(defConfigsE == null) {
                 defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
             }
-            final String[] array = featurePack.getFullModelsExcluded().toArray(new String[featurePack.getFullModelsExcluded().size()]);
-            Arrays.sort(array);
-            for(String name : array) {
-                final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE);
-                addAttribute(excluded, Attribute.MODEL, name);
+            for (Map.Entry<String, Boolean> excluded : featurePack.getFullModelsExcluded().entrySet()) {
+                final ElementNode exclude = addElement(defConfigsE, Element.EXCLUDE);
+                addAttribute(exclude, Attribute.MODEL, excluded.getKey());
+                if(!excluded.getValue()) {
+                    addAttribute(exclude, Attribute.NAMED_CONFIGS_ONLY, FALSE);
+                }
             }
         }
         if(featurePack.hasFullModelsIncluded()) {

@@ -30,7 +30,7 @@ import java.util.Set;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.StringUtils;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -207,13 +207,13 @@ public class FeatureSpec extends PackageDepsSpec {
     private FeatureSpec(Builder builder) {
         super(builder);
         this.name = builder.name;
-        this.annotations = Unmodifiable.list(builder.annotations);
-        this.featureDeps = Unmodifiable.map(builder.featureDeps);
-        this.featureRefs = Unmodifiable.map(builder.refs);
-        this.params = Unmodifiable.map(builder.params);
-        this.idParams = Unmodifiable.list(builder.idParams);
-        this.providedCaps = Unmodifiable.set(builder.providedCaps);
-        this.requiredCaps = Unmodifiable.set(builder.requiredCaps);
+        this.annotations = PmCollections.list(builder.annotations);
+        this.featureDeps = PmCollections.map(builder.featureDeps);
+        this.featureRefs = PmCollections.map(builder.refs);
+        this.params = PmCollections.map(builder.params);
+        this.idParams = PmCollections.list(builder.idParams);
+        this.providedCaps = PmCollections.set(builder.providedCaps);
+        this.requiredCaps = PmCollections.set(builder.requiredCaps);
     }
 
     public String getName() {

@@ -113,6 +113,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         EXTENSION("extension"),
         INHERIT("inherit"),
         MODEL("model"),
+        NAMED_CONFIGS_ONLY("named-configs-only"),
         VERSION("version"),
         NAME("name"),
         // default unknown attribute

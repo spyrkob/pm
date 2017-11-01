@@ -33,7 +33,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.util.DescrFormatter;
 import org.jboss.provisioning.util.StringUtils;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * This class describes the feature-pack as it is available in the repository.
@@ -163,10 +163,10 @@ public class FeaturePackSpec {
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
-        this.defPackages = Unmodifiable.set(builder.defPackages);
-        this.dependencies = Unmodifiable.map(builder.dependencies);
-        this.dependencyByName = Unmodifiable.map(builder.dependencyByName);
-        this.defConfigs = Unmodifiable.list(builder.defConfigs);
+        this.defPackages = PmCollections.set(builder.defPackages);
+        this.dependencies = PmCollections.map(builder.dependencies);
+        this.dependencyByName = PmCollections.map(builder.dependencyByName);
+        this.defConfigs = PmCollections.list(builder.defConfigs);
     }
 
     public ArtifactCoords.Gav getGav() {

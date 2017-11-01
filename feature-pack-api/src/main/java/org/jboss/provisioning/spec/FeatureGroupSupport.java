@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -141,7 +141,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         super(builder);
         name = builder.name;
         resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
-        this.items = Unmodifiable.list(builder.items);
+        this.items = PmCollections.list(builder.items);
     }
 
     public String getName() {
