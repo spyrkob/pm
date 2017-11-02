@@ -195,14 +195,14 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if (fpConfig.isConfigExcluded(config.getModel(), config.getName())) {
+                if (fpConfig.isConfigExcluded(config)) {
                     return true;
                 }
-                if(fpConfig.isFullModelExcluded(config.getModel())) {
+                if(fpConfig.isConfigModelExcluded(config)) {
                     return !fpConfig.isConfigIncluded(config);
                 }
                 if (!fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isFullModelIncluded(config.getModel()) && !fpConfig.isConfigIncluded(config);
+                    return !fpConfig.isConfigModelIncluded(config) && !fpConfig.isConfigIncluded(config);
                 }
             }
             return false;
@@ -215,11 +215,11 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 if(fpConfig.isConfigIncluded(config)) {
                     return true;
                 }
-                if(fpConfig.isFullModelIncluded(config.getModel())) {
-                    return !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                if(fpConfig.isConfigModelIncluded(config)) {
+                    return !fpConfig.isConfigExcluded(config);
                 }
                 if(fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isFullModelExcluded(config.getModel()) && !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                    return !fpConfig.isConfigModelExcluded(config) && !fpConfig.isConfigExcluded(config);
                 }
             }
             return false;

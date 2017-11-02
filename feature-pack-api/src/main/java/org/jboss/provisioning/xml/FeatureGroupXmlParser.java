@@ -40,7 +40,7 @@ public class FeatureGroupXmlParser implements XmlParser<FeatureGroupSpec> {
 
     @Override
     public FeatureGroupSpec parse(final Reader input) throws XMLStreamException {
-        final FeatureGroupSpec.Builder configBuilder = FeatureGroupSpec.builder().setResetFeaturePackOrigin(true);
+        final FeatureGroupSpec.Builder configBuilder = FeatureGroupSpec.builder();
         XmlParsers.parse(input, configBuilder);
         return configBuilder.build();
     }

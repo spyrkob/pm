@@ -33,19 +33,12 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
 
         String name;
         protected List<ConfigItem> items = Collections.emptyList();
-        boolean resetFeaturePackOrigin;
 
         protected Builder() {
         }
 
         protected Builder(String name) {
             this.name = name;
-        }
-
-        @SuppressWarnings("unchecked")
-        public B setResetFeaturePackOrigin(boolean resetOrigin) {
-            this.resetFeaturePackOrigin = resetOrigin;
-            return (B) this;
         }
 
         @SuppressWarnings("unchecked")
@@ -67,7 +60,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
             int result = 1;
             result = prime * result + ((items == null) ? 0 : items.hashCode());
             result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime * result + (resetFeaturePackOrigin ? 1231 : 1237);
             return result;
         }
 
@@ -91,8 +83,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
                     return false;
             } else if (!name.equals(other.name))
                 return false;
-            if (resetFeaturePackOrigin != other.resetFeaturePackOrigin)
-                return false;
             return true;
         }
 
@@ -100,14 +90,12 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
     }
 
     protected final String name;
-    protected final boolean resetFeaturePackOrigin;
 
     protected final List<ConfigItem> items;
 
     protected FeatureGroupSupport(FeatureGroupSupport copy) {
         super(copy);
         name = copy.name;
-        resetFeaturePackOrigin = copy.resetFeaturePackOrigin;
 
         if(copy.items.isEmpty()) {
             items = Collections.emptyList();
@@ -132,7 +120,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
     protected FeatureGroupSupport(Builder<?, ?> builder) {
         super(builder);
         name = builder.name;
-        resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
         this.items = PmCollections.unmodifiable(builder.items);
     }
 
@@ -152,7 +139,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
 
     @Override
     public boolean isResetFeaturePackOrigin() {
-        return resetFeaturePackOrigin;
+        return true;
     }
 
     @Override
@@ -161,7 +148,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         int result = super.hashCode();
         result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + (resetFeaturePackOrigin ? 1231 : 1237);
         return result;
     }
 
@@ -183,8 +169,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
-            return false;
-        if (resetFeaturePackOrigin != other.resetFeaturePackOrigin)
             return false;
         return true;
     }

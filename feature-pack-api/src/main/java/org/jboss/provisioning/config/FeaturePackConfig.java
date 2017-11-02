@@ -70,19 +70,19 @@ public class FeaturePackConfig extends PackageDepsConfig {
             return this;
         }
 
-        public Builder excludeModel(String name) throws ProvisioningDescriptionException {
-            return excludeModel(name, true);
+        public Builder excludeConfigModel(String model) throws ProvisioningDescriptionException {
+            return excludeConfigModel(model, true);
         }
 
-        public Builder excludeModel(String name, boolean namedConfigsOnly) throws ProvisioningDescriptionException {
-            if(includedModels.contains(name)) {
-                throw new ProvisioningDescriptionException("Model " + name + " has been included");
+        public Builder excludeConfigModel(String model, boolean namedConfigsOnly) throws ProvisioningDescriptionException {
+            if(includedModels.contains(model)) {
+                throw new ProvisioningDescriptionException("Model " + model + " has been included");
             }
-            excludedModels = PmCollections.put(excludedModels, name, namedConfigsOnly);
+            excludedModels = PmCollections.put(excludedModels, model, namedConfigsOnly);
             return this;
         }
 
-        public Builder includeModel(String name) throws ProvisioningDescriptionException {
+        public Builder includeConfigModel(String name) throws ProvisioningDescriptionException {
             if(excludedModels.containsKey(name)) {
                 throw new ProvisioningDescriptionException("Model " + name + " has been excluded");
             }
@@ -180,8 +180,8 @@ public class FeaturePackConfig extends PackageDepsConfig {
         return includedModels;
     }
 
-    public boolean isFullModelIncluded(String name) {
-        return includedModels.contains(name);
+    public boolean isConfigModelIncluded(ConfigId configId) {
+        return includedModels.contains(configId.getModel());
     }
 
     public boolean hasFullModelsExcluded() {
@@ -192,17 +192,21 @@ public class FeaturePackConfig extends PackageDepsConfig {
         return excludedModels;
     }
 
-    public boolean isFullModelExcluded(String name) {
-        return excludedModels.containsKey(name);
+    public boolean isConfigModelExcluded(ConfigId configId) {
+        final Boolean namedOnly = excludedModels.get(configId.getModel());
+        if(namedOnly == null) {
+            return false;
+        }
+        return namedOnly ? configId.getName() != null : true;
     }
 
     public boolean hasExcludedConfigs() {
         return !excludedConfigs.isEmpty();
     }
 
-    public boolean isConfigExcluded(String model, String name) {
-        final Set<String> names = excludedConfigs.get(model);
-        return names == null ? false : names.contains(name);
+    public boolean isConfigExcluded(ConfigId configId) {
+        final Set<String> names = excludedConfigs.get(configId.getModel());
+        return names == null ? false : names.contains(configId.getName());
     }
 
     public Set<String> getExcludedModels() {
@@ -301,6 +305,14 @@ public class FeaturePackConfig extends PackageDepsConfig {
         builder.append("[").append(gav.toString());
         if(!inheritConfigs) {
             builder.append(" inheritConfigs=false");
+        }
+        if(!this.excludedModels.isEmpty()) {
+            builder.append(" excluded models ");
+            StringUtils.append(builder, excludedModels.entrySet());
+        }
+        if(!excludedConfigs.isEmpty()) {
+            builder.append(" excluded configs ");
+            StringUtils.append(builder, excludedConfigs.entrySet());
         }
         if(!includedConfigs.isEmpty()) {
             builder.append(" included configs ");

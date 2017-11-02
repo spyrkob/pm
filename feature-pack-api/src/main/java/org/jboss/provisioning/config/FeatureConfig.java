@@ -198,6 +198,11 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     }
 
     @Override
+    public boolean isResetFeaturePackOrigin() {
+        return false;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

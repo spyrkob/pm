@@ -45,7 +45,6 @@ public class FeatureGroupParsingTestCase {
     public void testMain() throws Exception {
         final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
         final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
-                .setResetFeaturePackOrigin(true)
                 .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
                 .addFeatureGroup(FeatureGroupConfig.builder("dep3")

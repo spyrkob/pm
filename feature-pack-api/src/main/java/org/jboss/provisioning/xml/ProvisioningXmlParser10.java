@@ -234,7 +234,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                             parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder();
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 fpBuilder.addConfig(configBuilder.build());
@@ -328,7 +328,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         try {
             if (include) {
                 if (name == null) {
-                    fpBuilder.includeModel(model);
+                    fpBuilder.includeConfigModel(model);
                 } else {
                     final IncludedConfig.Builder configBuilder = IncludedConfig.builder(model, name);
                     if(inheritFeatures != null) {
@@ -340,9 +340,9 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 }
             } else if (name == null) {
                 if(namedConfigsOnly != null) {
-                    fpBuilder.excludeModel(model, namedConfigsOnly);
+                    fpBuilder.excludeConfigModel(model, namedConfigsOnly);
                 } else {
-                    fpBuilder.excludeModel(model);
+                    fpBuilder.excludeConfigModel(model);
                 }
             } else {
                 fpBuilder.excludeDefaultConfig(model, name);
