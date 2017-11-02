@@ -28,7 +28,5 @@ public interface ConfigItemContainer {
 
     List<ConfigItem> getItems();
 
-    default boolean isResetFeaturePackOrigin() {
-        return false;
-    }
+     boolean isResetFeaturePackOrigin();
 }

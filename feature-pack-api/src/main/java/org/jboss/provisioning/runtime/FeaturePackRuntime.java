@@ -41,6 +41,7 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
@@ -73,15 +74,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         PackageRuntime.Builder newPackage(String name, Path dir) {
             final PackageRuntime.Builder pkgBuilder = PackageRuntime.builder(name, dir);
-            switch(pkgBuilders.size()) {
-                case 0:
-                    pkgBuilders = Collections.singletonMap(name, pkgBuilder);
-                    break;
-                case 1:
-                    pkgBuilders = new HashMap<>(pkgBuilders);
-                default:
-                    pkgBuilders.put(name, pkgBuilder);
-            }
+            pkgBuilders = PmCollections.put(pkgBuilders, name, pkgBuilder);
             return pkgBuilder;
         }
 
@@ -148,16 +141,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         void push(FeaturePackConfig fpConfig) {
-            if(fpConfigStack.isEmpty()) {
-                fpConfigStack = Collections.singletonList(fpConfig);
-            } else {
-                if(fpConfigStack.size() == 1) {
-                    final FeaturePackConfig first = fpConfigStack.get(0);
-                    fpConfigStack = new ArrayList<>(2);
-                    fpConfigStack.add(first);
-                }
-                fpConfigStack.add(fpConfig);
-            }
+            fpConfigStack = PmCollections.add(fpConfigStack, fpConfig);
             if(blockedPackageInheritance == null && !fpConfig.isInheritPackages()) {
                 blockedPackageInheritance = fpConfig;
             }
@@ -211,14 +195,14 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if (fpConfig.isConfigExcluded(config.getModel(), config.getName())) {
+                if (fpConfig.isConfigExcluded(config)) {
                     return true;
                 }
-                if(fpConfig.isFullModelExcluded(config.getModel())) {
+                if(fpConfig.isConfigModelExcluded(config)) {
                     return !fpConfig.isConfigIncluded(config);
                 }
                 if (!fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isFullModelIncluded(config.getModel()) && !fpConfig.isConfigIncluded(config);
+                    return !fpConfig.isConfigModelIncluded(config) && !fpConfig.isConfigIncluded(config);
                 }
             }
             return false;
@@ -231,11 +215,11 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 if(fpConfig.isConfigIncluded(config)) {
                     return true;
                 }
-                if(fpConfig.isFullModelIncluded(config.getModel())) {
-                    return !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                if(fpConfig.isConfigModelIncluded(config)) {
+                    return !fpConfig.isConfigExcluded(config);
                 }
                 if(fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isFullModelExcluded(config.getModel()) && !fpConfig.isConfigExcluded(config.getModel(), config.getName());
+                    return !fpConfig.isConfigModelExcluded(config) && !fpConfig.isConfigExcluded(config);
                 }
             }
             return false;

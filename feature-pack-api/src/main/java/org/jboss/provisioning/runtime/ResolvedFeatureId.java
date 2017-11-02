@@ -25,7 +25,7 @@ import java.util.Map;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -42,20 +42,7 @@ public class ResolvedFeatureId {
         }
 
         public Builder setParam(String name, String value) {
-            if(params.isEmpty()) {
-                params = Collections.singletonMap(name, value);
-                return this;
-            }
-            if(params.size() == 1) {
-                if(params.containsKey(name)) {
-                    params = Collections.singletonMap(name, value);
-                    return this;
-                }
-                final Map.Entry<String, String> entry = params.entrySet().iterator().next();
-                params = new HashMap<>(2);
-                params.put(entry.getKey(), entry.getValue());
-            }
-            params.put(name, value);
+            params = PmCollections.put(params, name, value);
             return this;
         }
 
@@ -165,23 +152,13 @@ public class ResolvedFeatureId {
         Map<String, String> filtered = Collections.emptyMap();
         for(Map.Entry<String, String> entry : params.entrySet()) {
             if(!Constants.PM_UNDEFINED.equals(entry.getValue())) {
-                switch(filtered.size()) {
-                    case 0:
-                        filtered = Collections.singletonMap(entry.getKey(), entry.getValue());
-                        break;
-                    case 1:
-                        final Map.Entry<String, String> first = filtered.entrySet().iterator().next();
-                        filtered = new HashMap<>(2);
-                        filtered.put(first.getKey(), first.getValue());
-                    default:
-                        filtered.put(entry.getKey(), entry.getValue());
-                }
+                filtered = PmCollections.put(filtered, entry.getKey(), entry.getValue());
             }
         }
         if(filtered.isEmpty()) {
             filtered = params;
         }
-        this.params = Unmodifiable.map(filtered);
+        this.params = PmCollections.unmodifiable(filtered);
     }
 
     public ResolvedSpecId getSpecId() {

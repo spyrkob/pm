@@ -17,9 +17,10 @@
 
 package org.jboss.provisioning.runtime;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.jboss.provisioning.util.PmCollections;
 
 
 /**
@@ -36,32 +37,12 @@ class CapabilityProviders {
     private boolean provided;
 
     void add(SpecFeatures specFeatures) {
-        switch(specs.size()) {
-            case 0:
-                specs = Collections.singletonList(specFeatures);
-                break;
-            case 1:
-                final SpecFeatures first = specs.get(0);
-                specs = new ArrayList<>(2);
-                specs.add(first);
-            default:
-                specs.add(specFeatures);
-        }
+        specs = PmCollections.add(specs, specFeatures);
         specFeatures.spec.addCapabilityProviders(this);
     }
 
     void add(ResolvedFeature feature) {
-        switch(features.size()) {
-            case 0:
-                features = Collections.singletonList(feature);
-                break;
-            case 1:
-                final ResolvedFeature first = features.get(0);
-                features = new ArrayList<>(2);
-                features.add(first);
-            default:
-                features.add(feature);
-        }
+        features = PmCollections.add(features, feature);
         feature.addCapabilityProviders(this);
     }
 

@@ -25,7 +25,7 @@ import java.util.Set;
 import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -57,10 +57,10 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.fpDep = builder.fpDep;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
-        this.includedSpecs = Unmodifiable.set(builder.includedSpecs);
-        this.excludedSpecs = Unmodifiable.set(builder.excludedSpecs);
-        this.includedFeatures = Unmodifiable.map(builder.includedFeatures);
-        this.excludedFeatures = Unmodifiable.map(builder.excludedFeatures);
+        this.includedSpecs = PmCollections.unmodifiable(builder.includedSpecs);
+        this.excludedSpecs = PmCollections.unmodifiable(builder.excludedSpecs);
+        this.includedFeatures = PmCollections.unmodifiable(builder.includedFeatures);
+        this.excludedFeatures = PmCollections.unmodifiable(builder.excludedFeatures);
 
         if(builder.externalFgConfigs.isEmpty()) {
             this.externalFgConfigs = Collections.emptyMap();

@@ -18,8 +18,9 @@ package org.jboss.provisioning.spec;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -40,21 +41,7 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
 
     @SuppressWarnings("unchecked")
     public T addPackageDep(PackageDependencySpec dep) {
-        switch(localPkgDeps.size()) {
-            case 0:
-                localPkgDeps = Collections.singletonMap(dep.getName(), dep);
-                break;
-            case 1:
-                if(localPkgDeps.containsKey(dep.getName())) {
-                    localPkgDeps = Collections.singletonMap(dep.getName(), dep);
-                    return (T) this;
-                }
-                final Map.Entry<String, PackageDependencySpec> first = localPkgDeps.entrySet().iterator().next();
-                localPkgDeps = new LinkedHashMap<>(2);
-                localPkgDeps.put(first.getKey(), first.getValue());
-            default:
-                localPkgDeps.put(dep.getName(), dep);
-        }
+        localPkgDeps = PmCollections.putLinked(localPkgDeps, dep.getName(), dep);
         return (T) this;
     }
 
@@ -71,18 +58,9 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
         if(fpDep == null) {
             return addPackageDep(dep);
         }
-        if(externalPkgDeps.isEmpty()) {
-            externalPkgDeps = Collections.singletonMap(fpDep, Collections.singletonMap(dep.getName(), dep));
-            return (T) this;
-        }
         Map<String, PackageDependencySpec> deps = externalPkgDeps.get(fpDep);
         if(deps == null) {
-            if(externalPkgDeps.size() == 1) {
-                final Map.Entry<String, Map<String, PackageDependencySpec>> first = externalPkgDeps.entrySet().iterator().next();
-                externalPkgDeps = new HashMap<>(2);
-                externalPkgDeps.put(first.getKey(), first.getValue());
-            }
-            externalPkgDeps.put(fpDep, Collections.singletonMap(dep.getName(), dep));
+            externalPkgDeps = PmCollections.put(externalPkgDeps, fpDep, Collections.singletonMap(dep.getName(), dep));
             return (T) this;
         }
         if(deps.size() == 1) {

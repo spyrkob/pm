@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
 /**
@@ -62,15 +61,7 @@ public class ProvisioningConfig {
             if(featurePacks.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
             }
-            switch(featurePacks.size()) {
-                case 0:
-                    featurePacks = Collections.singletonMap(gaPart, fp);
-                    break;
-                case 1:
-                    featurePacks = new LinkedHashMap<>(featurePacks);
-                default:
-                    featurePacks.put(gaPart, fp);
-            }
+            featurePacks = PmCollections.putLinked(featurePacks, gaPart, fp);
             return this;
         }
 
@@ -91,7 +82,7 @@ public class ProvisioningConfig {
         }
 
         public ProvisioningConfig build() {
-            return new ProvisioningConfig(Unmodifiable.map(featurePacks));
+            return new ProvisioningConfig(PmCollections.unmodifiable(featurePacks));
         }
 
         public void exportToXml(Path location) throws IOException {

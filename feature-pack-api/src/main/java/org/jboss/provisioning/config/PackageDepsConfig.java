@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -35,8 +35,8 @@ public abstract class PackageDepsConfig {
 
     protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
         this.inheritPackages = builder.inheritPackages;
-        this.excludedPackages = Unmodifiable.set(builder.excludedPackages);
-        this.includedPackages = Unmodifiable.map(builder.includedPackages);
+        this.excludedPackages = PmCollections.unmodifiable(builder.excludedPackages);
+        this.includedPackages = PmCollections.unmodifiable(builder.includedPackages);
     }
 
     public boolean isInheritPackages() {

@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.wildfly.core.launcher.CliCommandBuilder;
@@ -49,31 +46,21 @@ public class CliScriptRunner {
         try {
             cliProcess = processBuilder.start();
 
-            String echoLine = null;
-            int opIndex = 1;
             final StringWriter errorWriter = new StringWriter();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(cliProcess.getInputStream()));
                     BufferedWriter writer = new BufferedWriter(errorWriter)) {
                 String line = reader.readLine();
                 boolean flush = false;
                 while (line != null) {
-                    if (line.startsWith("executing ")) {
-                        echoLine = line;
-                        opIndex = 1;
+                    if (line.equals("}")) {
+                        flush = true;
+                    } else if (flush) {
                         writer.flush();
                         errorWriter.getBuffer().setLength(0);
-                    } else {
-                        if (line.equals("}")) {
-                            ++opIndex;
-                            flush = true;
-                        } else if (flush){
-                            writer.flush();
-                            errorWriter.getBuffer().setLength(0);
-                            flush = false;
-                        }
-                        writer.write(line);
-                        writer.newLine();
+                        flush = false;
                     }
+                    writer.write(line);
+                    writer.newLine();
                     line = reader.readLine();
                 }
             } catch (IOException e) {
@@ -89,34 +76,6 @@ public class CliScriptRunner {
             }
 
             if(cliProcess.exitValue() != 0) {
-                final String error = errorWriter.getBuffer().toString();
-                if(echoLine != null) {
-                    Path p = Paths.get(echoLine.substring("executing ".length()));
-                    final String scriptName = p.getFileName().toString();
-                    p = p.getParent();
-                    p = p.getParent();
-                    p = p.getParent();
-                    final String pkgName = p.getFileName().toString();
-                    p = p.getParent();
-                    p = p.getParent();
-                    final String fpVersion = p.getFileName().toString();
-                    p = p.getParent();
-                    final String fpArtifact = p.getFileName().toString();
-                    p = p.getParent();
-                    final String fpGroup = p.getFileName().toString();
-                    messageWriter.error("Failed to execute script %s from %s package %s line # %d", scriptName,
-                            ArtifactCoords.newGav(fpGroup, fpArtifact, fpVersion), pkgName, opIndex);
-                    messageWriter.error(error);
-                } else {
-                    messageWriter.error("Could not locate the cause of the error in the CLI output.");
-                    messageWriter.error(error);
-                }
-                final StringBuilder buf = new StringBuilder();
-                if(error.length() == 0) {
-                    buf.append("CLI configuration scripts failed (look for the detailed error messages above)");
-                } else {
-                    buf.append(error);
-                }
 //                try {
 //                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
 //                    IoUtils.copy(script, scriptCopy);
@@ -124,10 +83,10 @@ public class CliScriptRunner {
 //                } catch(IOException e) {
 //                    e.printStackTrace();
 //                }
-                throw new ProvisioningException(buf.toString());
+                throw new ProvisioningException(errorWriter.getBuffer().toString());
             }
         } catch (IOException e) {
-            throw new ProvisioningException("Embedded CLI process failed", e);
+            throw new ProvisioningException("CLI process failed", e);
         }
     }
 }

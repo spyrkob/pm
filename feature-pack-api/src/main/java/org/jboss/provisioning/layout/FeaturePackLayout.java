@@ -20,7 +20,6 @@ package org.jboss.provisioning.layout;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * This class combines the feature-pack and the package specs that belong
@@ -51,17 +50,7 @@ public class FeaturePackLayout {
         }
 
         public Builder addPackage(PackageSpec pkg) {
-            switch(packages.size()) {
-                case 0:
-                    packages = Collections.singletonMap(pkg.getName(), pkg);
-                    break;
-                case 1:
-                    final Map.Entry<String, PackageSpec> first = packages.entrySet().iterator().next();
-                    packages = new HashMap<>();
-                    packages.put(first.getKey(), first.getValue());
-                default:
-                    packages.put(pkg.getName(), pkg);
-            }
+            packages = PmCollections.put(packages, pkg.getName(), pkg);
             return this;
         }
 
@@ -107,7 +96,7 @@ public class FeaturePackLayout {
                     }
                 }
             }
-            return new FeaturePackLayout(builtSpec, Unmodifiable.map(packages), externalPackageDependencies);
+            return new FeaturePackLayout(builtSpec, PmCollections.unmodifiable(packages), externalPackageDependencies);
         }
     }
 

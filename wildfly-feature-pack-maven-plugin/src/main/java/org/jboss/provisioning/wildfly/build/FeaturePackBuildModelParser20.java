@@ -196,7 +196,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             parsePackageSchemas(reader, builder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder config = ConfigSpec.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder config = ConfigSpec.builder();
                             ConfigXml.readConfig(reader, config);
                             builder.addConfig(config.build());
                             break;

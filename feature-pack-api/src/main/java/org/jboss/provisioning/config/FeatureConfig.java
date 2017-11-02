@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +32,7 @@ import org.jboss.provisioning.spec.ConfigItemContainerBuilder;
 import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.StringUtils;
 
 /**
@@ -152,20 +152,9 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     }
 
     public String putParam(String name, String value) {
-        switch(params.size()) {
-            case 0:
-                params = Collections.singletonMap(name, value);
-                return null;
-            case 1:
-                final String prevValue = params.get(name);
-                if(prevValue != null) {
-                    params = Collections.singletonMap(name, value);
-                    return prevValue;
-                }
-                params = new HashMap<>(params);
-            default:
-                return params.put(name, value);
-        }
+        final String prevValue = params.get(name);
+        params = PmCollections.put(params, name, value);
+        return prevValue;
     }
 
     public FeatureConfig addFeatureDep(FeatureId featureId) throws ProvisioningDescriptionException {
@@ -173,20 +162,10 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     }
 
     public FeatureConfig addFeatureDep(FeatureDependencySpec dep) throws ProvisioningDescriptionException {
-        switch(deps.size()) {
-            case 0:
-                deps = Collections.singletonMap(dep.getFeatureId(), dep);
-                break;
-            case 1:
-                if(deps.containsKey(dep.getFeatureId())) {
-                    throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId());
-                }
-                final Map.Entry<FeatureId, FeatureDependencySpec> first = deps.entrySet().iterator().next();
-                deps = new LinkedHashMap<>(2);
-                deps.put(first.getKey(), first.getValue());
-            default:
-                deps.put(dep.getFeatureId(), dep);
+        if(deps.containsKey(dep.getFeatureId())) {
+            throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId());
         }
+        deps = PmCollections.putLinked(deps, dep.getFeatureId(), dep);
         return this;
     }
 
@@ -214,16 +193,13 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
 
     @Override
     public FeatureConfig addConfigItem(ConfigItem item) {
-        switch (items.size()) {
-            case 0:
-                items = Collections.singletonList(item);
-                break;
-            case 1:
-                items = new ArrayList<>(items);
-            default:
-                items.add(item);
-        }
+        items = PmCollections.add(items, item);
         return this;
+    }
+
+    @Override
+    public boolean isResetFeaturePackOrigin() {
+        return false;
     }
 
     @Override

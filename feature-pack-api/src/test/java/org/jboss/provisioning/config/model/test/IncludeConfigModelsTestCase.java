@@ -83,7 +83,7 @@ public class IncludeConfigModelsTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(FP_GAV).setInheritConfigs(false)
-                        .includeModel("model1")
+                        .includeConfigModel("model1")
                         .build())
                 .build();
     }

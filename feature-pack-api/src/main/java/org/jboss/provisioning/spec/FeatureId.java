@@ -19,12 +19,11 @@ package org.jboss.provisioning.spec;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.StringUtils;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -103,15 +102,7 @@ public class FeatureId {
         }
 
         public Builder setParam(String name, String value) {
-            switch(params.size()) {
-                case 0:
-                    params = Collections.singletonMap(name, value);
-                    break;
-                case 1:
-                    params = new HashMap<>(params);
-                default:
-                    params.put(name, value);
-            }
+            params = PmCollections.put(params, name, value);
             return this;
         }
 
@@ -136,7 +127,7 @@ public class FeatureId {
             throw new ProvisioningDescriptionException("ID paramaters are missing");
         }
         this.specId = SpecId.fromString(specName);
-        this.params = Unmodifiable.map(params);
+        this.params = PmCollections.unmodifiable(params);
     }
 
     public SpecId getSpec() {

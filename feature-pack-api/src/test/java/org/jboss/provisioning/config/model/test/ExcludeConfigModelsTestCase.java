@@ -83,7 +83,7 @@ public class ExcludeConfigModelsTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
-                        .excludeModel("model2")
+                        .excludeConfigModel("model2")
                         .build())
                 .build();
     }

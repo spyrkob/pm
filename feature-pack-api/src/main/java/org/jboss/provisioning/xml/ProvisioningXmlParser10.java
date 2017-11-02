@@ -106,6 +106,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         INHERIT_FEATURES("inherit-features"),
         MODEL("model"),
         NAME("name"),
+        NAMED_CONFIGS_ONLY("named-configs-only"),
         VERSION("version"),
 
         // default unknown attribute
@@ -233,7 +234,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                             parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder();
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 fpBuilder.addConfig(configBuilder.build());
@@ -303,6 +304,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         String name = null;
         String model = null;
         Boolean inheritFeatures = null;
+        Boolean namedConfigsOnly = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
@@ -315,6 +317,9 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 case INHERIT_FEATURES:
                     inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
+                case NAMED_CONFIGS_ONLY:
+                    namedConfigsOnly = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
@@ -323,7 +328,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         try {
             if (include) {
                 if (name == null) {
-                    fpBuilder.includeModel(model);
+                    fpBuilder.includeConfigModel(model);
                 } else {
                     final IncludedConfig.Builder configBuilder = IncludedConfig.builder(model, name);
                     if(inheritFeatures != null) {
@@ -334,7 +339,11 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                     return;
                 }
             } else if (name == null) {
-                fpBuilder.excludeModel(model);
+                if(namedConfigsOnly != null) {
+                    fpBuilder.excludeConfigModel(model, namedConfigsOnly);
+                } else {
+                    fpBuilder.excludeConfigModel(model);
+                }
             } else {
                 fpBuilder.excludeDefaultConfig(model, name);
             }

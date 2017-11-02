@@ -460,13 +460,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                 }
                 if(depConfig.hasFullModelsExcluded()) {
-                    for(String model : depConfig.getFullModelsExcluded()) {
-                        depBuilder.excludeModel(model);
+                    for(Map.Entry<String, Boolean> entry : depConfig.getFullModelsExcluded().entrySet()) {
+                        depBuilder.excludeConfigModel(entry.getKey(), entry.getValue());
                     }
                 }
                 if(depConfig.hasFullModelsIncluded()) {
                     for(String model : depConfig.getFullModelsIncluded()) {
-                        depBuilder.includeModel(model);
+                        depBuilder.includeConfigModel(model);
                     }
                 }
                 if(depConfig.hasIncludedConfigs()) {

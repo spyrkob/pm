@@ -20,7 +20,6 @@ package org.jboss.provisioning.runtime;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +49,7 @@ import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
@@ -172,18 +172,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     }
 
     private void addConfig(ProvisionedConfig config) {
-        switch(configs.size()) {
-            case 0:
-                configs = Collections.singletonList(config);
-                break;
-            case 1:
-                final ProvisionedConfig tmp = configs.get(0);
-                configs = new ArrayList<>(2);
-                configs.add(tmp);
-            default:
-                configs.add(config);
-        }
+        configs = PmCollections.add(configs, config);
     }
+
     /**
      * The target staged location
      *
@@ -192,7 +183,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     public Path getStagedDir() {
         return stagedDir;
     }
-/**
+
+    /**
      * The target installation location
      *
      * @return the installation location
@@ -321,15 +313,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             try(Stream<Path> stream = Files.list(pluginsDir)) {
                 final Iterator<Path> i = stream.iterator();
                 while(i.hasNext()) {
-                    switch(urls.size()) {
-                        case 0:
-                            urls = Collections.singletonList(i.next().toUri().toURL());
-                            break;
-                        case 1:
-                            urls = new ArrayList<>(urls);
-                        default:
-                            urls.add(i.next().toUri().toURL());
-                    }
+                    urls = PmCollections.add(urls, i.next().toUri().toURL());
                 }
             } catch (IOException e) {
                 throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
@@ -377,15 +361,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             try(Stream<Path> stream = Files.list(pluginsDir)) {
                 final Iterator<Path> i = stream.iterator();
                 while(i.hasNext()) {
-                    switch(urls.size()) {
-                        case 0:
-                            urls = Collections.singletonList(i.next().toUri().toURL());
-                            break;
-                        case 1:
-                            urls = new ArrayList<>(urls);
-                        default:
-                            urls.add(i.next().toUri().toURL());
-                    }
+                    urls = PmCollections.add(urls, i.next().toUri().toURL());
                 }
             } catch (IOException e) {
                 throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);

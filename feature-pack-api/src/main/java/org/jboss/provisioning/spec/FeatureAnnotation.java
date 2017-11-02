@@ -18,9 +18,10 @@
 package org.jboss.provisioning.spec;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -40,24 +41,7 @@ public class FeatureAnnotation {
     }
 
     public FeatureAnnotation setAttr(String name, String value) {
-        if(elems.isEmpty()) {
-            elems = Collections.singletonMap(name, value);
-            return this;
-        }
-        if(elems.containsKey(name)) {
-            if(elems.size() == 1) {
-                elems = Collections.singletonMap(name, value);
-            } else {
-                elems.put(name, value);
-            }
-            return this;
-        }
-        if(elems.size() == 1) {
-            final Map.Entry<String, String> entry = elems.entrySet().iterator().next();
-            elems = new HashMap<>(2);
-            elems.put(entry.getKey(), entry.getValue());
-        }
-        elems.put(name, value);
+        elems = PmCollections.put(elems, name, value);
         return this;
     }
 

@@ -17,16 +17,14 @@
 package org.jboss.provisioning.wildfly.build;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * Representation of the feature pack build config
@@ -47,62 +45,22 @@ public class WildFlyFeaturePackBuild {
         }
 
         public Builder addDefaultPackage(String packageName) {
-            switch(defaultPackages.size()) {
-                case 0:
-                    defaultPackages = Collections.singleton(packageName);
-                    break;
-                case 1:
-                    final String first = defaultPackages.iterator().next();
-                    defaultPackages = new HashSet<>();
-                    defaultPackages.add(first);
-                default:
-                    defaultPackages.add(packageName);
-            }
+            defaultPackages = PmCollections.add(defaultPackages, packageName);
             return this;
         }
 
         public Builder addDependency(FeaturePackDependencySpec dependency) {
-            switch(dependencies.size()) {
-                case 0:
-                    dependencies = Collections.singletonList(dependency);
-                    break;
-                case 1:
-                    final FeaturePackDependencySpec first = dependencies.get(0);
-                    dependencies = new ArrayList<FeaturePackDependencySpec>(2);
-                    dependencies.add(first);
-                default:
-                    dependencies.add(dependency);
-            }
+            dependencies = PmCollections.add(dependencies, dependency);
             return this;
         }
 
         public Builder addSchemaGroup(String groupId) {
-            switch(schemaGroups.size()) {
-                case 0:
-                    schemaGroups = Collections.singleton(groupId);
-                    break;
-                case 1:
-                    final String first = schemaGroups.iterator().next();
-                    schemaGroups = new HashSet<>();
-                    schemaGroups.add(first);
-                default:
-                    schemaGroups.add(groupId);
-            }
+            schemaGroups = PmCollections.add(schemaGroups, groupId);
             return this;
         }
 
         public Builder addConfig(ConfigSpec config) {
-            switch(configs.size()) {
-                case 0:
-                    configs = Collections.singletonList(config);
-                    break;
-                case 1:
-                    final ConfigSpec first = configs.get(0);
-                    configs = new ArrayList<>();
-                    configs.add(first);
-                default:
-                    configs.add(config);
-            }
+            configs = PmCollections.add(configs, config);
             return this;
         }
 
@@ -121,10 +79,10 @@ public class WildFlyFeaturePackBuild {
     private final List<ConfigSpec> configs;
 
     private WildFlyFeaturePackBuild(Builder builder) {
-        this.dependencies = Unmodifiable.list(builder.dependencies);
-        this.schemaGroups = Unmodifiable.set(builder.schemaGroups);
-        this.defaultPackages = Unmodifiable.set(builder.defaultPackages);
-        this.configs = Unmodifiable.list(builder.configs);
+        this.dependencies = PmCollections.unmodifiable(builder.dependencies);
+        this.schemaGroups = PmCollections.unmodifiable(builder.schemaGroups);
+        this.defaultPackages = PmCollections.unmodifiable(builder.defaultPackages);
+        this.configs = PmCollections.unmodifiable(builder.configs);
     }
 
     public Collection<String> getDefaultPackages() {

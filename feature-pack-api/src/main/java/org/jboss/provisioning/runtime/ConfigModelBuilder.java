@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -35,6 +36,7 @@ import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
+import org.jboss.provisioning.util.PmCollections;
 
 
 /**
@@ -213,11 +215,12 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     private void merge(ResolvedFeature feature) throws ProvisioningException {
         if(feature.id == null) {
-            addToSpecFeatures(feature);
+            addToSpecFeatures(feature.copy(++featureIncludeCount));
             return;
         }
         final ResolvedFeature localFeature = featuresById.get(feature.id);
         if(localFeature == null) {
+            feature = feature.copy(++featureIncludeCount);
             featuresById.put(feature.id, feature);
             addToSpecFeatures(feature);
             return;
@@ -311,9 +314,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     public ProvisionedConfig build(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(featuresById.isEmpty()) {
-            orderedFeatures = Collections.emptyList();
-            featuresById = Collections.emptyMap();
-            featuresBySpec = Collections.emptyMap();
             return this;
         }
         try {
@@ -467,17 +467,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                     if (next.loopedOn.id.equals(feature.id)) {
                         // this feature initiated the loop
                         i.remove();
-                        switch(initiatedCircularRefs.size()) {
-                            case 0:
-                                initiatedCircularRefs = Collections.singletonList(next);
-                                break;
-                            case 1:
-                                final CircularRefInfo first = initiatedCircularRefs.get(0);
-                                initiatedCircularRefs = new ArrayList<>(2);
-                                initiatedCircularRefs.add(first);
-                            default:
-                                initiatedCircularRefs.add(next);
-                        }
+                        initiatedCircularRefs = PmCollections.add(initiatedCircularRefs, next);
                     } else {
                         // the feature is in the middle of the loop
                         next.setNext(feature);

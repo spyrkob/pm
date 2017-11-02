@@ -35,7 +35,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +59,7 @@ import org.jboss.provisioning.runtime.PackageRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.IoUtils;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.PropertyUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
@@ -141,17 +141,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 try(BufferedReader reader = Files.newBufferedReader(schemaGroupsTxt)) {
                     String line = reader.readLine();
                     while(line != null) {
-                        if(!schemaGroups.contains(line)) {
-                            switch(schemaGroups.size()) {
-                                case 0:
-                                    schemaGroups = Collections.singleton(line);
-                                    break;
-                                case 1:
-                                    schemaGroups = new HashSet<>(schemaGroups);
-                                default:
-                                    schemaGroups.add(line);
-                            }
-                        }
+                        schemaGroups = PmCollections.add(schemaGroups, line);
                         line = reader.readLine();
                     }
                 } catch (IOException e) {

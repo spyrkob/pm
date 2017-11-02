@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +27,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.util.Unmodifiable;
+import org.jboss.provisioning.util.PmCollections;
 
 
 /**
@@ -51,28 +50,12 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addCopyArtifact(CopyArtifact copy) {
-            switch(copyArtifacts.size()) {
-                case 0:
-                    copyArtifacts = Collections.singletonList(copy);
-                    break;
-                case 1:
-                    copyArtifacts = new ArrayList<CopyArtifact>(copyArtifacts);
-                default:
-                    copyArtifacts.add(copy);
-            }
+            copyArtifacts = PmCollections.add(copyArtifacts, copy);
             return this;
         }
 
         public Builder addCopyPath(CopyPath copy) {
-            switch(copyPaths.size()) {
-                case 0:
-                    copyPaths = Collections.singletonList(copy);
-                    break;
-                case 1:
-                    copyPaths = new ArrayList<>(copyPaths);
-                default:
-                    copyPaths.add(copy);
-            }
+            copyPaths = PmCollections.add(copyPaths, copy);
             return this;
         }
 
@@ -91,15 +74,7 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addDeletePath(DeletePath deletePath) {
-            switch(deletePaths.size()) {
-                case 0:
-                    deletePaths = Collections.singletonList(deletePath);
-                    break;
-                case 1:
-                    deletePaths = new ArrayList<>(deletePaths);
-                default:
-                    deletePaths.add(deletePath);
-            }
+            deletePaths = PmCollections.add(deletePaths, deletePath);
             return this;
         }
 
@@ -111,15 +86,7 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addFilePermissions(FilePermission filePermission) {
-            switch(filePermissions.size()) {
-                case 0:
-                    filePermissions = Collections.singletonList(filePermission);
-                    break;
-                case 1:
-                    filePermissions = new ArrayList<FilePermission>(filePermissions);
-                default:
-                    filePermissions.add(filePermission);
-            }
+            filePermissions = PmCollections.add(filePermissions, filePermission);
             return this;
         }
 
@@ -131,15 +98,7 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addMkDirs(String mkdirs) {
-            switch(mkDirs.size()) {
-                case 0:
-                    mkDirs = Collections.singletonList(mkdirs);
-                    break;
-                case 1:
-                    mkDirs = new ArrayList<String>(mkDirs);
-                default:
-                    mkDirs.add(mkdirs);
-            }
+            mkDirs = PmCollections.add(mkDirs, mkdirs);
             return this;
         }
 
@@ -151,15 +110,7 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addWindowsLineEndFilter(FileFilter filter) {
-            switch(windowsLineEndFilters.size()) {
-                case 0:
-                    windowsLineEndFilters = Collections.singletonList(filter);
-                    break;
-                case 1:
-                    windowsLineEndFilters = new ArrayList<FileFilter>(windowsLineEndFilters);
-                default:
-                    windowsLineEndFilters.add(filter);
-            }
+            windowsLineEndFilters = PmCollections.add(windowsLineEndFilters, filter);
             return this;
         }
 
@@ -171,15 +122,7 @@ public class WildFlyPackageTasks {
         }
 
         public Builder addUnixLineEndFilter(FileFilter filter) {
-            switch(unixLineEndFilters.size()) {
-                case 0:
-                    unixLineEndFilters = Collections.singletonList(filter);
-                    break;
-                case 1:
-                    unixLineEndFilters = new ArrayList<FileFilter>(unixLineEndFilters);
-                default:
-                    unixLineEndFilters.add(filter);
-            }
+            unixLineEndFilters = PmCollections.add(unixLineEndFilters, filter);
             return this;
         }
 
@@ -218,13 +161,13 @@ public class WildFlyPackageTasks {
     private final List<FileFilter> unixLineEndFilters;
 
     private WildFlyPackageTasks(Builder builder) {
-        this.copyArtifacts = Unmodifiable.list(builder.copyArtifacts);
-        this.copyPaths = Unmodifiable.list(builder.copyPaths);
-        this.deletePaths = Unmodifiable.list(builder.deletePaths);
-        this.filePermissions = Unmodifiable.list(builder.filePermissions);
-        this.mkDirs = Unmodifiable.list(builder.mkDirs);
-        this.windowsLineEndFilters = Unmodifiable.list(builder.windowsLineEndFilters);
-        this.unixLineEndFilters = Unmodifiable.list(builder.unixLineEndFilters);
+        this.copyArtifacts = PmCollections.unmodifiable(builder.copyArtifacts);
+        this.copyPaths = PmCollections.unmodifiable(builder.copyPaths);
+        this.deletePaths = PmCollections.unmodifiable(builder.deletePaths);
+        this.filePermissions = PmCollections.unmodifiable(builder.filePermissions);
+        this.mkDirs = PmCollections.unmodifiable(builder.mkDirs);
+        this.windowsLineEndFilters = PmCollections.unmodifiable(builder.windowsLineEndFilters);
+        this.unixLineEndFilters = PmCollections.unmodifiable(builder.unixLineEndFilters);
     }
 
     public boolean hasCopyArtifacts() {

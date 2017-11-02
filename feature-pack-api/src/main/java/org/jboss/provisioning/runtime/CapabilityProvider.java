@@ -17,9 +17,10 @@
 
 package org.jboss.provisioning.runtime;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -30,16 +31,7 @@ abstract class CapabilityProvider {
     private List<CapabilityProviders> capProviders = Collections.emptyList();
 
     void addCapabilityProviders(CapabilityProviders providers) {
-        if(capProviders.isEmpty()) {
-            capProviders = Collections.singletonList(providers);
-            return;
-        }
-        if(capProviders.size() == 1) {
-            final CapabilityProviders first = capProviders.get(0);
-            capProviders = new ArrayList<>(2);
-            capProviders.add(first);
-        }
-        capProviders.add(providers);
+        capProviders = PmCollections.add(capProviders, providers);
     }
 
     void provided() {

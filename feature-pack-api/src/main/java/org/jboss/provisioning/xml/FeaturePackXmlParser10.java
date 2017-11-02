@@ -113,6 +113,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         EXTENSION("extension"),
         INHERIT("inherit"),
         MODEL("model"),
+        NAMED_CONFIGS_ONLY("named-configs-only"),
         VERSION("version"),
         NAME("name"),
         // default unknown attribute
@@ -176,7 +177,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             }
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder config = ConfigSpec.builder().setResetFeaturePackOrigin(true);
+                            final ConfigSpec.Builder config = ConfigSpec.builder();
                             ConfigXml.readConfig(reader, config);
                             try {
                                 fpBuilder.addConfig(config.build());
