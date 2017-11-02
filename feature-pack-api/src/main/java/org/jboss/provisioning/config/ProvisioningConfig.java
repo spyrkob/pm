@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,15 +61,7 @@ public class ProvisioningConfig {
             if(featurePacks.containsKey(gaPart)) {
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
             }
-            switch(featurePacks.size()) {
-                case 0:
-                    featurePacks = Collections.singletonMap(gaPart, fp);
-                    break;
-                case 1:
-                    featurePacks = new LinkedHashMap<>(featurePacks);
-                default:
-                    featurePacks.put(gaPart, fp);
-            }
+            featurePacks = PmCollections.putLinked(featurePacks, gaPart, fp);
             return this;
         }
 
@@ -91,7 +82,7 @@ public class ProvisioningConfig {
         }
 
         public ProvisioningConfig build() {
-            return new ProvisioningConfig(PmCollections.map(featurePacks));
+            return new ProvisioningConfig(PmCollections.unmodifiable(featurePacks));
         }
 
         public void exportToXml(Path location) throws IOException {

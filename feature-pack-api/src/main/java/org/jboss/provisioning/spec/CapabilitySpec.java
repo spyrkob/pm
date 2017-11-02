@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.spec;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +25,7 @@ import java.util.Map;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * @author Alexey Loubyansky
@@ -66,22 +66,8 @@ public class CapabilitySpec {
                             break;
                         }
                     }
-                    switch(parts.size()) {
-                        case 0:
-                            parts = Collections.singletonList(buf.toString());
-                            partTypes = Collections.singletonList(staticPart);
-                            break;
-                        case 1:
-                            final String firstPart = parts.get(0);
-                            final Boolean firstType = partTypes.get(0);
-                            parts = new ArrayList<>(2);
-                            partTypes = new ArrayList<>(2);
-                            parts.add(firstPart);
-                            partTypes.add(firstType);
-                        default:
-                            parts.add(buf.toString());
-                            partTypes.add(staticPart);
-                    }
+                    parts = PmCollections.add(parts, buf.toString());
+                    partTypes = PmCollections.add(partTypes, staticPart);
                     buf.setLength(0);
                     staticPart = true;
                     break;
@@ -103,22 +89,8 @@ public class CapabilitySpec {
         if(buf.length() == 0) {
             formatError(str);
         }
-        switch(parts.size()) {
-            case 0:
-                parts = Collections.singletonList(buf.toString());
-                partTypes = Collections.singletonList(staticPart);
-                break;
-            case 1:
-                final String firstPart = parts.get(0);
-                final Boolean firstType = partTypes.get(0);
-                parts = new ArrayList<>(2);
-                partTypes = new ArrayList<>(2);
-                parts.add(firstPart);
-                partTypes.add(firstType);
-            default:
-                parts.add(buf.toString());
-                partTypes.add(staticPart);
-        }
+        parts = PmCollections.add(parts, buf.toString());
+        partTypes = PmCollections.add(partTypes, staticPart);
         return new CapabilitySpec(parts, partTypes, optional);
     }
 

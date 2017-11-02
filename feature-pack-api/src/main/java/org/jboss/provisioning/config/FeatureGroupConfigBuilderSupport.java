@@ -18,17 +18,13 @@
 package org.jboss.provisioning.config;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.config.FeatureGroupConfig.Builder;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  * @author Alexey Loubyansky
@@ -85,15 +81,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         if(excludedSpecs.contains(specId)) {
             throw new ProvisioningDescriptionException(specId + " spec has been explicitly excluded");
         }
-        switch(includedSpecs.size()) {
-            case 0:
-                includedSpecs = Collections.singleton(specId);
-                break;
-            case 1:
-                includedSpecs = new LinkedHashSet<>(includedSpecs);
-            default:
-                includedSpecs.add(specId);
-        }
+        includedSpecs = PmCollections.addLinked(includedSpecs, specId);
         return (B) this;
     }
 
@@ -132,17 +120,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
                         + idEntry.getValue() + "' in feature ID and value '" + prevValue + "' in the feature body");
             }
         }
-        switch(includedFeatures.size()) {
-            case 0:
-                includedFeatures = Collections.singletonMap(featureId, feature);
-                break;
-            case 1:
-                final Map.Entry<FeatureId, FeatureConfig> entry = includedFeatures.entrySet().iterator().next();
-                includedFeatures = new LinkedHashMap<>(2);
-                includedFeatures.put(entry.getKey(), entry.getValue());
-            default:
-                includedFeatures.put(featureId, feature);
-        }
+        includedFeatures = PmCollections.putLinked(includedFeatures, featureId, feature);
         return (B) this;
     }
 
@@ -161,15 +139,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         if(includedSpecs.contains(specId)) {
             throw new ProvisioningDescriptionException(specId + " spec has been inplicitly excluded");
         }
-        switch(excludedSpecs.size()) {
-            case 0:
-                excludedSpecs = Collections.singleton(specId);
-                break;
-            case 1:
-                excludedSpecs = new HashSet<>(excludedSpecs);
-            default:
-                excludedSpecs.add(specId);
-        }
+        excludedSpecs = PmCollections.add(excludedSpecs, specId);
         return (B) this;
     }
 
@@ -195,17 +165,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         if(includedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly included");
         }
-        switch(excludedFeatures.size()) {
-            case 0:
-                excludedFeatures = Collections.singletonMap(featureId, parentRef);
-                break;
-            case 1:
-                final Map.Entry<FeatureId, String> first = excludedFeatures.entrySet().iterator().next();
-                excludedFeatures = new HashMap<>(2);
-                excludedFeatures.put(first.getKey(), first.getValue());
-            default:
-                excludedFeatures.put(featureId, parentRef);
-        }
+        excludedFeatures = PmCollections.put(excludedFeatures, featureId, parentRef);
         return (B) this;
     }
 
@@ -220,16 +180,7 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
             return fgBuilder;
         }
         fgBuilder = FeatureGroupConfig.builder(inheritFeatures);
-        if(externalFgConfigs.isEmpty()) {
-            externalFgConfigs = Collections.singletonMap(fpDep, fgBuilder);
-            return fgBuilder;
-        }
-        if(externalFgConfigs.size() == 1) {
-            final Map.Entry<String, Builder> first = externalFgConfigs.entrySet().iterator().next();
-            externalFgConfigs = new LinkedHashMap<>(2);
-            externalFgConfigs.put(first.getKey(), first.getValue());
-        }
-        externalFgConfigs.put(fpDep, fgBuilder);
+        externalFgConfigs = PmCollections.putLinked(externalFgConfigs, fpDep, fgBuilder);
         return fgBuilder;
     }
 }

@@ -18,7 +18,6 @@
 package org.jboss.provisioning.spec;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.util.StringUtils;
@@ -41,15 +40,7 @@ public class ConfigSpec extends FeatureGroupSupport {
         }
 
         public Builder setProperty(String name, String value) {
-            switch(props.size()) {
-                case 0:
-                    props = Collections.singletonMap(name, value);
-                    break;
-                case 1:
-                    props = new HashMap<>(props);
-                default:
-                    props.put(name, value);
-            }
+            props = PmCollections.put(props, name, value);
             return this;
         }
 
@@ -69,7 +60,7 @@ public class ConfigSpec extends FeatureGroupSupport {
     private ConfigSpec(Builder builder) {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
-        this.props = PmCollections.map(builder.props);
+        this.props = PmCollections.unmodifiable(builder.props);
     }
 
     public ConfigId getId() {

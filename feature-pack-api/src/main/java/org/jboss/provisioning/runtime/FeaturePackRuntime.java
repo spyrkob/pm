@@ -41,6 +41,7 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
@@ -73,15 +74,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         PackageRuntime.Builder newPackage(String name, Path dir) {
             final PackageRuntime.Builder pkgBuilder = PackageRuntime.builder(name, dir);
-            switch(pkgBuilders.size()) {
-                case 0:
-                    pkgBuilders = Collections.singletonMap(name, pkgBuilder);
-                    break;
-                case 1:
-                    pkgBuilders = new HashMap<>(pkgBuilders);
-                default:
-                    pkgBuilders.put(name, pkgBuilder);
-            }
+            pkgBuilders = PmCollections.put(pkgBuilders, name, pkgBuilder);
             return pkgBuilder;
         }
 
@@ -148,16 +141,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         }
 
         void push(FeaturePackConfig fpConfig) {
-            if(fpConfigStack.isEmpty()) {
-                fpConfigStack = Collections.singletonList(fpConfig);
-            } else {
-                if(fpConfigStack.size() == 1) {
-                    final FeaturePackConfig first = fpConfigStack.get(0);
-                    fpConfigStack = new ArrayList<>(2);
-                    fpConfigStack.add(first);
-                }
-                fpConfigStack.add(fpConfig);
-            }
+            fpConfigStack = PmCollections.add(fpConfigStack, fpConfig);
             if(blockedPackageInheritance == null && !fpConfig.isInheritPackages()) {
                 blockedPackageInheritance = fpConfig;
             }

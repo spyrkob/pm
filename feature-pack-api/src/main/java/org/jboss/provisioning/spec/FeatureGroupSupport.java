@@ -57,15 +57,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         @Override
         @SuppressWarnings("unchecked")
         public B addConfigItem(ConfigItem item) {
-            switch (items.size()) {
-                case 0:
-                    items = Collections.singletonList(item);
-                    break;
-                case 1:
-                    items = new ArrayList<>(items);
-                default:
-                    items.add(item);
-            }
+            items = PmCollections.add(items, item);
             return (B) this;
         }
 
@@ -141,7 +133,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         super(builder);
         name = builder.name;
         resetFeaturePackOrigin = builder.resetFeaturePackOrigin;
-        this.items = PmCollections.list(builder.items);
+        this.items = PmCollections.unmodifiable(builder.items);
     }
 
     public String getName() {

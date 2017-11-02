@@ -17,12 +17,8 @@
 package org.jboss.provisioning.spec;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,15 +66,7 @@ public class FeaturePackSpec {
 
         public Builder addDefaultPackage(String packageName) {
             assert packageName != null : "packageName is null";
-            switch(defPackages.size()) {
-                case 0:
-                    defPackages = Collections.singleton(packageName);
-                    break;
-                case 1:
-                    defPackages = new LinkedHashSet<String>(defPackages);
-                default:
-                    defPackages.add(packageName);
-            }
+            defPackages = PmCollections.addLinked(defPackages, packageName);
             return this;
         }
 
@@ -90,15 +78,7 @@ public class FeaturePackSpec {
                 }
                 unnamedConfig = config;
             }
-            switch(defConfigs.size()) {
-                case 0:
-                    defConfigs = Collections.singletonList(config);
-                    break;
-                case 1:
-                    defConfigs = new ArrayList<ConfigSpec>(defConfigs);
-                default:
-                    defConfigs.add(config);
-            }
+            defConfigs = PmCollections.add(defConfigs, config);
             return this;
         }
 
@@ -112,26 +92,12 @@ public class FeaturePackSpec {
 
         public Builder addDependency(FeaturePackDependencySpec dependency) throws ProvisioningDescriptionException {
             if(dependency.getName() != null) {
-                if(dependencyByName.isEmpty()) {
-                    dependencyByName = Collections.singletonMap(dependency.getName(), dependency);
-                } else if(dependencyByName.containsKey(dependency.getName())){
+                if(dependencyByName.containsKey(dependency.getName())){
                     throw new ProvisioningDescriptionException(Errors.duplicateDependencyName(dependency.getName()));
-                } else {
-                    if(dependencyByName.size() == 1) {
-                        dependencyByName = new HashMap<>(dependencyByName);
-                    }
-                    dependencyByName.put(dependency.getName(), dependency);
                 }
+                dependencyByName = PmCollections.put(dependencyByName, dependency.getName(), dependency);
             }
-            switch(dependencies.size()) {
-                case 0:
-                    dependencies = Collections.singletonMap(dependency.getTarget().getGav().toGa(), dependency);
-                    break;
-                case 1:
-                    dependencies = new LinkedHashMap<>(dependencies);
-                default:
-                    dependencies.put(dependency.getTarget().getGav().toGa(), dependency);
-            }
+            dependencies = PmCollections.putLinked(dependencies, dependency.getTarget().getGav().toGa(), dependency);
             return this;
         }
 
@@ -163,10 +129,10 @@ public class FeaturePackSpec {
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
-        this.defPackages = PmCollections.set(builder.defPackages);
-        this.dependencies = PmCollections.map(builder.dependencies);
-        this.dependencyByName = PmCollections.map(builder.dependencyByName);
-        this.defConfigs = PmCollections.list(builder.defConfigs);
+        this.defPackages = PmCollections.unmodifiable(builder.defPackages);
+        this.dependencies = PmCollections.unmodifiable(builder.dependencies);
+        this.dependencyByName = PmCollections.unmodifiable(builder.dependencyByName);
+        this.defConfigs = PmCollections.unmodifiable(builder.defConfigs);
     }
 
     public ArtifactCoords.Gav getGav() {

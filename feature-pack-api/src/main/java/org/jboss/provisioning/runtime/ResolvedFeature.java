@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -30,6 +31,7 @@ import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -170,19 +172,10 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     public void addDependency(ResolvedFeatureId id, FeatureDependencySpec depSpec) throws ProvisioningDescriptionException {
-        if(deps.isEmpty()) {
-            deps = Collections.singletonMap(id, depSpec);
-            return;
-        }
         if(deps.containsKey(id)) {
             throw new ProvisioningDescriptionException("Duplicate dependency on " + id + " from " + this.id); // TODO
         }
-        if(deps.size() == 1) {
-            final Map.Entry<ResolvedFeatureId, FeatureDependencySpec> first = deps.entrySet().iterator().next();
-            deps = new LinkedHashMap<>(2);
-            deps.put(first.getKey(), first.getValue());
-        }
-        deps.put(id, depSpec);
+        deps = PmCollections.putLinked(deps, id, depSpec);
     }
 
     @Override
@@ -225,21 +218,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
                 return;
             }
         }
-        switch(params.size()) {
-            case 0:
-                params = Collections.singletonMap(name, value);
-                break;
-            case 1:
-                if(params.containsKey(name)) {
-                    params = Collections.singletonMap(name, value);
-                    return;
-                }
-                final Map.Entry<String, String> first = params.entrySet().iterator().next();
-                params = new HashMap<>(2);
-                params.put(first.getKey(), first.getValue());
-            default:
-                params.put(name, value);
-        }
+        params = PmCollections.put(params, name, value);
     }
 
     void mergeParams(FeatureConfig config) throws ProvisioningDescriptionException {

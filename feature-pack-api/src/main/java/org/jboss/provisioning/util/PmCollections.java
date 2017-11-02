@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.util;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +33,7 @@ import java.util.Set;
  */
 public class PmCollections {
 
-    public static <K,V> Map<K,V> map(Map<K,V> m) {
+    public static <K,V> Map<K,V> unmodifiable(Map<K,V> m) {
         return m.size() > 1 ? Collections.unmodifiableMap(m) : m;
     }
 
@@ -68,11 +69,24 @@ public class PmCollections {
         return m;
     }
 
-    public static <T> List<T> list(List<T> l) {
+    public static <T> List<T> unmodifiable(List<T> l) {
         return l.size() > 1 ? Collections.unmodifiableList(l) : l;
     }
 
-    public static <T> Set<T> set(Set<T> s) {
+    public static <T> List<T> add(List<T> s, T t) {
+        if(s.isEmpty()) {
+            return Collections.singletonList(t);
+        }
+        if(s.size() == 1) {
+            final T first = s.iterator().next();
+            s = new ArrayList<>(2);
+            s.add(first);
+        }
+        s.add(t);
+        return s;
+    }
+
+    public static <T> Set<T> unmodifiable(Set<T> s) {
         return s.size() > 1 ? Collections.unmodifiableSet(s) : s;
     }
 

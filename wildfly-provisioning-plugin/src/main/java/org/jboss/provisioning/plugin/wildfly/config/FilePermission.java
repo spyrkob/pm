@@ -61,7 +61,7 @@ public class FilePermission {
         }
 
         public FilePermission build() {
-            return new FilePermission(value, PmCollections.list(filters));
+            return new FilePermission(value, PmCollections.unmodifiable(filters));
         }
     }
 

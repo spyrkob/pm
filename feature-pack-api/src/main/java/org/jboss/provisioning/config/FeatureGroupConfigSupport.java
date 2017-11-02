@@ -57,10 +57,10 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.fpDep = builder.fpDep;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
-        this.includedSpecs = PmCollections.set(builder.includedSpecs);
-        this.excludedSpecs = PmCollections.set(builder.excludedSpecs);
-        this.includedFeatures = PmCollections.map(builder.includedFeatures);
-        this.excludedFeatures = PmCollections.map(builder.excludedFeatures);
+        this.includedSpecs = PmCollections.unmodifiable(builder.includedSpecs);
+        this.excludedSpecs = PmCollections.unmodifiable(builder.excludedSpecs);
+        this.includedFeatures = PmCollections.unmodifiable(builder.includedFeatures);
+        this.excludedFeatures = PmCollections.unmodifiable(builder.excludedFeatures);
 
         if(builder.externalFgConfigs.isEmpty()) {
             this.externalFgConfigs = Collections.emptyMap();

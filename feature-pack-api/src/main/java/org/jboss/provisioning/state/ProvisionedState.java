@@ -17,10 +17,8 @@
 
 package org.jboss.provisioning.state;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,32 +42,12 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         }
 
         public Builder addFeaturePack(ProvisionedFeaturePack fp) {
-            switch(featurePacks.size()) {
-                case 0:
-                    featurePacks = Collections.singletonMap(fp.getGav(), fp);
-                    break;
-                case 1:
-                    final Map.Entry<ArtifactCoords.Gav, ProvisionedFeaturePack> first = featurePacks.entrySet().iterator().next();
-                    featurePacks = new LinkedHashMap<>(2);
-                    featurePacks.put(first.getKey(), first.getValue());
-                default:
-                    featurePacks.put(fp.getGav(), fp);
-            }
+            featurePacks = PmCollections.putLinked(featurePacks, fp.getGav(), fp);
             return this;
         }
 
         public Builder addConfig(ProvisionedConfig config) {
-            switch(configs.size()) {
-                case 0:
-                    configs = Collections.singletonList(config);
-                    break;
-                case 1:
-                    final ProvisionedConfig first = configs.get(0);
-                    configs = new ArrayList<>(2);
-                    configs.add(first);
-                default:
-                    configs.add(config);
-            }
+            configs = PmCollections.add(configs, config);
             return this;
         }
 
@@ -86,8 +64,8 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     private final List<ProvisionedConfig> configs;
 
     ProvisionedState(Builder builder) {
-        this.featurePacks = PmCollections.map(builder.featurePacks);
-        this.configs = PmCollections.list(builder.configs);
+        this.featurePacks = PmCollections.unmodifiable(builder.featurePacks);
+        this.configs = PmCollections.unmodifiable(builder.configs);
     }
 
     @Override

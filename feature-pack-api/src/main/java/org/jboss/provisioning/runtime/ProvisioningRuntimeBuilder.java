@@ -66,6 +66,7 @@ import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.LayoutUtils;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
@@ -351,62 +352,33 @@ public class ProvisioningRuntimeBuilder {
         if(config.getModel() == null) {
             if(config.getName() == null) {
                 final ConfigModelBuilder modelBuilder = ConfigModelBuilder.anonymous();
-                switch(anonymousConfigs.size()) {
-                    case 0:
-                        anonymousConfigs = Collections.singletonList(modelBuilder);
-                        break;
-                    case 1:
-                        anonymousConfigs = new ArrayList<>(anonymousConfigs);
-                    default:
-                        anonymousConfigs.add(modelBuilder);
-                }
-                return modelBuilder;
-            }
-            if (noModelNamedConfigs.isEmpty()) {
-                final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forName(config.getName());
-                noModelNamedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
+                anonymousConfigs = PmCollections.add(anonymousConfigs, modelBuilder);
                 return modelBuilder;
             }
             ConfigModelBuilder modelBuilder = noModelNamedConfigs.get(config.getName());
-            if (modelBuilder == null) {
+            if(modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forName(config.getName());
-                if (noModelNamedConfigs.size() == 1) {
-                    noModelNamedConfigs = new LinkedHashMap<>(noModelNamedConfigs);
-                }
-                noModelNamedConfigs.put(config.getName(), modelBuilder);
+                noModelNamedConfigs = PmCollections.putLinked(noModelNamedConfigs, config.getName(), modelBuilder);
             }
             return modelBuilder;
         }
         if(config.getName() == null) {
-            if(noNameModelConfigs.isEmpty()) {
-                final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forModel(config.getModel());
-                noNameModelConfigs = Collections.singletonMap(config.getModel(), modelBuilder);
-                return modelBuilder;
-            }
             ConfigModelBuilder modelBuilder = noNameModelConfigs.get(config.getModel());
-            if (modelBuilder == null) {
+            if(modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forModel(config.getModel());
-                if (noNameModelConfigs.size() == 1) {
-                    noNameModelConfigs = new LinkedHashMap<>(noNameModelConfigs);
-                }
-                noNameModelConfigs.put(config.getModel(), modelBuilder);
+                noNameModelConfigs = PmCollections.putLinked(noNameModelConfigs, config.getModel(), modelBuilder);
             }
             return modelBuilder;
         }
-        if (modelConfigs.isEmpty()) {
-            final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
-            modelConfigs = Collections.singletonMap(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
-            return modelBuilder;
-        }
+
         Map<String, ConfigModelBuilder> namedConfigs = modelConfigs.get(config.getModel());
-        if (namedConfigs == null) {
+        if(namedConfigs == null) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
-            if (modelConfigs.size() == 1) {
-                modelConfigs = new LinkedHashMap<>(modelConfigs);
-            }
-            modelConfigs.put(config.getModel(), Collections.singletonMap(config.getName(), modelBuilder));
+            namedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
+            modelConfigs = PmCollections.putLinked(modelConfigs, config.getModel(), namedConfigs);
             return modelBuilder;
         }
+
         ConfigModelBuilder modelBuilder = namedConfigs.get(config.getName());
         if (modelBuilder == null) {
             if (namedConfigs.size() == 1) {

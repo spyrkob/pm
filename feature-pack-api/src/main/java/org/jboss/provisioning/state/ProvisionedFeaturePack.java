@@ -19,7 +19,6 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,15 +46,7 @@ public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
         }
 
         public Builder addPackage(ProvisionedPackage provisionedPkg) {
-            switch(packages.size()) {
-                case 0:
-                    packages = Collections.singletonMap(provisionedPkg.getName(), provisionedPkg);
-                    break;
-                case 1:
-                    packages = new LinkedHashMap<>(packages);
-                default:
-                    packages.put(provisionedPkg.getName(), provisionedPkg);
-            }
+            packages = PmCollections.putLinked(packages, provisionedPkg.getName(), provisionedPkg);
             return this;
         }
 
@@ -64,7 +55,7 @@ public class ProvisionedFeaturePack implements FeaturePack<ProvisionedPackage> {
         }
 
         public ProvisionedFeaturePack build() {
-            return new ProvisionedFeaturePack(gav, PmCollections.map(packages));
+            return new ProvisionedFeaturePack(gav, PmCollections.unmodifiable(packages));
         }
     }
 

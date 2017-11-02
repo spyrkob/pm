@@ -157,11 +157,11 @@ public class FeaturePackConfig extends PackageDepsConfig {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
         this.inheritConfigs = builder.inheritConfigs;
-        this.includedModels = PmCollections.set(builder.includedModels);
-        this.excludedModels = PmCollections.map(builder.excludedModels);
-        this.includedConfigs = PmCollections.map(builder.includedConfigs);
-        this.excludedConfigs = PmCollections.map(builder.excludedConfigs);
-        this.definedConfigs = PmCollections.map(builder.definedConfigs);
+        this.includedModels = PmCollections.unmodifiable(builder.includedModels);
+        this.excludedModels = PmCollections.unmodifiable(builder.excludedModels);
+        this.includedConfigs = PmCollections.unmodifiable(builder.includedConfigs);
+        this.excludedConfigs = PmCollections.unmodifiable(builder.excludedConfigs);
+        this.definedConfigs = PmCollections.unmodifiable(builder.definedConfigs);
     }
 
     public ArtifactCoords.Gav getGav() {

@@ -19,13 +19,12 @@ package org.jboss.provisioning.config;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -48,20 +47,7 @@ abstract class PackageDepsConfigBuilder<T extends PackageDepsConfigBuilder<T>> {
         if(includedPackages.containsKey(packageName)) {
             throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
         }
-        if(!excludedPackages.contains(packageName)) {
-            switch(excludedPackages.size()) {
-                case 0:
-                    excludedPackages = Collections.singleton(packageName);
-                    break;
-                case 1:
-                    if(excludedPackages.contains(packageName)) {
-                        return (T) this;
-                    }
-                    excludedPackages = new HashSet<>(excludedPackages);
-                default:
-                    excludedPackages.add(packageName);
-            }
-        }
+        excludedPackages = PmCollections.add(excludedPackages, packageName);
         return (T) this;
     }
 
@@ -90,20 +76,7 @@ abstract class PackageDepsConfigBuilder<T extends PackageDepsConfigBuilder<T>> {
         if(excludedPackages.contains(packageConfig.getName())) {
             throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageConfig.getName()));
         }
-
-        if(includedPackages.isEmpty()) {
-            includedPackages = Collections.singletonMap(packageConfig.getName(), packageConfig);
-            return (T) this;
-        }
-
-        if(includedPackages.containsKey(packageConfig.getName())) {
-            return (T) this;
-        }
-
-        if (includedPackages.size() == 1) {
-            includedPackages = new HashMap<>(includedPackages);
-        }
-        includedPackages.put(packageConfig.getName(), packageConfig);
+        includedPackages = PmCollections.put(includedPackages, packageConfig.getName(), packageConfig);
         return (T) this;
     }
 

@@ -35,8 +35,8 @@ public abstract class PackageDepsConfig {
 
     protected PackageDepsConfig(PackageDepsConfigBuilder<?> builder) {
         this.inheritPackages = builder.inheritPackages;
-        this.excludedPackages = PmCollections.set(builder.excludedPackages);
-        this.includedPackages = PmCollections.map(builder.includedPackages);
+        this.excludedPackages = PmCollections.unmodifiable(builder.excludedPackages);
+        this.includedPackages = PmCollections.unmodifiable(builder.includedPackages);
     }
 
     public boolean isInheritPackages() {

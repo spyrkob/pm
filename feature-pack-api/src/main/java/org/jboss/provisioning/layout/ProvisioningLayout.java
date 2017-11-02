@@ -18,7 +18,6 @@ package org.jboss.provisioning.layout;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
@@ -57,15 +56,7 @@ public class ProvisioningLayout {
                 }
                 throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), existingGav));
             }
-            switch(featurePacks.size()) {
-                case 0:
-                    featurePacks = Collections.singletonMap(fpGa, fp);
-                    break;
-                case 1:
-                    featurePacks = new HashMap<>(featurePacks);
-                default:
-                    featurePacks.put(fpGa, fp);
-            }
+            featurePacks = PmCollections.put(featurePacks, fpGa, fp);
             return this;
         }
 
@@ -114,7 +105,7 @@ public class ProvisioningLayout {
     private final Map<ArtifactCoords.Ga, FeaturePackLayout> featurePacks;
 
     private ProvisioningLayout(Builder builder) {
-        featurePacks = PmCollections.map(builder.featurePacks);
+        featurePacks = PmCollections.unmodifiable(builder.featurePacks);
     }
 
     public boolean hasFeaturePacks() {

@@ -17,12 +17,8 @@
 
 package org.jboss.provisioning.spec;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,76 +58,33 @@ public class FeatureSpec extends PackageDepsSpec {
         }
 
         public Builder addAnnotation(FeatureAnnotation annotation) {
-            switch(annotations.size()) {
-                case 0:
-                    annotations = Collections.singletonList(annotation);
-                    break;
-                case 1:
-                    final FeatureAnnotation first = annotations.get(0);
-                    annotations = new ArrayList<>(2);
-                    annotations.add(first);
-                default:
-                    annotations.add(annotation);
-            }
+            annotations = PmCollections.add(annotations, annotation);
             return this;
         }
 
         public Builder addFeatureDep(FeatureDependencySpec dep) throws ProvisioningDescriptionException {
-            switch(featureDeps.size()) {
-                case 0:
-                    featureDeps = Collections.singletonMap(dep.getFeatureId(), dep);
-                    break;
-                case 1:
-                    if(featureDeps.containsKey(dep.getFeatureId())) {
-                        throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId() + " from feature spec " + name);
-                    }
-                    featureDeps = new LinkedHashMap<>(featureDeps);
-                default:
-                    featureDeps.put(dep.getFeatureId(), dep);
+            if(featureDeps.containsKey(dep.getFeatureId())) {
+                throw new ProvisioningDescriptionException("Duplicate dependency on " + dep.getFeatureId() + " from feature spec " + name);
             }
+            featureDeps = PmCollections.putLinked(featureDeps, dep.getFeatureId(), dep);
             return this;
         }
 
         public Builder addFeatureRef(FeatureReferenceSpec ref) throws ProvisioningDescriptionException {
-            if(refs.isEmpty()) {
-                refs = Collections.singletonMap(ref.name, ref);
-                return this;
-            }
             if(refs.containsKey(ref.name)) {
                 throw new ProvisioningDescriptionException("Duplicate reference " + ref.name + " in feature spec " + name);
             }
-            if(refs.size() == 1) {
-                final Map.Entry<String, FeatureReferenceSpec> entry = refs.entrySet().iterator().next();
-                refs = new LinkedHashMap<>(2);
-                refs.put(entry.getKey(), entry.getValue());
-            }
-            refs.put(ref.name, ref);
+            refs = PmCollections.putLinked(refs, ref.name, ref);
             return this;
         }
 
         public Builder addParam(FeatureParameterSpec param) throws ProvisioningDescriptionException {
-            if(params.isEmpty()) {
-                params = Collections.singletonMap(param.name, param);
-            } else if(params.containsKey(param.name)) {
+            if(params.containsKey(param.name)) {
                 throw new ProvisioningDescriptionException("Duplicate parameter " + param + " for feature " + name);
-            } else {
-                if (params.size() == 1) {
-                    final Map.Entry<String, FeatureParameterSpec> entry = params.entrySet().iterator().next();
-                    params = new HashMap<>();
-                    params.put(entry.getKey(), entry.getValue());
-                }
-                params.put(param.name, param);
             }
+            params = PmCollections.put(params, param.name, param);
             if(param.featureId) {
-                switch(idParams.size()) {
-                    case 0:
-                        idParams = Collections.singletonList(param);
-                        break;
-                    case 1:
-                        idParams = new ArrayList<>(idParams);
-                    default:
-                        idParams.add(param);
-                }
+                idParams = PmCollections.add(idParams, param);
             }
             return this;
         }
@@ -145,17 +98,7 @@ public class FeatureSpec extends PackageDepsSpec {
         }
 
         public Builder providesCapability(CapabilitySpec cap) {
-            switch(providedCaps.size()) {
-                case 0:
-                    providedCaps = Collections.singleton(cap);
-                    break;
-                case 1:
-                    final CapabilitySpec first = providedCaps.iterator().next();
-                    providedCaps = new HashSet<>(2);
-                    providedCaps.add(first);
-                default:
-                    providedCaps.add(cap);
-            }
+            providedCaps = PmCollections.add(providedCaps, cap);
             return this;
         }
 
@@ -168,17 +111,7 @@ public class FeatureSpec extends PackageDepsSpec {
         }
 
         public Builder requiresCapability(CapabilitySpec cap) {
-            switch(requiredCaps.size()) {
-                case 0:
-                    requiredCaps = Collections.singleton(cap);
-                    break;
-                case 1:
-                    final CapabilitySpec first = requiredCaps.iterator().next();
-                    requiredCaps = new HashSet<>(2);
-                    requiredCaps.add(first);
-                default:
-                    requiredCaps.add(cap);
-            }
+            requiredCaps = PmCollections.add(requiredCaps, cap);
             return this;
         }
 
@@ -207,13 +140,13 @@ public class FeatureSpec extends PackageDepsSpec {
     private FeatureSpec(Builder builder) {
         super(builder);
         this.name = builder.name;
-        this.annotations = PmCollections.list(builder.annotations);
-        this.featureDeps = PmCollections.map(builder.featureDeps);
-        this.featureRefs = PmCollections.map(builder.refs);
-        this.params = PmCollections.map(builder.params);
-        this.idParams = PmCollections.list(builder.idParams);
-        this.providedCaps = PmCollections.set(builder.providedCaps);
-        this.requiredCaps = PmCollections.set(builder.requiredCaps);
+        this.annotations = PmCollections.unmodifiable(builder.annotations);
+        this.featureDeps = PmCollections.unmodifiable(builder.featureDeps);
+        this.featureRefs = PmCollections.unmodifiable(builder.refs);
+        this.params = PmCollections.unmodifiable(builder.params);
+        this.idParams = PmCollections.unmodifiable(builder.idParams);
+        this.providedCaps = PmCollections.unmodifiable(builder.providedCaps);
+        this.requiredCaps = PmCollections.unmodifiable(builder.requiredCaps);
     }
 
     public String getName() {
