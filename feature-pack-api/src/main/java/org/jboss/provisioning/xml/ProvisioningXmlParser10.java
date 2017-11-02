@@ -103,10 +103,11 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         ARTIFACT_ID("artifactId"),
         GROUP_ID("groupId"),
         INHERIT("inherit"),
+        INHERIT_UNNAMED_MODELS("inherit-unnamed-models"),
         INHERIT_FEATURES("inherit-features"),
         MODEL("model"),
         NAME("name"),
-        NAMED_CONFIGS_ONLY("named-configs-only"),
+        NAMED_MODELS_ONLY("named-models-only"),
         VERSION("version"),
 
         // default unknown attribute
@@ -269,6 +270,9 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 case INHERIT:
                     fpBuilder.setInheritConfigs(Boolean.parseBoolean(reader.getAttributeValue(i)));
                     break;
+                case INHERIT_UNNAMED_MODELS:
+                    fpBuilder.setInheritModelOnlyConfigs(Boolean.parseBoolean(reader.getAttributeValue(i)));
+                    break;
                 default:
                     throw ParsingUtils.unexpectedContent(reader);
             }
@@ -317,7 +321,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 case INHERIT_FEATURES:
                     inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
-                case NAMED_CONFIGS_ONLY:
+                case NAMED_MODELS_ONLY:
                     namedConfigsOnly = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 default:

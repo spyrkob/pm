@@ -31,6 +31,14 @@ public class ConfigId {
         this.name = name;
     }
 
+    public boolean isAnonymous() {
+        return model == null && name == null;
+    }
+
+    public boolean isModelOnly() {
+        return model != null && name == null;
+    }
+
     public String getModel() {
         return model;
     }

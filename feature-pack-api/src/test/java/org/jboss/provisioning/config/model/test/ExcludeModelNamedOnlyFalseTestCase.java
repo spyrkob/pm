@@ -101,6 +101,7 @@ public class ExcludeModelNamedOnlyFalseTestCase extends PmInstallFeaturePackTest
                                 .setParam("name", "a1")
                                 .setParam("p3", "custom1"))
                         .build())
+                .addConfig(ConfigSpec.builder().setName("custom2").setModel("model2").build())
                 .build();
     }
 
@@ -114,6 +115,17 @@ public class ExcludeModelNamedOnlyFalseTestCase extends PmInstallFeaturePackTest
                         .setProperty("prop3", "custom1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
                                 .setParam("p3", "custom1")
+                                .setParam("p4", "spec")
+                                .build())
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setModel("model2")
+                        .setName("custom2")
+                        .setProperty("prop2", "config2")
+                        .setProperty("prop3", "config2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
+                                .setParam("p2", "config2")
+                                .setParam("p3", "config2")
                                 .setParam("p4", "spec")
                                 .build())
                         .build())

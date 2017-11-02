@@ -53,14 +53,14 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         if (provisioningConfig.hasFeaturePacks()) {
             for(FeaturePackConfig fp : provisioningConfig.getFeaturePacks()) {
                 final ElementNode fpElement = addElement(pkg, Element.FEATURE_PACK);
-                writeFeaturePack(fpElement, fp);
+                writeFeaturePackConfig(fpElement, fpElement.getNamespace(), fp);
             }
         }
 
         return pkg;
     }
 
-    private void writeFeaturePack(ElementNode fp, FeaturePackConfig featurePack) {
+    public static void writeFeaturePackConfig(ElementNode fp, String ns, FeaturePackConfig featurePack) {
         addAttribute(fp, Attribute.GROUP_ID, featurePack.getGav().getGroupId());
         addAttribute(fp, Attribute.ARTIFACT_ID, featurePack.getGav().getArtifactId());
         if (featurePack.getGav().getVersion() != null) {
@@ -69,35 +69,41 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
 
         ElementNode defConfigsE = null;
         if(!featurePack.isInheritConfigs()) {
-            defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
-            addAttribute(defConfigsE, Attribute.INHERIT, "false");
+            defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
+            addAttribute(defConfigsE, Attribute.INHERIT, FALSE);
+        }
+        if(!featurePack.isInheritModelOnlyConfigs()) {
+            if(defConfigsE == null) {
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
+            }
+            addAttribute(defConfigsE, Attribute.INHERIT_UNNAMED_MODELS, FALSE);
         }
         if(featurePack.hasFullModelsExcluded()) {
             if(defConfigsE == null) {
-                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
             for (Map.Entry<String, Boolean> excluded : featurePack.getFullModelsExcluded().entrySet()) {
-                final ElementNode exclude = addElement(defConfigsE, Element.EXCLUDE);
+                final ElementNode exclude = addElement(defConfigsE, Element.EXCLUDE.getLocalName(), ns);
                 addAttribute(exclude, Attribute.MODEL, excluded.getKey());
                 if(!excluded.getValue()) {
-                    addAttribute(exclude, Attribute.NAMED_CONFIGS_ONLY, FALSE);
+                    addAttribute(exclude, Attribute.NAMED_MODELS_ONLY, FALSE);
                 }
             }
         }
         if(featurePack.hasFullModelsIncluded()) {
             if(defConfigsE == null) {
-                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
             final String[] array = featurePack.getFullModelsIncluded().toArray(new String[featurePack.getFullModelsIncluded().size()]);
             Arrays.sort(array);
             for(String name : array) {
-                final ElementNode included = addElement(defConfigsE, Element.INCLUDE);
+                final ElementNode included = addElement(defConfigsE, Element.INCLUDE.getLocalName(), ns);
                 addAttribute(included, Attribute.MODEL, name);
             }
         }
         if(featurePack.hasExcludedConfigs()) {
             if(defConfigsE == null) {
-                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
             String[] models = featurePack.getExcludedModels().toArray(EMPTY_ARRAY);
             Arrays.sort(models);
@@ -105,7 +111,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
                 String[] configs = featurePack.getExcludedConfigs(modelName).toArray(EMPTY_ARRAY);
                 Arrays.sort(configs);
                 for(String configName : configs) {
-                    final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE);
+                    final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE.getLocalName(), ns);
                     if(modelName != null) {
                         addAttribute(excluded, Attribute.MODEL, modelName);
                     }
@@ -115,43 +121,43 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         }
         if(featurePack.hasIncludedConfigs()) {
             if(defConfigsE == null) {
-                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS);
+                defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
             for (IncludedConfig config : featurePack.getIncludedConfigs()) {
-                final ElementNode includeElement = addElement(defConfigsE, Element.INCLUDE);
+                final ElementNode includeElement = addElement(defConfigsE, Element.INCLUDE.getLocalName(), ns);
                 if(config.getModel() != null) {
                     addAttribute(includeElement, Attribute.MODEL, config.getModel());
                 }
-                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, Element.INCLUDE.getNamespace(), includeElement);
+                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, ns, includeElement);
             }
         }
 
         if(featurePack.hasDefinedConfigs()) {
             for (ConfigSpec config : featurePack.getDefinedConfigs()) {
-                fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ProvisioningXmlParser10.NAMESPACE_1_0));
+                fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ns));
             }
         }
 
         ElementNode packages = null;
         if (!featurePack.isInheritPackages()) {
-            packages = addElement(fp, Element.PACKAGES);
-            addAttribute(packages, Attribute.INHERIT, "false");
+            packages = addElement(fp, Element.PACKAGES.getLocalName(), ns);
+            addAttribute(packages, Attribute.INHERIT, FALSE);
         }
         if (featurePack.hasExcludedPackages()) {
             if (packages == null) {
-                packages = addElement(fp, Element.PACKAGES);
+                packages = addElement(fp, Element.PACKAGES.getLocalName(), ns);
             }
             for (String excluded : featurePack.getExcludedPackages()) {
-                final ElementNode exclude = addElement(packages, Element.EXCLUDE);
+                final ElementNode exclude = addElement(packages, Element.EXCLUDE.getLocalName(), ns);
                 addAttribute(exclude, Attribute.NAME, excluded);
             }
         }
         if (featurePack.hasIncludedPackages()) {
             if (packages == null) {
-                packages = addElement(fp, Element.PACKAGES);
+                packages = addElement(fp, Element.PACKAGES.getLocalName(), ns);
             }
             for (PackageConfig included : featurePack.getIncludedPackages()) {
-                final ElementNode include = addElement(packages, Element.INCLUDE);
+                final ElementNode include = addElement(packages, Element.INCLUDE.getLocalName(), ns);
                 addAttribute(include, Attribute.NAME, included.getName());
             }
         }
