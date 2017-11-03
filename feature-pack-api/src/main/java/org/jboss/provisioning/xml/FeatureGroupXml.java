@@ -63,6 +63,8 @@ public class FeatureGroupXml {
         INCLUDE("include"),
         PACKAGES("packages"),
         PARAMETER("param"),
+        PROP("prop"),
+        PROPS("props"),
 
         // default unknown element
         UNKNOWN(null);
@@ -299,6 +301,9 @@ public class FeatureGroupXml {
                         case FEATURE_PACK:
                             readFeaturePackIncludeExclude(reader, builder);
                             break;
+                        case PROPS:
+                            readProps(reader, builder);
+                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
@@ -308,6 +313,64 @@ public class FeatureGroupXml {
             }
         }
         throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void readProps(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName().getLocalPart());
+                    switch (element) {
+                        case PROP:
+                            readProp(reader, builder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void readProp(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+        String name = null;
+        String value = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case VALUE:
+                    value = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(name == null) {
+            if(value == null) {
+                final Set<Attribute> attrs = new HashSet<>();
+                attrs.add(Attribute.NAME);
+                attrs.add(Attribute.VALUE);
+                throw ParsingUtils.missingAttributes(reader.getLocation(), attrs);
+            }
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
+        } else if(value == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
+        }
+        builder.setProperty(name, value);
+        ParsingUtils.parseNoContent(reader);
     }
 
     private static void readFeaturePackIncludeExclude(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {

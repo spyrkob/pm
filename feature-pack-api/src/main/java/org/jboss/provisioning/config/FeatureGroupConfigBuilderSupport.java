@@ -60,6 +60,10 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return (B) this;
     }
 
+    public B setProperty(String name, String value) {
+        throw new UnsupportedOperationException();
+    }
+
     @SuppressWarnings("unchecked")
     public B setInheritFeatures(boolean inheritFeatures) {
         this.inheritFeatures = inheritFeatures;

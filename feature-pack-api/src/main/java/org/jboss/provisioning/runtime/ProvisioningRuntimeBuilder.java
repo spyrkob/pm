@@ -303,7 +303,6 @@ public class ProvisioningRuntimeBuilder {
                 if(fpConfig.isInheritModelOnlyConfigs()) {
                     if(!fp.isModelOnlyConfigExcluded(configId)) {
                         recordModelOnlyConfig(fpConfig, config);
-                        //contributed |= includeConfig(fp, fpConfig, config);
                     }
                 } else if(fp.isModelOnlyConfigIncluded(configId)) {
                     recordModelOnlyConfig(fpConfig, config);
@@ -370,6 +369,7 @@ public class ProvisioningRuntimeBuilder {
     private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, ConfigSpec config) throws ProvisioningException {
         final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
         configBuilder.overwriteProps(config.getProperties());
+        configBuilder.overwriteProps(includedConfig.getProperties());
         return processFeatureGroupConfig(configBuilder, fp, includedConfig, config);
     }
 
