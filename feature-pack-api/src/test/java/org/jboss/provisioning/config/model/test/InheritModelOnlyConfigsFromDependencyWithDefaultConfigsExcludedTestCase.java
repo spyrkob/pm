@@ -22,9 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -54,6 +56,14 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
                     .addParam(FeatureParameterSpec.create("p3"))
                     .addParam(FeatureParameterSpec.create("p4", "spec"))
                     .build())
+            .addSpec(FeatureSpec.builder("specB")
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addPackageDep("fc1.p1")
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+                    .addFeature(new FeatureConfig("specB").setParam("name", "b"))
+                    .addPackageDep("fg1.p1")
+                    .build())
             .addConfig(ConfigSpec.builder().setModel("model1")
                     .setProperty("prop1", "config1")
                     .setProperty("prop2", "config1")
@@ -81,11 +91,22 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
             .addConfig(ConfigSpec.builder().setModel("model2")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
+                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
+                    .addPackageDep("model2.p1")
                     .build())
+            .newPackage("model2.p1")
+                    .writeContent("model2/p1.txt", "model2p1")
+                    .getFeaturePack()
+            .newPackage("fg1.p1")
+                    .writeContent("fg1/p1.txt", "fg1p1")
+                    .getFeaturePack()
+            .newPackage("fc1.p1")
+                    .writeContent("fc1/p1.txt", "fc1p1")
+                    .getFeaturePack()
             .getInstaller()
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)

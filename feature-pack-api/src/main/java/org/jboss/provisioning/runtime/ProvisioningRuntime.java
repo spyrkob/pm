@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +117,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Path tmpDir;
     private final Path pluginsDir;
     private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
-    private final Map<String, String> parameters = new HashMap<>();
+    private final Map<String, String> parameters;
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
 
@@ -134,26 +133,25 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
                 addConfig(config);
             }
         }
-        if(!builder.noModelNamedConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> config : builder.noModelNamedConfigs.entrySet()) {
+        if(!builder.nameOnlyConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> config : builder.nameOnlyConfigs.entrySet()) {
                 addConfig(config.getValue());
             }
         }
-        if(!builder.noNameModelConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> config : builder.noNameModelConfigs.entrySet()) {
+        if(!builder.modelOnlyConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> config : builder.modelOnlyConfigs.entrySet()) {
                 addConfig(config.getValue());
             }
         }
-        if(!builder.modelConfigs.isEmpty()) {
-            for(Map.Entry<String, Map<String, ConfigModelBuilder>> namedConfigs : builder.modelConfigs.entrySet()) {
+        if(!builder.namedModelConfigs.isEmpty()) {
+            for(Map.Entry<String, Map<String, ConfigModelBuilder>> namedConfigs : builder.namedModelConfigs.entrySet()) {
                 for(Map.Entry<String, ConfigModelBuilder> config : namedConfigs.getValue().entrySet()) {
                     addConfig(config.getValue());
                 }
             }
         }
-        if(!builder.rtParams.isEmpty()) {
-            this.parameters.putAll(builder.rtParams);
-        }
+        parameters = builder.rtParams;
+
         if(configs.size() > 1) {
             configs = Collections.unmodifiableList(configs);
         }

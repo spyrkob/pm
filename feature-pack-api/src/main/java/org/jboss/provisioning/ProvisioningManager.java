@@ -325,13 +325,13 @@ public class ProvisioningManager {
                         }
                     }));
             reference.provision(configuration);
-            final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+            try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())
-                    .setInstallDir(tempInstallationDir);
-            parameters.entrySet().forEach(entry -> builder.addParameter(entry.getKey(), entry.getValue()));
-            try (ProvisioningRuntime runtime = builder.build()) {
+                    .setInstallDir(tempInstallationDir)
+                    .addAllParameters(parameters)
+                    .build()) {
                 // install the software
                 ProvisioningRuntime.exportDiff(runtime, location, installationHome);
             } catch (IOException e) {

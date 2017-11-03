@@ -70,6 +70,7 @@ public class ExcludeModelNamedOnlyFalseTestCase extends PmInstallFeaturePackTest
                             .setParam("name", "a1")
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
+                    .addPackageDep("model1.p1")
                     .build())
             .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
                     .setProperty("prop3", "main")
@@ -85,6 +86,9 @@ public class ExcludeModelNamedOnlyFalseTestCase extends PmInstallFeaturePackTest
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
                     .build())
+            .newPackage("model1.p1")
+                    .writeContent("model1/p1.txt", "model1 p1")
+                    .getFeaturePack()
             .getInstaller()
         .install();
     }

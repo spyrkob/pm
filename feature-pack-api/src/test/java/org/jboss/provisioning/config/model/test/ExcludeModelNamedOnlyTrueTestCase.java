@@ -30,6 +30,8 @@ import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
@@ -70,6 +72,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                             .setParam("name", "a1")
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
+                    .addPackageDep("model1.p1")
                     .build())
             .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
                     .setProperty("prop3", "main")
@@ -85,6 +88,9 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
                     .build())
+            .newPackage("model1.p1")
+                    .writeContent("model1/p1.txt", "model1 p1")
+                    .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -108,7 +114,9 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("model1.p1")
+                        .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1")
                         .setName("custom1")
@@ -134,5 +142,10 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                                 .build())
                         .build())
                 .build();
+    }
+
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.addFile("model1/p1.txt", "model1 p1").build();
     }
 }
