@@ -135,14 +135,21 @@ public class ProvisioningRuntimeBuilder {
     private final MessageWriter messageWriter;
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
     List<ConfigModelBuilder> anonymousConfigs = Collections.emptyList();
-    Map<String, ConfigModelBuilder> noModelNamedConfigs = Collections.emptyMap();
-    Map<String, ConfigModelBuilder> noNameModelConfigs = Collections.emptyMap();
-    Map<String, Map<String, ConfigModelBuilder>> modelConfigs = Collections.emptyMap();
+    Map<String, ConfigModelBuilder> nameOnlyConfigs = Collections.emptyMap();
+    Map<String, ConfigModelBuilder> modelOnlyConfigs = Collections.emptyMap();
+    Map<String, Map<String, ConfigModelBuilder>> namedModelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
     private FeaturePackRuntime.Builder fpOrigin;
-    Map<String, String> rtParams = new HashMap<>();
+    Map<String, String> rtParams = Collections.emptyMap();
 
     private ResolvedFeature parentFeature;
+
+    // this is a stack of model only configs that are resolved and merged after all
+    // the named model configs have been resolved. This is done to:
+    // 1) avoid resolving model only configs that are not going to get merged;
+    // 2) to avoid adding package dependencies of the model only configs that are not merged.
+    private List<ConfigSpec> modelOnlyConfigSpecs = Collections.emptyList();
+    private List<FeaturePackConfig> modelOnlyFpConfigs = Collections.emptyList();
 
     private ProvisioningRuntimeBuilder(final MessageWriter messageWriter) {
         startTime = System.currentTimeMillis();
@@ -212,17 +219,33 @@ public class ProvisioningRuntimeBuilder {
                 config.build(this);
             }
         }
-        if(!noModelNamedConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> entry : noModelNamedConfigs.entrySet()) {
+        if(!nameOnlyConfigs.isEmpty()) {
+            for(Map.Entry<String, ConfigModelBuilder> entry : nameOnlyConfigs.entrySet()) {
                 entry.getValue().build(this);
             }
         }
 
-        if(!noNameModelConfigs.isEmpty()) {
-            final Iterator<Map.Entry<String, ConfigModelBuilder>> i = noNameModelConfigs.entrySet().iterator();
-            if(noNameModelConfigs.size() == 1) {
+        if(!modelOnlyConfigSpecs.isEmpty()) {
+            for(int i = 0; i < modelOnlyConfigSpecs.size(); ++i) {
+                final ConfigSpec modelOnlySpec = modelOnlyConfigSpecs.get(i);
+                if(!namedModelConfigs.containsKey(modelOnlySpec.getModel())) {
+                    continue;
+                }
+                for(Map.Entry<ArtifactCoords.Ga, FeaturePackRuntime.Builder> entry : fpRtBuilders.entrySet()) {
+                    entry.getValue().activateConfigStack(i);
+                }
+                final FeaturePackConfig fpConfig = this.modelOnlyFpConfigs.get(i);
+                final FeaturePackRuntime.Builder fp = loadFpBuilder(fpConfig.getGav());
+                if(includeConfig(fp, fpConfig, modelOnlySpec) && !fp.ordered) {
+                    orderFpRtBuilder(fp);
+                }
+            }
+        }
+        if(!modelOnlyConfigs.isEmpty()) {
+            final Iterator<Map.Entry<String, ConfigModelBuilder>> i = modelOnlyConfigs.entrySet().iterator();
+            if(modelOnlyConfigs.size() == 1) {
                 final Map.Entry<String, ConfigModelBuilder> entry = i.next();
-                final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
+                final Map<String, ConfigModelBuilder> targetConfigs = namedModelConfigs.get(entry.getKey());
                 if (targetConfigs != null) {
                     for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
                         targetConfig.getValue().merge(entry.getValue());
@@ -231,7 +254,7 @@ public class ProvisioningRuntimeBuilder {
             } else {
                 while (i.hasNext()) {
                     final Map.Entry<String, ConfigModelBuilder> entry = i.next();
-                    final Map<String, ConfigModelBuilder> targetConfigs = modelConfigs.get(entry.getKey());
+                    final Map<String, ConfigModelBuilder> targetConfigs = namedModelConfigs.get(entry.getKey());
                     if (targetConfigs != null) {
                         for (Map.Entry<String, ConfigModelBuilder> targetConfig : targetConfigs.entrySet()) {
                             targetConfig.getValue().merge(entry.getValue());
@@ -239,10 +262,10 @@ public class ProvisioningRuntimeBuilder {
                     }
                 }
             }
-            noNameModelConfigs = Collections.emptyMap();
+            modelOnlyConfigs = Collections.emptyMap();
         }
 
-        for(Map<String, ConfigModelBuilder> configMap : modelConfigs.values()) {
+        for(Map<String, ConfigModelBuilder> configMap : namedModelConfigs.values()) {
             for(Map.Entry<String, ConfigModelBuilder> configEntry : configMap.entrySet()) {
                 configEntry.getValue().build(this);
             }
@@ -279,19 +302,17 @@ public class ProvisioningRuntimeBuilder {
             } else if(configId.isModelOnly()) {
                 if(fpConfig.isInheritModelOnlyConfigs()) {
                     if(!fp.isModelOnlyConfigExcluded(configId)) {
-                        contributed |= includeConfig(fp, fpConfig, config);
+                        recordModelOnlyConfig(fpConfig, config);
                     }
                 } else if(fp.isModelOnlyConfigIncluded(configId)) {
+                    recordModelOnlyConfig(fpConfig, config);
+                }
+            } else if (fpConfig.isInheritConfigs()) {
+                if (!fp.isConfigExcluded(configId)) {
                     contributed |= includeConfig(fp, fpConfig, config);
                 }
-            } else {
-                if(fpConfig.isInheritConfigs()) {
-                    if(!fp.isConfigExcluded(configId)) {
-                        contributed |= includeConfig(fp, fpConfig, config);
-                    }
-                } else if(fp.isConfigIncluded(configId)) {
-                    contributed |= includeConfig(fp, fpConfig, config);
-                }
+            } else if (fp.isConfigIncluded(configId)) {
+                contributed |= includeConfig(fp, fpConfig, config);
             }
         }
 
@@ -329,6 +350,14 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
+    private void recordModelOnlyConfig(FeaturePackConfig fpConfig, ConfigSpec configSpec) {
+        modelOnlyConfigSpecs = PmCollections.add(modelOnlyConfigSpecs, configSpec);
+        modelOnlyFpConfigs = PmCollections.add(modelOnlyFpConfigs, fpConfig);
+        for(Map.Entry<ArtifactCoords.Ga, FeaturePackRuntime.Builder> entry : this.fpRtBuilders.entrySet()) {
+            entry.getValue().recordConfigStack();
+        }
+    }
+
     private boolean includeConfig(FeaturePackRuntime.Builder fp, FeaturePackConfig fpConfig, ConfigSpec config) throws ProvisioningException {
         final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
         if(includedConfig != null) {
@@ -340,6 +369,7 @@ public class ProvisioningRuntimeBuilder {
     private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, ConfigSpec config) throws ProvisioningException {
         final ConfigModelBuilder configBuilder = getConfigModelBuilder(config.getId());
         configBuilder.overwriteProps(config.getProperties());
+        configBuilder.overwriteProps(includedConfig.getProperties());
         return processFeatureGroupConfig(configBuilder, fp, includedConfig, config);
     }
 
@@ -363,27 +393,27 @@ public class ProvisioningRuntimeBuilder {
                 anonymousConfigs = PmCollections.add(anonymousConfigs, modelBuilder);
                 return modelBuilder;
             }
-            ConfigModelBuilder modelBuilder = noModelNamedConfigs.get(config.getName());
+            ConfigModelBuilder modelBuilder = nameOnlyConfigs.get(config.getName());
             if(modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forName(config.getName());
-                noModelNamedConfigs = PmCollections.putLinked(noModelNamedConfigs, config.getName(), modelBuilder);
+                nameOnlyConfigs = PmCollections.putLinked(nameOnlyConfigs, config.getName(), modelBuilder);
             }
             return modelBuilder;
         }
         if(config.getName() == null) {
-            ConfigModelBuilder modelBuilder = noNameModelConfigs.get(config.getModel());
+            ConfigModelBuilder modelBuilder = modelOnlyConfigs.get(config.getModel());
             if(modelBuilder == null) {
                 modelBuilder = ConfigModelBuilder.forModel(config.getModel());
-                noNameModelConfigs = PmCollections.putLinked(noNameModelConfigs, config.getModel(), modelBuilder);
+                modelOnlyConfigs = PmCollections.putLinked(modelOnlyConfigs, config.getModel(), modelBuilder);
             }
             return modelBuilder;
         }
 
-        Map<String, ConfigModelBuilder> namedConfigs = modelConfigs.get(config.getModel());
+        Map<String, ConfigModelBuilder> namedConfigs = namedModelConfigs.get(config.getModel());
         if(namedConfigs == null) {
             final ConfigModelBuilder modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             namedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
-            modelConfigs = PmCollections.putLinked(modelConfigs, config.getModel(), namedConfigs);
+            namedModelConfigs = PmCollections.putLinked(namedModelConfigs, config.getModel(), namedConfigs);
             return modelBuilder;
         }
 
@@ -391,10 +421,10 @@ public class ProvisioningRuntimeBuilder {
         if (modelBuilder == null) {
             if (namedConfigs.size() == 1) {
                 namedConfigs = new LinkedHashMap<>(namedConfigs);
-                if (modelConfigs.size() == 1) {
-                    modelConfigs = new LinkedHashMap<>(modelConfigs);
+                if (namedModelConfigs.size() == 1) {
+                    namedModelConfigs = new LinkedHashMap<>(namedModelConfigs);
                 }
-                modelConfigs.put(config.getModel(), namedConfigs);
+                namedModelConfigs.put(config.getModel(), namedConfigs);
             }
             modelBuilder = ConfigModelBuilder.forConfig(config.getModel(), config.getName());
             namedConfigs.put(config.getName(), modelBuilder);
@@ -409,32 +439,12 @@ public class ProvisioningRuntimeBuilder {
             for(Map.Entry<String, FeatureGroupConfig> entry : fgConfig.getExternalFeatureGroups().entrySet()) {
                 final FeaturePackRuntime.Builder depFpRt = getFpDependency(fp, entry.getKey());
                 if(modelBuilder.pushConfig(depFpRt.gav, resolveFeatureGroupConfig(depFpRt, entry.getValue()))) {
-                    switch(pushedConfigs.size()) {
-                        case 0:
-                            pushedConfigs = Collections.singletonList(depFpRt);
-                            break;
-                        case 1:
-                            final FeaturePackRuntime.Builder first = pushedConfigs.get(0);
-                            pushedConfigs = new ArrayList<>(2);
-                            pushedConfigs.add(first);
-                        default:
-                            pushedConfigs.add(depFpRt);
-                    }
+                    pushedConfigs = PmCollections.add(pushedConfigs, depFpRt);
                 }
             }
         }
         if(modelBuilder.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, fgConfig))) {
-            switch(pushedConfigs.size()) {
-                case 0:
-                    pushedConfigs = Collections.singletonList(fp);
-                    break;
-                case 1:
-                    final FeaturePackRuntime.Builder first = pushedConfigs.get(0);
-                    pushedConfigs = new ArrayList<>(2);
-                    pushedConfigs.add(first);
-                default:
-                    pushedConfigs.add(fp);
-            }
+            pushedConfigs = PmCollections.add(pushedConfigs, fp);
         }
         if(fgSpec.hasPackageDeps()) {
             try {
@@ -950,7 +960,14 @@ public class ProvisioningRuntimeBuilder {
     }
 
     public ProvisioningRuntimeBuilder addParameter(String name, String param) {
-        this.rtParams.put(name, param);
+        rtParams = PmCollections.put(rtParams, name, param);
+        return this;
+    }
+
+    public ProvisioningRuntimeBuilder addAllParameters(Map<String, String> params) {
+        for(Map.Entry<String, String> param : params.entrySet()) {
+            addParameter(param.getKey(), param.getValue());
+        }
         return this;
     }
 }

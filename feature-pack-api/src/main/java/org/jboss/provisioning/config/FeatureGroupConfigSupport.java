@@ -90,6 +90,14 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         return name;
     }
 
+    public boolean hasProperties() {
+        return false;
+    }
+
+    public Map<String, String> getProperties() {
+        return Collections.emptyMap();
+    }
+
     public boolean isInheritFeatures() {
         return inheritFeatures;
     }

@@ -17,11 +17,13 @@
 
 package org.jboss.provisioning.config;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.spec.ConfigId;
 import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.StringUtils;
 
 /**
@@ -33,10 +35,17 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
     public static class Builder extends FeatureGroupConfigBuilderSupport<IncludedConfig, Builder> {
 
         private final String model;
+        private Map<String, String> props = Collections.emptyMap();
 
         private Builder(String model, String name) {
             super(name);
             this.model = model;
+        }
+
+        @Override
+        public Builder setProperty(String name, String value) {
+            props = PmCollections.put(props, name, value);
+            return this;
         }
 
         @Override
@@ -50,10 +59,12 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
     }
 
     final ConfigId id;
+    final Map<String, String> props;
 
     private IncludedConfig(Builder builder) {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
+        this.props = PmCollections.unmodifiable(builder.props);
     }
 
     public ConfigId getId() {
@@ -65,23 +76,42 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
     }
 
     @Override
+    public boolean hasProperties() {
+        return !props.isEmpty();
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        return props;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((id.getModel() == null) ? 0 : id.getModel().hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((props == null) ? 0 : props.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(!super.equals(obj)) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
             return false;
-        }
-        final IncludedConfig other = (IncludedConfig) obj;
-        if (id.getModel() == null) {
-            if (other.id.getModel() != null)
+        if (getClass() != obj.getClass())
+            return false;
+        IncludedConfig other = (IncludedConfig) obj;
+        if (id == null) {
+            if (other.id != null)
                 return false;
-        } else if (!id.getModel().equals(other.id.getModel()))
+        } else if (!id.equals(other.id))
+            return false;
+        if (props == null) {
+            if (other.props != null)
+                return false;
+        } else if (!props.equals(other.props))
             return false;
         return true;
     }
@@ -92,6 +122,10 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
         buf.append("[model=").append(id.getModel()).append(" name=").append(id.getName());
         if(fpDep != null) {
             buf.append(" fp=").append(fpDep);
+        }
+        if(!props.isEmpty()) {
+            buf.append(" props=");
+            StringUtils.append(buf, props.entrySet());
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");

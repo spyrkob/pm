@@ -74,7 +74,11 @@ public class ExcludeNamedConfigsByModelTestCase extends PmProvisionConfigTestBas
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config2"))
+                    .addPackageDep("model2.p1")
                     .build())
+            .newPackage("model2.p1")
+                    .writeContent("model2/p1.txt", "model2 p1")
+                    .getFeaturePack()
             .getInstaller()
         .install();
     }
