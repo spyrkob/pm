@@ -17,12 +17,7 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
-import java.util.Map;
-
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
-import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -38,8 +33,6 @@ import org.jboss.provisioning.xml.util.TextNode;
 public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
 
     private static final FeaturePackXmlWriter INSTANCE = new FeaturePackXmlWriter();
-
-    private static final String FALSE = "false";
 
     public static FeaturePackXmlWriter getInstance() {
         return INSTANCE;
@@ -90,93 +83,9 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
 
     private static void write(ElementNode deps, FeaturePackDependencySpec dependency) {
         final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
-        final FeaturePackConfig target = dependency.getTarget();
-        final ArtifactCoords.Gav gav = target.getGav();
-        addAttribute(depElement, Attribute.GROUP_ID, gav.getGroupId());
-        addAttribute(depElement, Attribute.ARTIFACT_ID, gav.getArtifactId());
-        if(gav.getVersion() != null) {
-            addAttribute(depElement, Attribute.VERSION, gav.getVersion());
-        }
-
         if(dependency.getName() != null) {
             addElement(depElement, Element.NAME).addChild(new TextNode(dependency.getName()));
         }
-
-        ElementNode packages = null;
-        if (!target.isInheritPackages()) {
-            packages = addElement(depElement, Element.PACKAGES);
-            addAttribute(packages, Attribute.INHERIT, "false");
-        }
-        if (target.hasExcludedPackages()) {
-            if (packages == null) {
-                packages = addElement(depElement, Element.PACKAGES);
-            }
-            for (String excluded : target.getExcludedPackages()) {
-                final ElementNode exclude = addElement(packages, Element.EXCLUDE);
-                addAttribute(exclude, Attribute.NAME, excluded);
-            }
-        }
-        if (target.hasIncludedPackages()) {
-            if (packages == null) {
-                packages = addElement(depElement, Element.PACKAGES);
-            }
-            for (PackageConfig included : target.getIncludedPackages()) {
-                final ElementNode include = addElement(packages, Element.INCLUDE);
-                addAttribute(include, Attribute.NAME, included.getName());
-            }
-        }
-
-        ElementNode defaultConfigs = null;
-        if (!target.isInheritConfigs()) {
-            defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
-            addAttribute(defaultConfigs, Attribute.INHERIT, "false");
-        }
-        if (target.hasFullModelsExcluded()) {
-            if (defaultConfigs == null) {
-                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
-            }
-            for (Map.Entry<String, Boolean> excluded : target.getFullModelsExcluded().entrySet()) {
-                final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
-                addAttribute(exclude, Attribute.MODEL, excluded.getKey());
-                if(!excluded.getValue()) {
-                    addAttribute(exclude, Attribute.NAMED_CONFIGS_ONLY, FALSE);
-                }
-            }
-        }
-        if (target.hasFullModelsIncluded()) {
-            if (defaultConfigs == null) {
-                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
-            }
-            for (String included : target.getFullModelsIncluded()) {
-                final ElementNode include = addElement(defaultConfigs, Element.INCLUDE);
-                addAttribute(include, Attribute.MODEL, included);
-            }
-        }
-        if (target.hasExcludedConfigs()) {
-            if (defaultConfigs == null) {
-                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
-            }
-            for (String model : target.getExcludedModels()) {
-                for(String name : target.getExcludedConfigs(model)) {
-                    final ElementNode exclude = addElement(defaultConfigs, Element.EXCLUDE);
-                    if(model != null) {
-                        addAttribute(exclude, Attribute.MODEL, model);
-                    }
-                    addAttribute(exclude, Attribute.NAME, name);
-                }
-            }
-        }
-        if (target.hasIncludedConfigs()) {
-            if (defaultConfigs == null) {
-                defaultConfigs = addElement(depElement, Element.DEFAULT_CONFIGS);
-            }
-            for (IncludedConfig config : target.getIncludedConfigs()) {
-                final ElementNode includeElement = addElement(defaultConfigs, Element.INCLUDE);
-                if(config.getModel() != null) {
-                    addAttribute(includeElement, Attribute.MODEL, config.getModel());
-                }
-                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, Element.FEATURE_PACK.getNamespace(), includeElement);
-            }
-        }
+        ProvisioningXmlWriter.writeFeaturePackConfig(depElement, depElement.getNamespace(), dependency.getTarget());
     }
 }

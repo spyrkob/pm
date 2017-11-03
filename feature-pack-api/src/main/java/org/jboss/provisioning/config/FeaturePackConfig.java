@@ -42,6 +42,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
 
         protected final ArtifactCoords.Gav gav;
         protected boolean inheritConfigs = true;
+        protected boolean inheritModelOnlyConfigs = true;
         protected Set<String> includedModels = Collections.emptySet();
         protected Map<ConfigId, IncludedConfig> includedConfigs = Collections.emptyMap();
         protected Map<String, Boolean> excludedModels = Collections.emptyMap();
@@ -59,6 +60,11 @@ public class FeaturePackConfig extends PackageDepsConfig {
 
         public Builder setInheritConfigs(boolean inherit) {
             this.inheritConfigs = inherit;
+            return this;
+        }
+
+        public Builder setInheritModelOnlyConfigs(boolean inheritModelOnlyConfigs) {
+            this.inheritModelOnlyConfigs = inheritModelOnlyConfigs;
             return this;
         }
 
@@ -146,6 +152,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
 
     private final ArtifactCoords.Gav gav;
     private final boolean inheritConfigs;
+    private final boolean inheritModelOnlyConfigs;
     private final Set<String> includedModels;
     private final Map<String, Boolean> excludedModels;
     private final Map<ConfigId, IncludedConfig> includedConfigs;
@@ -157,6 +164,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
         this.inheritConfigs = builder.inheritConfigs;
+        this.inheritModelOnlyConfigs = builder.inheritModelOnlyConfigs;
         this.includedModels = PmCollections.unmodifiable(builder.includedModels);
         this.excludedModels = PmCollections.unmodifiable(builder.excludedModels);
         this.includedConfigs = PmCollections.unmodifiable(builder.includedConfigs);
@@ -169,7 +177,11 @@ public class FeaturePackConfig extends PackageDepsConfig {
     }
 
     public boolean isInheritConfigs() {
-        return this.inheritConfigs;
+        return inheritConfigs;
+    }
+
+    public boolean isInheritModelOnlyConfigs() {
+        return inheritModelOnlyConfigs;
     }
 
     public boolean hasFullModelsIncluded() {
@@ -252,6 +264,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
         result = prime * result + ((includedConfigs == null) ? 0 : includedConfigs.hashCode());
         result = prime * result + ((includedModels == null) ? 0 : includedModels.hashCode());
         result = prime * result + (inheritConfigs ? 1231 : 1237);
+        result = prime * result + (inheritModelOnlyConfigs ? 1231 : 1237);
         return result;
     }
 
@@ -296,6 +309,8 @@ public class FeaturePackConfig extends PackageDepsConfig {
             return false;
         if (inheritConfigs != other.inheritConfigs)
             return false;
+        if (inheritModelOnlyConfigs != other.inheritModelOnlyConfigs)
+            return false;
         return true;
     }
 
@@ -305,6 +320,9 @@ public class FeaturePackConfig extends PackageDepsConfig {
         builder.append("[").append(gav.toString());
         if(!inheritConfigs) {
             builder.append(" inheritConfigs=false");
+        }
+        if(!inheritModelOnlyConfigs) {
+            builder.append(" inheritModelOnlyConfigs=false");
         }
         if(!this.excludedModels.isEmpty()) {
             builder.append(" excluded models ");

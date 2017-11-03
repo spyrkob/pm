@@ -270,27 +270,27 @@ public class ProvisioningRuntimeBuilder {
 
         boolean contributed = false;
 
-        if(fpConfig.isInheritConfigs()) {
-            for(ConfigSpec config : fp.spec.getConfigs()) {
-                if(fp.isConfigExcluded(config.getId())) {
-                    continue;
+        for(ConfigSpec config : fp.spec.getConfigs()) {
+            final ConfigId configId = config.getId();
+            if(configId.isAnonymous()) {
+                if(fpConfig.isInheritConfigs()) {
+                    contributed |= includeConfig(fp, fpConfig, config);
                 }
-                final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
-                if(includedConfig != null) {
-                    contributed |= includeConfig(fp, includedConfig, config);
-                } else {
-                    contributed |= processConfigSpec(fp, config);
-                }
-            }
-        } else {
-            for(ConfigSpec config : fp.spec.getConfigs()) {
-                if(fp.isConfigIncluded(config.getId())) {
-                    final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
-                    if(includedConfig != null) {
-                        contributed |= includeConfig(fp, includedConfig, config);
-                    } else {
-                        contributed |= processConfigSpec(fp, config);
+            } else if(configId.isModelOnly()) {
+                if(fpConfig.isInheritModelOnlyConfigs()) {
+                    if(!fp.isModelOnlyConfigExcluded(configId)) {
+                        contributed |= includeConfig(fp, fpConfig, config);
                     }
+                } else if(fp.isModelOnlyConfigIncluded(configId)) {
+                    contributed |= includeConfig(fp, fpConfig, config);
+                }
+            } else {
+                if(fpConfig.isInheritConfigs()) {
+                    if(!fp.isConfigExcluded(configId)) {
+                        contributed |= includeConfig(fp, fpConfig, config);
+                    }
+                } else if(fp.isConfigIncluded(configId)) {
+                    contributed |= includeConfig(fp, fpConfig, config);
                 }
             }
         }
@@ -327,6 +327,14 @@ public class ProvisioningRuntimeBuilder {
         if(!fp.ordered && contributed) {
             orderFpRtBuilder(fp);
         }
+    }
+
+    private boolean includeConfig(FeaturePackRuntime.Builder fp, FeaturePackConfig fpConfig, ConfigSpec config) throws ProvisioningException {
+        final IncludedConfig includedConfig = fpConfig.getIncludedConfig(config.getId());
+        if(includedConfig != null) {
+            return includeConfig(fp, includedConfig, config);
+        }
+        return processConfigSpec(fp, config);
     }
 
     private boolean includeConfig(FeaturePackRuntime.Builder fp, IncludedConfig includedConfig, ConfigSpec config) throws ProvisioningException {

@@ -23,16 +23,13 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
-import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
-import org.jboss.provisioning.test.PmProvisionConfigTestBase;
+import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
@@ -41,7 +38,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class CustomizedInheritedConfigTestCase extends PmProvisionConfigTestBase {
+public class DontInheritModelOnlyConfigsFromDependencyTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
@@ -52,50 +49,63 @@ public class CustomizedInheritedConfigTestCase extends PmProvisionConfigTestBase
         .newFeaturePack(FP1_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("p1", true))
+                    .addParam(FeatureParameterSpec.create("p1"))
+                    .addParam(FeatureParameterSpec.create("p2"))
+                    .addParam(FeatureParameterSpec.create("p3"))
+                    .addParam(FeatureParameterSpec.create("p4", "spec"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
-                    .setProperty("prop1", "c1m1")
+            .addConfig(ConfigSpec.builder().setModel("model1")
+                    .setProperty("prop1", "config1")
+                    .setProperty("prop2", "config1")
+                    .setProperty("prop3", "config1")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config1"))
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a2")
-                            .setParam("p1", "config1"))
-                    .addFeature(new FeatureConfig().setSpecName("specA")
-                            .setParam("name", "a3")
-                            .setParam("p1", "config1"))
+                            .setParam("p1", "config1")
+                            .setParam("p2", "config1")
+                            .setParam("p3", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model2")
-                    .setProperty("prop1", "c1m2")
+            .addConfig(ConfigSpec.builder().setModel("model1")
+                    .setProperty("prop2", "config2")
+                    .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config1"))
+                            .setParam("p2", "config2")
+                            .setParam("p3", "config2"))
+                    .build())
+            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+                    .setProperty("prop3", "main")
+                    .addFeature(new FeatureConfig().setSpecName("specA")
+                            .setParam("name", "a1")
+                            .setParam("p3", "main"))
+                    .build())
+            .addConfig(ConfigSpec.builder().setModel("model2")
+                    .setProperty("prop2", "config2")
+                    .setProperty("prop3", "config2")
+                    .addFeature(new FeatureConfig().setSpecName("specA")
+                            .setParam("name", "a1")
+                            .setParam("p2", "config2")
+                            .setParam("p3", "config2"))
                     .build())
             .getInstaller()
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
-                    .setInheritConfigs(true)
-                    .includeDefaultConfig(IncludedConfig.builder("model1", "config1")
-                            .excludeFeature(FeatureId.fromString("specA:name=a3"))
-                            .includeFeature(FeatureId.fromString("specA:name=a2"), new FeatureConfig().setParam("p1", "custom1"))
-                            .build())
+                    .setInheritModelOnlyConfigs(false)
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
+            .addConfig(ConfigSpec.builder()
+                    .setModel("model1")
+                    .setName("fp2")
                     .addFeature(new FeatureConfig("specA")
                             .setFpDep("fp1")
-                            .setParam("name", "a5")
-                            .setParam("p1", "fp2"))
+                            .setParam("name", "a1")
+                            .setParam("p3", "fp2"))
                     .build())
             .getInstaller()
         .install();
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
-        return ProvisioningConfig.builder()
-                .addFeaturePack(FP2_GAV)
-                .build();
+    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
+        return FeaturePackConfig.forGav(FP2_GAV);
     }
 
     @Override
@@ -104,25 +114,20 @@ public class CustomizedInheritedConfigTestCase extends PmProvisionConfigTestBase
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP1_GAV))
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config1")
                         .setModel("model1")
-                        .setProperty("prop1", "c1m1")
+                        .setName("main")
+                        .setProperty("prop3", "main")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a2"))
-                                .setParam("p1", "custom1")
-                                .build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a5"))
-                                .setParam("p1", "fp2")
+                                .setParam("p3", "main")
+                                .setParam("p4", "spec")
                                 .build())
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .setName("config1")
-                        .setModel("model2")
-                        .setProperty("prop1", "c1m2")
+                        .setModel("model1")
+                        .setName("fp2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setParam("p3", "fp2")
+                                .setParam("p4", "spec")
                                 .build())
                         .build())
                 .build();

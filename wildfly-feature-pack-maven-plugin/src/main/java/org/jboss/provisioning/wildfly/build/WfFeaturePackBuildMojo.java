@@ -227,8 +227,12 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
         if(!fpDependencies.isEmpty()) {
             for(Map.Entry<String, FeaturePackLayout> fpDep : fpDependencies.entrySet()) {
-                if (fpDep.getValue().hasPackage(WfConstants.MODULES_ALL)) {
+                final FeaturePackLayout fpDepLayout = fpDep.getValue();
+                if (fpDepLayout.hasPackage(WfConstants.MODULES_ALL)) {
                     modulesAll.addPackageDep(fpDep.getKey(), WfConstants.MODULES_ALL);
+                }
+                if(fpDepLayout.hasPackage(WfConstants.DOCS)) {
+                    docsBuilder.addPackageDep(fpDep.getKey(), WfConstants.DOCS);
                 }
             }
         }

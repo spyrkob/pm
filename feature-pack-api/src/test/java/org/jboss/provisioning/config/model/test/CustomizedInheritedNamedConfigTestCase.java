@@ -41,7 +41,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class CustomizedIncludedConfigFromDependencyTestCase extends PmProvisionConfigTestBase {
+public class CustomizedInheritedNamedConfigTestCase extends PmProvisionConfigTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
@@ -75,7 +75,7 @@ public class CustomizedIncludedConfigFromDependencyTestCase extends PmProvisionC
             .getInstaller()
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
-                    .setInheritConfigs(false)
+                    .setInheritConfigs(true)
                     .includeDefaultConfig(IncludedConfig.builder("model1", "config1")
                             .excludeFeature(FeatureId.fromString("specA:name=a3"))
                             .includeFeature(FeatureId.fromString("specA:name=a2"), new FeatureConfig().setParam("p1", "custom1"))
@@ -115,6 +115,14 @@ public class CustomizedIncludedConfigFromDependencyTestCase extends PmProvisionC
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a5"))
                                 .setParam("p1", "fp2")
+                                .build())
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setName("config1")
+                        .setModel("model2")
+                        .setProperty("prop1", "c1m2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a1"))
+                                .setParam("p1", "config1")
                                 .build())
                         .build())
                 .build();

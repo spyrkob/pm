@@ -191,18 +191,46 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return false;
         }
 
-        boolean isConfigExcluded(ConfigId config) {
+        boolean isModelOnlyConfigExcluded(ConfigId configId) {
             int i = fpConfigStack.size() - 1;
             while(i >= 0) {
                 final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if (fpConfig.isConfigExcluded(config)) {
+                if(fpConfig.isConfigModelExcluded(configId)) {
                     return true;
                 }
-                if(fpConfig.isConfigModelExcluded(config)) {
-                    return !fpConfig.isConfigIncluded(config);
+                if (!fpConfig.isInheritModelOnlyConfigs()) {
+                    return !fpConfig.isConfigModelIncluded(configId);
+                }
+            }
+            return false;
+        }
+
+        boolean isConfigExcluded(ConfigId configId) {
+            int i = fpConfigStack.size() - 1;
+            while(i >= 0) {
+                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
+                if (fpConfig.isConfigExcluded(configId)) {
+                    return true;
+                }
+                if(fpConfig.isConfigModelExcluded(configId)) {
+                    return !fpConfig.isConfigIncluded(configId);
                 }
                 if (!fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isConfigModelIncluded(config) && !fpConfig.isConfigIncluded(config);
+                    return !fpConfig.isConfigModelIncluded(configId) && !fpConfig.isConfigIncluded(configId);
+                }
+            }
+            return false;
+        }
+
+        boolean isModelOnlyConfigIncluded(ConfigId config) {
+            int i = fpConfigStack.size() - 1;
+            while(i >= 0) {
+                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
+                if(fpConfig.isConfigModelIncluded(config)) {
+                    return true;
+                }
+                if(fpConfig.isInheritModelOnlyConfigs()) {
+                    return !fpConfig.isConfigModelExcluded(config);
                 }
             }
             return false;
