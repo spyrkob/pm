@@ -284,14 +284,12 @@ public class ProvisioningRuntimeBuilder {
                 } else if(fp.isModelOnlyConfigIncluded(configId)) {
                     contributed |= includeConfig(fp, fpConfig, config);
                 }
-            } else {
-                if(fpConfig.isInheritConfigs()) {
-                    if(!fp.isConfigExcluded(configId)) {
-                        contributed |= includeConfig(fp, fpConfig, config);
-                    }
-                } else if(fp.isConfigIncluded(configId)) {
+            } else if (fpConfig.isInheritConfigs()) {
+                if (!fp.isConfigExcluded(configId)) {
                     contributed |= includeConfig(fp, fpConfig, config);
                 }
+            } else if (fp.isConfigIncluded(configId)) {
+                contributed |= includeConfig(fp, fpConfig, config);
             }
         }
 
