@@ -27,17 +27,17 @@ import org.jboss.provisioning.config.ProvisioningConfig;
  *
  * @author Alexey Loubyansky
  */
-public abstract class PmInstallFeaturePackTestBase extends PmMethodTestBase {
+public abstract class PmInstallFeaturePackTestBase extends PmTestBase {
 
     @Override
-    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
+    protected ProvisioningConfig provisionedConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder().addFeaturePack(featurePackConfig()).build();
     }
 
     protected abstract FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException;
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+    protected void testPm(ProvisioningManager pm) throws ProvisioningException {
         pm.install(featurePackConfig());
     }
 }

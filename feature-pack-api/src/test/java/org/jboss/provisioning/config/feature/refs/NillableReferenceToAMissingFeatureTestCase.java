@@ -21,9 +21,9 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -77,21 +77,21 @@ public class NillableReferenceToAMissingFeatureTestCase extends PmInstallFeature
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("There should be an unsatisfied reference");
-        } catch(ProvisioningException e) {
-            Assert.assertEquals("Failed to build config named config1", e.getMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals("org.jboss.pm.test:fp1:1.0.0.Final#specB:name=b has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:name=a", e.getMessage());
-        }
+    protected void pmSuccess() {
+        Assert.fail("There should be an unsatisfied reference");
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals("Failed to build config named config1", e.getMessage());
+        e = (ProvisioningException) e.getCause();
+        Assert.assertNotNull(e);
+        Assert.assertEquals("org.jboss.pm.test:fp1:1.0.0.Final#specB:name=b has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:name=a", e.getMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

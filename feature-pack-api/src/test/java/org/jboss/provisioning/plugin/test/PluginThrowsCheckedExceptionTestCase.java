@@ -20,7 +20,6 @@ package org.jboss.provisioning.plugin.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
@@ -67,18 +66,18 @@ public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmSuccess() {
+        Assert.fail("Plugin failure was ignored");
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("Plugin failure was ignored");
-        } catch(ProvisioningException e) {
-            // expected
-        }
+    protected void pmFailure(ProvisioningException e) {
+        // expected
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override
