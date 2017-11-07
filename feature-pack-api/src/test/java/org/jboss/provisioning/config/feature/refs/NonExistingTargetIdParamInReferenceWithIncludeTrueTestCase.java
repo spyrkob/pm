@@ -15,23 +15,24 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.pkg;
+package org.jboss.provisioning.config.feature.refs;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Assert;
 
@@ -39,7 +40,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFeaturePackTestBase {
+public class NonExistingTargetIdParamInReferenceWithIncludeTrueTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -49,24 +50,31 @@ public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFea
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("a", "aOne"))
+                    .build())
+            .addSpec(FeatureSpec.builder("specB")
+                    .addParam(FeatureParameterSpec.createId("id"))
+                    .addParam(FeatureParameterSpec.create("b", false))
                     .addParam(FeatureParameterSpec.create("a", true))
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
+                            .setName("specA")
+                            .setNillable(false)
+                            .setInclude(true)
+                            .build())
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeature(new FeatureConfig("specA")
-                            .setParam("name", "config1"))
-                    .addPackageDep("config1.pkg1")
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("id", "b")
+                            .setParam("a", "a"))
                     .build())
-            .newPackage("config1.pkg1")
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
 
     @Override
-    protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
-        return FeaturePackConfig.builder(FP_GAV)
-                .excludePackage("config1.pkg1")
-                .build();
+    protected FeaturePackConfig featurePackConfig() {
+        return FeaturePackConfig.forGav(FP_GAV);
     }
 
     @Override
@@ -77,9 +85,9 @@ public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFea
     @Override
     protected void pmFailure(ProvisioningException e) {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-        Throwable t = e.getCause();
-        Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "config1.pkg1"), t.getLocalizedMessage());
+        Assert.assertNotNull(e.getCause());
+        Assert.assertEquals(Errors.nonExistingTargetIdParamInFkDefaultMapping("specA", new ResolvedSpecId(FP_GAV, "specB"), "name"),
+                e.getCause().getLocalizedMessage());
     }
 
     @Override
@@ -93,7 +101,7 @@ public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFea
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
+    protected DirState provisionedHomeDir(DirState.DirBuilder builder) {
         return builder.clear().build();
     }
 }

@@ -22,9 +22,9 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -68,21 +68,21 @@ public class ConfigDependsOnNonExistingPackageTestCase extends PmInstallFeatureP
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail();
-        } catch(ProvisioningException e) {
-            Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-            Throwable t = e.getCause();
-            Assert.assertNotNull(t);
-            Assert.assertEquals(Errors.packageNotFound(FP_GAV, "config1.pkg2"), t.getLocalizedMessage());
-        }
+    protected void pmSuccess() {
+        Assert.fail();
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.packageNotFound(FP_GAV, "config1.pkg2"), t.getLocalizedMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.test;
 
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
@@ -31,19 +32,19 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
+public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
     protected abstract void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException;
 
-    protected abstract ProvisioningConfig provisioningConfig() throws ProvisioningException;
+    protected abstract ProvisioningConfig provisionedConfig() throws ProvisioningException;
 
     protected abstract ProvisionedState provisionedState() throws ProvisioningException;
-
-    protected abstract void testPmMethod(ProvisioningManager pm) throws ProvisioningException;
 
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder.build();
     }
+
+    protected abstract void testPm(ProvisioningManager pm) throws ProvisioningException;
 
     @Override
     protected void doBefore() throws Exception {
@@ -54,21 +55,34 @@ public abstract class PmMethodTestBase extends FeaturePackRepoTestBase {
     @Test
     public void main() throws Exception {
         final ProvisioningManager pm = getPm();
-        testPmMethod(pm);
-        testRecordedProvisioningConfig(pm);
-        testRecordedProvisionedState(pm);
-        testProvisionedContent();
+        try {
+            testPm(pm);
+            pmSuccess();
+        } catch(ProvisioningException e) {
+            pmFailure(e);
+        }
+        assertProvisionedConfig(pm);
+        assertProvisionedState(pm);
+        assertProvisionedContent();
     }
 
-    protected void testRecordedProvisionedState(final ProvisioningManager pm) throws ProvisioningException {
+    protected void pmSuccess() {
+    }
+
+
+    protected void pmFailure(ProvisioningException e) throws ProvisioningException {
+        throw e;
+    }
+
+    protected void assertProvisionedState(final ProvisioningManager pm) throws ProvisioningException {
         assertProvisionedState(pm, provisionedState());
     }
 
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, provisioningConfig());
+    protected void assertProvisionedConfig(final ProvisioningManager pm) throws ProvisioningException {
+        assertProvisioningConfig(pm, provisionedConfig());
     }
 
-    protected void testProvisionedContent() {
-        provisionedHomeDir(DirState.rootBuilder().skip(".pm")).assertState(installHome);
+    protected void assertProvisionedContent() {
+        provisionedHomeDir(DirState.rootBuilder().skip(Constants.PROVISIONED_STATE_DIR)).assertState(installHome);
     }
 }

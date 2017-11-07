@@ -22,10 +22,10 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
@@ -87,24 +87,24 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("There should be an id param conflict");
-        } catch(ProvisioningException e) {
-            Assert.assertEquals("Failed to resolve config", e.getMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals("Failed to initialize foreign key parameters of [specC a=a2,id=c1] referencing org.jboss.pm.test:fp1:1.0.0.Final#specA:id=a1", e.getLocalizedMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());
-        }
+    protected void pmSuccess() {
+        Assert.fail("There should be an id param conflict");
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals("Failed to resolve config", e.getMessage());
+        e = (ProvisioningException) e.getCause();
+        Assert.assertNotNull(e);
+        Assert.assertEquals("Failed to initialize foreign key parameters of [specC a=a2,id=c1] referencing org.jboss.pm.test:fp1:1.0.0.Final#specA:id=a1", e.getLocalizedMessage());
+        e = (ProvisioningException) e.getCause();
+        Assert.assertNotNull(e);
+        Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

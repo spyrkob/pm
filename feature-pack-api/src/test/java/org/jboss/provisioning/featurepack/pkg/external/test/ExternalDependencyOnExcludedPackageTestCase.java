@@ -22,7 +22,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -63,20 +62,21 @@ public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConf
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-        } catch(ProvisioningDescriptionException e) {
-            Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
-            Assert.assertNotNull(e.getCause());
-            Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
-            Assert.assertEquals(Errors.unsatisfiedPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"), e.getCause().getLocalizedMessage());
-        }
+    protected void pmSuccess() {
+        Assert.fail();
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
+        Assert.assertNotNull(e.getCause());
+        Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
+        Assert.assertEquals(Errors.unsatisfiedPackageDependency(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"), e.getCause().getLocalizedMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

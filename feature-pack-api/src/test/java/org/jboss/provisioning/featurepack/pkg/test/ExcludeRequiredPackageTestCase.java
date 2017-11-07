@@ -20,7 +20,6 @@ package org.jboss.provisioning.featurepack.pkg.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -69,23 +68,23 @@ public class ExcludeRequiredPackageTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig() {
+    protected void pmSuccess() {
+        Assert.fail("Required package dependency was ignored");
+    }
+
+    @Override
+    protected void pmFailure(ProvisioningException e) {
+        // expected
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
         return null;
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return null;
-    }
-
-    @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("Required package dependency was ignored");
-        } catch(ProvisioningDescriptionException e) {
-            // expected
-        }
     }
 
     @Override

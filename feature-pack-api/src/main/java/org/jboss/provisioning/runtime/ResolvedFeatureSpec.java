@@ -119,33 +119,30 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     private void assertRefParamMapping(final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec)
             throws ProvisioningDescriptionException {
         if (!targetSpec.xmlSpec.hasId()) {
-            throw new ProvisioningDescriptionException(getName() + " feature spec declares reference "
-                    + refSpec.getName() + " which targets " + targetSpec.getName()
-                    + " feature spec that has no ID parameters");
+            throw new ProvisioningDescriptionException(id + " feature spec declares reference "
+                    + refSpec.getName() + " to feature spec " + targetSpec.id
+                    + " that has no ID parameters");
         }
         if(refSpec.getParamsMapped() == 0) {
             for(FeatureParameterSpec targetIdParam : targetSpec.xmlSpec.getIdParams()) {
-                if(!getParamNames().contains(targetIdParam.getName())) {
-                    throw new ProvisioningDescriptionException(getName() + " feature does not include parameter "
-                            + targetIdParam.getName() + " implied by reference " + refSpec.getName());
+                if(!xmlSpec.hasParam(targetIdParam.getName())) {
+                    throw new ProvisioningDescriptionException(Errors.nonExistingTargetIdParamInFkDefaultMapping(refSpec.getName(), id, targetIdParam.getName()));
                 }
             }
             return;
         }
         if (targetSpec.xmlSpec.getIdParams().size() != refSpec.getParamsMapped()) {
-            throw new ProvisioningDescriptionException("Parameters mapped in reference " + refSpec.getName() + " of feature "
-                    + getName() + " must correspond to the ID parameters of the target feature "
-                    + targetSpec.getName());
+            throw new ProvisioningDescriptionException("The number of foreign key parameters of reference " + refSpec.getName() +
+                    " in feature spec " + id + " does not match the number of the ID parameters of the referenced feature spec "
+                    + targetSpec.id);
         }
         for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
             if (!xmlSpec.hasParam(refSpec.getLocalParam(i))) {
-                throw new ProvisioningDescriptionException(getName() + " feature does not include parameter "
-                        + refSpec.getLocalParam(i) + " mapped in reference " + refSpec.getName());
+                throw new ProvisioningDescriptionException(Errors.invalidLocalParamInFkMapping(refSpec.getLocalParam(i), refSpec.getName(), id));
             }
             if (!targetSpec.xmlSpec.hasParam(refSpec.getTargetParam(i))) {
-                throw new ProvisioningDescriptionException(targetSpec.getName()
-                        + " feature does not include parameter '" + refSpec.getTargetParam(i) + "' referenced from "
-                        + getName() + " through reference " + refSpec.getName());
+                throw new ProvisioningDescriptionException(
+                        Errors.invalidTargetIdParamInFkMapping(refSpec.getLocalParam(i), refSpec.getName(), id, refSpec.getTargetParam(i), targetSpec.id));
             }
         }
     }
@@ -156,12 +153,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         if(resolvedRefTargets.size() == 1) {
             final Entry<String, ResolvedFeatureSpec> refEntry = resolvedRefTargets.entrySet().iterator().next();
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue());
+            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue(), false);
             return refId == null ? Collections.emptyList() : Collections.singletonList(refId);
         }
         final List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
         for(Map.Entry<String, ResolvedFeatureSpec> refEntry : resolvedRefTargets.entrySet()) {
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue());
+            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue(), false);
             if(refId != null) {
                 refIds.add(refId);
             }
@@ -169,7 +166,16 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return refIds;
     }
 
-    ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec) throws ProvisioningDescriptionException {
+    ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec)
+            throws ProvisioningDescriptionException {
+        return resolveRefId(feature, refSpec, targetSpec, true);
+    }
+
+    private ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec, boolean assertRefMapping)
+            throws ProvisioningDescriptionException {
+        if(assertRefMapping) {
+            assertRefParamMapping(refSpec, targetSpec);
+        }
         if(refSpec.getParamsMapped() == 0) {
             final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
             if(targetIdParams.size() == 1) {

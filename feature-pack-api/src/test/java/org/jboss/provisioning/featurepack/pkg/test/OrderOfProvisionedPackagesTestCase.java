@@ -94,8 +94,8 @@ public class OrderOfProvisionedPackagesTestCase extends PmInstallFeaturePackTest
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        super.testPmMethod(pm);
+    protected void testPm(ProvisioningManager pm) throws ProvisioningException {
+        super.testPm(pm);
         final ProvisionedState state = pm.getProvisionedState();
         final Iterator<String> packageNames = state.getFeaturePack(
                 ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))

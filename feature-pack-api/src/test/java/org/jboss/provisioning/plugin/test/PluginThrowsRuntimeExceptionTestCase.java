@@ -67,18 +67,18 @@ public class PluginThrowsRuntimeExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
-    }
-
-    @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+    protected void testPm(ProvisioningManager pm) throws ProvisioningException {
         try {
-            super.testPmMethod(pm);
+            super.testPm(pm);
             Assert.fail("Plugin failure was ignored");
         } catch(IllegalStateException e) {
             // expected
         }
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

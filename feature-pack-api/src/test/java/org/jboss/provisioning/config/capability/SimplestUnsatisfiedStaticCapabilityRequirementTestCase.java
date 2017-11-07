@@ -21,9 +21,9 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -71,21 +71,21 @@ public class SimplestUnsatisfiedStaticCapabilityRequirementTestCase extends PmIn
     }
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPmMethod(pm);
-            Assert.fail("There is no cap.a provider");
-        } catch(ProvisioningException e) {
-            Assert.assertEquals("Failed to build config", e.getMessage());
-            e = (ProvisioningException) e.getCause();
-            Assert.assertNotNull(e);
-            Assert.assertEquals("No provider found for capability cap.a required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
-        }
+    protected void pmSuccess() {
+        Assert.fail("There is no cap.a provider");
     }
 
     @Override
-    protected void testRecordedProvisioningConfig(final ProvisioningManager pm) throws ProvisioningException {
-        assertProvisioningConfig(pm, null);
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals("Failed to build config", e.getMessage());
+        e = (ProvisioningException) e.getCause();
+        Assert.assertNotNull(e);
+        Assert.assertEquals("No provider found for capability cap.a required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
     }
 
     @Override

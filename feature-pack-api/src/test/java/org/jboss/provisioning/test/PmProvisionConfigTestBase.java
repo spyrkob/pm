@@ -19,15 +19,23 @@ package org.jboss.provisioning.test;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
+import org.jboss.provisioning.config.ProvisioningConfig;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public abstract class PmProvisionConfigTestBase extends PmMethodTestBase {
+public abstract class PmProvisionConfigTestBase extends PmTestBase {
 
     @Override
-    protected void testPmMethod(ProvisioningManager pm) throws ProvisioningException {
+    protected ProvisioningConfig provisionedConfig() throws ProvisioningException {
+        return provisioningConfig();
+    }
+
+    protected abstract ProvisioningConfig provisioningConfig() throws ProvisioningException;
+
+    @Override
+    protected void testPm(ProvisioningManager pm) throws ProvisioningException {
         pm.provision(provisioningConfig());
     }
 }
