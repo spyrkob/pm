@@ -217,6 +217,20 @@ public interface Errors {
                 + " conflicts with the corresponding parent ID value '" + newValue + "'";
     }
 
+    static String invalidLocalParamInFkMapping(String localParam, String refName, ResolvedSpecId specId) {
+        return specId + " feature spec does not include the foreign key parameter " + localParam + " used in the reference " + refName;
+    }
+
+    static String invalidTargetIdParamInFkMapping(String localParam, String refName, ResolvedSpecId specId, String targetParam, ResolvedSpecId targetSpecId) {
+        return "Foreign key parameter " + localParam + " of reference " + refName + " in " + specId +
+                " is mapped to a non-existing ID parameter " + targetParam + " of feature spec " + targetSpecId;
+    }
+
+    static String nonExistingTargetIdParamInFkDefaultMapping(String refName, ResolvedSpecId specId, String targetParam) {
+        return specId + " feature spec does not include the foreign key parameter "
+                + targetParam + " to resolve reference " + refName;
+    }
+
     static String featureRefNotInSpec(String featureRefName, String featureSpec) {
         return "Feature spec " + featureSpec + " does not include a feature reference named " + featureRefName;
     }
