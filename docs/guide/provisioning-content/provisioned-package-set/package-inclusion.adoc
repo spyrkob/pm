@@ -1,4 +1,4 @@
-#### Explicit package inclusion
+##### Explicit package inclusion
 
 A package may be explicitly included into the feature-pack effective package set. For example, given the following feature-pack definition:
 

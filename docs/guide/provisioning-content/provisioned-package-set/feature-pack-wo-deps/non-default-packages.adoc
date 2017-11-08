@@ -1,4 +1,4 @@
-#### Feature-pack non-default packages
+##### Feature-pack non-default packages
 
 Feature-pack may contain packages that are not marked as default in the *feature-pack.xml*. Non-default packages can be installed either:
 

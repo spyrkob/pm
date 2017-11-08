@@ -1,4 +1,4 @@
-### Package metadata (package.xml)
+#### Package metadata (package.xml)
 
 Package metadata contains the following information:
 
@@ -19,4 +19,4 @@ Here is an illustration of how a *package.xml* might look like:
     </dependencies>
  </package-spec>
 
-Here package *p1* declares dependencies on packages *p2* and *p3* that belong to the same feature-pack as *p1* and *p1* and *p11* that belong to another feature-pack referenced by alias *another-feature-pack*.
+Here package *p1* declares dependencies on packages *p2* and *p3* that belong to the same feature-pack as *p1* and packages *p1* and *p11* that belong to another feature-pack referenced by the alias *another-feature-pack*.

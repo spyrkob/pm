@@ -1,6 +1,6 @@
-### Feature-pack with dependencies
+#### Feature-pack with dependencies
 
-Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack's metadata, i.e. *feature-pack.xml* file. For example:
+Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack metadata, i.e. the *feature-pack.xml* file. For example:
 
 [options="nowrap"]
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"

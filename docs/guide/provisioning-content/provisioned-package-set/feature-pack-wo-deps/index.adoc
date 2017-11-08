@@ -1,4 +1,4 @@
-### Feature-pack without dependencies
+#### Feature-pack without dependencies
 
 This chapter focuses on a single feature-pack without dependencies. Effective package set of feature packs with dependencies will be covered in a separate chapter.
 

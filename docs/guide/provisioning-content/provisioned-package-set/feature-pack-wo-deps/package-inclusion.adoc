@@ -1,6 +1,6 @@
-#### Explicit package inclusion
+##### Explicit package inclusion
 
-A package may be explicitly included into the feature-pack effective package set. For example, given the following feature-pack definition:
+A package may be explicitly included into the feature-pack's effective package set. For example, given the following feature-pack definition:
 
 [options="nowrap"]
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
@@ -11,7 +11,7 @@ A package may be explicitly included into the feature-pack effective package set
     </default-packages>
  </feature-pack>
 
-Let’s also assume:
+and assuming that
 
 * *p2* has an optional dependency on non-default package *p21*
 

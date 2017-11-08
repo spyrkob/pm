@@ -1,6 +1,6 @@
-#### Explicit package exclusion
+##### Explicit package exclusion
 
-A package may be explicitly excluded from the feature-pack effective package set. For example, given the following feature-pack definition:
+A package may be explicitly excluded from the feature-pack's effective package set. For example, given the following feature-pack definition:
 
 [options="nowrap"]
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
@@ -11,7 +11,7 @@ A package may be explicitly excluded from the feature-pack effective package set
     </default-packages>
  </feature-pack>
 
-Let’s also assume:
+and assuming that
 
 *   package *p1* has an optional dependency on non-default package *p11*
 
@@ -29,4 +29,4 @@ If a user is interested in a subset of the effective package set, in fact, only 
     </packages>
  </feature-pack>
 
-Packages *p11* and *p2* are explicitly excluded and package *p21* is a non-default package which is not on the dependency path from the packages to be installed, i.e. *p1*.
+Packages *p11* and *p2* are explicitly excluded and package *p22* is a non-default package which is not on the dependency tree originating from the packages to be installed, i.e. *p1*.

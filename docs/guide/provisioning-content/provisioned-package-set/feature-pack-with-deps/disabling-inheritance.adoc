@@ -1,6 +1,6 @@
-#### Disabling inheritance of a dependency package set
+##### Disabling inheritance of a dependency package set
 
-By default, the effective package set of a dependency is inherited by the feature-pack declaring the dependency. However, it is possible to declare the dependency without inheriting its effective package set and simply pick the packages manually under the dependency element (in other words to manually define the effective package set of the dependency).
+By default, the effective package set of a dependency is inherited by the feature-pack declaring the dependency. However, it is possible to declare the dependency without inheriting its effective package set and simply pick the packages explicity under the dependency element (in other words to explicitly define the effective package set of the dependency).
 
 Optional boolean attribute *inherit* on the *packages* element controls whether the inheritance is enabled or disabled. In case the attribute is not explicitly specified, its value assumed to be true. Here is an example of a dependency with the inheritance disabled:
 

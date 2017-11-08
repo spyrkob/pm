@@ -1,5 +1,0 @@
-#### Feature-pack original effective package set
-
-_Original_ in the title means not explicitly modified. I.e. a package set which is going to be installed when a feature-pack is installed as-is without any user customization.
-
-The feature-pack original effective package set consists of all the default packages of the feature-pack plus all the packages from the package dependency trees starting from the default packages.
