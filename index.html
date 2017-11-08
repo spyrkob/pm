@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Alexey Loubyansky">
 <title>PM Provisioning Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -18,7 +18,6 @@ audio:not([controls]){display:none;height:0}
 [hidden],template{display:none}
 script{display:none!important}
 html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
-body{margin:0}
 a{background:transparent}
 a:focus{outline:thin dotted}
 a:active,a:hover{outline:0}
@@ -53,7 +52,7 @@ textarea{overflow:auto;vertical-align:top}
 table{border-collapse:collapse;border-spacing:0}
 *,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
 html,body{font-size:100%}
-body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 a:hover{cursor:pointer}
 img,object,embed{max-width:100%;height:auto}
 object,embed{height:100%}
@@ -65,7 +64,6 @@ img{-ms-interpolation-mode:bicubic}
 .text-center{text-align:center!important}
 .text-justify{text-align:justify!important}
 .hide{display:none}
-body{-webkit-font-smoothing:antialiased}
 img,object,svg{display:inline-block;vertical-align:middle}
 textarea{height:auto;min-height:50px}
 select{width:100%}
@@ -92,13 +90,12 @@ strong,b{font-weight:bold;line-height:inherit}
 small{font-size:60%;line-height:inherit}
 code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
-ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
 ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
 ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
-ul.no-bullet{list-style:none}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -120,18 +117,25 @@ table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:
 table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
 table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
 table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
-body{tab-size:4}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
 h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
 .clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
 .clearfix:after,.float-group:after{clear:both}
-*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed;word-wrap:break-word}
+*:not(pre)>code.nobreak{word-wrap:normal}
+*:not(pre)>code.nowrap{white-space:nowrap}
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+em em{font-style:normal}
+strong strong{font-weight:400}
 .keyseq{color:rgba(51,51,51,.8)}
 kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
 .keyseq kbd:last-child{margin-right:0}
-.menuseq,.menu{color:rgba(0,0,0,.8)}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
 b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
 b.button:before{content:"[";padding:0 3px 0 2px}
 b.button:after{content:"]";padding:0 2px 0 3px}
@@ -198,7 +202,7 @@ table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
 table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
 .admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
 .admonitionblock>table td.icon{text-align:center;width:80px}
-.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon img{max-width:initial}
 .admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
@@ -254,13 +258,13 @@ table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
 table.tableblock{max-width:100%;border-collapse:separate}
 table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
 table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
-table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
-table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
-table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
-table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
-table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
-table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
-table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.grid-all>thead>tr>.tableblock,table.grid-all>tbody>tr>.tableblock{border-width:0 1px 1px 0}
+table.grid-all>tfoot>tr>.tableblock{border-width:1px 1px 0 0}
+table.grid-cols>*>tr>.tableblock{border-width:0 1px 0 0}
+table.grid-rows>thead>tr>.tableblock,table.grid-rows>tbody>tr>.tableblock{border-width:0 0 1px 0}
+table.grid-rows>tfoot>tr>.tableblock{border-width:1px 0 0 0}
+table.grid-all>*>tr>.tableblock:last-child,table.grid-cols>*>tr>.tableblock:last-child{border-right-width:0}
+table.grid-all>tbody>tr:last-child>.tableblock,table.grid-all>thead:last-child>tr>.tableblock,table.grid-rows>tbody>tr:last-child>.tableblock,table.grid-rows>thead:last-child>tr>.tableblock{border-bottom-width:0}
 table.frame-all{border-width:1px}
 table.frame-sides{border-width:0 1px}
 table.frame-topbot{border-width:1px 0}
@@ -281,10 +285,12 @@ ul li ol{margin-left:1.5em}
 dl dd{margin-left:1.125em}
 dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
-ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
-ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
 ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
 ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
 ul.inline>li>*{display:block}
@@ -301,7 +307,8 @@ ol.lowergreek{list-style-type:lower-greek}
 td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
 td.hdlist1{font-weight:bold;padding-bottom:1.25em}
 .literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
-.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:first-of-type{padding:.4em .75em 0 .75em;line-height:1;vertical-align:top}
+.colist>table tr>td:first-of-type img{max-width:initial}
 .colist>table tr>td:last-of-type{padding:.25em 0}
 .thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
 .imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
@@ -364,6 +371,7 @@ div.unbreakable{page-break-inside:avoid}
 .yellow{color:#bfbf00}
 .yellow-background{background-color:#fafa00}
 span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
 .admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
 .admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
@@ -417,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .hide-for-print{display:none!important}
 .show-for-print{display:inherit!important}}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
 </head>
 <body class="book toc2 toc-left">
 <div id="header">
@@ -425,7 +433,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-07-18</span>
+<span id="revdate">2017-11-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -437,17 +445,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_feature_pack_metadata_feature_pack_xml">2.2. Feature-pack metadata (feature-pack.xml)</a></li>
 </ul>
 </li>
-<li><a href="#_feature_pack_packages">3. Feature-pack packages</a>
+<li><a href="#_provisioning_fs_content">3. Provisioning FS content</a>
 <ul class="sectlevel2">
-<li><a href="#_package_directory_structure">3.1. Package directory structure</a></li>
-<li><a href="#_package_metadata_package_xml">3.2. Package metadata (package.xml)</a></li>
-<li><a href="#_package_dependencies">3.3. Package dependencies</a></li>
+<li><a href="#_feature_pack_packages">3.1. Feature-pack packages</a></li>
+<li><a href="#_provisioned_package_set">3.2. Provisioned package set</a></li>
 </ul>
 </li>
-<li><a href="#_provisioned_package_set">4. Provisioned package set</a>
+<li><a href="#_provisioned_installation_configuration">4. Provisioned installation configuration</a>
 <ul class="sectlevel2">
-<li><a href="#_feature_pack_without_dependencies">4.1. Feature-pack without dependencies</a></li>
-<li><a href="#_feature_pack_with_dependencies">4.2. Feature-pack with dependencies</a></li>
+<li><a href="#_generic_configuration_model">4.1. Generic configuration model</a></li>
 </ul>
 </li>
 <li><a href="#_wildfly_provisioning">5. WildFly provisioning</a>
@@ -472,10 +478,42 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_overview">1. Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>PM is a Java provisioning tool designed to address provisioning and patching requirements of Java projects.</p>
+<p>PM is a Maven repository-based provisioning tool designed to manage Java software environments that consist of one or more products. The tool supports:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>installation of product releases;</p>
+<div class="ulist">
+<ul>
+<li>
+<p>their default and customized configurations;</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>integration of the installed products;</p>
+</li>
+<li>
+<p>resolution and verification of the binary and configuration dependencies;</p>
+</li>
+<li>
+<p>patching and the version updates;</p>
+</li>
+<li>
+<p>product-specific provisioning plugins;</p>
+</li>
+<li>
+<p>identification of the changes to the provisioned software (the FS content and/or the configuration) applied manually or using thirdparty tools;</p>
+</li>
+<li>
+<p>export the current environment configuration with the goal to reproduce it later at another location.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>Provisioning and patching tasks can be performed using either the tool&#8217;s command-line interface or its public API from a user application.</p>
+<p>The tool comes with a command-line interface and a public API.</p>
 </div>
 </div>
 </div>
@@ -491,10 +529,29 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>metadata describing the feature-pack;</p>
+<p>metadata describing</p>
+<div class="ulist">
+<ul>
+<li>
+<p>the feature-pack;</p>
 </li>
 <li>
-<p>a set of packages;</p>
+<p>default distribution spec;</p>
+</li>
+<li>
+<p>what and how can be customized;</p>
+</li>
+<li>
+<p>dependencies on other featurepacks;</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><em>(optional)</em> a set of content packages;</p>
+</li>
+<li>
+<p><em>(optional)</em> a set of configuration features;</p>
 </li>
 <li>
 <p><em>(optional)</em> various resources required to properly assemble and setup the installation;</p>
@@ -508,7 +565,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Feature-pack may declare dependencies on other feature-packs. Before a feature-pack is installed the tool will make sure its dependencies are satisifed (installing the missing ones).</p>
 </div>
 <div class="paragraph">
-<p>Conceptutally, any software installation can be described as one or more feature-packs installed at a specific location.</p>
+<p>Conceptually, any software installation can be described as one or more feature-packs installed at a specific location.</p>
 </div>
 <div class="sect2">
 <h3 id="_feature_pack_archive_structure">2.1. Feature-pack archive structure</h3>
@@ -518,9 +575,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="literalblock">
 <div class="content">
 <pre class="nowrap">feature-pack.zip
+|- feature_groups/
+|- features/
 |- packages/
-|- resources/
 |- plugins/
+|- resources/
 `- feature-pack.xml</pre>
 </div>
 </div>
@@ -530,7 +589,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p><strong>packages</strong> - directory containing feature-pack packages;</p>
+<p><strong>feature_groups</strong> - optional directory containing feature group descriptions;</p>
+</li>
+<li>
+<p><strong>features</strong> - optional directory containing configuration feature specs;</p>
+</li>
+<li>
+<p><strong>packages</strong> - optional directory containing content packages;</p>
 </li>
 <li>
 <p><strong>resources</strong> - optional directory containing various resources needed to properly setup the installation;</p>
@@ -539,7 +604,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>plugins</strong> - optional directory containing project/product-specific provisioning plug-ins;</p>
 </li>
 <li>
-<p><strong>feature-pack.xml</strong> - metadata describing the feature-pack.</p>
+<p><strong>feature-pack.xml</strong> - metadata describing the feature-pack and the default distribution.</p>
 </li>
 </ul>
 </div>
@@ -555,10 +620,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>GAV</strong> - feature-pack groupId, artifactId and version;</p>
 </li>
 <li>
-<p><strong>default packages</strong> - the names of the packages that are installed by default;</p>
+<p><em>(optional)</em> <strong>dependencies</strong> -  dependencies on other feature-packs.</p>
 </li>
 <li>
-<p><em>(optional)</em> <strong>dependencies</strong> -  dependencies on other feature-packs.</p>
+<p><em>(optional)</em> <strong>config</strong> -  config elements describe the default configurations are generated generated for the installation (there could be more than one configuration);</p>
+</li>
+<li>
+<p><em>(optional)</em> <strong>default packages</strong> - the names of the packages that are installed by default.</p>
 </li>
 </ul>
 </div>
@@ -576,6 +644,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
                    artifactId="another-artifact"
                    version="3.0.0.Final"/&gt;
    &lt;/dependencies&gt;
+   &lt;config&gt;
+       &lt;props&gt;
+           &lt;prop name="prop1" value="value1"/&gt;
+           &lt;prop name="prop2" value="value2"/&gt;
+       &lt;/props&gt;
+       &lt;feature-group name="group1"/&gt;
+       &lt;feature spec="feature1"&gt;
+           &lt;param name="p1" value="v1" /&gt;
+           &lt;param name="p2" value="v2" /&gt;
+       &lt;/feature&gt;
+   &lt;/config&gt;
    &lt;default-packages&gt;
        &lt;package name="package1"/&gt;
        &lt;package name="package2"/&gt;
@@ -584,19 +663,37 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Here feature-pack <strong>org.my-group:my-artifact:1.0.0.Alpha1</strong> depends on feature-pack <strong>org.another-group:another-artifact:3.0.0.Final</strong> and has packages <strong>package1</strong> and <strong>package2</strong> that are installed by default.</p>
+<p>In this example:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>feature-pack <strong>org.my-group:my-artifact:1.0.0.Alpha1</strong> depends on feature-pack <strong>org.another-group:another-artifact:3.0.0.Final</strong>;</p>
+</li>
+<li>
+<p>config element describes the default configuration that will be generated;</p>
+</li>
+<li>
+<p>packages <strong>package1</strong> and <strong>package2</strong> are installed by default.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_feature_pack_packages">3. Feature-pack packages</h2>
+<h2 id="_provisioning_fs_content">3. Provisioning FS content</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Package is a minimal atomic unit of a feature-pack that can be included into or excluded from the installation. It could be a set of files and/or provisioning resources used by the provisioning tool to install the package.</p>
+<p>Provisioning file system content is organized into packages. What is provisioned content-wise at the end depends on which packages were selected for the target installation.</p>
+</div>
+<div class="sect2">
+<h3 id="_feature_pack_packages">3.1. Feature-pack packages</h3>
+<div class="paragraph">
+<p>A package is a minimal atomic unit of a file system content that can be included into or excluded from the installation. It could be a set of files and/or provisioning-related resources attached to the package and used by the provisioning tool to provision a piece of an FS content.</p>
 </div>
 <div class="paragraph">
-<p>Essentially, a software release is a set of packages released under a common version.</p>
+<p>Essentially, a software release (FS content-wise) is represented as a set of packages released under a common version.</p>
 </div>
 <div class="paragraph">
 <p>Package contains:</p>
@@ -607,15 +704,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>metadata describing the package;</p>
 </li>
 <li>
-<p><em>(optional)</em> content which is added to the installation when the package is installed;</p>
+<p><em>(optional)</em> FS content which is copied to the installation when the package is installed;</p>
 </li>
 <li>
-<p><em>(optional)</em> other resources that are used during provisioning to integrate the content (or what the package represents) properly into the target installation.</p>
+<p><em>(optional)</em> other provisioning resources that are used during provisioning to generate and/or integrate the content (or what the package represents) properly into the target installation.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Package may declare dependencies on other packages that belong to the same or another feature-pack. Before a package is installed, the tool will make sure all its dependencies are satisifed (installing the missing ones).</p>
+<p>Package may declare dependencies on other packages that belong to the same or another feature-pack. Before a package is installed, the tool will make sure all its dependencies are satisifed (which includes automatic installation of the ones that are missing from the installation).</p>
 </div>
 <div class="paragraph">
 <p>Package is identified by its name. The name must be unique in the feature-pack the package belongs to.</p>
@@ -623,8 +720,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Packages are not versioned. Only the feature-pack has a version.</p>
 </div>
-<div class="sect2">
-<h3 id="_package_directory_structure">3.1. Package directory structure</h3>
+<div class="sect3">
+<h4 id="_package_directory_structure">3.1.1. Package directory structure</h4>
 <div class="paragraph">
 <p>Packages are stored in the directories (named after the packages) under the feature-pack <strong>packages</strong> directory.</p>
 </div>
@@ -637,10 +734,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>package.xml</strong> - the metadata describing the package;</p>
 </li>
 <li>
-<p><em>(optional)</em> <strong>content</strong> - directory containing the content of the package which will be added to the installation when the package is installed;</p>
+<p><em>(optional)</em> <strong>content</strong> - directory containing the content of the package which will be copied to the installation when the package is installed;</p>
 </li>
 <li>
-<p><em>(optional)</em> <strong>pm</strong> - directory containing various resources needed to properly install/integrate the content of the package.</p>
+<p><em>(optional)</em> <strong>pm</strong> - directory containing various resources needed to properly provision the content of the package.</p>
 </li>
 </ul>
 </div>
@@ -669,8 +766,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_package_metadata_package_xml">3.2. Package metadata (package.xml)</h3>
+<div class="sect3">
+<h4 id="_package_metadata_package_xml">3.1.2. Package metadata (package.xml)</h4>
 <div class="paragraph">
 <p>Package metadata contains the following information:</p>
 </div>
@@ -702,16 +799,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Here package <strong>p1</strong> declares dependencies on packages <strong>p2</strong> and <strong>p3</strong> that belong to the same feature-pack as <strong>p1</strong> and <strong>p1</strong> and <strong>p11</strong> that belong to another feature-pack referenced by alias <strong>another-feature-pack</strong>.</p>
+<p>Here package <strong>p1</strong> declares dependencies on packages <strong>p2</strong> and <strong>p3</strong> that belong to the same feature-pack as <strong>p1</strong> and packages <strong>p1</strong> and <strong>p11</strong> that belong to another feature-pack referenced by the alias <strong>another-feature-pack</strong>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_package_dependencies">3.3. Package dependencies</h3>
+<div class="sect3">
+<h4 id="_package_dependencies">3.1.3. Package dependencies</h4>
 <div class="paragraph">
 <p>Package dependency may be required or optional.</p>
 </div>
 <div class="paragraph">
-<p><strong>Required dependency</strong> means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency of another package was explicitly excluded), the provisioning process will fail with an error.</p>
+<p><strong>Required dependency</strong> means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency has been explicitly excluded from the installation), the provisioning process will fail with an error.</p>
 </div>
 <div class="paragraph">
 <p><strong>Optional dependency</strong> means that the dependency does not have to be satisfied for the package to be installed. For example if package <strong>p1</strong> declares an optional dependency on package <strong>p2</strong> and <strong>p2</strong> is explicitly excluded by the user, <strong>p1</strong> will still be installed. An example of an optional dependency could be a package called <strong>documentation</strong> which declares an optional dependency on package <strong>examples</strong>. If a user is not interested in the <strong>examples</strong>, the rest of the <strong>documentation</strong> could still be installed.</p>
@@ -719,8 +816,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Package dependencies are also used to determine the <a href="#_feature_pack_without_dependencies">effective package set of a feature-pack</a> to be installed described later.</p>
 </div>
+</div>
 <div class="sect3">
-<h4 id="_local_package_dependencies">3.3.1. Local package dependencies</h4>
+<h4 id="_local_package_dependencies">3.1.4. Local package dependencies</h4>
 <div class="paragraph">
 <p>If a package depends on another package from the same feature-pack, the dependency is called a local package dependency. Here is an example of how local dependencies are expressed in the XML metadata:</p>
 </div>
@@ -739,7 +837,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect3">
-<h4 id="_external_package_dependencies">3.3.2. External package dependencies</h4>
+<h4 id="_external_package_dependencies">3.1.5. External package dependencies</h4>
 <div class="paragraph">
 <p>If a package depends on a package from another feature-pack, the dependency is called an external package dependency.</p>
 </div>
@@ -786,21 +884,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_provisioned_package_set">4. Provisioned package set</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_provisioned_package_set">3.2. Provisioned package set</h3>
 <div class="paragraph">
 <p>This chapter is dedicated to the effective (resolved) package set of the installation&#8217;s provisioning specification.</p>
 </div>
-<div class="sect2">
-<h3 id="_feature_pack_without_dependencies">4.1. Feature-pack without dependencies</h3>
+<div class="sect3">
+<h4 id="_feature_pack_without_dependencies">3.2.1. Feature-pack without dependencies</h4>
 <div class="paragraph">
 <p>This chapter focuses on a single feature-pack without dependencies. Effective package set of feature packs with dependencies will be covered in a separate chapter.</p>
 </div>
-<div class="sect3">
-<h4 id="_feature_pack_default_packages">4.1.1. Feature-pack default packages</h4>
+<div class="sect4">
+<h5 id="_feature_pack_default_packages">Feature-pack default packages</h5>
 <div class="paragraph">
 <p>Feature pack may define a set of default packages. This set of default packages is installed implicitly when the feature-pack is installed unless the user provides explicit instructions which packages to install.</p>
 </div>
@@ -822,8 +917,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>In case this feature-pack is installed without further customizations, <strong>package1</strong> and <strong>package2</strong> will be installed by default, although the feature-pack above may still contain other packages (not listed as default) that may not get installed.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_feature_pack_non_default_packages">4.1.2. Feature-pack non-default packages</h4>
+<div class="sect4">
+<h5 id="_feature_pack_non_default_packages">Feature-pack non-default packages</h5>
 <div class="paragraph">
 <p>Feature-pack may contain packages that are not marked as default in the <strong>feature-pack.xml</strong>. Non-default packages can be installed either:</p>
 </div>
@@ -838,19 +933,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_feature_pack_original_effective_package_set">4.1.3. Feature-pack original effective package set</h4>
+<div class="sect4">
+<h5 id="_feature_pack_original_effective_package_set">Feature-pack original effective package set</h5>
 <div class="paragraph">
-<p><em>Original</em> in the title means not explicitly modified. I.e. a package set which is going to be installed when a feature-pack is installed as-is without any user customization.</p>
+<p><em>Original</em> in the title means not explicitly modified. I.e. a set of packages which is going to be installed when a feature-pack is installed as-is without any user customization.</p>
 </div>
 <div class="paragraph">
-<p>The feature-pack original effective package set consists of all the default packages of the feature-pack plus all the packages from the package dependency trees starting from the default packages.</p>
+<p>The feature-pack&#8217;s original effective package set consists of all the default packages of the feature-pack plus all the packages from the package dependency trees originating from the default packages.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_explicit_package_exclusion">4.1.4. Explicit package exclusion</h4>
+<div class="sect4">
+<h5 id="_explicit_package_exclusion">Explicit package exclusion</h5>
 <div class="paragraph">
-<p>A package may be explicitly excluded from the feature-pack effective package set. For example, given the following feature-pack definition:</p>
+<p>A package may be explicitly excluded from the feature-pack&#8217;s effective package set. For example, given the following feature-pack definition:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -864,7 +959,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Let’s also assume:</p>
+<p>and assuming that</p>
 </div>
 <div class="ulist">
 <ul>
@@ -893,13 +988,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Packages <strong>p11</strong> and <strong>p2</strong> are explicitly excluded and package <strong>p21</strong> is a non-default package which is not on the dependency path from the packages to be installed, i.e. <strong>p1</strong>.</p>
+<p>Packages <strong>p11</strong> and <strong>p2</strong> are explicitly excluded and package <strong>p22</strong> is a non-default package which is not on the dependency tree originating from the packages to be installed, i.e. <strong>p1</strong>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_explicit_package_inclusion">4.1.5. Explicit package inclusion</h4>
+<div class="sect4">
+<h5 id="_explicit_package_inclusion">Explicit package inclusion</h5>
 <div class="paragraph">
-<p>A package may be explicitly included into the feature-pack effective package set. For example, given the following feature-pack definition:</p>
+<p>A package may be explicitly included into the feature-pack&#8217;s effective package set. For example, given the following feature-pack definition:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -913,7 +1008,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Let’s also assume:</p>
+<p>and assuming that</p>
 </div>
 <div class="ulist">
 <ul>
@@ -966,10 +1061,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_feature_pack_with_dependencies">4.2. Feature-pack with dependencies</h3>
+<div class="sect3">
+<h4 id="_feature_pack_with_dependencies">3.2.2. Feature-pack with dependencies</h4>
 <div class="paragraph">
-<p>Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack&#8217;s metadata, i.e. <strong>feature-pack.xml</strong> file. For example:</p>
+<p>Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack metadata, i.e. the <strong>feature-pack.xml</strong> file. For example:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -1005,8 +1100,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </div>
-<div class="sect3">
-<h4 id="_customizing_the_inherited_package_set_from_a_dependency">4.2.1. Customizing the inherited package set from a dependency</h4>
+<div class="sect4">
+<h5 id="_customizing_the_inherited_package_set_from_a_dependency">Customizing the inherited package set from a dependency</h5>
 <div class="paragraph">
 <p>As shown in the example above, the effective package set of the dependency contributes to the effective package set of the feature-pack declaring the dependency. The feature-pack declaring the dependency, though, is allowed to customize the package set inherited from the dependency using the already seen before <strong>include</strong> and <strong>exclude</strong> XML elements in its <strong>feature-pack.xml</strong>. For example:</p>
 </div>
@@ -1032,7 +1127,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Package inclusion and exclusion under dependency element in <strong>feature-pack.xml</strong> file follows the same principle (in addition to the syntax) as it was described for the provisioning XML configuration file.</p>
+<p>Package inclusion and exclusion under the dependency element in <strong>feature-pack.xml</strong> file follows the same principle (and the syntax) as it was described for the provisioning XML configuration file.</p>
 </div>
 <div class="paragraph">
 <p>Now the original effective package set of <strong>fp1</strong> becomes:</p>
@@ -1077,10 +1172,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_disabling_inheritance_of_a_dependency_package_set">4.2.2. Disabling inheritance of a dependency package set</h4>
+<div class="sect4">
+<h5 id="_disabling_inheritance_of_a_dependency_package_set">Disabling inheritance of a dependency package set</h5>
 <div class="paragraph">
-<p>By default, the effective package set of a dependency is inherited by the feature-pack declaring the dependency. However, it is possible to declare the dependency without inheriting its effective package set and simply pick the packages manually under the dependency element (in other words to manually define the effective package set of the dependency).</p>
+<p>By default, the effective package set of a dependency is inherited by the feature-pack declaring the dependency. However, it is possible to declare the dependency without inheriting its effective package set and simply pick the packages explicity under the dependency element (in other words to explicitly define the effective package set of the dependency).</p>
 </div>
 <div class="paragraph">
 <p>Optional boolean attribute <strong>inherit</strong> on the <strong>packages</strong> element controls whether the inheritance is enabled or disabled. In case the attribute is not explicitly specified, its value assumed to be true. Here is an example of a dependency with the inheritance disabled:</p>
@@ -1134,8 +1229,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_explicit_vs_transitive_dependency_on_a_feature_pack">4.2.3. Explicit vs transitive dependency on a feature-pack</h4>
+<div class="sect4">
+<h5 id="_explicit_vs_transitive_dependency_on_a_feature_pack">Explicit vs transitive dependency on a feature-pack</h5>
 <div class="paragraph">
 <p>Consider a case when feature-pack <strong>fp1</strong> depends on feature-packs <strong>fp2</strong> and <strong>fp3</strong>. And <strong>fp2</strong> in its turn also depends on <strong>fp3</strong>. In this case <strong>fp3</strong> is both transitive and explicit dependency of <strong>fp1</strong>.</p>
 </div>
@@ -1206,8 +1301,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_merging_package_sets_from_dependency_branches">4.2.4. Merging package sets from dependency branches</h4>
+<div class="sect4">
+<h5 id="_merging_package_sets_from_dependency_branches">Merging package sets from dependency branches</h5>
 <div class="paragraph">
 <p>Suppose feature-pack <strong>fp1</strong> depends on feature-packs <strong>fp2</strong> and <strong>fp3</strong>. Both <strong>fp2</strong> and <strong>fp3</strong> depend on their own custom package sets of feature-pack <strong>fp4</strong>. When <strong>fp1</strong> is installed, the effective package set of <strong>fp4</strong> will be a merge of custom package sets of <strong>fp4</strong> specified as dependencies of <strong>fp2</strong> and <strong>fp3</strong>.</p>
 </div>
@@ -1294,6 +1389,537 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>fp4:p2</strong>, <strong>fp4:p4</strong> and their dependencies.</p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_provisioned_installation_configuration">4. Provisioned installation configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In addition to provisioning the FS content the tool also supports generation of the configuration for the target installation taking into account the customizations of the feature-pack default settings applied by the user.</p>
+</div>
+<div class="paragraph">
+<p>Feature-pack metadata (<strong>feature-pack.xml</strong>) may include one or more <strong>config</strong> elements each of which describes specific default installation configuration. In a simple (and perhaps the most common) case, the configuration described under the <strong>config</strong> element will represent a specific configuration file in the provisioned installation.</p>
+</div>
+<div class="paragraph">
+<p>Installation configuration is described using a generic configuration model. The model allows a user to manipulate the confguration in a generic way by adding to and/or removing pieces from it, overwriting existing values. The responsibility of the tool with regards to the configuration is to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>resolve the final installation configuration taking into account the customizations applied to the defaults;</p>
+</li>
+<li>
+<p>make sure the resolved configuration is valid by:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>making sure that the required values are set;</p>
+</li>
+<li>
+<p>verifying the referential integrity of the resolved configuration model (i.e. in case certain configuration pieces imply the presence of certain other configuration pieces);</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>present the elements of the resolved configuration to the provisioning plugins in the order the configuration model was populated but also respecting the dependencies of the configuration elements.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The generic provisioning tool itself does not generate the final configuration files. As indicated above, it only resolves the effective generic configuration model for the provisioned installation. It is the responsibility of the product-specific provisioning plugins to generate the final configuration file(s) from the generic configuration model resolved by the core provisioning tool.</p>
+</div>
+<div class="sect2">
+<h3 id="_generic_configuration_model">4.1. Generic configuration model</h3>
+<div class="paragraph">
+<p>Generic configuration model is based on an abstract schema that describes configurable units and relationships between them.</p>
+</div>
+<div class="sect3">
+<h4 id="_features">4.1.1. Features</h4>
+<div class="paragraph">
+<p>Minimal configurable unit of the generic configuration model is called a <strong>feature</strong>. A <strong>feature</strong> is described by a <strong>feature specification</strong> (or <strong>feature spec</strong> further in the text). A <strong>feature spec</strong> is like a type and a <strong>feature</strong> is an instance of that type.</p>
+</div>
+<div class="paragraph">
+<p>Feature specs are identified by their names that must be unique in the scope of the feature-pack.</p>
+</div>
+<div class="paragraph">
+<p>A feature spec describes</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the configurable parameters (including their names, default values (if any) and whether they are nillable);</p>
+</li>
+<li>
+<p><em>(optionally)</em> references to other feature specs;</p>
+</li>
+<li>
+<p><em>(optionally)</em> dependencies on other features;</p>
+</li>
+<li>
+<p><em>(optionally)</em> required capabilities;</p>
+</li>
+<li>
+<p><em>(optionally)</em> provided capabilities;</p>
+</li>
+<li>
+<p><em>(optionally)</em> dependencies on packages;</p>
+</li>
+<li>
+<p><em>(optionally)</em> annnotations.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Feature specs are stored in the <strong>spec.xml</strong> files in the directories named after the feature spec names under the feature-pack&#8217;s <strong>features</strong> directory. For example</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">features/
+|-feature1/
+| `-spec.xml
+`-feature2/
+  `-spec.xml</pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_id">Feature ID</h5>
+<div class="paragraph">
+<p>A feature may have an identifier (<strong>feature id</strong> further in the text) which is used to locate a specific feature in the configuration model. Whether a feature has an ID or not is specified in the feature spec. A feature ID is essential to be able to customize the configuration of a specific feature.</p>
+</div>
+<div class="paragraph">
+<p>Feature ID consists of a feature spec name plus one or more feature parameters. Feature parameters that are a part of the feature ID include <strong>feature-id="true"</strong> attribute in their descriptions (and cannot be nillable). For example</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="b" default="bb"/&gt;
+    &lt;param name="c" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if a config includes multiple features of the spec <strong>feature1</strong>, they could be refered to by <strong>feature1:name=<em>unique_name</em></strong>, where the <em>unique_name</em> is the value of the parameter <strong>name</strong> of the corresponding feature.</p>
+</div>
+<div class="paragraph">
+<p>Feature ID parameters cannot change values during config customizations. If a user wants to have a different value for an ID parameter of a certain feature, the existing feature has to be excluded from the config and a new feature with the desired ID parameter value has to be added in.</p>
+</div>
+<div class="paragraph">
+<p>Here is an example of a feature spec with multiple feature ID parameters:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature2"&gt;
+  &lt;params&gt;
+    &lt;param name="p1" feature-id="true"/&gt;
+    &lt;param name="p2" feature-id="true"/&gt;
+    &lt;param name="p3" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An ID of a feature of this spec will look like <strong>feature2:p1=<em>p1_value</em>,p2=<em>p2_value</em></strong>. The order of the ID parameters is not significant.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_parameters">Feature parameters</h5>
+<div class="paragraph">
+<p>Feature parameters are described in feature specs. A parameter is identified by its name (which must be unique in the scope of the feature spec) and may have the following attributes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>required string <strong>name</strong> - the name of the parameter;</p>
+</li>
+<li>
+<p>optional boolean <strong>feature-id</strong> - indicating whether the parameter is a part of the feature ID (if not present, the default is assumed to be <strong>false</strong>);</p>
+</li>
+<li>
+<p>optional boolean <strong>nillable</strong> - indicating whether the parameter allows null as the value in the resolved config (if not present, the default is assumed to be <strong>false</strong>);</p>
+</li>
+<li>
+<p>optional string <strong>default</strong> - indicates which value should be used for the parameter, if the parameter was not explicitly initialized in the configuration (if not present, the default is assumed to be <strong>null</strong>).</p>
+</li>
+</ul>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+  &lt;params&gt;
+    &lt;param name="a" feature-id="true"/&gt;
+    &lt;param name="b" default="bb"/&gt;
+    &lt;param name="c" nillable="true"/&gt;
+    &lt;param name="d"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this spec</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>parameter <strong>a</strong> is a feature ID parameter, cannot be null and must be explicitly initialized in the configuration;</p>
+</li>
+<li>
+<p>parameter <strong>b</strong> will have a default value of <em>bb</em> unless explicitly initialized;</p>
+</li>
+<li>
+<p>parameter <strong>c</strong> has not default and may be left uninitialized in the configuration;</p>
+</li>
+<li>
+<p>parameter <strong>d</strong> must be explicitly initialized in the configuration.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_references">Feature references</h5>
+<div class="paragraph">
+<p>There are cases when a value range of a parameter of one feature spec is defined by a set of existing in the configuration model values of an ID parameter from another feature spec. In other words, a feature spec may declare certain parameters as references to other feature ID parameters. (In a relational database, this would be a foreign key reference).</p>
+</div>
+<div class="paragraph">
+<p>In a feature spec a simple feature reference would look like</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"/&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Attribute <strong>feature</strong> in the <strong>ref</strong> element contains a name of the referenced feature-spec. Note that we have not provided which parameter of <strong>featureC</strong> references the ID parameter of <strong>featureP</strong>. This example also demonstrates the <strong>implicit reference parameter mapping</strong>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The implicit reference parameter mapping rule is based on the expectation that the feature spec declaring a reference includes parameters with the names matching the ID parameter names of the referenced feature spec.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>So the example above will work if one of the following statements is true:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>featureP</strong> declares parameter <strong>p</strong> and it is its only feature-id parameter;</p>
+</li>
+<li>
+<p><strong>featureP</strong> declares parameter <strong>name</strong> and it is its only feature-id parameter;</p>
+</li>
+<li>
+<p><strong>featureP</strong> declares parameters <strong>name</strong> and <strong>p</strong> and both of them are its only feature-id parameters.</p>
+</li>
+</ol>
+</div>
+<table class="tableblock frame-all grid-all">
+<caption class="title">Table 1. The complete set of a feature reference declaration attributes</caption>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Attribute name</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dependency</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">null (current feature-pack)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The feature-pack dependency name the referenced feature spec belongs to.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>feature</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">null</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the referenced feature spec.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The value of the <strong>feature</strong> attribute</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique feature reference name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nillable</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether a reference is nillable or not.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>include</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether the referenced feature should automatically be included into the config model if it was not explicitly configured.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect5">
+<h6 id="_custom_reference_parameter_mapping">Custom reference parameter mapping</h6>
+<div class="paragraph">
+<p>Suppose we want to explicitly map parameters in the reference declaration. The example below will correspond to the statement 1. from the example above.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"&gt;
+      &lt;param name="p" maps-to="p"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now let&#8217;s suppose that <strong>featureP</strong>'s ID parameter is in fact <strong>name</strong> but we still want to use parameter <strong>p</strong> as the reference to <strong>featureP</strong>.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"&gt;
+      &lt;param name="p" maps-to="name"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If <strong>featureP</strong> had more than one ID parameter, e.g.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+  &lt;params&gt;
+    &lt;param name="id1" feature-id="true"/&gt;
+    &lt;param name="id2" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then the reference parameter mapping in <strong>featureC</strong> could look like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"&gt;
+      &lt;param name="p1" maps-to="id1"/&gt;
+      &lt;param name="p2" maps-to="id2"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p1"/&gt;
+    &lt;param name="p2"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_nillable_feature_references">Nillable feature references</h6>
+<div class="paragraph">
+<p>Feature reference resolves to null if one of the feature reference parameters is null. If a reference resolves to null and its not marked as nillable in the feature spec, the provisioning will fail with an error. Here is an example of a nillable reference declaration:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP" nillable="true"&gt;
+      &lt;param name="p1" maps-to="id1"/&gt;
+      &lt;param name="p2" maps-to="id2"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p1" nillable="true"/&gt;
+    &lt;param name="p2"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_external_feature_references">External feature references</h6>
+<div class="paragraph">
+<p>A feature may reference a feature from another feature-pack. The origin of the external feature spec is specified in the <strong>dependency</strong> attribute of the feature reference declaration. The value of the <strong>dependency</strong> attribute must match the value of the <strong>name</strong> element of the feature-pack dependency (the referenced feature spec belongs to) declaration in the feature-pack.xml file.</p>
+</div>
+<div class="paragraph">
+<p>For example, suppose, feature-pack <strong>fp1</strong> depends on feature-pack <strong>fp2</strong>.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+   &lt;dependencies&gt;
+       &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
+           &lt;name&gt;fp2-dep&lt;/name&gt;
+       &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>fp2</strong> includes a feature spec <strong>featureP</strong></p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+  &lt;params&gt;
+    &lt;param name="p" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And <strong>fp1</strong> includes a feature spec <strong>featureC</strong> which declares a reference to <strong>featureP</strong></p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref dependency="fp2-dep" feature="featureP"/&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_implicit_inclusion_of_referenced_features_into_the_configuration">Implicit inclusion of referenced features into the configuration</h6>
+<div class="paragraph">
+<p>It is possible to configure feature references so that when the resolved referenced feature ID is not found in the configuration model, instead of failing with the referential integrity constraint error, implicitly include the referenced feature into the configuration model initializing it its configured default values. This is done by simply setting the <strong>include</strong> attribute of the feature reference declaration to <strong>true</strong>.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref dependency="fp2-dep" feature="featureP" include="true"/&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="p"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_multiple_references_to_the_same_feature_spec">Multiple references to the same feature spec</h6>
+<div class="paragraph">
+<p>Suppose a feature needs to declare more than one reference to the same feature spec. For example let&#8217;s model a chain having a feature spec called <strong>link</strong>. The <strong>link</strong> must have an ID parameter, let it be called <strong>id</strong>. Then it has to include a parameter to reference to the previous link and another parameter to reference the next link in the chain. The following, although looking right from the parameter mapping perspective, will clearly won&#8217;t work</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="link"&gt;
+      &lt;param name="prev-id" maps-to="id"/&gt;
+    &lt;/ref&gt;
+    &lt;ref feature="link"&gt;
+      &lt;param name="next-id" maps-to="id"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="id" feature-id="true"/&gt;
+    &lt;param name="prev-id" nillable="true"/&gt;
+    &lt;param name="next-id" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Feature references must have a unique name. In this case, both reference names are set to <strong>link</strong> and the provisioning tool will fail to process this spec. To workaround the error explicit names have to be assigned to the reference declarations, e.g.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
+  &lt;refs&gt;
+    &lt;ref name="prev" feature="link"&gt;
+      &lt;param name="prev-id" maps-to="id"/&gt;
+    &lt;/ref&gt;
+    &lt;ref name="next" feature="link"&gt;
+      &lt;param name="next-id" maps-to="id"/&gt;
+    &lt;/ref&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="id" feature-id="true"/&gt;
+    &lt;param name="prev-id" nillable="true"/&gt;
+    &lt;param name="next-id" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_processing_of_features_with_references">Processing of features with references</h6>
+<div class="paragraph">
+<p>One of the responsibilities of the provisioning tool is to order the features from the resolve configuration model for processing by the provisioning plugins that generate the final installation configuration files. While the general rule is to preserve the order in which the features where added to the configuration model, when feature A references feature B, feature B will get the priority will be processed by the provisioning plugins before feature A to not break the referential integrity of the generated model (if it is significant for the consuming plugin).</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_circular_feature_references">Circular feature references</h6>
+<div class="paragraph">
+<p>The provisioning mechanism is capable of identifying circular references (circular reference graphs). It does not throw an error if a circular reference graphs is detected. The responsibility of the provisioning mechanism is make sure the configuration model is valid and all the referential integrity constraints are satisfied. From this point of view circular references are not illegal.</p>
+</div>
+<div class="paragraph">
+<p>The issue with circular references is the ordering of the features when configuration model is processed by the product specific plugins that generate the final configuration files. In some cases the order of the features will not be significant but in some cases it will be. So the rule is</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+When a circular reference graph is identified, the feature that was added to the configuration model first will be processed by the provisioning plugins first, the rest of the features from the grapth will be processed respecting the references.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1715,7 +2341,7 @@ You can do the same exercise for <code>dist.domain</code> package.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-04-09 13:17:40 CEST
+Last updated 2017-11-08 18:54:13 CET
 </div>
 </div>
 </body>
