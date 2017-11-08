@@ -1,4 +1,4 @@
-#### Merging package sets from dependency branches
+##### Merging package sets from dependency branches
 
 Suppose feature-pack *fp1* depends on feature-packs *fp2* and *fp3*. Both *fp2* and *fp3* depend on their own custom package sets of feature-pack *fp4*. When *fp1* is installed, the effective package set of *fp4* will be a merge of custom package sets of *fp4* specified as dependencies of *fp2* and *fp3*.
 

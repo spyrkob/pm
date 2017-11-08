@@ -1,4 +1,4 @@
-#### Feature-pack default packages
+##### Feature-pack default packages
 
 Feature pack may define a set of default packages. This set of default packages is installed implicitly when the feature-pack is installed unless the user provides explicit instructions which packages to install.
 

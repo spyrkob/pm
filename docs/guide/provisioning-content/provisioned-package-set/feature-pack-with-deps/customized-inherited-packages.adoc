@@ -1,4 +1,4 @@
-#### Customizing the inherited package set from a dependency
+##### Customizing the inherited package set from a dependency
 
 As shown in the example above, the effective package set of the dependency contributes to the effective package set of the feature-pack declaring the dependency. The feature-pack declaring the dependency, though, is allowed to customize the package set inherited from the dependency using the already seen before *include* and *exclude* XML elements in its *feature-pack.xml*. For example:
 
@@ -21,7 +21,7 @@ As shown in the example above, the effective package set of the dependency contr
     </default-packages>
  </feature-pack>
 
-Package inclusion and exclusion under dependency element in *feature-pack.xml* file follows the same principle (in addition to the syntax) as it was described for the provisioning XML configuration file.
+Package inclusion and exclusion under the dependency element in *feature-pack.xml* file follows the same principle (and the syntax) as it was described for the provisioning XML configuration file.
 
 Now the original effective package set of *fp1* becomes:
 

@@ -1,4 +1,4 @@
-#### Explicit vs transitive dependency on a feature-pack
+##### Explicit vs transitive dependency on a feature-pack
 
 Consider a case when feature-pack *fp1* depends on feature-packs *fp2* and *fp3*. And *fp2* in its turn also depends on *fp3*. In this case *fp3* is both transitive and explicit dependency of *fp1*.
 

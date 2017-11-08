@@ -1,8 +1,8 @@
-### Package dependencies
+#### Package dependencies
 
 Package dependency may be required or optional.
 
-*Required dependency* means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency of another package was explicitly excluded), the provisioning process will fail with an error.
+*Required dependency* means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency has been explicitly excluded from the installation), the provisioning process will fail with an error.
 
 *Optional dependency* means that the dependency does not have to be satisfied for the package to be installed. For example if package *p1* declares an optional dependency on package *p2* and *p2* is explicitly excluded by the user, *p1* will still be installed. An example of an optional dependency could be a package called *documentation* which declares an optional dependency on package *examples*. If a user is not interested in the *examples*, the rest of the *documentation* could still be installed.
 

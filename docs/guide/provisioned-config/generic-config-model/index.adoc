@@ -1,0 +1,11 @@
+### Generic configuration model
+
+include::overview.adoc[]
+
+include::features.adoc[]
+
+include::feature-id.adoc[]
+
+include::feature-params.adoc[]
+
+include::feature-refs.adoc[]
