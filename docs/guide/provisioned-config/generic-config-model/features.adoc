@@ -12,9 +12,9 @@ A feature spec describes
 
 * _(optionally)_ <<feature-deps,dependencies on other features>>;
 
-* _(optionally)_ required capabilities;
+* _(optionally)_ <<caps,required capabilities>>;
 
-* _(optionally)_ provided capabilities;
+* _(optionally)_ <<caps,provided capabilities>>;
 
 * _(optionally)_ dependencies on packages;
 
