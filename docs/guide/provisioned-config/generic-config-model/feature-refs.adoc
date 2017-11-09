@@ -1,6 +1,6 @@
 ##### Feature references
 
-There are cases when a value range of a parameter of one feature spec is defined by a set of existing in the configuration model values of an ID parameter from another feature spec. In other words, a feature spec may declare certain parameters as references to other feature ID parameters. (In a relational database, this would be a foreign key reference).
+[[feature-refs]]There are cases when a value range of a parameter of one feature spec is defined by a set of existing in the configuration model values of an ID parameter from another feature spec. In other words, a feature spec may declare certain parameters as references to other feature ID parameters. (In a relational database, this would be a foreign key reference).
 
 In a feature spec a simple feature reference would look like
 

@@ -8,9 +8,9 @@ A feature spec describes
 
 * the configurable parameters (including their names, default values (if any) and whether they are nillable);
 
-* _(optionally)_ references to other feature specs;
+* _(optionally)_ <<feature-refs,references to other feature specs>>;
 
-* _(optionally)_ dependencies on other features;
+* _(optionally)_ <<feature-deps,dependencies on other features>>;
 
 * _(optionally)_ required capabilities;
 
