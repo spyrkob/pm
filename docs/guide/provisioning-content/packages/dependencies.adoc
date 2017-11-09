@@ -1,6 +1,6 @@
 #### Package dependencies
 
-Package dependency may be required or optional.
+[[package-deps]]Package dependency may be required or optional.
 
 *Required dependency* means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency has been explicitly excluded from the installation), the provisioning process will fail with an error.
 

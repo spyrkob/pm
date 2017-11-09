@@ -504,6 +504,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 }
                 feature.ordered();
                 orderedFeatures.add(feature);
+                initiatedCircularRefs.sort((o1, o2) -> o1.nextOnPath.includeNo - o2.nextOnPath.includeNo);
                 for(CircularRefInfo ref : initiatedCircularRefs) {
                     if(orderFeature(ref.nextOnPath) != null) {
                         throw new IllegalStateException();

@@ -8,4 +8,14 @@ include::feature-id.adoc[]
 
 include::feature-params.adoc[]
 
+include::features-in-config.adoc[]
+
 include::feature-refs.adoc[]
+
+include::feature-deps.adoc[]
+
+include::caps.adoc[]
+
+include::feature-package-deps.adoc[]
+
+include::feature-annotations.adoc[]

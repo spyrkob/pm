@@ -8,17 +8,17 @@ A feature spec describes
 
 * the configurable parameters (including their names, default values (if any) and whether they are nillable);
 
-* _(optionally)_ references to other feature specs;
+* _(optionally)_ <<feature-refs,references to other feature specs>>;
 
-* _(optionally)_ dependencies on other features;
+* _(optionally)_ <<feature-deps,dependencies on other features>>;
 
-* _(optionally)_ required capabilities;
+* _(optionally)_ <<caps,required capabilities>>;
 
-* _(optionally)_ provided capabilities;
+* _(optionally)_ <<caps,provided capabilities>>;
 
-* _(optionally)_ dependencies on packages;
+* _(optionally)_ <<feature-package-deps,dependencies on packages>>;
 
-* _(optionally)_ annnotations.
+* _(optionally)_ <<feature-annotations,annnotations>>.
 
 Feature specs are stored in the *spec.xml* files in the directories named after the feature spec names under the feature-pack's *features* directory. For example
 
