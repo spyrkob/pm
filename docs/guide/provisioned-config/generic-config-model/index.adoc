@@ -15,3 +15,5 @@ include::feature-refs.adoc[]
 include::feature-deps.adoc[]
 
 include::caps.adoc[]
+
+include::feature-package-deps.adoc[]

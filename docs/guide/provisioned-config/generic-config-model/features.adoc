@@ -16,7 +16,7 @@ A feature spec describes
 
 * _(optionally)_ <<caps,provided capabilities>>;
 
-* _(optionally)_ dependencies on packages;
+* _(optionally)_ <<feature-package-deps,dependencies on packages>>;
 
 * _(optionally)_ annnotations.
 
