@@ -17,3 +17,5 @@ include::feature-deps.adoc[]
 include::caps.adoc[]
 
 include::feature-package-deps.adoc[]
+
+include::feature-annotations.adoc[]
