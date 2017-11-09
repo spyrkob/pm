@@ -164,6 +164,81 @@ And *fp1* includes a feature spec *featureC* which declares a reference to *feat
  </feature-spec>
 
 
+###### Implicit feature reference parameter initialization
+
+Let's suppose we have parent-child relationship between two feature specs, e.g.
+
+[options="nowrap"]
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP">
+   <params>
+     <param name="parentId" feature-id="true"/>
+   </params>
+ </feature-spec>
+
+[options="nowrap"]
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
+   <refs>
+     <ref feature="featureP"/>
+   </refs>
+   <params>
+     <param name="childId" feature-id="true"/>
+     <param name="parentId"/>
+   </params>
+ </feature-spec>
+
+If we were to add features of these specs to a config, it could look like this
+
+[options="nowrap"]
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+   </feature>
+   <feature spec="featureC">
+     <param name="childId" value="child1"/>
+     <param name="parentId" value="parent1"/>
+   </feature>
+ </config>
+
+This approach is very verbose, the value for the *parentId* parameter is set on every feature. There is a more compact way of expressing the same configuration using nesting, e.g.
+
+[options="nowrap"]
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+     <feature spec="featureC">
+       <param name="childId" value="child1"/>
+     </feature>
+   </feature>
+ </config>
+
+As can be seen, the *parentId* parameter is initialized only once on the parent feature. The *parentId* of the child feature will be implicitly initialized to the value of the *parentId* of the parent.
+
+IMPORTANT: When a feature is nested, the tool will look in the feature spec of the nested feature for a reference declaration with the name matching the outer feature spec and, if it is found, the tool will resolve the reference parameter mappings and will initialize the parameters of the child feature referencing the parent.
+
+In case the reference name is different from the referenced feature spec name, i.e. it was explicitly set in the reference spec, e.g.
+[options="nowrap"]
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
+   <refs>
+     <ref feature="featureP" name="parent"/>
+   </refs>
+   <params>
+     <param name="childId" feature-id="true"/>
+     <param name="parentId"/>
+   </params>
+ </feature-spec>
+
+Then the name of the reference has to be explicitly specified when the child feature is nested using the *parent-ref* attribute, e.g.
+[options="nowrap"]
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+     <feature spec="featureC" parent-ref="parent">
+       <param name="childId" value="child1"/>
+     </feature>
+   </feature>
+ </config>
+
+
 ###### Implicit inclusion of referenced features into the configuration
 
 It is possible to configure feature references so that when the resolved referenced feature ID is not found in the configuration model, instead of failing with the referential integrity constraint error, implicitly include the referenced feature into the configuration model initializing it its configured default values. This is done by simply setting the *include* attribute of the feature reference declaration to *true*.

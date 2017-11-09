@@ -84,3 +84,5 @@ Let's see how it will look like in an actual configuration
  </feature-pack>
 
 In the example above feature _interface:name=public_ provides capability _org.wildfly.network.interface.public_ which is required by feature _socket-binding:name=http_. And feature _interface:name=secure_ provides capability _org.wildfly.network.interface.secure_ which is required by feature _socket-binding:name=https_.
+
+NOTE: More than one parameter could be used in a capability name. The parameters may appear in any part of the name, not necessarily at the end as in the example. The only rule is to use the dot as a separator for the parameters and the static parts of the name.
