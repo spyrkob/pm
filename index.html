@@ -433,7 +433,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-11-08</span>
+<span id="revdate">2017-11-09</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -805,7 +805,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="_package_dependencies">3.1.3. Package dependencies</h4>
 <div class="paragraph">
-<p>Package dependency may be required or optional.</p>
+<p><a id="package-deps"></a>Package dependency may be required or optional.</p>
 </div>
 <div class="paragraph">
 <p><strong>Required dependency</strong> means that a package cannot be installed unless all its required dependencies are satisfied, i.e. installed. If any required dependency cannot be satisfied (perhaps because a package that happens to be a required dependency has been explicitly excluded from the installation), the provisioning process will fail with an error.</p>
@@ -1455,22 +1455,22 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>the configurable parameters (including their names, default values (if any) and whether they are nillable);</p>
 </li>
 <li>
-<p><em>(optionally)</em> references to other feature specs;</p>
+<p><em>(optionally)</em> <a href="#feature-refs">references to other feature specs</a>;</p>
 </li>
 <li>
-<p><em>(optionally)</em> dependencies on other features;</p>
+<p><em>(optionally)</em> <a href="#feature-deps">dependencies on other features</a>;</p>
 </li>
 <li>
-<p><em>(optionally)</em> required capabilities;</p>
+<p><em>(optionally)</em> <a href="#caps">required capabilities</a>;</p>
 </li>
 <li>
-<p><em>(optionally)</em> provided capabilities;</p>
+<p><em>(optionally)</em> <a href="#caps">provided capabilities</a>;</p>
 </li>
 <li>
-<p><em>(optionally)</em> dependencies on packages;</p>
+<p><em>(optionally)</em> <a href="#feature-package-deps">dependencies on packages</a>;</p>
 </li>
 <li>
-<p><em>(optionally)</em> annnotations.</p>
+<p><em>(optionally)</em> <a href="#feature-annotations">annnotations</a>.</p>
 </li>
 </ul>
 </div>
@@ -1583,9 +1583,41 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect4">
+<h5 id="_features_in_a_configuration">Features in a configuration</h5>
+<div class="paragraph">
+<p>This is just an example of how features can be used in a configuration.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+  &lt;config&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="a" value="a1"/&gt;
+      &lt;param name="b" value="b1"/&gt;
+      &lt;param name="d" value="d1"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="a" value="a2"/&gt;
+      &lt;param name="d" value="d2"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="a" value="a3"/&gt;
+      &lt;param name="c" value="c3"/&gt;
+      &lt;param name="d" value="d3"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, the <strong>config</strong> element describes the default configuration which will be generated when <strong>fp1</strong> is installed (unless it is explicitly customized by the user), which includes three features of the same spec. When the final configuration is generated, the features will be processed in the order they appear in the <strong>config</strong> element.</p>
+</div>
+</div>
+<div class="sect4">
 <h5 id="_feature_references">Feature references</h5>
 <div class="paragraph">
-<p>There are cases when a value range of a parameter of one feature spec is defined by a set of existing in the configuration model values of an ID parameter from another feature spec. In other words, a feature spec may declare certain parameters as references to other feature ID parameters. (In a relational database, this would be a foreign key reference).</p>
+<p><a id="feature-refs"></a>There are cases when a value range of a parameter of one feature spec is defined by a set of existing in the configuration model values of an ID parameter from another feature spec. In other words, a feature spec may declare certain parameters as references to other feature ID parameters. (In a relational database, this would be a foreign key reference).</p>
 </div>
 <div class="paragraph">
 <p>In a feature spec a simple feature reference would look like</p>
@@ -1918,6 +1950,273 @@ When a circular reference graph is identified, the feature that was added to the
 </td>
 </tr>
 </table>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_dependencies">Feature dependencies</h5>
+<div class="paragraph">
+<p><a id="feature-deps"></a>While references are a kind of dependencies, they require parameters in the spec of the feature declaring the reference to identify the target. Unlike references, feature dependencies do not use the parameters to specify the target. Instead the dependency is declared by specifying the ID of the target feature directly.</p>
+</div>
+<div class="sect5">
+<h6 id="_feature_spec_dependencies">Feature spec dependencies</h6>
+<div class="paragraph">
+<p>Feature dependencies can be declared in the feature spec and/or on the feature itself. Here is an example of a dependency declaration in the feature spec:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+  &lt;deps&gt;
+    &lt;dep feature-id="feature2:id=123"/&gt;
+  &lt;/deps&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now all the features of the spec <strong>feature1</strong> will depend on the feature with ID <code>feature2:id=123</code>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_feature_config_dependencies">Feature config dependencies</h6>
+<div class="paragraph">
+<p>And here is how a feature dependency can be declared on a specific feature:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature spec="feature1"&gt;
+  &lt;deps&gt;
+    &lt;dep feature-id="feature3:id=789"/&gt;
+  &lt;/deps&gt;
+  &lt;param name="name" value="abc"/&gt;
+&lt;/feature&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now feature <code>feature1:name=abc</code> depends on the feature <code>feature2:id=123</code> (inherited dependency from the spec) and the feature <code>feature3:id=789</code>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_external_feature_dependencies">External feature dependencies</h6>
+<div class="paragraph">
+<p>If the <strong>feature3</strong> spec was from another feature-pack than the <strong>feature1</strong> spec then we&#8217;d have to add the origin of the <strong>feature3</strong> spec to the dependency declaration. Assuming that the feature-pack the <strong>feature1</strong> spec belongs to declared a dependecy named <strong>fp2</strong> on the feature-pack the <strong>feature3</strong> spec belongs to, the dependency declaration will look like this:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature spec="feature1"&gt;
+  &lt;deps&gt;
+    &lt;dep feature-id="feature3:id=789" dependency="fp2"/&gt;
+  &lt;/deps&gt;
+  &lt;param name="name" value="abc"/&gt;
+&lt;/feature&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_implicit_inclusion_of_feature_dependencies">Implicit inclusion of feature dependencies</h6>
+<div class="paragraph">
+<p>Like references, dependencies also support the <strong>include</strong> attribute. If the dependency is declared with the <strong>include=true</strong>, the target of the dependency will implicitly be included into the configuration unless it is already present. Here is an example of an implicitly included feature dependency:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature spec="feature1"&gt;
+  &lt;deps&gt;
+    &lt;dep feature-id="feature3:id=789" include="true"/&gt;
+  &lt;/deps&gt;
+  &lt;param name="name" value="abc"/&gt;
+&lt;/feature&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_capabilities">Feature capabilities</h5>
+<div class="paragraph">
+<p><a id="caps"></a>In the actual provisioned product, the components that are represented as features in the configuration model may provide certain runtime capabilities that other components also represented as features in the configuration model may depend upon. There two reasons why this <strong>may</strong> be important when resolving the configuration model for the installation to be provisioned:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>to make sure that the configuration is consistent in a sense that the runtime requirements of its components are satisfied;</p>
+</li>
+<li>
+<p>to order the features in the configuration model for processing by the provisioning plugins based on their dependencies and runtime requirements.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Capabilities are represented as strings with a dot serving as a word separator. Here is an example of a feature providing a capability:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+  &lt;provides&gt;
+    &lt;capability name="org.wildfly.network.interface"/&gt;
+  &lt;/provides&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="inet-address"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And here is a feature that expresses a requirement on the capability provided above</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+  &lt;requires&gt;
+    &lt;capability name="org.wildfly.network.interface"/&gt;
+  &lt;/requires&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="port"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In the examples above the capabilities were configured using constants. This type of a capability is called a <strong>static capability</strong>. As a consequence, all the features of the <strong>interface</strong> spec will provide the same capability <code>org.wildfly.network.interface</code>. And all the features of the <strong>socket-binding</strong> spec will require the same capabality <code>org.wildfly.network.interface</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect5">
+<h6 id="_dynamic_capabilities">Dynamic capabilities</h6>
+<div class="paragraph">
+<p>It is also possible, however, to provide or require a capability that depends on the parameters of a specific feature. Dynamic capabilities are following the same dot-separated string format but include feature parameters names prefixed with the <code>$</code> character. The examples above could be enhanced with dynamic capabilities as</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+  &lt;provides&gt;
+    &lt;capability name="org.wildfly.network.interface.$name"/&gt;
+  &lt;/provides&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="inet-address" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+  &lt;requires&gt;
+    &lt;capability name="org.wildfly.network.interface.$interface"/&gt;
+  &lt;/requires&gt;
+  &lt;params&gt;
+    &lt;param name="name" feature-id="true"/&gt;
+    &lt;param name="interface"/&gt;
+    &lt;param name="port" nillable="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s see how it will look like in an actual configuration</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+  &lt;config&gt;
+    &lt;feature spec="interface"&gt;
+      &lt;param name="name" value="public"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="interface"&gt;
+      &lt;param name="name" value="secure"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="socket-binding"&gt;
+      &lt;param name="name" value="http"/&gt;
+      &lt;param name="interface" value="public"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="socket-binding"&gt;
+      &lt;param name="name" value="https"/&gt;
+      &lt;param name="interface" value="secure"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the example above feature <em>interface:name=public</em> provides capability <em>org.wildfly.network.interface.public</em> which is required by feature <em>socket-binding:name=http</em>. And feature <em>interface:name=secure</em> provides capability <em>org.wildfly.network.interface.secure</em> which is required by feature <em>socket-binding:name=https</em>.</p>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_package_dependencies">Feature package dependencies</h5>
+<div class="paragraph">
+<p><a id="feature-package-deps"></a>Feature specs representing configurable components of the installation may include dependencies on the feature-pack packages that contain the binaries of those installation components. So that, when a feature is included into a configuration, the packages it declared dependencies on will implicitly be added to the list of the installed packages.</p>
+</div>
+<div class="paragraph">
+<p>Package dependencies are configured under the <strong>packages</strong> element of the feature spec which is equivalent to the <a href="#package-deps"><strong>dependencies</strong> element of the package spec metadata</a>. Here is an example</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec name="feature1" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+  &lt;params&gt;
+    &lt;param name="id" feature-id="true"/&gt;
+  &lt;/params&gt;
+  &lt;packages&gt;
+    &lt;package name="p1"/&gt;
+    &lt;package name="p2" optional="true"/&gt;
+    &lt;feature-pack dependency="another-feature-pack"&gt;
+      &lt;package name="p2"/&gt;
+      &lt;package name="p3" optional="true"/&gt;
+    &lt;/feature-pack&gt;
+  &lt;/packages&gt;
+&lt;/feature-spec&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, a feature of the <strong>feature1</strong> spec will have:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>a required dependency on the package <strong>p1</strong>;</p>
+</li>
+<li>
+<p>an optional dependency on the package <strong>p2</strong>;</p>
+</li>
+<li>
+<p>a required dependency on the package <strong>p2</strong> from the feature-pack dependency refered to as <strong>another-feature-pack</strong>;</p>
+</li>
+<li>
+<p>an optional dependency on the package <strong>p3</strong> from the feature-pack dependency refered to as <strong>another-feature-pack</strong>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_feature_annotations">Feature annotations</h5>
+<div class="paragraph">
+<p><a id="feature-annotations"></a>Feature specs may include a list of annotations. The provisioning mechanism does not include pre-defined annotations yet and does not use them for processing features and configurations. Annotations are simply parsed and attached to feature specs and made available to the provisioning plugins for processing. Here is an example of an annotated feature spec:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+  &lt;annotation name="name1"&gt;
+    &lt;elem name="elem1" value="value1"/&gt;
+  &lt;/annotation&gt;
+  &lt;annotation name="name2"&gt;
+    &lt;elem name="elem1" value="value1"/&gt;
+    &lt;elem name="elem1" value="value1"/&gt;
+  &lt;/annotation&gt;
+  &lt;params&gt;
+    &lt;param name="id" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</pre>
 </div>
 </div>
 </div>
