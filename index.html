@@ -433,7 +433,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-11-09</span>
+<span id="revdate">2017-11-10</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -633,33 +633,33 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Here is an illustration of how it may look like in a <strong>feature-pack.xml</strong> file:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.my-group"
-               artifactId="my-artifact"
-               version="1.0.0.Alpha1"&gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.another-group"
-                   artifactId="another-artifact"
-                   version="3.0.0.Final"/&gt;
-   &lt;/dependencies&gt;
-   &lt;config&gt;
-       &lt;props&gt;
-           &lt;prop name="prop1" value="value1"/&gt;
-           &lt;prop name="prop2" value="value2"/&gt;
-       &lt;/props&gt;
-       &lt;feature-group name="group1"/&gt;
-       &lt;feature spec="feature1"&gt;
-           &lt;param name="p1" value="v1" /&gt;
-           &lt;param name="p2" value="v2" /&gt;
-       &lt;/feature&gt;
-   &lt;/config&gt;
-   &lt;default-packages&gt;
-       &lt;package name="package1"/&gt;
-       &lt;package name="package2"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.my-group"
+                artifactId="my-artifact"
+                version="1.0.0.Alpha1"&gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.another-group"
+                    artifactId="another-artifact"
+                    version="3.0.0.Final"/&gt;
+    &lt;/dependencies&gt;
+    &lt;config&gt;
+        &lt;props&gt;
+            &lt;prop name="prop1" value="value1"/&gt;
+            &lt;prop name="prop2" value="value2"/&gt;
+        &lt;/props&gt;
+        &lt;feature-group name="group1"/&gt;
+        &lt;feature spec="feature1"&gt;
+            &lt;param name="p1" value="v1" /&gt;
+            &lt;param name="p2" value="v2" /&gt;
+        &lt;/feature&gt;
+    &lt;/config&gt;
+    &lt;default-packages&gt;
+        &lt;package name="package1"/&gt;
+        &lt;package name="package2"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -784,18 +784,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Here is an illustration of how a <strong>package.xml</strong> might look like:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
-   &lt;dependencies&gt;
-       &lt;package name="p2"/&gt;
-       &lt;package name="p3" optional="true"/&gt;
-       &lt;feature-pack dependency="another-feature-pack"&gt;
-           &lt;package name="p1"/&gt;
-           &lt;package name="p11" optional="true"/&gt;
-       &lt;/feature-pack&gt;
-   &lt;/dependencies&gt;
-&lt;/package-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
+    &lt;dependencies&gt;
+        &lt;package name="p2"/&gt;
+        &lt;package name="p3" optional="true"/&gt;
+        &lt;feature-pack dependency="another-feature-pack"&gt;
+            &lt;package name="p1"/&gt;
+            &lt;package name="p11" optional="true"/&gt;
+        &lt;/feature-pack&gt;
+    &lt;/dependencies&gt;
+ &lt;/package-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -822,14 +822,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>If a package depends on another package from the same feature-pack, the dependency is called a local package dependency. Here is an example of how local dependencies are expressed in the XML metadata:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
-   &lt;dependencies&gt;
-       &lt;package name="p2"/&gt;
-       &lt;package name="p3" optional=”true”/&gt;
-   &lt;/dependencies&gt;
-&lt;/package-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
+    &lt;dependencies&gt;
+        &lt;package name="p2"/&gt;
+        &lt;package name="p3" optional=”true”/&gt;
+    &lt;/dependencies&gt;
+ &lt;/package-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -850,36 +850,36 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>For example, suppose feature-pack <strong>fp1</strong> depends on feature-pack <strong>fp2</strong> and package <strong>fp1:p1</strong> depends on packages <strong>fp2:p1</strong> and <strong>fp2:p10</strong>. The <strong>feature-pack.xml</strong> of <strong>fp1</strong> might look like this:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
-           &lt;name&gt;fp2-dep&lt;/name&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
+            &lt;name&gt;fp2-dep&lt;/name&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>And the <strong>package.xml</strong> file of <strong>fp1:p1</strong> might look like this:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
-   &lt;dependencies&gt;
-       &lt;package name="p2" /&gt;
-       &lt;feature-pack dependency=”fp2-dep”&gt;
-           &lt;package name=”p1” /&gt;
-           &lt;package name=”p10” /&gt;
-       &lt;/feature-pack&gt;
-       &lt;package name="p3" /&gt;
-   &lt;/dependencies&gt;
-&lt;/package-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1"&gt;
+    &lt;dependencies&gt;
+        &lt;package name="p2" /&gt;
+        &lt;feature-pack dependency=”fp2-dep”&gt;
+            &lt;package name=”p1” /&gt;
+            &lt;package name=”p10” /&gt;
+        &lt;/feature-pack&gt;
+        &lt;package name="p3" /&gt;
+    &lt;/dependencies&gt;
+ &lt;/package-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -902,15 +902,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Default packages are explicitly listed in the <strong>feature-pack.xml</strong> file which is a part of the feature-pack archive. For example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;default-packages&gt;
-       &lt;package name="package1" /&gt;
-       &lt;package name="package2" /&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;default-packages&gt;
+        &lt;package name="package1" /&gt;
+        &lt;package name="package2" /&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -947,15 +947,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>A package may be explicitly excluded from the feature-pack&#8217;s effective package set. For example, given the following feature-pack definition:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1" /&gt;
-       &lt;package name="p2" /&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1" /&gt;
+        &lt;package name="p2" /&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -977,14 +977,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>If a user is interested in a subset of the effective package set, in fact, only in package <strong>p1</strong>, for example, it can be expressed in the provisioning XML configuration file as</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
-   &lt;packages&gt;
-       &lt;exclude name="p11"/&gt;
-       &lt;exclude name="p2"/&gt;
-   &lt;/packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+    &lt;packages&gt;
+        &lt;exclude name="p11"/&gt;
+        &lt;exclude name="p2"/&gt;
+    &lt;/packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -996,15 +996,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>A package may be explicitly included into the feature-pack&#8217;s effective package set. For example, given the following feature-pack definition:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1" /&gt;
-       &lt;package name="p2" /&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1" /&gt;
+        &lt;package name="p2" /&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1029,15 +1029,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>A user may explicitly add package <strong>p3</strong>, exclude <strong>p2</strong> and still leave <strong>p21</strong> in the effective package set using the following configuration:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
-   &lt;packages&gt;
-       &lt;include name="p3"/&gt;
-       &lt;exclude name="p2"/&gt;
-       &lt;include name="p21"/&gt;
-   &lt;/packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+    &lt;packages&gt;
+        &lt;include name="p3"/&gt;
+        &lt;exclude name="p2"/&gt;
+        &lt;include name="p21"/&gt;
+    &lt;/packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1046,17 +1046,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>If, for example, the user wanted to further cut down the effective set to <strong>p21</strong> and <strong>p3</strong>, the configuration would change to</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
-   &lt;packages&gt;
-       &lt;exclude name="p1"/&gt;
-       &lt;exclude name="p2"/&gt;
-       &lt;include name="p21"/&gt;
-       &lt;include name="p3"/&gt;
-       &lt;exclude name="p31"/&gt;
-   &lt;/packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0"&gt;
+    &lt;packages&gt;
+        &lt;exclude name="p1"/&gt;
+        &lt;exclude name="p2"/&gt;
+        &lt;include name="p21"/&gt;
+        &lt;include name="p3"/&gt;
+        &lt;exclude name="p31"/&gt;
+    &lt;/packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1066,19 +1066,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack metadata, i.e. the <strong>feature-pack.xml</strong> file. For example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.dep.group1" artifactId="fp2" version="0.0.1"/&gt;
-       &lt;dependency groupId="org.jboss.dep.group2" artifactId="fp3" version="0.0.2"/&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="package1"/&gt;
-       &lt;package name="package2"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.dep.group1" artifactId="fp2" version="0.0.1"/&gt;
+        &lt;dependency groupId="org.jboss.dep.group2" artifactId="fp3" version="0.0.2"/&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="package1"/&gt;
+        &lt;package name="package2"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1105,25 +1105,25 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>As shown in the example above, the effective package set of the dependency contributes to the effective package set of the feature-pack declaring the dependency. The feature-pack declaring the dependency, though, is allowed to customize the package set inherited from the dependency using the already seen before <strong>include</strong> and <strong>exclude</strong> XML elements in its <strong>feature-pack.xml</strong>. For example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
-           &lt;packages&gt;
-               &lt;exclude name="p1"/&gt;
-               &lt;exclude name="p2"/&gt;
-               &lt;include name="p3"/&gt;
-               &lt;include name="p4"/&gt;
-           &lt;/packages&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-       &lt;package name="p2"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
+            &lt;packages&gt;
+                &lt;exclude name="p1"/&gt;
+                &lt;exclude name="p2"/&gt;
+                &lt;include name="p3"/&gt;
+                &lt;include name="p4"/&gt;
+            &lt;/packages&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+        &lt;package name="p2"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1180,25 +1180,25 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Optional boolean attribute <strong>inherit</strong> on the <strong>packages</strong> element controls whether the inheritance is enabled or disabled. In case the attribute is not explicitly specified, its value assumed to be true. Here is an example of a dependency with the inheritance disabled:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
-           &lt;packages inherit=”false”&gt;
-               &lt;exclude name="p1"/&gt;
-               &lt;exclude name="p2"/&gt;
-               &lt;include name="p3"/&gt;
-               &lt;include name="p4"/&gt;
-           &lt;/packages&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-       &lt;package name="p2"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"&gt;
+            &lt;packages inherit=”false”&gt;
+                &lt;exclude name="p1"/&gt;
+                &lt;exclude name="p2"/&gt;
+                &lt;include name="p3"/&gt;
+                &lt;include name="p4"/&gt;
+            &lt;/packages&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+        &lt;package name="p2"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1240,48 +1240,48 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>For example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"&gt;
-           &lt;packages&gt;
-               &lt;exclude name="p1"/&gt;
-               &lt;exclude name="p3"/&gt;
-           &lt;/packages&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"&gt;
+            &lt;packages&gt;
+                &lt;exclude name="p1"/&gt;
+                &lt;exclude name="p3"/&gt;
+            &lt;/packages&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-       &lt;package name="p2"/&gt;
-       &lt;package name="p3"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+        &lt;package name="p2"/&gt;
+        &lt;package name="p3"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1309,66 +1309,66 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>For example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp2" version="2.0.0"/&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp3" version="2.0.0"/&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
-           &lt;packages&gt;
-               &lt;exclude name="p1"/&gt;
-               &lt;exclude name="p3"/&gt;
-           &lt;/packages&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
+            &lt;packages&gt;
+                &lt;exclude name="p1"/&gt;
+                &lt;exclude name="p3"/&gt;
+            &lt;/packages&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
-           &lt;packages inherit=”false”&gt;
-               &lt;!-- assume fp4 also contains non-default package p4 --&gt;
-               &lt;include name="p4"/&gt;
-           &lt;/packages&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" &gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.fp.group2" artifactId="fp4" version="2.0.0"&gt;
+            &lt;packages inherit=”false”&gt;
+                &lt;!-- assume fp4 also contains non-default package p4 --&gt;
+                &lt;include name="p4"/&gt;
+            &lt;/packages&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.fp.group1" artifactId="fp4" version="1.0.0" &gt;
-   &lt;default-packages&gt;
-       &lt;package name="p1"/&gt;
-       &lt;package name="p2"/&gt;
-       &lt;package name="p3"/&gt;
-   &lt;/default-packages&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.fp.group1" artifactId="fp4" version="1.0.0" &gt;
+    &lt;default-packages&gt;
+        &lt;package name="p1"/&gt;
+        &lt;package name="p2"/&gt;
+        &lt;package name="p3"/&gt;
+    &lt;/default-packages&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1494,15 +1494,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Feature ID consists of a feature spec name plus one or more feature parameters. Feature parameters that are a part of the feature ID include <strong>feature-id="true"</strong> attribute in their descriptions (and cannot be nillable). For example</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="b" default="bb"/&gt;
-    &lt;param name="c" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="b" default="bb"/&gt;
+     &lt;param name="c" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1514,15 +1514,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Here is an example of a feature spec with multiple feature ID parameters:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature2"&gt;
-  &lt;params&gt;
-    &lt;param name="p1" feature-id="true"/&gt;
-    &lt;param name="p2" feature-id="true"/&gt;
-    &lt;param name="p3" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature2"&gt;
+   &lt;params&gt;
+     &lt;param name="p1" feature-id="true"/&gt;
+     &lt;param name="p2" feature-id="true"/&gt;
+     &lt;param name="p3" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1550,16 +1550,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
-  &lt;params&gt;
-    &lt;param name="a" feature-id="true"/&gt;
-    &lt;param name="b" default="bb"/&gt;
-    &lt;param name="c" nillable="true"/&gt;
-    &lt;param name="d"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+   &lt;params&gt;
+     &lt;param name="a" feature-id="true"/&gt;
+     &lt;param name="b" default="bb"/&gt;
+     &lt;param name="c" nillable="true"/&gt;
+     &lt;param name="d"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1587,27 +1587,27 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>This is just an example of how features can be used in a configuration.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-  &lt;config&gt;
-    &lt;feature spec="feature1"&gt;
-      &lt;param name="a" value="a1"/&gt;
-      &lt;param name="b" value="b1"/&gt;
-      &lt;param name="d" value="d1"/&gt;
-    &lt;/feature&gt;
-    &lt;feature spec="feature1"&gt;
-      &lt;param name="a" value="a2"/&gt;
-      &lt;param name="d" value="d2"/&gt;
-    &lt;/feature&gt;
-    &lt;feature spec="feature1"&gt;
-      &lt;param name="a" value="a3"/&gt;
-      &lt;param name="c" value="c3"/&gt;
-      &lt;param name="d" value="d3"/&gt;
-    &lt;/feature&gt;
-  &lt;/config&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+   &lt;config&gt;
+     &lt;feature spec="feature1"&gt;
+       &lt;param name="a" value="a1"/&gt;
+       &lt;param name="b" value="b1"/&gt;
+       &lt;param name="d" value="d1"/&gt;
+     &lt;/feature&gt;
+     &lt;feature spec="feature1"&gt;
+       &lt;param name="a" value="a2"/&gt;
+       &lt;param name="d" value="d2"/&gt;
+     &lt;/feature&gt;
+     &lt;feature spec="feature1"&gt;
+       &lt;param name="a" value="a3"/&gt;
+       &lt;param name="c" value="c3"/&gt;
+       &lt;param name="d" value="d3"/&gt;
+     &lt;/feature&gt;
+   &lt;/config&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1622,17 +1622,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>In a feature spec a simple feature reference would look like</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP"/&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1720,70 +1720,70 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="paragraph">
 <p>Suppose we want to explicitly map parameters in the reference declaration. The example below will correspond to the statement 1. from the example above.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP"&gt;
-      &lt;param name="p" maps-to="p"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"&gt;
+       &lt;param name="p" maps-to="p"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Now let&#8217;s suppose that <strong>featureP</strong>'s ID parameter is in fact <strong>name</strong> but we still want to use parameter <strong>p</strong> as the reference to <strong>featureP</strong>.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP"&gt;
-      &lt;param name="p" maps-to="name"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"&gt;
+       &lt;param name="p" maps-to="name"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>If <strong>featureP</strong> had more than one ID parameter, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
-  &lt;params&gt;
-    &lt;param name="id1" feature-id="true"/&gt;
-    &lt;param name="id2" feature-id="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+   &lt;params&gt;
+     &lt;param name="id1" feature-id="true"/&gt;
+     &lt;param name="id2" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Then the reference parameter mapping in <strong>featureC</strong> could look like:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP"&gt;
-      &lt;param name="p1" maps-to="id1"/&gt;
-      &lt;param name="p2" maps-to="id2"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p1"/&gt;
-    &lt;param name="p2"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"&gt;
+       &lt;param name="p1" maps-to="id1"/&gt;
+       &lt;param name="p2" maps-to="id2"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p1"/&gt;
+     &lt;param name="p2"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1792,21 +1792,21 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="paragraph">
 <p>Feature reference resolves to null if one of the feature reference parameters is null. If a reference resolves to null and its not marked as nillable in the feature spec, the provisioning will fail with an error. Here is an example of a nillable reference declaration:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP" nillable="true"&gt;
-      &lt;param name="p1" maps-to="id1"/&gt;
-      &lt;param name="p2" maps-to="id2"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p1" nillable="true"/&gt;
-    &lt;param name="p2"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP" nillable="true"&gt;
+       &lt;param name="p1" maps-to="id1"/&gt;
+       &lt;param name="p2" maps-to="id2"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p1" nillable="true"/&gt;
+     &lt;param name="p2"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1818,44 +1818,44 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="paragraph">
 <p>For example, suppose, feature-pack <strong>fp1</strong> depends on feature-pack <strong>fp2</strong>.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-   &lt;dependencies&gt;
-       &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
-           &lt;name&gt;fp2-dep&lt;/name&gt;
-       &lt;/dependency&gt;
-   &lt;/dependencies&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+    &lt;dependencies&gt;
+        &lt;dependency groupId="org.jboss.pm.test" artifactId="fp2" version="2.0.0"&gt;
+            &lt;name&gt;fp2-dep&lt;/name&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p><strong>fp2</strong> includes a feature spec <strong>featureP</strong></p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
-  &lt;params&gt;
-    &lt;param name="p" feature-id="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+   &lt;params&gt;
+     &lt;param name="p" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>And <strong>fp1</strong> includes a feature spec <strong>featureC</strong> which declares a reference to <strong>featureP</strong></p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref dependency="fp2-dep" feature="featureP"/&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref dependency="fp2-dep" feature="featureP"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1864,57 +1864,57 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="paragraph">
 <p>Let&#8217;s suppose we have parent-child relationship between two feature specs, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
-  &lt;params&gt;
-    &lt;param name="parentId" feature-id="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+   &lt;params&gt;
+     &lt;param name="parentId" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP"/&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="childId" feature-id="true"/&gt;
-    &lt;param name="parentId"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="childId" feature-id="true"/&gt;
+     &lt;param name="parentId"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>If we were to add features of these specs to a config, it could look like this</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;config&gt;
-  &lt;feature spec="featureP"&gt;
-    &lt;param name="parentId" value="parent1"/&gt;
-  &lt;/feature&gt;
-  &lt;feature spec="featureC"&gt;
-    &lt;param name="childId" value="child1"/&gt;
-    &lt;param name="parentId" value="parent1"/&gt;
-  &lt;/feature&gt;
-&lt;/config&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;config&gt;
+   &lt;feature spec="featureP"&gt;
+     &lt;param name="parentId" value="parent1"/&gt;
+   &lt;/feature&gt;
+   &lt;feature spec="featureC"&gt;
+     &lt;param name="childId" value="child1"/&gt;
+     &lt;param name="parentId" value="parent1"/&gt;
+   &lt;/feature&gt;
+ &lt;/config&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>This approach is very verbose, the value for the <strong>parentId</strong> parameter is set on every feature. There is a more compact way of expressing the same configuration using nesting, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;config&gt;
-  &lt;feature spec="featureP"&gt;
-    &lt;param name="parentId" value="parent1"/&gt;
-    &lt;feature spec="featureC"&gt;
-      &lt;param name="childId" value="child1"/&gt;
-    &lt;/feature&gt;
-  &lt;/feature&gt;
-&lt;/config&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;config&gt;
+   &lt;feature spec="featureP"&gt;
+     &lt;param name="parentId" value="parent1"/&gt;
+     &lt;feature spec="featureC"&gt;
+       &lt;param name="childId" value="child1"/&gt;
+     &lt;/feature&gt;
+   &lt;/feature&gt;
+ &lt;/config&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1935,32 +1935,32 @@ When a feature is nested, the tool will look in the feature spec of the nested f
 <div class="paragraph">
 <p>In case the reference name is different from the referenced feature spec name, i.e. it was explicitly set in the reference spec, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="featureP" name="parent"/&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="childId" feature-id="true"/&gt;
-    &lt;param name="parentId"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP" name="parent"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="childId" feature-id="true"/&gt;
+     &lt;param name="parentId"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Then the name of the reference has to be explicitly specified when the child feature is nested using the <strong>parent-ref</strong> attribute, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;config&gt;
-  &lt;feature spec="featureP"&gt;
-    &lt;param name="parentId" value="parent1"/&gt;
-    &lt;feature spec="featureC" parent-ref="parent"&gt;
-      &lt;param name="childId" value="child1"/&gt;
-    &lt;/feature&gt;
-  &lt;/feature&gt;
-&lt;/config&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;config&gt;
+   &lt;feature spec="featureP"&gt;
+     &lt;param name="parentId" value="parent1"/&gt;
+     &lt;feature spec="featureC" parent-ref="parent"&gt;
+       &lt;param name="childId" value="child1"/&gt;
+     &lt;/feature&gt;
+   &lt;/feature&gt;
+ &lt;/config&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1969,17 +1969,17 @@ When a feature is nested, the tool will look in the feature spec of the nested f
 <div class="paragraph">
 <p>It is possible to configure feature references so that when the resolved referenced feature ID is not found in the configuration model, instead of failing with the referential integrity constraint error, implicitly include the referenced feature into the configuration model initializing it its configured default values. This is done by simply setting the <strong>include</strong> attribute of the feature reference declaration to <strong>true</strong>.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
-  &lt;refs&gt;
-    &lt;ref dependency="fp2-dep" feature="featureP" include="true"/&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="p"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+   &lt;refs&gt;
+     &lt;ref dependency="fp2-dep" feature="featureP" include="true"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1988,45 +1988,45 @@ When a feature is nested, the tool will look in the feature spec of the nested f
 <div class="paragraph">
 <p>Suppose a feature needs to declare more than one reference to the same feature spec. For example let&#8217;s model a chain having a feature spec called <strong>link</strong>. The <strong>link</strong> must have an ID parameter, let it be called <strong>id</strong>. Then it has to include a parameter to reference to the previous link and another parameter to reference the next link in the chain. The following, although looking right from the parameter mapping perspective, will clearly won&#8217;t work</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
-  &lt;refs&gt;
-    &lt;ref feature="link"&gt;
-      &lt;param name="prev-id" maps-to="id"/&gt;
-    &lt;/ref&gt;
-    &lt;ref feature="link"&gt;
-      &lt;param name="next-id" maps-to="id"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="id" feature-id="true"/&gt;
-    &lt;param name="prev-id" nillable="true"/&gt;
-    &lt;param name="next-id" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="link"&gt;
+       &lt;param name="prev-id" maps-to="id"/&gt;
+     &lt;/ref&gt;
+     &lt;ref feature="link"&gt;
+       &lt;param name="next-id" maps-to="id"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="id" feature-id="true"/&gt;
+     &lt;param name="prev-id" nillable="true"/&gt;
+     &lt;param name="next-id" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Feature references must have a unique name. In this case, both reference names are set to <strong>link</strong> and the provisioning tool will fail to process this spec. To workaround the error explicit names have to be assigned to the reference declarations, e.g.</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
-  &lt;refs&gt;
-    &lt;ref name="prev" feature="link"&gt;
-      &lt;param name="prev-id" maps-to="id"/&gt;
-    &lt;/ref&gt;
-    &lt;ref name="next" feature="link"&gt;
-      &lt;param name="next-id" maps-to="id"/&gt;
-    &lt;/ref&gt;
-  &lt;/refs&gt;
-  &lt;params&gt;
-    &lt;param name="id" feature-id="true"/&gt;
-    &lt;param name="prev-id" nillable="true"/&gt;
-    &lt;param name="next-id" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link"&gt;
+   &lt;refs&gt;
+     &lt;ref name="prev" feature="link"&gt;
+       &lt;param name="prev-id" maps-to="id"/&gt;
+     &lt;/ref&gt;
+     &lt;ref name="next" feature="link"&gt;
+       &lt;param name="next-id" maps-to="id"/&gt;
+     &lt;/ref&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="id" feature-id="true"/&gt;
+     &lt;param name="prev-id" nillable="true"/&gt;
+     &lt;param name="next-id" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -2068,16 +2068,16 @@ When a circular reference graph is identified, the feature that was added to the
 <div class="paragraph">
 <p>Feature dependencies can be declared in the feature spec and/or on the feature itself. Here is an example of a dependency declaration in the feature spec:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
-  &lt;deps&gt;
-    &lt;dep feature-id="feature2:id=123"/&gt;
-  &lt;/deps&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+   &lt;deps&gt;
+     &lt;dep feature-id="feature2:id=123"/&gt;
+   &lt;/deps&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2089,14 +2089,14 @@ When a circular reference graph is identified, the feature that was added to the
 <div class="paragraph">
 <p>And here is how a feature dependency can be declared on a specific feature:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature spec="feature1"&gt;
-  &lt;deps&gt;
-    &lt;dep feature-id="feature3:id=789"/&gt;
-  &lt;/deps&gt;
-  &lt;param name="name" value="abc"/&gt;
-&lt;/feature&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature spec="feature1"&gt;
+   &lt;deps&gt;
+     &lt;dep feature-id="feature3:id=789"/&gt;
+   &lt;/deps&gt;
+   &lt;param name="name" value="abc"/&gt;
+ &lt;/feature&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2108,14 +2108,14 @@ When a circular reference graph is identified, the feature that was added to the
 <div class="paragraph">
 <p>If the <strong>feature3</strong> spec was from another feature-pack than the <strong>feature1</strong> spec then we&#8217;d have to add the origin of the <strong>feature3</strong> spec to the dependency declaration. Assuming that the feature-pack the <strong>feature1</strong> spec belongs to declared a dependecy named <strong>fp2</strong> on the feature-pack the <strong>feature3</strong> spec belongs to, the dependency declaration will look like this:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature spec="feature1"&gt;
-  &lt;deps&gt;
-    &lt;dep feature-id="feature3:id=789" dependency="fp2"/&gt;
-  &lt;/deps&gt;
-  &lt;param name="name" value="abc"/&gt;
-&lt;/feature&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature spec="feature1"&gt;
+   &lt;deps&gt;
+     &lt;dep feature-id="feature3:id=789" dependency="fp2"/&gt;
+   &lt;/deps&gt;
+   &lt;param name="name" value="abc"/&gt;
+ &lt;/feature&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -2124,14 +2124,14 @@ When a circular reference graph is identified, the feature that was added to the
 <div class="paragraph">
 <p>Like references, dependencies also support the <strong>include</strong> attribute. If the dependency is declared with the <strong>include=true</strong>, the target of the dependency will implicitly be included into the configuration unless it is already present. Here is an example of an implicitly included feature dependency:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature spec="feature1"&gt;
-  &lt;deps&gt;
-    &lt;dep feature-id="feature3:id=789" include="true"/&gt;
-  &lt;/deps&gt;
-  &lt;param name="name" value="abc"/&gt;
-&lt;/feature&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature spec="feature1"&gt;
+   &lt;deps&gt;
+     &lt;dep feature-id="feature3:id=789" include="true"/&gt;
+   &lt;/deps&gt;
+   &lt;param name="name" value="abc"/&gt;
+ &lt;/feature&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -2154,33 +2154,33 @@ When a circular reference graph is identified, the feature that was added to the
 <div class="paragraph">
 <p>Capabilities are represented as strings with a dot serving as a word separator. Here is an example of a feature providing a capability:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
-  &lt;provides&gt;
-    &lt;capability name="org.wildfly.network.interface"/&gt;
-  &lt;/provides&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="inet-address"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+   &lt;provides&gt;
+     &lt;capability name="org.wildfly.network.interface"/&gt;
+   &lt;/provides&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="inet-address"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>And here is a feature that expresses a requirement on the capability provided above</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
-  &lt;requires&gt;
-    &lt;capability name="org.wildfly.network.interface"/&gt;
-  &lt;/requires&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="port"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+   &lt;requires&gt;
+     &lt;capability name="org.wildfly.network.interface"/&gt;
+   &lt;/requires&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="port"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2200,57 +2200,57 @@ In the examples above the capabilities were configured using constants. This typ
 <div class="paragraph">
 <p>It is also possible, however, to provide or require a capability that depends on the parameters of a specific feature. Dynamic capabilities are following the same dot-separated string format but include feature parameters names prefixed with the <code>$</code> character. The examples above could be enhanced with dynamic capabilities as</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
-  &lt;provides&gt;
-    &lt;capability name="org.wildfly.network.interface.$name"/&gt;
-  &lt;/provides&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="inet-address" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+   &lt;provides&gt;
+     &lt;capability name="org.wildfly.network.interface.$name"/&gt;
+   &lt;/provides&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="inet-address" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
-  &lt;requires&gt;
-    &lt;capability name="org.wildfly.network.interface.$interface"/&gt;
-  &lt;/requires&gt;
-  &lt;params&gt;
-    &lt;param name="name" feature-id="true"/&gt;
-    &lt;param name="interface"/&gt;
-    &lt;param name="port" nillable="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+   &lt;requires&gt;
+     &lt;capability name="org.wildfly.network.interface.$interface"/&gt;
+   &lt;/requires&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="interface"/&gt;
+     &lt;param name="port" nillable="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Let&#8217;s see how it will look like in an actual configuration</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-  &lt;config&gt;
-    &lt;feature spec="interface"&gt;
-      &lt;param name="name" value="public"/&gt;
-    &lt;/feature&gt;
-    &lt;feature spec="interface"&gt;
-      &lt;param name="name" value="secure"/&gt;
-    &lt;/feature&gt;
-    &lt;feature spec="socket-binding"&gt;
-      &lt;param name="name" value="http"/&gt;
-      &lt;param name="interface" value="public"/&gt;
-    &lt;/feature&gt;
-    &lt;feature spec="socket-binding"&gt;
-      &lt;param name="name" value="https"/&gt;
-      &lt;param name="interface" value="secure"/&gt;
-    &lt;/feature&gt;
-  &lt;/config&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+   &lt;config&gt;
+     &lt;feature spec="interface"&gt;
+       &lt;param name="name" value="public"/&gt;
+     &lt;/feature&gt;
+     &lt;feature spec="interface"&gt;
+       &lt;param name="name" value="secure"/&gt;
+     &lt;/feature&gt;
+     &lt;feature spec="socket-binding"&gt;
+       &lt;param name="name" value="http"/&gt;
+       &lt;param name="interface" value="public"/&gt;
+     &lt;/feature&gt;
+     &lt;feature spec="socket-binding"&gt;
+       &lt;param name="name" value="https"/&gt;
+       &lt;param name="interface" value="secure"/&gt;
+     &lt;/feature&gt;
+   &lt;/config&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2278,21 +2278,21 @@ More than one parameter could be used in a capability name. The parameters may a
 <div class="paragraph">
 <p>Package dependencies are configured under the <strong>packages</strong> element of the feature spec which is equivalent to the <a href="#package-deps"><strong>dependencies</strong> element of the package spec metadata</a>. Here is an example</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec name="feature1" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
-  &lt;params&gt;
-    &lt;param name="id" feature-id="true"/&gt;
-  &lt;/params&gt;
-  &lt;packages&gt;
-    &lt;package name="p1"/&gt;
-    &lt;package name="p2" optional="true"/&gt;
-    &lt;feature-pack dependency="another-feature-pack"&gt;
-      &lt;package name="p2"/&gt;
-      &lt;package name="p3" optional="true"/&gt;
-    &lt;/feature-pack&gt;
-  &lt;/packages&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec name="feature1" xmlns="urn:wildfly:pm-feature-spec:1.0"&gt;
+   &lt;params&gt;
+     &lt;param name="id" feature-id="true"/&gt;
+   &lt;/params&gt;
+   &lt;packages&gt;
+     &lt;package name="p1"/&gt;
+     &lt;package name="p2" optional="true"/&gt;
+     &lt;feature-pack dependency="another-feature-pack"&gt;
+       &lt;package name="p2"/&gt;
+       &lt;package name="p3" optional="true"/&gt;
+     &lt;/feature-pack&gt;
+   &lt;/packages&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2320,20 +2320,20 @@ More than one parameter could be used in a capability name. The parameters may a
 <div class="paragraph">
 <p><a id="feature-annotations"></a>Feature specs may include a list of annotations. The provisioning mechanism does not include pre-defined annotations yet and does not use them for processing features and configurations. Annotations are simply parsed and attached to feature specs and made available to the provisioning plugins for processing. Here is an example of an annotated feature spec:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
-  &lt;annotation name="name1"&gt;
-    &lt;elem name="elem1" value="value1"/&gt;
-  &lt;/annotation&gt;
-  &lt;annotation name="name2"&gt;
-    &lt;elem name="elem1" value="value1"/&gt;
-    &lt;elem name="elem1" value="value1"/&gt;
-  &lt;/annotation&gt;
-  &lt;params&gt;
-    &lt;param name="id" feature-id="true"/&gt;
-  &lt;/params&gt;
-&lt;/feature-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+   &lt;annotation name="name1"&gt;
+     &lt;elem name="elem1" value="value1"/&gt;
+   &lt;/annotation&gt;
+   &lt;annotation name="name2"&gt;
+     &lt;elem name="elem1" value="value1"/&gt;
+     &lt;elem name="elem1" value="value1"/&gt;
+   &lt;/annotation&gt;
+   &lt;params&gt;
+     &lt;param name="id" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -2344,58 +2344,58 @@ More than one parameter could be used in a capability name. The parameters may a
 <p>A feature represents a minimal configuration unit. When a configuration model reaches a certain level of complexity though, using and manipulating features to define the final configuration may become impractical.
 Feature groups allow to group a set of features that represent a certain part of the configuration together and then later include them all into the final configuration as a group. For example</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
-  &lt;feature spec="feature1"&gt;
-    &lt;param name="id" value="a1"/&gt;
-    &lt;feature spec="feature2"&gt;
-      &lt;param name="id" value="b1"/&gt;
-    &lt;/feature&gt;
-  &lt;/feature&gt;
-  &lt;feature spec="feature3"&gt;
-    &lt;param name="id" value="c1"/&gt;
-  &lt;/feature&gt;
-&lt;/feature-group-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+   &lt;feature spec="feature1"&gt;
+     &lt;param name="id" value="a1"/&gt;
+     &lt;feature spec="feature2"&gt;
+       &lt;param name="id" value="b1"/&gt;
+     &lt;/feature&gt;
+   &lt;/feature&gt;
+   &lt;feature spec="feature3"&gt;
+     &lt;param name="id" value="c1"/&gt;
+   &lt;/feature&gt;
+ &lt;/feature-group-spec&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-  &lt;config&gt;
-    &lt;feature-group name="group1"/&gt;
-  &lt;/config&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+   &lt;config&gt;
+     &lt;feature-group name="group1"/&gt;
+   &lt;/config&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>First, we defined a feature group named <strong>group1</strong> which includes three features. The name of the group must be unique in the scope of the feature-pack. Feature groups are saved in the feature-packs <code>feature_groups</code> directory in XML files named after the feature groups (group1.xml in this example).</p>
+<p>First, we defined a feature group named <strong>group1</strong> which includes three features. The name of the group must be unique in the scope of the feature-pack. Feature groups are saved in the feature-pack&#8217;s <code>feature_groups</code> directory in XML files named after the feature groups (<strong>group1.xml</strong> in this example).</p>
 </div>
 <div class="paragraph">
 <p>Then in the default configuration of the feature-pack we simply included the <strong>group1</strong>.</p>
 </div>
 <div class="paragraph">
-<p>Feature groups may not only include features but also other feature groups. For example, continuing the example above:</p>
+<p>Besides features, feature groups may also include other feature groups. Continuing the example above:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-group-spec name="group2" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
-  &lt;feature-group name="group1"/&gt;
-  &lt;feature spec="feature4"&gt;
-    &lt;param name="id" value="d1"/&gt;
-  &lt;/feature&gt;
-&lt;/feature-group-spec&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-group-spec name="group2" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+   &lt;feature-group name="group1"/&gt;
+   &lt;feature spec="feature4"&gt;
+     &lt;param name="id" value="d1"/&gt;
+   &lt;/feature&gt;
+ &lt;/feature-group-spec&gt;</code></pre>
 </div>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre class="nowrap">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
-               groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
-  &lt;config&gt;
-    &lt;feature-group name="group2"/&gt;
-  &lt;/config&gt;
-&lt;/feature-pack&gt;</pre>
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+                groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+   &lt;config&gt;
+     &lt;feature-group name="group2"/&gt;
+   &lt;/config&gt;
+ &lt;/feature-pack&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2404,10 +2404,10 @@ Feature groups allow to group a set of features that represent a certain part of
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><em>feature2:id=b1</em></p>
+<p><em>feature1:id=a1</em></p>
 </li>
 <li>
-<p><em>feature1:id=a1</em></p>
+<p><em>feature2:id=b1</em></p>
 </li>
 <li>
 <p><em>feature3:id=c1</em></p>
@@ -2416,6 +2416,393 @@ Feature groups allow to group a set of features that represent a certain part of
 <p><em>feature4:id=d1</em></p>
 </li>
 </ol>
+</div>
+<div class="sect4">
+<h5 id="_including_customized_feature_groups">Including customized feature groups</h5>
+<div class="paragraph">
+<p>When a feature group is included (into another feature group or the <strong>config</strong> element of the feature-pack configuration) the set of its features can be customized. There are two main kinds of customizations that are allowed when including a feature group:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><a href="#feature-param-overwrites">the configuration of the features included into the group can be overwritten</a>;</p>
+</li>
+<li>
+<p>certain features can be excluded from the group by</p>
+<div class="ulist">
+<ul>
+<li>
+<p>specifying feature IDs;</p>
+</li>
+<li>
+<p>specifying feature specs features of which have to be excluded;</p>
+</li>
+<li>
+<p>explicitly choosing which features should be included by specifying their feature IDs;</p>
+</li>
+<li>
+<p>explicitly choosing features of which feature specs should be included.</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+When a feature group is included into another feature group or a <strong>config</strong>, the list of its direct entries (features and feature groups) defined by the feature group spec cannot be extended by applying customizations. <a href="#There is a way though to extend the feature set of the included feature group indirectly">[There is a way though to extend the feature set of the included feature group indirectly]</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>All the feature group customizations are expressed in the body of the <code>feature-group</code> XML element.</p>
+</div>
+<div class="sect5">
+<h6 id="_overwriting_parameters_of_features_from_a_feature_group">Overwriting parameters of features from a feature group</h6>
+<div class="paragraph">
+<p><a id="feature-param-overwrites"></a>The configuration of a feature can be customized by adding the <code>include</code> element with the <code>feature-id</code> attribute targeting its ID to the body of the <code>feature-group</code> element. E.g. suppose this is our feature spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1"&gt;
+  &lt;params&gt;
+    &lt;param name="a" feature-id="true"/&gt;
+    &lt;param name="b" default="bb"/&gt;
+    &lt;param name="c" nillable="true"/&gt;
+    &lt;param name="d"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is our feature group spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="a" value="a1"/&gt;
+    &lt;param name="c" value="group1"/&gt;
+    &lt;param name="d" value="group1"/&gt;
+  &lt;/feature&gt;
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And this is our config:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1"&gt;
+    &lt;include feature-id="feature1:a=a1"&gt;
+      &lt;param name="d" value="config"/&gt;
+    &lt;/include&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resolved configuration will consist of one feature with the following configuration</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+<th class="tableblock halign-left valign-top">c</th>
+<th class="tableblock halign-left valign-top">d</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bb</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">config</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Let&#8217;s now suppose that we have two feature specs with a parent-child relationship</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+  &lt;params&gt;
+    &lt;param name="parent" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="parent" feature-id="true"/&gt;
+    &lt;param name="child" feature-id="true"/&gt;
+    &lt;param name="a"/&gt;
+    &lt;param name="b"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The group spec is</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+  &lt;feature spec="featureP"&gt;
+    &lt;param name="parent" value="p1"/&gt;
+    &lt;feature spec="featureC"&gt;
+      &lt;param name="child" value="c1"/&gt;
+      &lt;param name="a" value="group1"/&gt;
+      &lt;param name="b" value="group1"/&gt;
+    &lt;/feature&gt;
+  &lt;/feature&gt;
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And we want to customize the child feature when including the <strong>group1</strong> into the config.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1"&gt;
+    &lt;include feature-id="featureC:parent=p1,child=c1"&gt;
+      &lt;param name="b" value="config"/&gt;
+    &lt;/include&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resolved configuration will contain two features:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">parent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">p1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">child</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">p1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">c1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect5">
+<h6 id="_extending_feature_groups_by_including_features_indirectly">Extending feature groups by including features indirectly</h6>
+<div class="paragraph">
+<p>While the list of the feature group spec enrties (features and feature groups) is fixed and cannot be extended, new features and feature groups can be added as children of the features that have already been included into the feature group.
+Let&#8217;s edit the example from the previous paragraph to demonstrate that. The feature specs will remain the same.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+  &lt;params&gt;
+    &lt;param name="parent" feature-id="true"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC"&gt;
+  &lt;refs&gt;
+    &lt;ref feature="featureP"&gt;
+  &lt;/refs&gt;
+  &lt;params&gt;
+    &lt;param name="parent" feature-id="true"/&gt;
+    &lt;param name="child" feature-id="true"/&gt;
+    &lt;param name="a"/&gt;
+    &lt;param name="b"/&gt;
+  &lt;/params&gt;
+&lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The group spec will now include only parent feature</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+  &lt;feature spec="featureP"&gt;
+    &lt;param name="parent" value="p1"/&gt;
+  &lt;/feature&gt;
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And now we will include the child feature as a configuration customization of the parent feature.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1"&gt;
+    &lt;include feature-id="featureP:parent=p1"&gt;
+      &lt;feature spec="featureC"&gt;
+        &lt;param name="child" value="c1"/&gt;
+        &lt;param name="a" value="config"/&gt;
+        &lt;param name="b" value="config"/&gt;
+      &lt;/feature&gt;
+    &lt;/include&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resolved configuration will contain the two features:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">parent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">p1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">parent</th>
+<th class="tableblock halign-left valign-top">child</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">p1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">c1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">config</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">config</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_including_features_and_feature_groups_from_other_feature_packs">Including features and feature groups from other feature-packs</h5>
+<div class="paragraph">
+<p>Feature groups, as well as <strong>config</strong> elements in the <strong>feature-pack.xml</strong>, may include features and feature groups from other feature-packs. This is done by including one or more <code>feature-pack</code> element and specifying the origin of the included features and feature groups in its <code>dependency</code> attribute. For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a1"/&gt;
+  &lt;/feature&gt;
+
+  &lt;feature-pack dependency="another-feature-pack"&gt;
+    &lt;feature-group name="group2"/&gt;
+    &lt;feature spec="feature2"&gt;
+      &lt;param name="id" value="b1"/&gt;
+    &lt;/feature&gt;
+  &lt;/feature-pack&gt;
+
+  &lt;feature-group name="group3"/&gt;
+
+  &lt;feature-pack dependency="another-feature-pack"&gt;
+    &lt;feature-group name="group3"/&gt;
+  &lt;/feature-pack&gt;
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, the order of the features in the resolved feature group will be</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><em>feature1:id=a1</em> from the local feature-pack;</p>
+</li>
+<li>
+<p>features from <em>group2</em> from <strong>another-feature-pack</strong>;</p>
+</li>
+<li>
+<p><em>feature2:id=b1</em> from <strong>another-feature-pack</strong>;</p>
+</li>
+<li>
+<p>features from <em>group3</em> from the local feature-pack;</p>
+</li>
+<li>
+<p>features from <em>group3</em> from <strong>another-feature-pack</strong>.</p>
+</li>
+</ol>
+</div>
 </div>
 </div>
 </div>
@@ -2837,7 +3224,7 @@ You can do the same exercise for <code>dist.domain</code> package.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.Alpha-SNAPSHOT<br>
-Last updated 2017-11-08 18:54:13 CET
+Last updated 2017-11-10 11:30:55 CET
 </div>
 </div>
 </body>
