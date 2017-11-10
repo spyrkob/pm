@@ -61,7 +61,7 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
                     .addFeatureRef(FeatureReferenceSpec.builder("specD").setFpDep("fp2").build())
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.createId("d"))
-                    .addParam(FeatureParameterSpec.create("p1", false))
+                    .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addFeatureGroup(FeatureGroupSpec.builder("fg1")
                     .addFeature(new FeatureConfig("specA").setParam("a", "aOne"))
@@ -78,7 +78,7 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
             .addDependency("fp1", FP1_GAV)
             .addSpec(FeatureSpec.builder("specD")
                     .addParam(FeatureParameterSpec.createId("d"))
-                    .addParam(FeatureParameterSpec.create("p1", false))
+                    .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .getInstaller()
         .install();

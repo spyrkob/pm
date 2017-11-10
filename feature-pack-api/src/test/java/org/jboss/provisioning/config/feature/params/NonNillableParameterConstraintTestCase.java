@@ -15,31 +15,32 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs;
+package org.jboss.provisioning.config.feature.params;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
-import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
-import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBase {
+public class NonNillableParameterConstraintTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -49,27 +50,12 @@ public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBa
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("a", "aSpec"))
-                    .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("a", true))
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setName("specA")
-                            .setNillable(false)
-                            .mapParam("a", "name")
-                            .setInclude(true)
-                            .build())
+                    .addParam(FeatureParameterSpec.create("p1"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "b")
-                            .setParam("a", "a"))
-                    .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("name", "a")
-                            .setParam("a", "aConfig"))
+                            .setParam("name", "a1"))
                     .build())
             .getInstaller()
         .install();
@@ -81,15 +67,29 @@ public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBa
     }
 
     @Override
+    protected void pmSuccess() {
+        Assert.fail();
+    }
+
+    @Override
+    protected void pmFailure(ProvisioningException e) {
+        Assert.assertEquals(Errors.failedToBuildConfigSpec(null, null), e.getLocalizedMessage());
+        Assert.assertNotNull(e.getCause());
+        Assert.assertEquals(Errors.nonNillableParameterIsNull(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"), "p1"), e.getCause().getLocalizedMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
+    }
+
+    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).setParam("a", "aConfig").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
-                                .build())
-                        .build())
-                .build();
+        return null;
+    }
+
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.clear().build();
     }
 }

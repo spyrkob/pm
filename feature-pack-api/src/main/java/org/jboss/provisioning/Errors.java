@@ -246,6 +246,14 @@ public interface Errors {
         return "Failed to resolve configuration of feature-group " + groupName + " from " + gav;
     }
 
+    static String nonNillableParameterIsNull(ResolvedSpecId specId, String paramName) {
+        return "Non-nillable parameter " + paramName + " of " + specId + " has not been initialized";
+    }
+
+    static String nonNillableParameterIsNull(ResolvedFeatureId featureId, String paramName) {
+        return "Non-nillable parameter " + paramName + " of " + featureId + " has not been initialized";
+    }
+
     static void appendConfig(final StringBuilder buf, String model, String name) {
         if (model != null) {
             buf.append(" model ").append(model);

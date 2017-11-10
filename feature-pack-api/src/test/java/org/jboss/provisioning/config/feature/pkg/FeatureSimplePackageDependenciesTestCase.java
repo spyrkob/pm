@@ -54,7 +54,6 @@ public class FeatureSimplePackageDependenciesTestCase extends PmInstallFeaturePa
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("b", false))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
                             .setName("specA")

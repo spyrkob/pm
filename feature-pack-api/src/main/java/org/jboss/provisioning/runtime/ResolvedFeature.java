@@ -121,6 +121,18 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
+    void validate() throws ProvisioningDescriptionException {
+        for(FeatureParameterSpec param : spec.xmlSpec.getParams()) {
+            if(!param.isNillable() && !params.containsKey(param.getName())) {
+                if(id == null) {
+                    throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(spec.id, param.getName()));
+                } else {
+                    throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
+                }
+            }
+        }
+    }
+
     boolean isFree() {
         return orderingState == FREE;
     }
@@ -136,7 +148,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         orderingState = SCHEDULED;
     }
 
-    void ordered() {
+    void ordered() throws ProvisioningDescriptionException {
+        validate(); // may not be the best place for this
         if(orderingState != SCHEDULED) {
             throw new IllegalStateException();
         }
@@ -208,7 +221,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return params.get(name);
     }
 
-    public void setParam(String name, String value) throws ProvisioningDescriptionException {
+    void setParam(String name, String value) throws ProvisioningDescriptionException {
         if(id != null) {
             final String idValue = id.params.get(name);
             if(idValue != null) {
@@ -229,10 +242,12 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    void merge(ResolvedFeature other) throws ProvisioningDescriptionException {
+    void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningDescriptionException {
         if(other.hasParams()) {
             for(Map.Entry<String, String> entry : other.getParams().entrySet()) {
-                if(!params.containsKey(entry.getKey())) {
+                if(overwriteParams) {
+                    setParam(entry.getKey(), entry.getValue());
+                } else if(!params.containsKey(entry.getKey())) {
                     setParam(entry.getKey(), entry.getValue());
                 }
             }

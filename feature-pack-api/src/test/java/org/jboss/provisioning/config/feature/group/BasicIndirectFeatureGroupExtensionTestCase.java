@@ -15,16 +15,19 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs;
+package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -39,7 +42,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBase {
+public class BasicIndirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,29 +50,30 @@ public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBa
     protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(FP_GAV)
-            .addSpec(FeatureSpec.builder("specA")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("a", "aSpec"))
+            .addSpec(FeatureSpec.builder("specP")
+                    .addParam(FeatureParameterSpec.createId("parent"))
                     .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("a", true))
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setName("specA")
-                            .setNillable(false)
-                            .mapParam("a", "name")
-                            .setInclude(true)
-                            .build())
+            .addSpec(FeatureSpec.builder("specC")
+                    .addParam(FeatureParameterSpec.createId("parent"))
+                    .addParam(FeatureParameterSpec.createId("child"))
+                    .addParam(FeatureParameterSpec.create("a"))
+                    .addParam(FeatureParameterSpec.create("b"))
+                    .addFeatureRef(FeatureReferenceSpec.create("specP"))
+                    .build())
+            .addFeatureGroup(FeatureGroupSpec.builder("group1")
+                    .addFeature(
+                            new FeatureConfig("specP")
+                            .setParam("parent", "p1"))
                     .build())
             .addConfig(ConfigSpec.builder()
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("name", "b")
-                            .setParam("a", "a"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "a")
-                            .setParam("a", "aConfig"))
+                    .addFeatureGroup(FeatureGroupConfig.builder("group1")
+                            .includeFeature(FeatureId.create("specP", "parent", "p1"), new FeatureConfig()
+                                    .addFeature(
+                                            new FeatureConfig("specC")
+                                            .setParam("child", "c1")
+                                            .setParam("a", "config")
+                                            .setParam("b", "config")))
+                            .build())
                     .build())
             .getInstaller()
         .install();
@@ -85,9 +89,10 @@ public class ReferenceIncludeIncludedTestCase extends PmInstallFeaturePackTestBa
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).setParam("a", "aConfig").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specP", "parent", "p1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("parent", "p1").setParam("child", "c1").build())
+                                .setParam("a", "config")
+                                .setParam("b", "config")
                                 .build())
                         .build())
                 .build();

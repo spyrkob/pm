@@ -57,7 +57,6 @@ public class ReferenceIncludeExternalTestCase extends PmInstallFeaturePackTestBa
                 .addDependency("fp1", FP1_GAV)
                 .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("b", false))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
                             .setFpDep("fp1")

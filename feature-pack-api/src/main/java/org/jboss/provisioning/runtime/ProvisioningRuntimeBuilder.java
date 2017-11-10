@@ -109,7 +109,7 @@ public class ProvisioningRuntimeBuilder {
             value = param.getDefaultValue();
         }
         if(value == null && (param.isFeatureId() || !param.isNillable())) {
-            throw new ProvisioningDescriptionException("Required parameter " + param.getName() + " of " + specId + " is missing value");
+            throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(specId, param.getName()));
         }
         return value;
     }
@@ -457,17 +457,21 @@ public class ProvisioningRuntimeBuilder {
         if (pushedConfigs.isEmpty()) {
             return false;
         }
+
+        modelBuilder.startGroup();
+
         boolean resolvedFeatures = processConfigItemContainer(modelBuilder, fp, fgSpec);
         for(FeaturePackRuntime.Builder pushedFp : pushedConfigs) {
             final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(pushedFp.gav);
             if (!popped.includedFeatures.isEmpty()) {
                 for (Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
-                    if (feature.getValue() != null) {
+                    if (feature.getValue() != null) {// TODO has to make sure to include only those that are a part of the the feature group branch
                         resolvedFeatures |= resolveFeature(modelBuilder, pushedFp, feature.getValue());
                     }
                 }
             }
         }
+        modelBuilder.endGroup();
         return resolvedFeatures;
     }
 
