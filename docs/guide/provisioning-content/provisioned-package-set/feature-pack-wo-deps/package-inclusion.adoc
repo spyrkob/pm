@@ -2,7 +2,8 @@
 
 A package may be explicitly included into the feature-pack's effective package set. For example, given the following feature-pack definition:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <default-packages>
@@ -10,6 +11,7 @@ A package may be explicitly included into the feature-pack's effective package s
         <package name="p2" />
     </default-packages>
  </feature-pack>
+----
 
 and assuming that
 
@@ -23,7 +25,8 @@ The effective package set of *fp1* includes *p1*, *p2* and *p21*.
 
 A user may explicitly add package *p3*, exclude *p2* and still leave *p21* in the effective package set using the following configuration:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0">
     <packages>
         <include name="p3"/>
@@ -31,12 +34,14 @@ A user may explicitly add package *p3*, exclude *p2* and still leave *p21* in th
         <include name="p21"/>
     </packages>
  </feature-pack>
+----
 
 The effective package set now will consist of *p1* (default package), *p21* (explicitly included non-default), *p3* (explicitly included non-default) and *p31* (brought in as a dependency of *p3*).
 
 If, for example, the user wanted to further cut down the effective set to *p21* and *p3*, the configuration would change to
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0">
     <packages>
         <exclude name="p1"/>
@@ -46,3 +51,4 @@ If, for example, the user wanted to further cut down the effective set to *p21* 
         <exclude name="p31"/>
     </packages>
  </feature-pack>
+----

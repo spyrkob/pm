@@ -1,1 +1,5 @@
 include::overview.adoc[]
+
+include::customized-feature-groups.adoc[]
+
+include::external-groups.adoc[]

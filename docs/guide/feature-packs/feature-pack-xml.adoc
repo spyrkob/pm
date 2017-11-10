@@ -13,7 +13,8 @@ Feature-pack metadata contains the following information:
 
 Here is an illustration of how it may look like in a *feature-pack.xml* file:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.my-group"
                 artifactId="my-artifact"
@@ -39,6 +40,7 @@ Here is an illustration of how it may look like in a *feature-pack.xml* file:
         <package name="package2"/>
     </default-packages>
  </feature-pack>
+----
 
 In this example:
 

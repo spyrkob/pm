@@ -12,13 +12,15 @@ Package dependencies are also used to determine the <<_feature_pack_without_depe
 
 If a package depends on another package from the same feature-pack, the dependency is called a local package dependency. Here is an example of how local dependencies are expressed in the XML metadata:
 
-[options="nowrap"]
+[source,xml]
+----
  <package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1">
     <dependencies>
         <package name="p2"/>
         <package name="p3" optional=”true”/>
     </dependencies>
  </package-spec>
+----
 
 In this example *p2* is a required dependency of *p1* while *p3* is an optional one.
 
@@ -32,7 +34,8 @@ Feature-pack containing a package with an external dependency must declare an ex
 
 For example, suppose feature-pack *fp1* depends on feature-pack *fp2* and package *fp1:p1* depends on packages *fp2:p1* and *fp2:p10*. The *feature-pack.xml* of *fp1* might look like this:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
     <dependencies>
@@ -44,10 +47,12 @@ For example, suppose feature-pack *fp1* depends on feature-pack *fp2* and packag
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
 And the *package.xml* file of *fp1:p1* might look like this:
 
-[options="nowrap"]
+[source,xml]
+----
  <package-spec xmlns="urn:wildfly:pm-package:1.0" name="p1">
     <dependencies>
         <package name="p2" />
@@ -58,3 +63,5 @@ And the *package.xml* file of *fp1:p1* might look like this:
         <package name="p3" />
     </dependencies>
  </package-spec>
+----
+
