@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
@@ -64,11 +65,11 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
     }
 
-    private static final class FeatureGroupStack {
+    private final class FeatureGroupScopeStack {
         private List<Map<ResolvedFeatureId, ResolvedFeature>> list;
         private int last;
 
-        FeatureGroupStack() {
+        FeatureGroupScopeStack() {
             list = Collections.singletonList(new HashMap<>());
         }
 
@@ -79,7 +80,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         Map<ResolvedFeatureId, ResolvedFeature> startGroup() {
             final Map<ResolvedFeatureId, ResolvedFeature> group;
             if (list.size() == last + 1) {
-                group = new HashMap<>();
+                group = new LinkedHashMap<>();
                 list = PmCollections.add(list, group);
                 ++last;
             } else {
@@ -96,6 +97,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                     final ResolvedFeature parentFeature = parent.get(entry.getKey());
                     if (parentFeature == null) {
                         parent.put(entry.getKey(), entry.getValue());
+                        if(last == 0) {
+                            addToSpecFeatures(entry.getValue());
+                        }
                     } else {
                         parentFeature.merge(entry.getValue(), true);
                     }
@@ -103,6 +107,35 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                 group.clear();
             }
             return list.get(last);
+        }
+
+        void addFeature(ResolvedFeature feature) throws ProvisioningDescriptionException {
+            if(feature.id == null) {
+                addToSpecFeatures(feature);
+                return;
+            }
+            list.get(last).put(feature.id, feature);
+            if (last == 0) {
+                addToSpecFeatures(feature);
+            }
+        }
+
+        void merge(ResolvedFeature feature) throws ProvisioningException {
+            if(feature.id == null) {
+                addToSpecFeatures(feature);
+                return;
+            }
+            final ResolvedFeature localFeature = list.get(last).get(feature.id);
+            if(localFeature == null) {
+                list.get(last).put(feature.id, feature);
+                addToSpecFeatures(feature);
+                return;
+            }
+            localFeature.merge(feature, false);
+        }
+
+        void reset() {
+            list = Collections.emptyList();
         }
     }
 
@@ -125,7 +158,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     final String model;
     final String name;
     private Map<String, String> props = Collections.emptyMap();
-    private FeatureGroupStack featureGroupStack = new FeatureGroupStack();
+    private FeatureGroupScopeStack featureGroupStack = new FeatureGroupScopeStack();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = featureGroupStack.peek();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
     private Map<String, CapabilityProviders> capProviders = Collections.emptyMap();
@@ -154,11 +187,11 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     }
 
     void startGroup() {
-        //featuresById = featureGroupStack.startGroup(); TODO
+        featuresById = featureGroupStack.startGroup();
     }
 
     void endGroup() throws ProvisioningDescriptionException {
-        //featuresById = featureGroupStack.endGroup();
+        featuresById = featureGroupStack.endGroup();
     }
 
     boolean pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
@@ -207,7 +240,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                feature.mergeParams(config);
+                feature.setParams(config);
                 if(!resolvedDeps.isEmpty()) {
                     feature.addAllDependencies(resolvedDeps);
                 }
@@ -215,15 +248,16 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, config, resolvedDeps, ++featureIncludeCount);
-        if(id != null) {
-            featuresById.put(id, feature);
-        }
-        addToSpecFeatures(feature);
+        featureGroupStack.addFeature(feature);
         return feature;
     }
 
     boolean includes(ResolvedFeatureId id) {
         return featuresById.containsKey(id);
+    }
+
+    Set<ResolvedFeatureId> getIncludedIds() {
+        return featuresById.keySet();
     }
 
     private void addToSpecFeatures(final ResolvedFeature feature) {
@@ -257,18 +291,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     }
 
     private void merge(ResolvedFeature feature) throws ProvisioningException {
-        if(feature.id == null) {
-            addToSpecFeatures(feature.copy(++featureIncludeCount));
-            return;
-        }
-        final ResolvedFeature localFeature = featuresById.get(feature.id);
-        if(localFeature == null) {
-            feature = feature.copy(++featureIncludeCount);
-            featuresById.put(feature.id, feature);
-            addToSpecFeatures(feature);
-            return;
-        }
-        localFeature.merge(feature, false);
+        featureGroupStack.merge(feature.copy(++featureIncludeCount));
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
@@ -392,6 +415,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
 
         featuresById = Collections.emptyMap();
+        featureGroupStack.reset();
         featuresBySpec = Collections.emptyMap();
         return this;
     }

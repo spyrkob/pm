@@ -19,12 +19,15 @@ package org.jboss.provisioning.config.feature.group;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
@@ -36,13 +39,11 @@ import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Assert;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
 public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
@@ -80,7 +81,9 @@ public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTes
 
     @Override
     protected void pmFailure(ProvisioningException e) {
-        e.printStackTrace();
+        Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
+        Assert.assertNotNull(e.getCause());
+        Assert.assertEquals(Errors.featureNotInScope(ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specP"), "parent", "p2"), "group1", FP_GAV), e.getCause().getLocalizedMessage());
     }
 
     @Override

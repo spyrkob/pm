@@ -254,6 +254,10 @@ public interface Errors {
         return "Non-nillable parameter " + paramName + " of " + featureId + " has not been initialized";
     }
 
+    static String featureNotInScope(ResolvedFeatureId id, String groupName, ArtifactCoords.Gav fpGav) {
+        return id + " is not found in the scope of " + groupName + " from " + fpGav;
+    }
+
     static void appendConfig(final StringBuilder buf, String model, String name) {
         if (model != null) {
             buf.append(" model ").append(model);

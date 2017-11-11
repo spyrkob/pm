@@ -465,8 +465,17 @@ public class ProvisioningRuntimeBuilder {
             final ResolvedFeatureGroupConfig popped = modelBuilder.popConfig(pushedFp.gav);
             if (!popped.includedFeatures.isEmpty()) {
                 for (Map.Entry<ResolvedFeatureId, FeatureConfig> feature : popped.includedFeatures.entrySet()) {
-                    if (feature.getValue() != null) {// TODO has to make sure to include only those that are a part of the the feature group branch
-                        resolvedFeatures |= resolveFeature(modelBuilder, pushedFp, feature.getValue());
+                    final FeatureConfig includedFc = feature.getValue();
+                    if (includedFc != null && includedFc.hasParams()) {
+                        final ResolvedFeatureId includedId = feature.getKey();
+                        if (modelBuilder.isFilteredOut(includedId.specId, includedId)) {
+                            continue;
+                        }
+                        // make sure the included ID is in fact present on the feature group branch
+                        if (!modelBuilder.includes(includedId)) {
+                            throw new ProvisioningException(Errors.featureNotInScope(includedId, fgConfig.getName(), fp.gav));
+                        }
+                        resolvedFeatures |= resolveFeature(modelBuilder, pushedFp, includedFc);
                     }
                 }
             }
@@ -498,23 +507,27 @@ public class ProvisioningRuntimeBuilder {
             final Map.Entry<FeatureId, FeatureConfig> included = features.entrySet().iterator().next();
             final FeatureConfig fc = new FeatureConfig(included.getValue());
             final ResolvedFeatureSpec resolvedSpec = fp.getFeatureSpec(fc.getSpecId().getName());
+            final ResolvedFeatureId resolvedId;
             if (parentFeature != null) {
                 initForeignKey(parentFeature, fc, resolvedSpec);
+                resolvedId = resolveFeatureId(resolvedSpec, fc);
+            } else {
+                resolvedId = new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams());
             }
-            // the resolvedId is incomplete here, although it could be fixed, it appears to work in the scope of the group
-            // test ResolvedFeatureMapWithIncompleteResolvedIdAsKeysTestCase
-            return Collections.singletonMap(new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams()), fc);
+            return Collections.singletonMap(resolvedId, fc);
         }
         final Map<ResolvedFeatureId, FeatureConfig> tmp = new HashMap<>(features.size());
         for (Map.Entry<FeatureId, FeatureConfig> included : features.entrySet()) {
             final FeatureConfig fc = new FeatureConfig(included.getValue());
             final ResolvedFeatureSpec resolvedSpec = fp.getFeatureSpec(fc.getSpecId().getName());
+            final ResolvedFeatureId resolvedId;
             if (parentFeature != null) {
                 initForeignKey(parentFeature, fc, resolvedSpec);
+                resolvedId = resolveFeatureId(resolvedSpec, fc);
+            } else {
+                resolvedId = new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams());
             }
-            // the resolvedId is incomplete here, although it could be fixed, it appears to work in the scope of the group
-            // test ResolvedFeatureMapWithIncompleteResolvedIdAsKeysTestCase
-            tmp.put(new ResolvedFeatureId(resolvedSpec.id, included.getKey().getParams()), fc);
+            tmp.put(resolvedId, fc);
         }
         return tmp;
     }
