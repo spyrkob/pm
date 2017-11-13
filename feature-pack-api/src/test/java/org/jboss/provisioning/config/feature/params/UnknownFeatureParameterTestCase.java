@@ -75,10 +75,17 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(ProvisioningException e) throws ProvisioningDescriptionException {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-        Assert.assertNotNull(e.getCause());
-        Assert.assertEquals("Unknown parameter 'p5' for " + ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specA"),  "name", "a1"), e.getCause().getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV,
+                new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p5", "config1")), t.getLocalizedMessage());
+        t = t.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals("Unknown parameter 'p5' for " + ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specA"),  "name", "a1"), t.getLocalizedMessage());
     }
 
     @Override

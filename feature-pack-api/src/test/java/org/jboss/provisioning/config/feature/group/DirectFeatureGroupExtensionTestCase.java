@@ -83,7 +83,11 @@ public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTes
     protected void pmFailure(ProvisioningException e) {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Assert.assertNotNull(e.getCause());
-        Assert.assertEquals(Errors.featureNotInScope(ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specP"), "parent", "p2"), "group1", FP_GAV), e.getCause().getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV, "group1"), t.getLocalizedMessage());
+        Assert.assertNotNull(t.getCause());
+        t = t.getCause();
+        Assert.assertEquals(Errors.featureNotInScope(ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specP"), "parent", "p2"), "group1", FP_GAV), t.getLocalizedMessage());
     }
 
     @Override

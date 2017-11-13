@@ -92,7 +92,10 @@ public class FeatureGroupDependsOnExcludedRequiredPackageTestCase extends PmInst
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Throwable t = e.getCause();
         Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.resolveFeatureGroupConfig(FP_GAV, "fg1"), t.getLocalizedMessage());
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV, "fg2"), t.getLocalizedMessage());
+        t = t.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV, "fg1"), t.getLocalizedMessage());
         t = t.getCause();
         Assert.assertNotNull(t);
         Assert.assertEquals(Errors.unsatisfiedPackageDependency(FP_GAV, "fg1.pkg1"), t.getLocalizedMessage());

@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.runtime.ResolvedFeature;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
@@ -132,10 +133,6 @@ public interface Errors {
         return "Failed to resolve feature-pack " + fpGav + " package " + packageName;
     }
 
-    static String resolveFeature(ResolvedSpecId specId) {
-        return "Failed to resolve feature spec " + specId;
-    }
-
     static String packageExcludeInclude(String packageName) {
         return "Package " + packageName + " is explicitly excluded and included";
     }
@@ -217,18 +214,13 @@ public interface Errors {
                 + " conflicts with the corresponding parent ID value '" + newValue + "'";
     }
 
-    static String invalidLocalParamInFkMapping(String localParam, String refName, ResolvedSpecId specId) {
-        return specId + " feature spec does not include the foreign key parameter " + localParam + " used in the reference " + refName;
+    static String nonExistingForeignKeyTarget(String localParam, String refName, ResolvedSpecId specId, String targetParam, ResolvedSpecId targetSpecId) {
+        return "Foreign key parameter " + localParam + " of " + specId + " reference " + refName +
+                " is mapped to a non-existing ID parameter " + targetParam + " of " + targetSpecId;
     }
 
-    static String invalidTargetIdParamInFkMapping(String localParam, String refName, ResolvedSpecId specId, String targetParam, ResolvedSpecId targetSpecId) {
-        return "Foreign key parameter " + localParam + " of reference " + refName + " in " + specId +
-                " is mapped to a non-existing ID parameter " + targetParam + " of feature spec " + targetSpecId;
-    }
-
-    static String nonExistingTargetIdParamInFkDefaultMapping(String refName, ResolvedSpecId specId, String targetParam) {
-        return specId + " feature spec does not include the foreign key parameter "
-                + targetParam + " to resolve reference " + refName;
+    static String nonExistingForeignKeyParam(String refName, ResolvedSpecId specId, String targetParam) {
+        return "Foreign key parameter " + targetParam + " of " + specId + " reference " + refName + " does not exist";
     }
 
     static String featureRefNotInSpec(String featureRefName, String featureSpec) {
@@ -240,10 +232,6 @@ public interface Errors {
         appendFeature(buf, feature);
         buf.append(" has unresolved dependency on ").append(dep);
         return buf.toString();
-    }
-
-    static String resolveFeatureGroupConfig(ArtifactCoords.Gav gav, String groupName) {
-        return "Failed to resolve configuration of feature-group " + groupName + " from " + gav;
     }
 
     static String nonNillableParameterIsNull(ResolvedSpecId specId, String paramName) {
@@ -262,6 +250,18 @@ public interface Errors {
         final StringBuilder buf = new StringBuilder();
         buf.append("Unknown parameter '").append(paramName).append("' for ");
         appendFeature(buf, feature);
+        return buf.toString();
+    }
+
+    static String failedToProcess(ArtifactCoords.Gav fpGav, FeatureConfig feature) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to process feature-pack ").append(fpGav).append(" feature ").append(feature);
+        return buf.toString();
+    }
+
+    static String failedToProcess(ArtifactCoords.Gav fpGav, String groupName) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to process feature-pack ").append(fpGav).append(" group ").append(groupName);
         return buf.toString();
     }
 

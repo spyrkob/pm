@@ -84,11 +84,18 @@ public class InvalidTargetIdParamInFkMappingInReferenceWithIncludeTrueTestCase e
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(ProvisioningException e) throws ProvisioningDescriptionException {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-        Assert.assertNotNull(e.getCause());
-        Assert.assertEquals(Errors.invalidTargetIdParamInFkMapping("a", "specA", new ResolvedSpecId(FP_GAV, "specB"), "r", new ResolvedSpecId(FP_GAV, "specA")),
-                e.getCause().getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV,
+                new FeatureConfig("specB")
+                            .setParam("id", "b")
+                            .setParam("a", "a")), t.getLocalizedMessage());
+        t = t.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.nonExistingForeignKeyTarget("a", "specA", new ResolvedSpecId(FP_GAV, "specB"), "r", new ResolvedSpecId(FP_GAV, "specA")),
+                t.getLocalizedMessage());
     }
 
     @Override

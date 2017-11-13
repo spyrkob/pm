@@ -90,7 +90,7 @@ public class FeatureGroupDependsOnNonExistingPackageTestCase extends PmInstallFe
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Throwable t = e.getCause();
         Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.resolveFeatureGroupConfig(FP_GAV, "fg2"), t.getLocalizedMessage());
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV, "fg2"), t.getLocalizedMessage());
         t = t.getCause();
         Assert.assertNotNull(t);
         Assert.assertEquals(Errors.packageNotFound(FP_GAV, "fg2.pkg1"), t.getLocalizedMessage());
