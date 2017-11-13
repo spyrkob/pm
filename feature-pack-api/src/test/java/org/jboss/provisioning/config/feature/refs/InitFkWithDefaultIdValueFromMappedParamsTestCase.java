@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.feature.refs;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -23,22 +23,23 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
+import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-import org.junit.Assert;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeaturePackTestBase {
+public class InitFkWithDefaultIdValueFromMappedParamsTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,20 +48,21 @@ public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeatureP
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.a")
-                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addParam(FeatureParameterSpec.create("name", true, false, "defaultA"))
+                    .addParam(FeatureParameterSpec.create("a", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$a")
-                    .addParam(FeatureParameterSpec.createId("b"))
+                    .addParam(FeatureParameterSpec.create("name", true, false, "defaultB"))
+                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
+                            .mapParam("a", "name")
+                            .build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b1"))
-                    .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("a", "a1"))
+                                .addFeature(
+                                        new FeatureConfig("specB")))
                     .build())
             .getInstaller()
         .install();
@@ -72,33 +74,13 @@ public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeatureP
     }
 
     @Override
-    protected void pmSuccess() {
-        Assert.fail("There is no cap.a provider");
-    }
-
-    @Override
-    protected void pmFailure(ProvisioningException e) {
-        Assert.assertEquals("Failed to build config", e.getMessage());
-        e = (ProvisioningException) e.getCause();
-        Assert.assertNotNull(e);
-        Assert.assertEquals("Failed to satisfy capability requirement cap.$a for org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
-        e = (ProvisioningException) e.getCause();
-        Assert.assertNotNull(e);
-        Assert.assertEquals("Parameter a is missing value to resolve capability cap.$a", e.getMessage());
-    }
-
-    @Override
-    protected ProvisioningConfig provisionedConfig() {
-        return null;
-    }
-
-    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "defaultA")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("a", "defaultA").setParam("name", "defaultB").build()).build())
+                        .build())
+                .build();
     }
 }

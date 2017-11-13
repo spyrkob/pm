@@ -696,7 +696,7 @@ public class ProvisioningRuntimeBuilder {
                 }
             } else {
                 for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
-                    final String paramValue = parentFc.getParam(refSpec.getTargetParam(i));
+                    final String paramValue = parentFc.getParamOrDefault(refSpec.getTargetParam(i));
                     if (paramValue == null) {
                         throw new ProvisioningDescriptionException(
                                 childSpec.id + " expects ID parameter '" + refSpec.getTargetParam(i) + "' in " + parentFc.id);
