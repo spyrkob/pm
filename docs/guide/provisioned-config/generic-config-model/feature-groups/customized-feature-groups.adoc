@@ -6,18 +6,27 @@ When a feature group is included (into another feature group or the *config* ele
 
 . certain features can be excluded from the group by
 
-** specifying feature IDs;
+** <<fg-exclude-features-by-ids,specifying the feature IDs>>;
 
-** specifying feature specs features of which have to be excluded;
+** <<fg-exclude-features-by-specs,specifying the specs features of which have to be excluded>>;
 
-** explicitly choosing which features should be included by specifying their feature IDs;
+** <<fg-include-features-by-ids,explicitly choosing which features should be included by specifying their feature IDs>>;
 
-** explicitly choosing features of which feature specs should be included.
+** <<fg-include-features-by-specs,explicitly choosing features of which feature specs should be included>>.
 
 
-IMPORTANT: When a feature group is included into another feature group or a *config*, the list of its direct entries (features and feature groups) defined by the feature group spec cannot be extended by applying customizations. <<There is a way though to extend the feature set of the included feature group indirectly>>.
+IMPORTANT: When a feature group is included into another feature group or a *config*, the list of its direct entries (features and feature groups) defined by the feature group spec cannot be extended by applying customizations. <<fg-indirect-ext,There is a way though to extend the feature set of the included feature group indirectly>>.
 
 All the feature group customizations are expressed in the body of the `feature-group` XML element.
 
 include::feature-param-overwrites.adoc[]
 
+include::excluding-features-by-ids.adoc[]
+
+include::excluding-features-by-specs.adoc[]
+
+include::including-features-by-ids.adoc[]
+
+include::including-features-by-specs.adoc[]
+
+include::indirect-extension.adoc[]
