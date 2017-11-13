@@ -26,8 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -91,12 +89,12 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
         Map<ResolvedFeatureId, ResolvedFeature> endGroup() throws ProvisioningDescriptionException {
             if (last != 0) {
-                final Map<ResolvedFeatureId, ResolvedFeature> group = list.get(last--);
-                final Map<ResolvedFeatureId, ResolvedFeature> parent = list.get(last);
-                for (Map.Entry<ResolvedFeatureId, ResolvedFeature> entry : group.entrySet()) {
-                    final ResolvedFeature parentFeature = parent.get(entry.getKey());
+                final Map<ResolvedFeatureId, ResolvedFeature> endedGroup = list.get(last--);
+                final Map<ResolvedFeatureId, ResolvedFeature> parentGroup = list.get(last);
+                for (Map.Entry<ResolvedFeatureId, ResolvedFeature> entry : endedGroup.entrySet()) {
+                    final ResolvedFeature parentFeature = parentGroup.get(entry.getKey());
                     if (parentFeature == null) {
-                        parent.put(entry.getKey(), entry.getValue());
+                        parentGroup.put(entry.getKey(), entry.getValue());
                         if(last == 0) {
                             addToSpecFeatures(entry.getValue());
                         }
@@ -104,7 +102,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         parentFeature.merge(entry.getValue(), true);
                     }
                 }
-                group.clear();
+                endedGroup.clear();
             }
             return list.get(last);
         }
@@ -254,10 +252,6 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     boolean includes(ResolvedFeatureId id) {
         return featuresById.containsKey(id);
-    }
-
-    Set<ResolvedFeatureId> getIncludedIds() {
-        return featuresById.keySet();
     }
 
     private void addToSpecFeatures(final ResolvedFeature feature) {
