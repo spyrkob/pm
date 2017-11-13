@@ -91,14 +91,16 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
             }
             if(spec.xmlSpec.getParamsTotal() == 1) {
                 final Entry<String, String> param = params.entrySet().iterator().next();
-                final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(param.getKey());
-                if(paramSpec == null) {
-                    throw new ProvisioningDescriptionException("Provided parameters " + params.keySet() + " do not match " + spec.id + " parameters " + spec.xmlSpec.getParamNames());
+                if(!spec.xmlSpec.hasParam(param.getKey())) {
+                    throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, param.getKey()));
                 }
                 this.params = Collections.singletonMap(param.getKey(), param.getValue());
             } else {
                 this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
                 for(Map.Entry<String, String> param : params.entrySet()) {
+                    if(!spec.xmlSpec.hasParam(param.getKey())) {
+                        throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, param.getKey()));
+                    }
                     this.params.put(param.getKey(), param.getValue());
                 }
             }
@@ -233,6 +235,9 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
                 }
                 return;
             }
+        }
+        if(!spec.xmlSpec.hasParam(name)) {
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, name));
         }
         params = PmCollections.put(params, name, value);
     }

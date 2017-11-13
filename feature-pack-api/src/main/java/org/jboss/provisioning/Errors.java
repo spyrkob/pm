@@ -258,6 +258,13 @@ public interface Errors {
         return id + " is not found in the scope of " + groupName + " from " + fpGav;
     }
 
+    static String unknownFeatureParameter(ResolvedFeature feature, String paramName) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Unknown parameter '").append(paramName).append("' for ");
+        appendFeature(buf, feature);
+        return buf.toString();
+    }
+
     static void appendConfig(final StringBuilder buf, String model, String name) {
         if (model != null) {
             buf.append(" model ").append(model);
