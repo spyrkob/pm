@@ -25,7 +25,6 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -75,11 +74,11 @@ public class FeatureDependsOnNonExistingPackageTestCase extends PmInstallFeature
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(ProvisioningException e) throws ProvisioningDescriptionException {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Throwable t = e.getCause();
         Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.resolveFeature(new ResolvedSpecId(FP_GAV, "specA")), t.getLocalizedMessage());
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV, new FeatureConfig("specA").setParam("name", "a")), t.getLocalizedMessage());
         t = e.getCause();
         Assert.assertNotNull(t);
         Assert.assertEquals(Errors.packageNotFound(FP_GAV, "specA.pkg"), t.getCause().getLocalizedMessage());

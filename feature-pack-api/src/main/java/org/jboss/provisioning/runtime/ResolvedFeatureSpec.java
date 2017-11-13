@@ -126,7 +126,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         if(refSpec.getParamsMapped() == 0) {
             for(FeatureParameterSpec targetIdParam : targetSpec.xmlSpec.getIdParams()) {
                 if(!xmlSpec.hasParam(targetIdParam.getName())) {
-                    throw new ProvisioningDescriptionException(Errors.nonExistingTargetIdParamInFkDefaultMapping(refSpec.getName(), id, targetIdParam.getName()));
+                    throw new ProvisioningDescriptionException(Errors.nonExistingForeignKeyParam(refSpec.getName(), id, targetIdParam.getName()));
                 }
             }
             return;
@@ -138,11 +138,11 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         for (int i = 0; i < refSpec.getParamsMapped(); ++i) {
             if (!xmlSpec.hasParam(refSpec.getLocalParam(i))) {
-                throw new ProvisioningDescriptionException(Errors.invalidLocalParamInFkMapping(refSpec.getLocalParam(i), refSpec.getName(), id));
+                throw new ProvisioningDescriptionException(Errors.nonExistingForeignKeyParam(refSpec.getName(), id, refSpec.getLocalParam(i)));
             }
             if (!targetSpec.xmlSpec.hasParam(refSpec.getTargetParam(i))) {
                 throw new ProvisioningDescriptionException(
-                        Errors.invalidTargetIdParamInFkMapping(refSpec.getLocalParam(i), refSpec.getName(), id, refSpec.getTargetParam(i), targetSpec.id));
+                        Errors.nonExistingForeignKeyTarget(refSpec.getLocalParam(i), refSpec.getName(), id, refSpec.getTargetParam(i), targetSpec.id));
             }
         }
     }

@@ -83,11 +83,18 @@ public class NonExistingTargetIdParamInReferenceWithIncludeTrueTestCase extends 
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(ProvisioningException e) throws ProvisioningDescriptionException {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-        Assert.assertNotNull(e.getCause());
-        Assert.assertEquals(Errors.nonExistingTargetIdParamInFkDefaultMapping("specA", new ResolvedSpecId(FP_GAV, "specB"), "name"),
-                e.getCause().getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV,
+                new FeatureConfig("specB")
+                            .setParam("id", "b")
+                            .setParam("a", "a")), t.getLocalizedMessage());
+        t = t.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.nonExistingForeignKeyParam("specA", new ResolvedSpecId(FP_GAV, "specB"), "name"),
+                t.getLocalizedMessage());
     }
 
     @Override

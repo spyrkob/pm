@@ -447,11 +447,7 @@ public class ProvisioningRuntimeBuilder {
             pushedConfigs = PmCollections.add(pushedConfigs, fp);
         }
         if(fgSpec.hasPackageDeps()) {
-            try {
-                processPackageDeps(fp, fgSpec);
-            } catch(ProvisioningException e) {
-                throw new ProvisioningDescriptionException(Errors.resolveFeatureGroupConfig(fp.gav, fgSpec.getName()), e);
-            }
+            processPackageDeps(fp, fgSpec);
         }
 
         if (pushedConfigs.isEmpty()) {
@@ -576,15 +572,22 @@ public class ProvisioningRuntimeBuilder {
         if(ciContainer.hasItems()) {
             for(ConfigItem item : ciContainer.getItems()) {
                 final FeaturePackRuntime.Builder itemFp = item.getFpDep() == null ? fp : getFpDependency(fp, item.getFpDep());
-                if(item.isGroup()) {
-                    final FeatureGroupConfig nestedFg = (FeatureGroupConfig) item;
-                    resolvedFeatures |= processFeatureGroupConfig(modelBuilder, itemFp, nestedFg, itemFp.getFeatureGroupSpec(nestedFg.getName()));
-                } else {
-                    final FeatureConfig fc = (FeatureConfig) item;
-                    if (parentFeature != null) {
-                        initForeignKey(parentFeature, fc, itemFp.getFeatureSpec(fc.getSpecId().getName()));
+                try {
+                    if (item.isGroup()) {
+                        final FeatureGroupConfig nestedFg = (FeatureGroupConfig) item;
+                        resolvedFeatures |= processFeatureGroupConfig(modelBuilder, itemFp, nestedFg,
+                                itemFp.getFeatureGroupSpec(nestedFg.getName()));
+                    } else {
+                        final FeatureConfig fc = (FeatureConfig) item;
+                        if (parentFeature != null) {
+                            initForeignKey(parentFeature, fc, itemFp.getFeatureSpec(fc.getSpecId().getName()));
+                        }
+                        resolvedFeatures |= resolveFeature(modelBuilder, itemFp, fc);
                     }
-                    resolvedFeatures |= resolveFeature(modelBuilder, itemFp, fc);
+                } catch (ProvisioningException e) {
+                    throw new ProvisioningException(item.isGroup() ?
+                            Errors.failedToProcess(fp.gav, ((FeatureGroupConfig)item).getName()) : Errors.failedToProcess(fp.gav, (FeatureConfig)item),
+                            e);
                 }
             }
         }
@@ -610,11 +613,7 @@ public class ProvisioningRuntimeBuilder {
         }
 
         if(spec.xmlSpec.hasPackageDeps()) {
-            try {
-                processPackageDeps(fp, spec.xmlSpec);
-            } catch(ProvisioningException e) {
-                throw new ProvisioningDescriptionException(Errors.resolveFeature(spec.id), e);
-            }
+            processPackageDeps(fp, spec.xmlSpec);
         }
 
         final ResolvedFeature myParent = parentFeature;
@@ -713,7 +712,7 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         } catch (ProvisioningException e) {
-            throw new ProvisioningException("Failed to initialize foreign key parameters of " + childFc + " referencing " + parentFc.id, e);
+            throw new ProvisioningException("Failed to initialize foreign key parameters of " + childFc + " to reference " + parentFc.id, e);
         }
     }
 
