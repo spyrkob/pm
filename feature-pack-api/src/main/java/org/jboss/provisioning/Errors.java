@@ -255,7 +255,7 @@ public interface Errors {
     }
 
     static String featureNotInScope(ResolvedFeatureId id, String groupName, ArtifactCoords.Gav fpGav) {
-        return id + " is not found in the scope of " + groupName + " from " + fpGav;
+        return id + " cannot be included into group " + groupName + " from " + fpGav + " as it's not in the scope of the group";
     }
 
     static String unknownFeatureParameter(ResolvedFeature feature, String paramName) {
