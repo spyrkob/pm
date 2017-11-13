@@ -2,7 +2,8 @@
 
 Feature pack may depend on one or more other feature-packs. Feature-pack dependencies are expressed in the feature-pack metadata, i.e. the *feature-pack.xml* file. For example:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <dependencies>
@@ -14,6 +15,7 @@ Feature pack may depend on one or more other feature-packs. Feature-pack depende
         <package name="package2"/>
     </default-packages>
  </feature-pack>
+----
 
 In this case feature-pack *fp1* depends on feature-packs *fp2* and *fp3*. Let's also assume that *fp3* depends on feature-pack *fp4* and *fp2* and *fp4* don’t have any further dependencies. The effective package set of feature-pack *fp1* will consist of:
 

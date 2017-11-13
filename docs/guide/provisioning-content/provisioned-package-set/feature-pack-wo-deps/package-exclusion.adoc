@@ -2,7 +2,8 @@
 
 A package may be explicitly excluded from the feature-pack's effective package set. For example, given the following feature-pack definition:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <default-packages>
@@ -10,6 +11,7 @@ A package may be explicitly excluded from the feature-pack's effective package s
         <package name="p2" />
     </default-packages>
  </feature-pack>
+----
 
 and assuming that
 
@@ -21,12 +23,14 @@ The original effective package set of *fp1* includes *p1*, *p11*, *p2* and *p22*
 
 If a user is interested in a subset of the effective package set, in fact, only in package *p1*, for example, it can be expressed in the provisioning XML configuration file as
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack groupId="org.jboss.group1" artifactId="fp1" version="1.0.0">
     <packages>
         <exclude name="p11"/>
         <exclude name="p2"/>
     </packages>
  </feature-pack>
+----
 
 Packages *p11* and *p2* are explicitly excluded and package *p22* is a non-default package which is not on the dependency tree originating from the packages to be installed, i.e. *p1*.

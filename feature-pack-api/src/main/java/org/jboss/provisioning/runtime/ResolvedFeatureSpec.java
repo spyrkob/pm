@@ -180,7 +180,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
             if(targetIdParams.size() == 1) {
                 final String paramName = targetIdParams.get(0).getName();
-                final String paramValue = feature.getParam(paramName);
+                final String paramValue = feature.getParamOrDefault(paramName);
                 if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
                     assertRefNotNillable(feature, refSpec);
                     return null;
@@ -189,7 +189,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             }
             final Map<String, String> params = new HashMap<>(targetIdParams.size());
             for(FeatureParameterSpec targetIdParam : targetIdParams) {
-                final String paramValue = feature.getParam(targetIdParam.getName());
+                final String paramValue = feature.getParamOrDefault(targetIdParam.getName());
                 if(paramValue == null) {
                     assertRefNotNillable(feature, refSpec);
                     return null;
@@ -204,7 +204,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             return new ResolvedFeatureId(targetSpec.id, params);
         }
         if(refSpec.getParamsMapped() == 1) {
-            final String paramValue = feature.getParam(refSpec.getLocalParam(0));
+            final String paramValue = feature.getParamOrDefault(refSpec.getLocalParam(0));
             if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
                 assertRefNotNillable(feature, refSpec);
                 return null;
@@ -213,7 +213,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         Map<String, String> params = new HashMap<>(refSpec.getParamsMapped());
         for(int i = 0; i < refSpec.getParamsMapped(); ++i) {
-            final String paramValue = feature.getParam(refSpec.getLocalParam(i));
+            final String paramValue = feature.getParamOrDefault(refSpec.getLocalParam(i));
             if(paramValue == null) {
                 assertRefNotNillable(feature, refSpec);
                 return null;

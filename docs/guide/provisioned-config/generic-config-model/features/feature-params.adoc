@@ -7,7 +7,8 @@ Feature parameters are described in feature specs. A parameter is identified by 
 * optional boolean *nillable* - indicating whether the parameter allows null as the value in the resolved config (if not present, the default is assumed to be *false*);
 * optional string *default* - indicates which value should be used for the parameter, if the parameter was not explicitly initialized in the configuration (if not present, the default is assumed to be *null*).
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="feature1">
    <params>
      <param name="a" feature-id="true"/>
@@ -16,6 +17,7 @@ Feature parameters are described in feature specs. A parameter is identified by 
      <param name="d"/>
    </params>
  </feature-spec>
+----
 
 In this spec
 

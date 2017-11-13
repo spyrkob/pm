@@ -4,7 +4,8 @@ By default, the effective package set of a dependency is inherited by the featur
 
 Optional boolean attribute *inherit* on the *packages* element controls whether the inheritance is enabled or disabled. In case the attribute is not explicitly specified, its value assumed to be true. Here is an example of a dependency with the inheritance disabled:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <dependencies>
@@ -22,6 +23,7 @@ Optional boolean attribute *inherit* on the *packages* element controls whether 
         <package name="p2"/>
     </default-packages>
  </feature-pack>
+----
 
 Now the original effective package set of *fp1* becomes:
 

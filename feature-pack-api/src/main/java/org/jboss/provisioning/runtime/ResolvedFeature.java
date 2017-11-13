@@ -98,26 +98,30 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
                 this.params = Collections.singletonMap(param.getKey(), param.getValue());
             } else {
                 this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
-                if(params.size() != spec.xmlSpec.getParamsTotal()) {
-                    for(FeatureParameterSpec pSpec : spec.xmlSpec.getParams()) {
-                        if(pSpec.hasDefaultValue()) {
-                            this.params.put(pSpec.getName(), pSpec.getDefaultValue());
-                        }
-                    }
-                }
                 for(Map.Entry<String, String> param : params.entrySet()) {
                     this.params.put(param.getKey(), param.getValue());
                 }
             }
-        } else if(spec.xmlSpec.hasParams()) {
-            this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
-            for(FeatureParameterSpec pSpec : spec.xmlSpec.getParams()) {
-                if(pSpec.hasDefaultValue()) {
-                    this.params.put(pSpec.getName(), pSpec.getDefaultValue());
-                }
-            }
         } else {
             this.params = Collections.emptyMap();
+        }
+    }
+
+    void validate() throws ProvisioningDescriptionException {
+        for(FeatureParameterSpec param : spec.xmlSpec.getParams()) {
+            if(!param.isNillable()) {
+                if(!params.containsKey(param.getName())) {
+                    if(param.hasDefaultValue()) {
+                        params = PmCollections.put(params, param.getName(), param.getDefaultValue());
+                    } else if(id == null) {
+                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(spec.id, param.getName()));
+                    } else {
+                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
+                    }
+                }
+            } else if(param.hasDefaultValue() && !params.containsKey(param.getName())) {
+                params = PmCollections.put(params, param.getName(), param.getDefaultValue());
+            }
         }
     }
 
@@ -136,7 +140,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         orderingState = SCHEDULED;
     }
 
-    void ordered() {
+    void ordered() throws ProvisioningDescriptionException {
+        validate(); // may not be the best place for this
         if(orderingState != SCHEDULED) {
             throw new IllegalStateException();
         }
@@ -208,7 +213,18 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return params.get(name);
     }
 
-    public void setParam(String name, String value) throws ProvisioningDescriptionException {
+    String getParamOrDefault(String name) throws ProvisioningDescriptionException {
+        String value = params.get(name);
+        if(value == null) {
+            final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(name);
+            if(paramSpec.hasDefaultValue()) {
+                return paramSpec.getDefaultValue();
+            }
+        }
+        return value;
+    }
+
+    void setParam(String name, String value) throws ProvisioningDescriptionException {
         if(id != null) {
             final String idValue = id.params.get(name);
             if(idValue != null) {
@@ -221,7 +237,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         params = PmCollections.put(params, name, value);
     }
 
-    void mergeParams(FeatureConfig config) throws ProvisioningDescriptionException {
+    void setParams(FeatureConfig config) throws ProvisioningDescriptionException {
         if(config.hasParams()) {
             for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
                 setParam(entry.getKey(), entry.getValue());
@@ -229,10 +245,12 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    void merge(ResolvedFeature other) throws ProvisioningDescriptionException {
+    void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningDescriptionException {
         if(other.hasParams()) {
             for(Map.Entry<String, String> entry : other.getParams().entrySet()) {
-                if(!params.containsKey(entry.getKey())) {
+                if(overwriteParams) {
+                    setParam(entry.getKey(), entry.getValue());
+                } else if(!params.containsKey(entry.getKey())) {
                     setParam(entry.getKey(), entry.getValue());
                 }
             }

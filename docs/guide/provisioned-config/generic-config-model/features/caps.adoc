@@ -7,7 +7,8 @@
 . to order the features in the configuration model for processing by the provisioning plugins based on their dependencies and runtime requirements.
 
 Capabilities are represented as strings with a dot serving as a word separator. Here is an example of a feature providing a capability:
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0">
    <provides>
      <capability name="org.wildfly.network.interface"/>
@@ -17,9 +18,11 @@ Capabilities are represented as strings with a dot serving as a word separator. 
      <param name="inet-address"/>
    </params>
  </feature-spec>
+----
 
 And here is a feature that expresses a requirement on the capability provided above
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0">
    <requires>
      <capability name="org.wildfly.network.interface"/>
@@ -29,6 +32,7 @@ And here is a feature that expresses a requirement on the capability provided ab
      <param name="port"/>
    </params>
  </feature-spec>
+----
 
 NOTE: In the examples above the capabilities were configured using constants. This type of a capability is called a *static capability*. As a consequence, all the features of the *interface* spec will provide the same capability `org.wildfly.network.interface`. And all the features of the *socket-binding* spec will require the same capabality `org.wildfly.network.interface`.
 
@@ -37,7 +41,8 @@ NOTE: In the examples above the capabilities were configured using constants. Th
 
 It is also possible, however, to provide or require a capability that depends on the parameters of a specific feature. Dynamic capabilities are following the same dot-separated string format but include feature parameters names prefixed with the `$` character. The examples above could be enhanced with dynamic capabilities as
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec name="interface" xmlns="urn:wildfly:pm-feature-spec:1.0">
    <provides>
      <capability name="org.wildfly.network.interface.$name"/>
@@ -47,8 +52,10 @@ It is also possible, however, to provide or require a capability that depends on
      <param name="inet-address" nillable="true"/>
    </params>
  </feature-spec>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec name="socket-binding" xmlns="urn:wildfly:pm-feature-spec:1.0">
    <requires>
      <capability name="org.wildfly.network.interface.$interface"/>
@@ -59,10 +66,12 @@ It is also possible, however, to provide or require a capability that depends on
      <param name="port" nillable="true"/>
    </params>
  </feature-spec>
+----
 
 Let's see how it will look like in an actual configuration
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
    <config>
@@ -82,5 +91,8 @@ Let's see how it will look like in an actual configuration
      </feature>
    </config>
  </feature-pack>
+----
 
 In the example above feature _interface:name=public_ provides capability _org.wildfly.network.interface.public_ which is required by feature _socket-binding:name=http_. And feature _interface:name=secure_ provides capability _org.wildfly.network.interface.secure_ which is required by feature _socket-binding:name=https_.
+
+NOTE: More than one parameter could be used in a capability name. The parameters may appear in any part of the name, not necessarily at the end as in the example. The only rule is to use the dot as a separator for the parameters and the static parts of the name.

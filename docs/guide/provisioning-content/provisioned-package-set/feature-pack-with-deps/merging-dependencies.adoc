@@ -4,7 +4,8 @@ Suppose feature-pack *fp1* depends on feature-packs *fp2* and *fp3*. Both *fp2* 
 
 For example:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <dependencies>
@@ -15,8 +16,10 @@ For example:
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" >
     <dependencies>
@@ -31,8 +34,10 @@ For example:
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" >
     <dependencies>
@@ -47,8 +52,10 @@ For example:
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp4" version="1.0.0" >
     <default-packages>
@@ -57,6 +64,7 @@ For example:
         <package name="p3"/>
     </default-packages>
  </feature-pack>
+----
 
 If a user installs *fp1* without further customizations, the following packages will be installed:
 

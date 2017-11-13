@@ -4,7 +4,8 @@
 
 In a feature spec a simple feature reference would look like
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref feature="featureP"/>
@@ -14,6 +15,7 @@ In a feature spec a simple feature reference would look like
      <param name="p"/>
    </params>
  </feature-spec>
+----
 
 Attribute *feature* in the *ref* element contains a name of the referenced feature-spec. Note that we have not provided which parameter of *featureC* references the ID parameter of *featureP*. This example also demonstrates the *implicit reference parameter mapping*.
 
@@ -49,7 +51,8 @@ So the example above will work if one of the following statements is true:
 
 Suppose we want to explicitly map parameters in the reference declaration. The example below will correspond to the statement 1. from the example above.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref feature="featureP">
@@ -61,10 +64,12 @@ Suppose we want to explicitly map parameters in the reference declaration. The e
      <param name="p"/>
    </params>
  </feature-spec>
+----
 
 Now let's suppose that *featureP*'s ID parameter is in fact *name* but we still want to use parameter *p* as the reference to *featureP*.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref feature="featureP">
@@ -76,20 +81,24 @@ Now let's suppose that *featureP*'s ID parameter is in fact *name* but we still 
      <param name="p"/>
    </params>
  </feature-spec>
+----
 
 If *featureP* had more than one ID parameter, e.g.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP">
    <params>
      <param name="id1" feature-id="true"/>
      <param name="id2" feature-id="true"/>
    </params>
  </feature-spec>
+----
 
 Then the reference parameter mapping in *featureC* could look like:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref feature="featureP">
@@ -103,13 +112,15 @@ Then the reference parameter mapping in *featureC* could look like:
      <param name="p2"/>
    </params>
  </feature-spec>
+----
 
 
 ###### Nillable feature references
 
 Feature reference resolves to null if one of the feature reference parameters is null. If a reference resolves to null and its not marked as nillable in the feature spec, the provisioning will fail with an error. Here is an example of a nillable reference declaration:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref feature="featureP" nillable="true">
@@ -123,6 +134,7 @@ Feature reference resolves to null if one of the feature reference parameters is
      <param name="p2"/>
    </params>
  </feature-spec>
+----
 
 
 ###### External feature references
@@ -131,7 +143,8 @@ A feature may reference a feature from another feature-pack. The origin of the e
 
 For example, suppose, feature-pack *fp1* depends on feature-pack *fp2*.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0">
     <dependencies>
@@ -140,19 +153,23 @@ For example, suppose, feature-pack *fp1* depends on feature-pack *fp2*.
         </dependency>
     </dependencies>
  </feature-pack>
+----
 
 *fp2* includes a feature spec *featureP*
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP">
    <params>
      <param name="p" feature-id="true"/>
    </params>
  </feature-spec>
+----
 
 And *fp1* includes a feature spec *featureC* which declares a reference to *featureP*
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref dependency="fp2-dep" feature="featureP"/>
@@ -162,13 +179,102 @@ And *fp1* includes a feature spec *featureC* which declares a reference to *feat
      <param name="p"/>
    </params>
  </feature-spec>
+----
+
+
+###### Implicit feature reference parameter initialization
+
+Let's suppose we have parent-child relationship between two feature specs, e.g.
+
+[source,xml]
+----
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP">
+   <params>
+     <param name="parentId" feature-id="true"/>
+   </params>
+ </feature-spec>
+----
+
+[source,xml]
+----
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
+   <refs>
+     <ref feature="featureP"/>
+   </refs>
+   <params>
+     <param name="childId" feature-id="true"/>
+     <param name="parentId"/>
+   </params>
+ </feature-spec>
+----
+
+If we were to add features of these specs to a config, it could look like this
+
+[source,xml]
+----
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+   </feature>
+   <feature spec="featureC">
+     <param name="childId" value="child1"/>
+     <param name="parentId" value="parent1"/>
+   </feature>
+ </config>
+----
+
+This approach is very verbose, the value for the *parentId* parameter is set on every feature. There is a more compact way of expressing the same configuration using nesting, e.g.
+
+[source,xml]
+----
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+     <feature spec="featureC">
+       <param name="childId" value="child1"/>
+     </feature>
+   </feature>
+ </config>
+----
+
+As can be seen, the *parentId* parameter is initialized only once on the parent feature. The *parentId* of the child feature will be implicitly initialized to the value of the *parentId* of the parent.
+
+IMPORTANT: When a feature is nested, the tool will look in the feature spec of the nested feature for a reference declaration with the name matching the outer feature spec and, if it is found, the tool will resolve the reference parameter mappings and will initialize the parameters of the child feature referencing the parent.
+
+In case the reference name is different from the referenced feature spec name, i.e. it was explicitly set in the reference spec, e.g.
+[source,xml]
+----
+ <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
+   <refs>
+     <ref feature="featureP" name="parent"/>
+   </refs>
+   <params>
+     <param name="childId" feature-id="true"/>
+     <param name="parentId"/>
+   </params>
+ </feature-spec>
+----
+
+Then the name of the reference has to be explicitly specified when the child feature is nested using the *parent-ref* attribute, e.g.
+[source,xml]
+----
+ <config>
+   <feature spec="featureP">
+     <param name="parentId" value="parent1"/>
+     <feature spec="featureC" parent-ref="parent">
+       <param name="childId" value="child1"/>
+     </feature>
+   </feature>
+ </config>
+----
 
 
 ###### Implicit inclusion of referenced features into the configuration
 
 It is possible to configure feature references so that when the resolved referenced feature ID is not found in the configuration model, instead of failing with the referential integrity constraint error, implicitly include the referenced feature into the configuration model initializing it its configured default values. This is done by simply setting the *include* attribute of the feature reference declaration to *true*.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureC">
    <refs>
      <ref dependency="fp2-dep" feature="featureP" include="true"/>
@@ -178,13 +284,15 @@ It is possible to configure feature references so that when the resolved referen
      <param name="p"/>
    </params>
  </feature-spec>
+----
 
 
 ###### Multiple references to the same feature spec
 
 Suppose a feature needs to declare more than one reference to the same feature spec. For example let's model a chain having a feature spec called *link*. The *link* must have an ID parameter, let it be called *id*. Then it has to include a parameter to reference to the previous link and another parameter to reference the next link in the chain. The following, although looking right from the parameter mapping perspective, will clearly won't work
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link">
    <refs>
      <ref feature="link">
@@ -200,10 +308,12 @@ Suppose a feature needs to declare more than one reference to the same feature s
      <param name="next-id" nillable="true"/>
    </params>
  </feature-spec>
+----
 
 Feature references must have a unique name. In this case, both reference names are set to *link* and the provisioning tool will fail to process this spec. To workaround the error explicit names have to be assigned to the reference declarations, e.g.
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="link">
    <refs>
      <ref name="prev" feature="link">
@@ -219,6 +329,7 @@ Feature references must have a unique name. In this case, both reference names a
      <param name="next-id" nillable="true"/>
    </params>
  </feature-spec>
+----
 
 
 ###### Processing of features with references

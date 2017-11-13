@@ -3,7 +3,8 @@
 [[feature-package-deps]]Feature specs representing configurable components of the installation may include dependencies on the feature-pack packages that contain the binaries of those installation components. So that, when a feature is included into a configuration, the packages it declared dependencies on will implicitly be added to the list of the installed packages.
 
 Package dependencies are configured under the *packages* element of the feature spec which is equivalent to the <<package-deps,*dependencies* element of the package spec metadata>>. Here is an example
-[options="nowrap"]
+[source,xml]
+----
  <feature-spec name="feature1" xmlns="urn:wildfly:pm-feature-spec:1.0">
    <params>
      <param name="id" feature-id="true"/>
@@ -17,6 +18,7 @@ Package dependencies are configured under the *packages* element of the feature 
      </feature-pack>
    </packages>
  </feature-spec>
+----
 
 In this case, a feature of the *feature1* spec will have:
 

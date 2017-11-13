@@ -6,7 +6,8 @@ The rule is that the package set of an explicit dependency overrides the package
 
 For example:
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp1" version="1.0.0" >
     <dependencies>
@@ -17,8 +18,10 @@ For example:
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp2" version="1.0.0" >
     <dependencies>
@@ -33,8 +36,10 @@ For example:
         <package name="p1"/>
     </default-packages>
  </feature-pack>
+----
 
-[options="nowrap"]
+[source,xml]
+----
  <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
                 groupId="org.jboss.fp.group1" artifactId="fp3" version="1.0.0" >
     <default-packages>
@@ -43,6 +48,7 @@ For example:
         <package name="p3"/>
     </default-packages>
  </feature-pack>
+----
 
 Installing *fp1* without further customizations the following packages will be installed:
 
