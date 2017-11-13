@@ -433,7 +433,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-11-10</span>
+<span id="revdate">2017-11-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -1862,7 +1862,7 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="sect5">
 <h6 id="_implicit_feature_reference_parameter_initialization">Implicit feature reference parameter initialization</h6>
 <div class="paragraph">
-<p>Let&#8217;s suppose we have parent-child relationship between two feature specs, e.g.</p>
+<p><a id="feature-fk-init"></a>Let&#8217;s suppose we have parent-child relationship between two feature specs, e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1962,6 +1962,18 @@ When a feature is nested, the tool will look in the feature spec of the nested f
    &lt;/feature&gt;
  &lt;/config&gt;</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+it is also possible to <a href="#fg-in-features">include a feature-group as child of the feature</a>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect5">
@@ -2432,16 +2444,16 @@ Feature groups allow to group a set of features that represent a certain part of
 <div class="ulist">
 <ul>
 <li>
-<p>specifying feature IDs;</p>
+<p><a href="#fg-exclude-features-by-ids">specifying the feature IDs</a>;</p>
 </li>
 <li>
-<p>specifying feature specs features of which have to be excluded;</p>
+<p><a href="#fg-exclude-features-by-specs">specifying the specs features of which have to be excluded</a>;</p>
 </li>
 <li>
-<p>explicitly choosing which features should be included by specifying their feature IDs;</p>
+<p><a href="#fg-include-features-by-ids">explicitly choosing which features should be included by specifying their feature IDs</a>;</p>
 </li>
 <li>
-<p>explicitly choosing features of which feature specs should be included.</p>
+<p><a href="#fg-include-features-by-specs">explicitly choosing features of which feature specs should be included</a>.</p>
 </li>
 </ul>
 </div>
@@ -2455,7 +2467,7 @@ Feature groups allow to group a set of features that represent a certain part of
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-When a feature group is included into another feature group or a <strong>config</strong>, the list of its direct entries (features and feature groups) defined by the feature group spec cannot be extended by applying customizations. <a href="#There is a way though to extend the feature set of the included feature group indirectly">[There is a way though to extend the feature set of the included feature group indirectly]</a>.
+When a feature group is included into another feature group or a <strong>config</strong>, the list of its direct entries (features and feature groups) defined by the feature group spec cannot be extended by applying customizations. <a href="#fg-indirect-ext">There is a way though to extend the feature set of the included feature group indirectly</a>.
 </td>
 </tr>
 </table>
@@ -2643,9 +2655,248 @@ When a feature group is included into another feature group or a <strong>config<
 </table>
 </div>
 <div class="sect5">
+<h6 id="_excluding_features_from_a_group_by_ids">Excluding features from a group by IDs</h6>
+<div class="paragraph">
+<p><a id="fg-exclude-features-by-ids"></a>When a feature group is included into another group or a config, certain features can be excluded from the included feature set by simply specifying their IDs.</p>
+</div>
+<div class="paragraph">
+<p>Suppose, we have the following group spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a2"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b2"/&gt;
+  &lt;/feature&gt;
+
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here is how <strong>feature1:id=a1</strong> and <strong>feature2:id=b1</strong> can be excluded:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1"&gt;
+    &lt;exclude feature-id="feature1:id=a1"/&gt;
+    &lt;exclude feature-id="feature2:id=b1"/&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The config will include <strong>feature1:id=a2</strong> and <strong>feature2:id=b2</strong>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_excluding_features_from_a_group_by_specs">Excluding features from a group by specs</h6>
+<div class="paragraph">
+<p><a id="fg-exclude-features-by-specs"></a>When a feature group is included into another group or a config, all the features of a specific feature spec can be excluded from the included feature set by simply specifying the feature spec.</p>
+</div>
+<div class="paragraph">
+<p>Suppose, we have the following group spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a2"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b2"/&gt;
+  &lt;/feature&gt;
+
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here is how all the feature of the <strong>feature1</strong> spec can be excluded:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1"&gt;
+    &lt;exclude spec="feature1"/&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The config will include <strong>feature2:id=b1</strong> and <strong>feature2:id=b2</strong>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_picking_features_from_a_group_by_ids">Picking features from a group by IDs</h6>
+<div class="paragraph">
+<p><a id="fg-include-features-by-ids"></a>When a feature group is included into another group or a config, by default all the features it contains are included but it is also possible to pick which ones exactly should be included.</p>
+</div>
+<div class="paragraph">
+<p>Suppose, we have the following group spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a2"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b2"/&gt;
+  &lt;/feature&gt;
+
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here is how <strong>feature1:id=a1</strong> and <strong>feature2:id=b1</strong> can be picked into the config:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1" inherit-features="false"&gt;
+    &lt;include feature-id="feature1:id=a1"/&gt;
+    &lt;include feature-id="feature2:id=b1"/&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>inherit-features</code> attribute indicates whether the whole feature set of the group should be included into the config or not. If this attribute is not specified, its value is assumed to be true.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Then the <code>include</code> elements are picking the features that need to be included by their IDs.</p>
+</div>
+<div class="paragraph">
+<p>The config will include <strong>feature1:id=a1</strong> and <strong>feature2:id=b1</strong>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>include</code> elements can also be used to pick features from the excluded feature specs. The config below is equivalent to the config above.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1" inherit-features="true"&gt;
+    &lt;exclude spec="feature1"/&gt;
+    &lt;exclude spec="feature2"/&gt;
+    &lt;include feature-id="feature1:id=a1"/&gt;
+    &lt;include feature-id="feature2:id=b1"/&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_including_features_of_specific_feature_specs_from_a_group">Including features of specific feature specs from a group</h6>
+<div class="paragraph">
+<p><a id="fg-include-features-by-specs"></a>When a feature group is included into another group or a config, by default all the features it contains are included but it is also possible to pick features of which feature specs should be included.</p>
+</div>
+<div class="paragraph">
+<p>Suppose, we have the following group spec:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature1"&gt;
+    &lt;param name="id" value="a2"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="feature2"&gt;
+    &lt;param name="id" value="b2"/&gt;
+  &lt;/feature&gt;
+
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here is how all the features of <strong>feature1</strong> can be included into the config:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group1" inherit-features="false"&gt;
+    &lt;include spec="feature1"/&gt;
+  &lt;/feature-group&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>inherit-features</code> attribute indicates whether the whole feature set of the group should be included into the config or not. If this attribute is not specified, its value is assumed to be true.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Then the <code>include</code> element is specifying the feature spec features of which should be included into the config.</p>
+</div>
+<div class="paragraph">
+<p>The config will include <strong>feature1:id=a1</strong> and <strong>feature1:id=a2</strong>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>&lt;exclude feature-id="xxx"/&gt;</code> elements can be used to exclude certain features from the feature set of the included feature spec.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect5">
 <h6 id="_extending_feature_groups_by_including_features_indirectly">Extending feature groups by including features indirectly</h6>
 <div class="paragraph">
-<p>While the list of the feature group spec enrties (features and feature groups) is fixed and cannot be extended, new features and feature groups can be added as children of the features that have already been included into the feature group.
+<p><a id="fg-indirect-ext"></a>While the list of the feature group spec enrties (features and feature groups) is fixed and cannot be extended, new features and feature groups can be added as children of the features that have already been included into the feature group.
 Let&#8217;s edit the example from the previous paragraph to demonstrate that. The feature specs will remain the same.</p>
 </div>
 <div class="listingblock">
@@ -2800,6 +3051,109 @@ Let&#8217;s edit the example from the previous paragraph to demonstrate that. Th
 </li>
 <li>
 <p>features from <em>group3</em> from <strong>another-feature-pack</strong>.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_nesting_feature_groups_under_features">Nesting feature groups under features</h5>
+<div class="paragraph">
+<p>It was mentioned in an earlier chapter that a <a href="#feature-fk-init">feature may nest other features that reference it</a>. <a id="fg-in-features"></a>It is also possible to nest a feature group under a feature with the condition that all the features included directly into the spec of the feature group reference the same parent feature.</p>
+</div>
+<div class="paragraph">
+<p>For example, suppose we have a parent spec <strong>featureP</strong> and child spec <strong>featureA</strong> and <strong>featureB</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureP"&gt;
+   &lt;params&gt;
+     &lt;param name="parent" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureA"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="parent" feature-id="true"/&gt;
+     &lt;param name="a" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureB"&gt;
+   &lt;refs&gt;
+     &lt;ref feature="featureP"/&gt;
+   &lt;/refs&gt;
+   &lt;params&gt;
+     &lt;param name="parent" feature-id="true"/&gt;
+     &lt;param name="b" feature-id="true"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now let&#8217;s suppose that there is a group which consists of features of <strong>featureA</strong> and <strong>featureB</strong> specs.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="featureA"&gt;
+    &lt;param name="a" value="a1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureB"&gt;
+    &lt;param name="id" value="b1"/&gt;
+  &lt;/feature&gt;
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This group can be nested under any instance of <strong>featureP</strong> and the <strong>parent</strong> parameters of the features in the group will implicitly be initialized to the value of the <strong>parent</strong> parameter of the outer <strong>featureP</strong> instance.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature spec="featureP"&gt;
+    &lt;param name="parent" value="p1"/&gt;
+    &lt;feature-group name="group1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureP"&gt;
+    &lt;param name="parent" value="p2"/&gt;
+    &lt;feature-group name="group1"/&gt;
+  &lt;/feature&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resulting config will include:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><em>featureP:parent=p1</em>;</p>
+</li>
+<li>
+<p><em>featureP:parent=p2</em>;</p>
+</li>
+<li>
+<p><em>featureA:parent=p1,a=a1</em>;</p>
+</li>
+<li>
+<p><em>featureA:parent=p2,a=a1</em>;</p>
+</li>
+<li>
+<p><em>featureB:parent=p1,b=b1</em>;</p>
+</li>
+<li>
+<p><em>featureB:parent=p2,b=b1</em>.</p>
 </li>
 </ol>
 </div>
