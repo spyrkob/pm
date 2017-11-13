@@ -215,7 +215,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return params.get(name);
     }
 
-    String getParamOrDefault(String name) throws ProvisioningDescriptionException {
+    public String getParamOrDefault(String name) throws ProvisioningDescriptionException {
         String value = params.get(name);
         if(value == null) {
             final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(name);
@@ -271,7 +271,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
 
     String resolveCapability(CapabilitySpec cap) throws ProvisioningException {
         try {
-            return cap.resolve(params);
+            return cap.resolve(this);
         } catch (ProvisioningException e) {
             throw new ProvisioningException(Errors.failedToResolveCapability(this, cap), e);
         }

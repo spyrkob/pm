@@ -20,11 +20,10 @@ package org.jboss.provisioning.spec;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ResolvedFeature;
 import org.jboss.provisioning.util.PmCollections;
 
 /**
@@ -119,7 +118,7 @@ public class CapabilitySpec {
         return parts.length == 1 && partTypes[0];
     }
 
-    public String resolve(Map<String, String> params) throws ProvisioningException {
+    public String resolve(ResolvedFeature feature) throws ProvisioningException {
         if(isStatic()) {
             return toString();
         }
@@ -127,7 +126,7 @@ public class CapabilitySpec {
         if(partTypes[0]) {
             buf.append(parts[0]);
         } else {
-            final String value = params.get(parts[0]);
+            final String value = feature.getParamOrDefault(parts[0]);
             if (value == null) {
                 if (optional) {
                     return null;
@@ -144,7 +143,7 @@ public class CapabilitySpec {
             if(partTypes[i]) {
                 buf.append(parts[i]);
             } else {
-                final String value = params.get(parts[i]);
+                final String value = feature.getParamOrDefault(parts[i]);
                 if (value == null) {
                     if (optional) {
                         return null;

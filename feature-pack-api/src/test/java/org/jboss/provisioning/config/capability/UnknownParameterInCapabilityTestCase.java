@@ -38,7 +38,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeaturePackTestBase {
+public class UnknownParameterInCapabilityTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -84,7 +84,7 @@ public class InvalidDynamicCapabilityParameterTestCase extends PmInstallFeatureP
         Assert.assertEquals("Failed to satisfy capability requirement cap.$a for org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
-        Assert.assertEquals("Parameter a is missing value to resolve capability cap.$a", e.getMessage());
+        Assert.assertEquals("Feature spec specB does not contain parameter a", e.getMessage());
     }
 
     @Override
