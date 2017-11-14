@@ -5,3 +5,5 @@ include::customized-feature-groups.adoc[]
 include::external-groups.adoc[]
 
 include::groups-in-features.adoc[]
+
+include::feature-group-merge.adoc[]
