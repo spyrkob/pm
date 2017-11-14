@@ -52,7 +52,7 @@ public class PackageXmlParserTestCase {
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
         validator.validateAndParse("xml/package/package-1.0.1.xml",
-                "cvc-elt.1: Cannot find the declaration of element 'package-spec'.",
+                "Cannot find the declaration of element 'package-spec'.",
                 "Message: Unexpected element '{urn:wildfly:pm-package:1.0.1}package-spec'");
     }
 

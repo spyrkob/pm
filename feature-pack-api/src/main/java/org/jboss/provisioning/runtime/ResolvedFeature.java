@@ -337,4 +337,9 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     List<ResolvedFeatureId> resolveRefs() throws ProvisioningException {
         return spec.resolveRefs(this);
     }
+
+    @Override
+    public String toString() {
+        return "ResolvedFeature{" + "includeNo=" + includeNo + ", id=" + id + ", spec=" + spec + ", params=" + params + ", deps=" + deps + ", orderingState=" + orderingState + ", batchControl=" + batchControl + '}';
+    }
 }

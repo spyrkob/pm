@@ -86,7 +86,7 @@ public class XmlParserValidator<T> {
             if (xsdValidationExceptionMessage == null) {
                 throw e;
             }
-            Assert.assertEquals(xsdValidationExceptionMessage, e.getMessage());
+            Assert.assertTrue(e.getMessage().contains(xsdValidationExceptionMessage));
         }
 
         return parse(p, parseExceptionMessage);
