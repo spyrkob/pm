@@ -409,6 +409,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                 } else {
                     IoUtils.copy(jarSrc, jarTarget);
                 }
+                runtime.getMessageWriter().verbose("    Copying artifact " + jarSrc + " to " + jarTarget);
                 if(schemaGroups.contains(coords.getGroupId())) {
                     extractSchemas(jarSrc);
                 }
@@ -498,9 +499,12 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                             @Override
                             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                                 throws IOException {
-                                final String entry = dir.toString().substring(1);
+                                String entry = dir.toString().substring(1);
                                 if(entry.isEmpty()) {
                                     return FileVisitResult.CONTINUE;
+                                }
+                                if(!entry.endsWith("/")) {
+                                    entry += '/';
                                 }
                                 if(!copy.includeFile(entry)) {
                                     return FileVisitResult.SKIP_SUBTREE;

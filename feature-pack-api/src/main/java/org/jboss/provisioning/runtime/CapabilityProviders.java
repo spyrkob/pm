@@ -53,4 +53,13 @@ class CapabilityProviders {
     boolean isProvided() {
         return provided;
     }
+
+    void add(CapabilityProviders providers) {
+        for(ResolvedFeature feature : providers.features) {
+            add(feature);
+        }
+        for(SpecFeatures spec : providers.specs) {
+            add(spec);
+        }
+    }
 }

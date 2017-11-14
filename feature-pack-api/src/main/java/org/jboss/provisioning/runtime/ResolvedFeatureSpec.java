@@ -629,4 +629,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "ResolvedFeatureSpec{" + "id=" + id + ", xmlSpec=" + xmlSpec + ", resolvedRefTargets=" + resolvedRefTargets + ", resolvedDeps=" + resolvedDeps + '}';
+    }
+
 }
