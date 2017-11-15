@@ -678,6 +678,9 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private static void initForeignKey(ResolvedFeature parentFc, FeatureConfig childFc, final ResolvedFeatureSpec childSpec) throws ProvisioningException {
+        if(!parentFc.hasId()) {
+            throw new ProvisioningException("Failed to initialize foreign key parameters of " + childFc + ": the referenced feature has not ID ");
+        }
         final String parentRef = childFc.getParentRef() == null ? parentFc.getSpecId().getName() : childFc.getParentRef();
         try {
             final FeatureReferenceSpec refSpec = childSpec.xmlSpec.getFeatureRef(parentRef);

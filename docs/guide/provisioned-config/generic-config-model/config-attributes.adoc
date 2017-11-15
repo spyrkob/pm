@@ -1,4 +1,4 @@
-###Configuration model attributes
+### Configuration model attributes
 
 Configuration models are described in the `feature-pack.xml` file under the `config` elements. A `feature-pack.xml` file may contain zero, one or more `config` elements. Each configuration may include the following *optional* attributes:
 
@@ -6,7 +6,7 @@ Configuration models are described in the `feature-pack.xml` file under the `con
 
 * `model` - the model name of the configuration.
 
-In the XML it could look like this:
+In the XML it could look like this (the content of the `config` elements has been left out as not important in this example):
 [source,xml]
 ----
 <feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
@@ -30,3 +30,4 @@ In the XML it could look like this:
 </feature-pack>
 ----
 
+The `name` and `model` attributes are optional, which means it is well possible to define a configuration w/o those attributes. The `name` and the `model` attributes are useful when customizing and merging configuration models.
