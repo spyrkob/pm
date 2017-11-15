@@ -47,12 +47,15 @@ import org.jboss.provisioning.util.IoUtils;
  */
 class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
+    private static final String CONFIG_NAME = "config-name";
+    private static final String DOMAIN_CONFIG_NAME = "domain-config-name";
+    private static final String HOST_CONFIG_NAME = "host-config-name";
+    private static final String TMP_DOMAIN_XML = "pm-tmp-domain.xml";
+    private static final String TMP_HOST_XML = "pm-tmp-host.xml";
+
     private static final int OP = 0;
     private static final int WRITE_ATTR = 1;
     private static final int LIST_ADD = 2;
-
-    private static final String TMP_DOMAIN_XML = "pm-tmp-domain.xml";
-    private static final String TMP_HOST_XML = "pm-tmp-host.xml";
 
     private static final ArtifactCoords.Ga WF_CORE_GA = ArtifactCoords.newGa("org.wildfly.core", "wildfly-core-feature-pack-new");
     private static final byte LOOK_FOR_HOST = 1;
@@ -189,7 +192,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         reset();
         final String logFile;
         if("standalone".equals(config.getModel())) {
-            logFile = config.getProperties().get("config-name");
+            logFile = config.getProperties().get(CONFIG_NAME);
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
             }
@@ -203,54 +206,84 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     return !("profile".equals(name) || "host".equals(name));
                 }
             };
-        } else {
-            if("domain".equals(config.getModel())) {
-                logFile = config.getProperties().get("domain-config-name");
-                if (logFile == null) {
-                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
-                            + " is missing property domain-config-name");
-                }
-
-                tmpConfig = TMP_HOST_XML;
-                embedBuf.append("embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
-                .append(TMP_HOST_XML)
-                .append(" --domain-config=").append(logFile)
-                .append(" --jboss-home=").append(runtime.getStagedDir());
-
-                paramFilter = new NameFilter() {
-                    @Override
-                    public boolean accepts(String name) {
-                        return !"host".equals(name);
-                    }
-                };
-            } else if ("host".equals(config.getModel())) {
-                logFile = config.getProperties().get("host-config-name");
-                if (logFile == null) {
-                    throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
-                            + " is missing property host-config-name");
-                }
-                lookForHost = LOOK_FOR_HOST;
-
-                embedBuf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
-                        .append(logFile);
-                final String domainConfig = config.getProperties().get("domain-config-name");
-                if (domainConfig == null) {
-                    tmpConfig = TMP_DOMAIN_XML;
-                    embedBuf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=").append(TMP_DOMAIN_XML);
-                } else {
-                    embedBuf.append(" --domain-config=").append(domainConfig);
-                }
-                embedBuf.append(" --jboss-home=").append(runtime.getStagedDir());
-
-                paramFilter = new NameFilter() {
-                    @Override
-                    public boolean accepts(String name) {
-                        return !"profile".equals(name);
-                    }
-                };
-            } else {
-                throw new ProvisioningException("Unsupported config model " + config.getModel());
+        } else if("domain".equals(config.getModel())) {
+            logFile = config.getProperties().get(DOMAIN_CONFIG_NAME);
+            if (logFile == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                        + " is missing property domain-config-name");
             }
+
+            String hostConfig = config.getProperties().get(HOST_CONFIG_NAME);
+            if(hostConfig == null) {
+                tmpConfig = TMP_HOST_XML;
+                hostConfig = TMP_HOST_XML;
+            }
+
+            embedBuf.append(
+                    "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
+                    .append(hostConfig).append(" --domain-config=").append(logFile).append(" --jboss-home=")
+                    .append(runtime.getStagedDir());
+
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return !"host".equals(name);
+                }
+            };
+        } else if ("host".equals(config.getModel())) {
+            logFile = config.getProperties().get(HOST_CONFIG_NAME);
+            if (logFile == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                        + " is missing property host-config-name");
+            }
+            lookForHost = LOOK_FOR_HOST;
+
+            embedBuf.append("embed-host-controller --empty-host-config --remove-existing-host-config --host-config=")
+                    .append(logFile);
+            final String domainConfig = config.getProperties().get(DOMAIN_CONFIG_NAME);
+            if (domainConfig == null) {
+                tmpConfig = TMP_DOMAIN_XML;
+                embedBuf.append(" --empty-domain-config --remove-existing-domain-config --domain-config=")
+                        .append(TMP_DOMAIN_XML);
+            } else {
+                embedBuf.append(" --domain-config=").append(domainConfig);
+            }
+            embedBuf.append(" --jboss-home=").append(runtime.getStagedDir());
+
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return !"profile".equals(name);
+                }
+            };
+        } else if("domain+host".equals(config.getModel())) {
+            logFile = config.getProperties().get(DOMAIN_CONFIG_NAME);
+            if (logFile == null) {
+                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
+                        + " is missing property domain-config-name");
+            }
+
+            String hostConfig = config.getProperties().get(HOST_CONFIG_NAME);
+            if(hostConfig == null) {
+                tmpConfig = TMP_HOST_XML;
+                hostConfig = TMP_HOST_XML;
+            } else {
+                lookForHost = LOOK_FOR_HOST;
+            }
+
+            embedBuf.append(
+                    "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
+                    .append(hostConfig).append(" --domain-config=").append(logFile).append(" --jboss-home=")
+                    .append(runtime.getStagedDir());
+
+            paramFilter = new NameFilter() {
+                @Override
+                public boolean accepts(String name) {
+                    return true;
+                }
+            };
+        } else {
+            throw new ProvisioningException("Unsupported config model " + config.getModel());
         }
         scriptName = logFile;
     }
