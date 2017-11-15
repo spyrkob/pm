@@ -6,4 +6,4 @@ include::features/index.adoc[]
 
 include::feature-groups/index.adoc[]
 
-include::config-attributes.adoc[]
+include::configs/index.adoc[]
