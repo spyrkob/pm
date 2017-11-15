@@ -20,3 +20,4 @@ The generic provisioning tool itself does not generate the final configuration f
 
 include::generic-config-model/index.adoc[]
 
+include::configs/index.adoc[]

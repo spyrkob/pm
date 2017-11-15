@@ -9,7 +9,7 @@ Anonymous config is associated with neither name nor model. E.g.
   <config>
     <!-- config body -->
   </config>
-[source,xml]
+</feature-pack>
 ----
 
-
+One of the limitations of the anonymous configs is that it cannot be customized. It can only be provisioned as it was defined in the feature-pack spec.

@@ -1,0 +1,7 @@
+include::config-attributes.adoc[]
+
+include::excluding-default-configs.adoc[]
+
+include::picking-default-configs.adoc[]
+
+include::merges/index.adoc[]

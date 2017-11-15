@@ -47,9 +47,14 @@ import org.jboss.provisioning.util.IoUtils;
  */
 class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
+    private static final String DOMAIN = "domain";
+    private static final String HOST = "host";
+    private static final String STANDALONE = "standalone";
+
     private static final String CONFIG_NAME = "config-name";
     private static final String DOMAIN_CONFIG_NAME = "domain-config-name";
     private static final String HOST_CONFIG_NAME = "host-config-name";
+
     private static final String TMP_DOMAIN_XML = "pm-tmp-domain.xml";
     private static final String TMP_HOST_XML = "pm-tmp-host.xml";
 
@@ -191,7 +196,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     public void prepare(ProvisionedConfig config) throws ProvisioningException {
         reset();
         final String logFile;
-        if("standalone".equals(config.getModel())) {
+        if(STANDALONE.equals(config.getModel())) {
             logFile = config.getProperties().get(CONFIG_NAME);
             if(logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel() + " is missing property config-name");
@@ -203,10 +208,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
-                    return !("profile".equals(name) || "host".equals(name));
+                    return !("profile".equals(name) || HOST.equals(name));
                 }
             };
-        } else if("domain".equals(config.getModel())) {
+        } else if(DOMAIN.equals(config.getModel())) {
             logFile = config.getProperties().get(DOMAIN_CONFIG_NAME);
             if (logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
@@ -227,10 +232,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name) {
-                    return !"host".equals(name);
+                    return !HOST.equals(name);
                 }
             };
-        } else if ("host".equals(config.getModel())) {
+        } else if (HOST.equals(config.getModel())) {
             logFile = config.getProperties().get(HOST_CONFIG_NAME);
             if (logFile == null) {
                 throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
@@ -256,32 +261,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     return !"profile".equals(name);
                 }
             };
-        } else if("domain+host".equals(config.getModel())) {
-            logFile = config.getProperties().get(DOMAIN_CONFIG_NAME);
-            if (logFile == null) {
-                throw new ProvisioningException("Config " + config.getName() + " of model " + config.getModel()
-                        + " is missing property domain-config-name");
-            }
-
-            String hostConfig = config.getProperties().get(HOST_CONFIG_NAME);
-            if(hostConfig == null) {
-                tmpConfig = TMP_HOST_XML;
-                hostConfig = TMP_HOST_XML;
-            } else {
-                lookForHost = LOOK_FOR_HOST;
-            }
-
-            embedBuf.append(
-                    "embed-host-controller --empty-host-config --remove-existing-host-config --empty-domain-config --remove-existing-domain-config --host-config=")
-                    .append(hostConfig).append(" --domain-config=").append(logFile).append(" --jboss-home=")
-                    .append(runtime.getStagedDir());
-
-            paramFilter = new NameFilter() {
-                @Override
-                public boolean accepts(String name) {
-                    return true;
-                }
-            };
         } else {
             throw new ProvisioningException("Unsupported config model " + config.getModel());
         }
@@ -296,7 +275,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     @Override
     public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
         messageWriter.verbose("    SPEC " + spec.getName());
-        if(lookForHost == LOOK_FOR_HOST && "host".equals(spec.getName()) && spec.getId().getGav().toGa().equals(WF_CORE_GA)) {
+        if(lookForHost == LOOK_FOR_HOST && HOST.equals(spec.getName()) && spec.getId().getGav().toGa().equals(WF_CORE_GA)) {
             lookForHost = LOOK_FOR_HOST_IN_SPEC;
         }
         if(!spec.hasAnnotations()) {
@@ -427,7 +406,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
         if(lookForHost == LOOK_FOR_HOST_IN_SPEC) {
             lookForHost = 0;
-            hostName = feature.getParam("host");
+            hostName = feature.getParam(HOST);
         }
         if (opsTotal == 0) {
             messageWriter.verbose("      " + feature.getParams());
@@ -484,7 +463,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             throw new ProvisioningException("Failed to generate " + script.getFileName() + " configuration", e);
         }
         if(tmpConfig != null) {
-            final Path tmpPath = runtime.getStagedDir().resolve("domain").resolve("configuration").resolve(tmpConfig);
+            final Path tmpPath = runtime.getStagedDir().resolve(DOMAIN).resolve("configuration").resolve(tmpConfig);
             if(Files.exists(tmpPath)) {
                 IoUtils.recursiveDelete(tmpPath);
             } else {
