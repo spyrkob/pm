@@ -1,3 +1,0 @@
-include::config-attributes.adoc[]
-
-include::anonymous-config.adoc[]

@@ -100,7 +100,6 @@ public class ConfigXml {
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         MODEL("model"),
-        SOURCE("source"),
         VALUE("value"),
 
         // default unknown attribute
