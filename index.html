@@ -433,7 +433,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Alexey Loubyansky</span><br>
 <span id="revnumber">version 1.0.0.Alpha-SNAPSHOT,</span>
-<span id="revdate">2017-11-13</span>
+<span id="revdate">2017-11-16</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -454,6 +454,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_provisioned_installation_configuration">4. Provisioned installation configuration</a>
 <ul class="sectlevel2">
 <li><a href="#_generic_configuration_model">4.1. Generic configuration model</a></li>
+<li><a href="#_configuration_model_attributes">4.2. Configuration model attributes</a></li>
+<li><a href="#_excluding_default_configs_from_the_installation">4.3. Excluding default configs from the installation</a></li>
+<li><a href="#_picking_default_configs_into_the_installation">4.4. Picking default configs into the installation</a></li>
+<li><a href="#_configuration_model_merges">4.5. Configuration model merges</a></li>
+<li><a href="#_content_of_the_config_element">4.6. Content of the config element</a></li>
+<li><a href="#_config_package_dependencies">4.7. Config package dependencies</a></li>
 </ul>
 </li>
 <li><a href="#_wildfly_provisioning">5. WildFly provisioning</a>
@@ -1862,7 +1868,7 @@ The implicit reference parameter mapping rule is based on the expectation that t
 <div class="sect5">
 <h6 id="_implicit_feature_reference_parameter_initialization">Implicit feature reference parameter initialization</h6>
 <div class="paragraph">
-<p><a id="feature-fk-init"></a>Let&#8217;s suppose we have parent-child relationship between two feature specs, e.g.</p>
+<p><a id="feature-fk-init"></a>Let&#8217;s suppose we have a parent-child relationship between two feature specs, e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1970,7 +1976,7 @@ When a feature is nested, the tool will look in the feature spec of the nested f
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-it is also possible to <a href="#fg-in-features">include a feature-group as child of the feature</a>.
+it is also possible to <a href="#fg-in-features">include a feature-group as a child of the feature</a>.
 </td>
 </tr>
 </table>
@@ -3158,6 +3164,1646 @@ Let&#8217;s edit the example from the previous paragraph to demonstrate that. Th
 </ol>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_merging_feature_groups">Merging feature groups</h5>
+<div class="paragraph">
+<p>There could be a situation when the same feature group is brought into the config as a dependency of other feature groups. Which means its basic feature set is included multiple times but, taking into account possible customizations, each time it might be slightly different.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+In that case the feature configurations will be merged. The features that are included later in the config will overwrite the common parameters of the corresponding features included earlier. But they will not completely replace the feature configurations that were added earlier.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>For example, suppose we have these feature specs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureA"&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p1" default="feature-spec"/&gt;
+     &lt;param name="p2" default="feature-spec"/&gt;
+     &lt;param name="p3" default="feature-spec"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"> &lt;feature-spec xmlns="urn:wildfly:pm-feature-spec:1.0" name="featureB"&gt;
+   &lt;params&gt;
+     &lt;param name="name" feature-id="true"/&gt;
+     &lt;param name="p1" default="feature-spec"/&gt;
+     &lt;param name="p2" default="feature-spec"/&gt;
+     &lt;param name="p3" default="feature-spec"/&gt;
+   &lt;/params&gt;
+ &lt;/feature-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and these feature groups</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group1" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature spec="featureA"&gt;
+    &lt;param name="name" value="a1"/&gt;
+    &lt;param name="p1" value="group1"/&gt;
+    &lt;param name="p2" value="group1"/&gt;
+    &lt;param name="p3" value="group1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureA"&gt;
+    &lt;param name="name" value="a2"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureA"&gt;
+    &lt;param name="name" value="a3"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureB"&gt;
+    &lt;param name="name" value="b1"/&gt;
+    &lt;param name="p1" value="gorup1"/&gt;
+    &lt;param name="p2" value="group1"/&gt;
+    &lt;param name="p3" value="group1"/&gt;
+  &lt;/feature&gt;
+  &lt;feature spec="featureB"&gt;
+    &lt;param name="name" value="b2"/&gt;
+  &lt;/feature&gt;
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group2" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature-group name="group1"&gt;
+    &lt;include feature-id="featureA:name="a1"&gt;
+      &lt;param name="p1" value="group2"/&gt;
+      &lt;param name="p2" value="group2"/&gt;
+    &lt;/feature&gt;
+    &lt;exclude feature-id="featureA:name=a3"/&gt;
+    &lt;include feature-id="featureB:name="b1"&gt;
+      &lt;param name="p2" value="group2"/&gt;
+    &lt;/feature&gt;
+    &lt;exclude feature-id="featureB:name=b2"/&gt;
+  &lt;/feature-group&gt;
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-group-spec name="group3" xmlns="urn:wildfly:pm-feature-group:1.0"&gt;
+
+  &lt;feature-group name="group1"&gt;
+    &lt;include feature-id="featureA:name="a1"&gt;
+      &lt;param name="p1" value="group3"/&gt;
+    &lt;/feature&gt;
+    &lt;exclude feature-id="featureA:name=a2"/&gt;
+    &lt;include feature-id="featureB:name="b1"&gt;
+      &lt;param name="p3" value="group3"/&gt;
+    &lt;/feature&gt;
+    &lt;exclude feature-id="featureB:name=b2"/&gt;
+  &lt;/feature-group&gt;
+
+&lt;/feature-group-spec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now this configuration</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;config&gt;
+  &lt;feature-group name="group2"/&gt;
+  &lt;feature-group name="group3"/&gt;
+&lt;/config&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>will contain</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">name</th>
+<th class="tableblock halign-left valign-top">p1</th>
+<th class="tableblock halign-left valign-top">p2</th>
+<th class="tableblock halign-left valign-top">p3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature-spec</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">featureB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">b1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">group3</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuration_model_attributes">4.2. Configuration model attributes</h3>
+<div class="paragraph">
+<p>Configuration models are described in the <code>feature-pack.xml</code> file under the <code>config</code> elements. A <code>feature-pack.xml</code> file may contain zero, one or more <code>config</code> elements. Each configuration may include the following <strong>optional</strong> attributes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>name</code> - the name of the configuration;</p>
+</li>
+<li>
+<p><code>model</code> - the model name of the configuration.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In the XML it could look like this (the content of the <code>config</code> elements has been left out as not important in this example):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+  &lt;config&gt;
+    &lt;!-- anonymous config --&gt;
+  &lt;/config&gt;
+
+  &lt;config name="config1"&gt;
+    &lt;!-- named config --&gt;
+  &lt;/config&gt;
+
+  &lt;config model="model1"&gt;
+    &lt;!-- model1 model-only config --&gt;
+  &lt;/config&gt;
+
+  &lt;config model="model1" name="config1"&gt;
+    &lt;!-- named model1 config --&gt;
+  &lt;/config&gt;
+
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>name</code> and <code>model</code> attributes are optional, which means it is well possible to define a configuration w/o those attributes. A feature pack may define zero, one or more anonymous configs.</p>
+</div>
+<div class="paragraph">
+<p>The <code>name</code> and the <code>model</code> attributes serve as an identity of the config model. They are essential when customizing and merging configuration models.</p>
+</div>
+<div class="paragraph">
+<p>If a config is associated only with the name (without the model) then only the name will be used as the identity of the config model. If a config is associated with both the name and the model then a combination of the name and the model will be used as the identity of the config model.</p>
+</div>
+<div class="paragraph">
+<p>In the example above the named config <strong>config1</strong> and the named <strong>model1:config1</strong> config are two unrelated config models.</p>
+</div>
+<div class="paragraph">
+<p>When a feature-pack is installed, by default all the configs defined in its <code>feature-pack.xml</code> are installed. Users may explicitly specify though which configs should the final installation include and customize those and/or provide their own custom configs.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_excluding_default_configs_from_the_installation">4.3. Excluding default configs from the installation</h3>
+<div class="paragraph">
+<p>To be able to exclude a config, it needs to be identifiable. I.e. it must have a <code>name</code> associated with it. If a config doesn&#8217;t have a name it still can be excluded but only altogether with the other configs like this</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;installation xmlns="urn:wildfly:pm-provisioning:1.0"&gt;
+    &lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+
+        &lt;default-configs inherit="false"/&gt;
+
+    &lt;/feature-pack&gt;
+&lt;/installation&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>inherit="false"</code> attribute indicates that none of the configs should be included into the installation by default. If the attribute is not present, its value is assumed to be true.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>feature-pack</code> element in the example above could as well appear under the <code>dependecies</code> element of another feature pack&#8217;s <strong>feature-pack.xml</strong> file. Meaning the XML type of these elements are equivalent - they both describe a customized feature pack. The examples below will display only the <code>feature-pack</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If a config is a named config which is not associated with any model then it can be excluded by specifying its name, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+    &lt;default-configs&gt;
+        &lt;exclude name="config1"/&gt;
+    &lt;/default-configs&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If a config is associated with both the name and the model, both of them have to be specified, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+    &lt;default-configs&gt;
+        &lt;exclude name="config1" model="model1"/&gt;
+    &lt;/default-configs&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In case there are multiple named configs that are associated with the same model, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+
+  &lt;config model="model1" name="config1"&gt;
+    &lt;!-- config body --&gt;
+  &lt;/config&gt;
+  &lt;config model="model1" name="config2"&gt;
+    &lt;!-- config body --&gt;
+  &lt;/config&gt;
+
+  &lt;config model="model2" name="config1"&gt;
+    &lt;!-- config body --&gt;
+  &lt;/config&gt;
+  &lt;config model="model2" name="config2"&gt;
+    &lt;!-- config body --&gt;
+  &lt;/config&gt;
+
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a id="excl-configs-by-model"></a>They can be excluded altogether by specifying the model name, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;installation xmlns="urn:wildfly:pm-provisioning:1.0"&gt;
+    &lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+        &lt;default-configs&gt;
+            &lt;exclude model="model1"/&gt;
+        &lt;/default-configs&gt;
+    &lt;/feature-pack&gt;
+&lt;/installation&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This installation will include configs <strong>model2:config1</strong> and <strong>model2:config2</strong>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_picking_default_configs_into_the_installation">4.4. Picking default configs into the installation</h3>
+<div class="paragraph">
+<p>There are two scenarios when including a config makes sense:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>when the config was excluded by <code>&lt;exclude model="<em>model_name</em>"/&gt;</code>;</p>
+</li>
+<li>
+<p>when inhertance of the default configs was disabled with <code>&lt;default-configs inherit="false"&gt;</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The first one of course assumes that the config is associated with both the name and the model. It could look like this</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+    &lt;default-configs&gt;
+        &lt;exclude model="model1"/&gt;
+        &lt;include name="config1" model="model1"/&gt;
+    &lt;/default-configs&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The example above excludes all the configs with the <strong>model1</strong> except the <strong>config1</strong>.</p>
+</div>
+<div class="paragraph">
+<p><a id="disable-def-configs"></a>Here is an example for the second scenario</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+    &lt;default-configs inherit="false"&gt;
+        &lt;include name="config1"/&gt;
+        &lt;include name="config1" model="model1"/&gt;
+    &lt;/default-configs&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The example above picks only the <strong>config1</strong> and the <strong>model1:config1</strong> from all the default configs to be included into the installation.</p>
+</div>
+<div class="paragraph">
+<p>It also possible to include the configs of a specific model, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+    &lt;default-configs inherit="false"&gt;
+        &lt;include model="model1"/&gt;
+    &lt;/default-configs&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, all the default configs associated with the <strong>model1</strong> will be included into the installation.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuration_model_merges">4.5. Configuration model merges</h3>
+<div class="paragraph">
+<p>Configuration model merges is a way to integrate various products into a single installation. Suppose we have an installation and we want to add another product to it. Besides adding the actual filesystem content of the product we are adding to the installation, normally the configuration of the installation will have to be adjusted to include the configuration of the product we are adding to it.</p>
+</div>
+<div class="paragraph">
+<p>In the provisioning terms, this scenarios can be described as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>there is a feature-pack of the main installation (defining its FS content as well as the configuration model);</p>
+</li>
+<li>
+<p>there is the other product&#8217;s feature-pack defining its FS content and the default configuration that should be added to the main installation as part of its integration.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>How exactly the configuration of the new product is integrated into the existing installation will depend on every specific case but there are a few basic ways it can happen:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>the product comes with its own standalone config which will not affect the existing installation configuration;</p>
+</li>
+<li>
+<p>the product&#8217;s config will have to be added to the existing installation configuration model;</p>
+</li>
+<li>
+<p>a combination of the two above (standalone config and a piece of the config that needs to be added to the existing installation configuration).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The first one is simple: we just need to generate two separate configurations: one for each feature-pack.</p>
+</div>
+<div class="paragraph">
+<p>For the second one, we need to merge the configs from both feature-packs and then generate a single confguration.</p>
+</div>
+<div class="paragraph">
+<p>The third one effectively means that we&#8217;ve got multiple configuration models some of which should be merged and some should remain standalone. The tricky part is to identify which one is which. This is where the config <strong>name</strong> and <strong>model</strong> attributes are useful.</p>
+</div>
+<div class="paragraph">
+<p>The provisioned installation may contain only one configuration model of a specific identity (which is the value of the <code>config</code> <code>name</code> attribute or the <code>model</code> and the <code>name</code> combination).</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+When the provisioning mechanism analysing the installation being provisioned discovers multiple configuration models with the same identity, <strong>it does not throw an error but merges the configuration models into one</strong> (which may still result in an error, of course).
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_anonymous_configs">4.5.1. Anonymous configs</h4>
+<div class="paragraph">
+<p>Anonymous configs are associated with neither name nor model. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0"&gt;
+  &lt;config&gt;
+    &lt;!-- config body --&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That means anonymous configs have no identity. They cannot be customized and they are not merged. Each anonymous config is a standalone config.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_named_name_only_configs">4.5.2. Named (name-only) configs</h4>
+<div class="paragraph">
+<p>The simplest way to provide an identity for the configuration is to give it a name. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config name="config1"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1"/&gt;
+      &lt;param name="b" value="fp1"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="feature2"&gt;
+      &lt;param name="id" value="1"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if another feature-pack provides a config with the same name, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;config name="config1"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="b" value="fp2"/&gt;
+    &lt;/feature&gt;
+    &lt;feature spec="feature3"&gt;
+      &lt;param name="id" value="1"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And we include both of these feature packs into the same installation</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;installation xmlns="urn:wildfly:pm-provisioning:1.0"&gt;
+  &lt;feature-pack groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"/&gt;
+  &lt;feature-pack groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"/&gt;
+&lt;/installation&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The provisioned <strong>config1</strong> will be the result of merging the <strong>config1</strong> from the <strong>fp2</strong> into the <strong>config1</strong> of from the <strong>fp1</strong>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Which config overwrites which depends on the order in which the feature-packs are listed in the <code>provisioning.xml</code> file (under the <code>installation</code> element).
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Here is the content of the provisioned <strong>config1</strong>:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp2:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp2:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The features of the <strong>feature1</strong> spec are not merged although they appear to have the same ID. The reason is that the <strong>fp2</strong> does not declare the dependency on the <strong>fp1</strong> and its feature specs are not available in the <strong>fp2</strong> configs. So this example assumes that both <strong>fp1</strong> and <strong>fp2</strong> include the feature spec <strong>feature1</strong>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Here is how the <strong>fp2</strong> feature-pack.xml had to be written so that the <strong>feature1</strong> spec could be re-used in the <strong>fp2</strong> config.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="config1"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="b" value="fp2"/&gt;
+      &lt;/feature&gt;
+    &lt;/feature-pack&gt;
+    &lt;feature spec="feature3"&gt;
+      &lt;param name="id" value="1"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With this feature-pack configuration the resulting <strong>config1</strong> will include the following features:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp2:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_named_model_configs">4.5.3. Named model configs</h4>
+<div class="paragraph">
+<p>There are a couple of reasons for adding the <code>model</code> attribute into the config identity. One of them is to define the scope for the <code>name</code> attribute. In this sense, the <code>model</code> could be thought of as a namespace. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="a" value="fp1-modelA"/&gt;
+        &lt;param name="b" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+  &lt;config name="main" model="modelB"&gt;
+    &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="a" value="fp1-modelB"/&gt;
+        &lt;param name="b" value="fp1-modelB"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+        &lt;feature spec="feature1"&gt;
+            &lt;param name="id" value="1"/&gt;
+            &lt;param name="b" value="fp2-modelA"/&gt;
+        &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+  &lt;config name="main" model="modelB"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="b" value="fp2-modelB"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Installing these two feature-packs (<strong>fp2</strong> after the <strong>fp1</strong>) will result in the following two configurations:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">main</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">main</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_model_only_configs">4.5.4. Model-only configs</h4>
+<div class="paragraph">
+<p>Model-only configs are the configs that are associated with a specific model using the <code>model</code> attribute of the <code>config</code> element but are not associated with any name.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Model-only configs are meant to be merged into other configs. The provisioned installation will contain only anonymous or named configs but not the model-only ones.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Model only configs are merged into <strong>all</strong> the named configs of the installation that are associated with the same model as the model-only config.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A model-only config will simply be ignored if the installation does not include any named config with the same model as the model-only config.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The idea behind the model-only configs is to be able to define the base for a config of a specific model that every final configuration of that model should include. Model-only configs are always added into the configuration before the named model configs, i.e. the named configs will be added on top of the model-only ones and will overwrite them.</p>
+</div>
+<div class="paragraph">
+<p>Here is an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1-modelA"/&gt;
+      &lt;param name="b" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+  &lt;config name="main" model="modelB"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="b" value="fp1-modelB"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="b" value="fp2-modelA"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+  &lt;config name="test" model="modelA"&gt;
+    &lt;feature spec="feature2"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp2-modelA"/&gt;
+      &lt;param name="b" value="fp2-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+  &lt;config model="modelB"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="a" value="fp2-modelB"/&gt;
+        &lt;param name="b" value="fp2-modelB"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+  &lt;config name="test" model="modelB"&gt;
+    &lt;feature spec="feature2"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp2-modelB"/&gt;
+      &lt;param name="b" value="fp2-modelB"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Installing these two feature-packs will result in the following configurations:</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">main</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp2:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">main</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelB</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Config model</th>
+<th class="tableblock halign-left valign-top">Config name</th>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp2:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelB</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect4">
+<h5 id="_excluding_model_only_configs_with_the_exclude_element">Excluding model-only configs with the exclude element</h5>
+<div class="paragraph">
+<p>Normally, model-only configs are not supposed to be explicitly excluded. If a user excludes all the named configs of a specific model, the model-only configs of that model will implicitly be ignored by the provisioning mechanism.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Config model designers are encouraged to design the configs in a way that model-only configs represent essential configuration and don&#8217;t need to be excluded explicitly by the users or should be excluded in exceptional cases.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In a previous chapter it was described how the default configs could be excluded from the provisioned installation by <a href="#excl-configs-by-model">specifying their model name</a>. Here is the example snipped again</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;installation xmlns="urn:wildfly:pm-provisioning:1.0"&gt;
+    &lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+        &lt;default-configs&gt;
+            &lt;exclude model="model1"/&gt;
+        &lt;/default-configs&gt;
+    &lt;/feature-pack&gt;
+&lt;/installation&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>exclude</code> element above <strong>does not</strong> affect the model-only configs. It affects <strong>only</strong> the named configs. And in this specific example this fact will not make any difference on the result which is why, as a user, you shouldn&#8217;t care about it, since if the named configs are excluded, the model-only configs will automatically be ignored by the provisioning mechanism. Let&#8217;s look at an example where it makes a real difference.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1-modelA"/&gt;
+      &lt;param name="b" value="fp1-modelA"/&gt;
+      &lt;param name="c" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="b" value="fp1-modelB-main"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="c" value="fp2-modelA-main"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we install these feature-packs the resulting config will contain</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+<th class="tableblock halign-left valign-top">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA-main</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA-main</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If, we exclude the <strong>modelA</strong> like it was shown in the previous example <strong>in the declaration of the dependency on the fp1</strong>, i.e.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+      &lt;default-configs&gt;
+        &lt;exclude model="modelA"/&gt;
+      &lt;/default-configs&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="c" value="fp2-modelA-main"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we install the <strong>fp2</strong>, the provisioned configuration will contain</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">a</th>
+<th class="tableblock halign-left valign-top">b</th>
+<th class="tableblock halign-left valign-top">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp1-modelA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA-main</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The model-only config from <strong>fp1</strong> is still effective because it is considered as an essential for any named config of the <strong>modelA</strong>. In case it still has to be excluded from the provisioned config you can add the <code>named-only-models="false"</code> attribute to the <code>exclude</code> element, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+      &lt;default-configs&gt;
+        &lt;exclude model="modelA" named-only-models="false"/&gt;
+      &lt;/default-configs&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="c" value="fp2-modelA-main"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>exclude</code> element above affects both named and model-only configs of <strong>modelA</strong> from the feature-pack <strong>fp1</strong>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The <code>named-only-models</code> attribute is optional and if abscent its value is assumed to be <strong>true</strong>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The provisioned configuration of the <strong>fp2</strong> will now contain</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA-main</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_disabling_inheritance_of_the_model_only_configs">Disabling inheritance of the model-only configs</h5>
+<div class="paragraph">
+<p>In an earlier chapter it was shown <a href="#disable-def-configs">how the default configs of a feature-pack could be suppressed</a>. Let&#8217;s now include the model-only config in the example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1-modelA"/&gt;
+      &lt;param name="b" value="fp1-modelA"/&gt;
+      &lt;param name="c" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="b" value="fp1-modelB-main"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+      &lt;default-configs inherit="false"/&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="c" value="fp2-modelA-main"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With the <code>inherit="false"</code> attribute of the <code>default-configs</code> element we indicated that the default configs of <strong>fp1</strong> should not be included into the provisioned installation of <strong>fp2</strong>. But it does not affect the model-only configs. So the model-only <strong>modelA</strong> config will still be effective in <strong>fp2</strong>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The <code>inherit-unnamed-models</code> attributes of the <code>default-configs</code> element controls whether the model-only configs are inherited or not. The attribute is optional and if not present, its value is assumed to be <strong>true</strong>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Here is an example that disables the inheritance of all the anonymous, named and model-only configs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+      &lt;default-configs inherit="false" inherit-unnamed-models="false"/&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="c" value="fp2-modelA-main"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The provisioned configuration of <strong>fp2</strong> will now contain</p>
+</div>
+<table class="tableblock frame-all grid-all">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature spec origin</th>
+<th class="tableblock halign-left valign-top">Feature spec</th>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">org.jboss.pm.test:fp1:1.0.0.Final</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">feature1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fp2-modelA-main</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_content_of_the_config_element">4.6. Content of the config element</h3>
+<div class="paragraph">
+<p>The <code>config</code> element is basically an extended version of the <a href="#_feature_groups"><code>feature-group</code> element</a>. Meaning that everything that is allowed in the body of the <code>feature-group</code> is allowed in the <code>config</code> element. Which means the <code>feature</code> and the <code>feature-group</code> elements (as well as the <code>feature-pack</code> element for dependencies).</p>
+</div>
+<div class="paragraph">
+<p>Besides that the config element supports already mentioned in an earlier chapter the <a href="#_configuration_model_attributes">config attributes</a> and the <code>props</code> element.</p>
+</div>
+<div class="paragraph">
+<p>The <code>props</code> element allows to attach various properties to the configuration described by the <code>config</code> element that can be meaningful for the provisioning plugin processing the configuration. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;props&gt;
+      &lt;prop name="save-to-file" value="model-a.xml"/&gt;
+      &lt;prop name="other" value="thing"/&gt;
+    &lt;/props&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The config properties are not used by the generic provisioning mechanism itself (only the relevant plugins).
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_overwriting_properties_during_config_inclusion">4.6.1. Overwriting properties during config inclusion</h4>
+<div class="paragraph">
+<p>When a default config is included, its properties can be overwritten, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;installation xmlns="urn:wildfly:pm-provisioning:1.0"&gt;
+    &lt;feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+        &lt;default-configs&gt;
+            &lt;include name="main" model="modelA"&gt;
+              &lt;props&gt;
+                &lt;prop name="save-to-file" value="main-model-a.xml"/&gt;
+              &lt;/props&gt;
+            &lt;/include&gt;
+        &lt;/default-configs&gt;
+    &lt;/feature-pack&gt;
+&lt;/installation&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resolved config will include the following properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>save-to-file=main-model-a.xml;</p>
+</li>
+<li>
+<p>other=thing.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_overwriting_properties_when_merging_configs">4.6.2. Overwriting properties when merging configs</h4>
+<div class="paragraph">
+<p>When the <a href="#_configuration_model_merges">configs are merged</a>, their properties are also merged. The config that is included later into the installation overwrites the properties of the config which was added before. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config model="modelA"&gt;
+    &lt;props&gt;
+      &lt;prop name="save-to-file" value="model-a.xml"/&gt;
+      &lt;prop name="other" value="thing"/&gt;
+    &lt;/props&gt;
+    &lt;feature spec="feature1"&gt;
+      &lt;param name="id" value="1"/&gt;
+      &lt;param name="a" value="fp1-modelA"/&gt;
+    &lt;/feature&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp2" version="1.0.0.Final"&gt;
+  &lt;dependencies&gt;
+    &lt;dependency groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+      &lt;name&gt;fp1-dep&lt;/name&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;config name="main" model="modelA"&gt;
+    &lt;props&gt;
+      &lt;prop name="save-to-file" value="main-model-a.xml"/&gt;
+    &lt;/props&gt;
+    &lt;feature-pack dependency="fp1-dep"&gt;
+      &lt;feature spec="feature1"&gt;
+        &lt;param name="id" value="1"/&gt;
+        &lt;param name="a" value="fp2-modelA"/&gt;
+      &lt;/feature&gt;
+    &lt;feature-pack&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The resolve configuration <strong>modelA:main</strong> will contain the following properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>save-to-file=main-model-a.xml;</p>
+</li>
+<li>
+<p>other=thing.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_config_package_dependencies">4.7. Config package dependencies</h3>
+<div class="paragraph">
+<p><code>config</code> elements may include the feature-pack package dependencies. So that when the config is included into the installation, the relevant packages are automatically included as well. The package dependencies are configured using the same elements used for <a href="#_feature_package_dependencies">the feature package dependencies</a>. E.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;feature-pack xmlns="urn:wildfly:pm-feature-pack:1.0"
+              groupId="org.jboss.pm.test" artifactId="fp1" version="1.0.0.Final"&gt;
+  &lt;config model="modelA"&gt;
+    &lt;packages&gt;
+     &lt;package name="p1"/&gt;
+     &lt;package name="p2" optional="true"/&gt;
+    &lt;/packages&gt;
+  &lt;/config&gt;
+&lt;/feature-pack&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now every config of the <strong>modelA</strong> will depend on and implicitly will bring into the installation the specified packages.</p>
 </div>
 </div>
 </div>
@@ -3165,6 +4811,18 @@ Let&#8217;s edit the example from the previous paragraph to demonstrate that. Th
 <div class="sect1">
 <h2 id="_wildfly_provisioning">5. WildFly provisioning</h2>
 <div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The WildFly provisioning docs are very much out of date. They pretty much can be ignored. The updates are coming soon.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
 <h3 id="_wildfly_pm_provisioning_plug_in">5.1. WildFly PM Provisioning Plug-in</h3>
 <div class="paragraph">
