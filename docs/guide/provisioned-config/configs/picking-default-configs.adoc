@@ -19,7 +19,7 @@ The first one of course assumes that the config is associated with both the name
 
 The example above excludes all the configs with the *model1* except the *config1*.
 
-Here is an example for the second scenario
+[[disable-def-configs]]Here is an example for the second scenario
 [source,xml]
 ----
 <feature-pack groupId="org.pm.test" artifactId="fp1" version="1.0.0.Final">

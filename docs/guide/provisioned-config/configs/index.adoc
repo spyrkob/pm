@@ -5,3 +5,8 @@ include::excluding-default-configs.adoc[]
 include::picking-default-configs.adoc[]
 
 include::merges/index.adoc[]
+
+include::config-element.adoc[]
+
+include::config-package-deps.adoc[]
+

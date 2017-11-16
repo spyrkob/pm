@@ -4,11 +4,11 @@ Configuration model merges is a way to integrate various products into a single 
 
 In the provisioning terms, this scenarios can be described as:
 
-* there is a feature-pack of the installation (defining its FS content as well as the configuration model);
+* there is a feature-pack of the main installation (defining its FS content as well as the configuration model);
 
 * there is the other product's feature-pack defining its FS content and the default configuration that should be added to the main installation as part of its integration.
 
-How exactly the configuration of the new product is integrated into the existing installation will depend on every specific case but there are a few basic ways it could happen:
+How exactly the configuration of the new product is integrated into the existing installation will depend on every specific case but there are a few basic ways it can happen:
 
 . the product comes with its own standalone config which will not affect the existing installation configuration;
 
@@ -16,11 +16,11 @@ How exactly the configuration of the new product is integrated into the existing
 
 . a combination of the two above (standalone config and a piece of the config that needs to be added to the existing installation configuration).
 
-The first one is simple: we just need to generate a standalone configuration for each feature-pack.
+The first one is simple: we just need to generate two separate configurations: one for each feature-pack.
 
 For the second one, we need to merge the configs from both feature-packs and then generate a single confguration.
 
-The third one effectively means that we have multiple configuration models some of which should be merged and some should remain standalone. The tricky part is to identify which one is which. This is where the config *name* and *model* attributes are useful.
+The third one effectively means that we've got multiple configuration models some of which should be merged and some should remain standalone. The tricky part is to identify which one is which. This is where the config *name* and *model* attributes are useful.
 
 The provisioned installation may contain only one configuration model of a specific identity (which is the value of the `config` `name` attribute or the `model` and the `name` combination).
 

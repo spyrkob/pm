@@ -63,7 +63,7 @@ In case there are multiple named configs that are associated with the same model
 </feature-pack>
 ----
 
-They can be excluded altogether by specifying the model name, e.g.
+[[excl-configs-by-model]]They can be excluded altogether by specifying the model name, e.g.
 [source,xml]
 ----
 <installation xmlns="urn:wildfly:pm-provisioning:1.0">
@@ -76,4 +76,3 @@ They can be excluded altogether by specifying the model name, e.g.
 ----
 
 This installation will include configs *model2:config1* and *model2:config2*.
-

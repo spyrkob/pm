@@ -1,6 +1,6 @@
-#### Anonymous config
+#### Anonymous configs
 
-Anonymous config is associated with neither name nor model. E.g.
+Anonymous configs are associated with neither name nor model. E.g.
 
 [source,xml]
 ----
@@ -12,4 +12,4 @@ Anonymous config is associated with neither name nor model. E.g.
 </feature-pack>
 ----
 
-One of the limitations of the anonymous configs is that it cannot be customized. It can only be provisioned as it was defined in the feature-pack spec.
+That means anonymous configs have no identity. They cannot be customized and they are not merged. Each anonymous config is a standalone config.
