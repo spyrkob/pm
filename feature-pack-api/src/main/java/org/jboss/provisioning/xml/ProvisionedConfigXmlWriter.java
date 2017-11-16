@@ -67,10 +67,10 @@ public class ProvisionedConfigXmlWriter extends BaseXmlWriter<ProvisionedConfig>
                 addAttribute(featureE, Attribute.ID, feature.getId().toString());
             }
             if(feature.hasParams()) {
-                for(Map.Entry<String, String> entry : feature.getParams().entrySet()) {
+                for(Map.Entry<String, Object> entry : feature.getParams().entrySet()) {
                     final ElementNode paramE = addElement(featureE, Element.PARAM);
                     addAttribute(paramE, Attribute.NAME, entry.getKey());
-                    addAttribute(paramE, Attribute.VALUE, entry.getValue());
+                    addAttribute(paramE, Attribute.VALUE, entry.getValue().toString());
                 }
             }
         }

@@ -17,6 +17,9 @@
 
 package org.jboss.provisioning.config.feature.refs;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
@@ -27,6 +30,7 @@ import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
@@ -111,7 +115,10 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
                 .setParam("a", "a2")), e.getLocalizedMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
-        Assert.assertEquals("Failed to initialize foreign key parameters of [specC a=a2,id=c1] to reference org.jboss.pm.test:fp1:1.0.0.Final#specA:id=a1", e.getLocalizedMessage());
+        final Map<String, String> params = new HashMap<>();
+        params.put("id", "c1");
+        params.put("a", "a2");
+        Assert.assertEquals(Errors.failedToInitializeForeignKeyParams(new ResolvedSpecId(FP_GAV, "specC"), ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specA"), "id", "a1"), params), e.getLocalizedMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
         Assert.assertEquals(Errors.idParamForeignKeyInitConflict(new ResolvedSpecId(FP_GAV, "specC"), "a", "a2", "a1"), e.getLocalizedMessage());

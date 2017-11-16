@@ -15,29 +15,23 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.type;
 
-import java.util.Map;
-
-import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.ProvisioningException;
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public interface ProvisionedFeature {
+public interface FeatureParameterType {
 
-    boolean hasId();
+    String getName();
 
-    ResolvedFeatureId getId();
+    Object getDefaultValue();
 
-    ResolvedSpecId getSpecId();
+    Object fromString(String str) throws ParameterTypeConversionException;
 
-    boolean hasParams();
+    String toString(Object o) throws ParameterTypeConversionException;
 
-    Map<String, Object> getParams();
-
-    Object getParam(String name) throws ProvisioningDescriptionException;
+    Object merge(Object original, Object other) throws ProvisioningException;
 }

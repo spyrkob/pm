@@ -19,6 +19,7 @@ package org.jboss.provisioning.config.capability;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
@@ -84,7 +85,7 @@ public class UnknownParameterInCapabilityTestCase extends PmInstallFeaturePackTe
         Assert.assertEquals("Failed to satisfy capability requirement cap.$a for org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
-        Assert.assertEquals("Feature spec specB does not contain parameter a", e.getMessage());
+        Assert.assertEquals(Errors.unknownFeatureParameter("specB", "a"), e.getMessage());
     }
 
     @Override

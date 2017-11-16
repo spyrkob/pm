@@ -41,6 +41,8 @@ import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.type.ParameterTypeProvider;
+import org.jboss.provisioning.type.builtin.BuiltInParameterTypeProvider;
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.jboss.provisioning.xml.FeatureSpecXmlParser;
@@ -66,6 +68,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         private List<List<FeaturePackConfig>> recordedStacks = Collections.emptyList();
         private FeaturePackConfig blockedPackageInheritance;
         private FeaturePackConfig blockedConfigInheritance;
+
+        ParameterTypeProvider featureParamTypeProvider = BuiltInParameterTypeProvider.getInstance();
 
         private Builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
             this.gav = gav;
@@ -123,7 +127,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 } catch (Exception e) {
                     throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
                 }
-                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), xmlSpec);
+
+                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), featureParamTypeProvider, xmlSpec);
                 featureSpecs.put(name, resolvedSpec);
             }
             return resolvedSpec;

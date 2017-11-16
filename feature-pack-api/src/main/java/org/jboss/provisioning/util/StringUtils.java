@@ -28,6 +28,10 @@ public class StringUtils {
 
     public static void append(StringBuilder buf, Iterable<?> i) {
         final Iterator<?> it = i.iterator();
+        if(!it.hasNext()) {
+            buf.append("[]");
+            return;
+        }
         buf.append(it.next());
         while(it.hasNext()) {
             buf.append(',').append(it.next());
@@ -35,6 +39,10 @@ public class StringUtils {
     }
 
     public static void appendList(StringBuilder buf, List<?> list) {
+        if(list.isEmpty()) {
+            buf.append("[]");
+            return;
+        }
         buf.append(list.get(0));
         for(int i = 1; i < list.size(); ++i) {
             buf.append(',').append(list.get(i));

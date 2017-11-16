@@ -15,29 +15,26 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.type;
 
-import java.util.Map;
-
-import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.ProvisioningException;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedFeature {
+public class ParameterTypeConversionException extends ProvisioningException {
 
-    boolean hasId();
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-    ResolvedFeatureId getId();
+    public ParameterTypeConversionException(String message) {
+        super(message);
+    }
 
-    ResolvedSpecId getSpecId();
-
-    boolean hasParams();
-
-    Map<String, Object> getParams();
-
-    Object getParam(String name) throws ProvisioningDescriptionException;
+    public ParameterTypeConversionException(String message, Throwable t) {
+        super(message, t);
+    }
 }

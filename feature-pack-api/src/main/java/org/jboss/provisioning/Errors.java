@@ -18,6 +18,7 @@ package org.jboss.provisioning;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.config.FeatureConfig;
@@ -26,6 +27,7 @@ import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -209,7 +211,15 @@ public interface Errors {
         return buf.toString();
     }
 
-    static String idParamForeignKeyInitConflict(ResolvedSpecId specId, String param, String prevValue, String newValue) {
+    static String failedToInitializeForeignKeyParams(ResolvedSpecId specId, ResolvedFeatureId parentId, Map<String, ?> params) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to initialize the foreign key parameters for the feature ").append(specId).append(" with parameters ");
+        StringUtils.append(buf, params.entrySet());
+        buf.append(" referencing ID ").append(parentId);
+        return buf.toString();
+    }
+
+    static String idParamForeignKeyInitConflict(ResolvedSpecId specId, String param, Object prevValue, Object newValue) {
         return "Value '" + prevValue + "' of ID parameter " + param + " of " + specId
                 + " conflicts with the corresponding parent ID value '" + newValue + "'";
     }
@@ -250,6 +260,12 @@ public interface Errors {
         final StringBuilder buf = new StringBuilder();
         buf.append("Unknown parameter '").append(paramName).append("' for ");
         appendFeature(buf, feature);
+        return buf.toString();
+    }
+
+    static String unknownFeatureParameter(String featureSpec, String paramName) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Feature spec ").append(featureSpec).append(" does not define parameter ").append(paramName);
         return buf.toString();
     }
 

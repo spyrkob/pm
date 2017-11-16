@@ -15,29 +15,15 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.type;
 
-import java.util.Map;
-
-import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.ArtifactCoords;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedFeature {
+public interface ParameterTypeProvider {
 
-    boolean hasId();
-
-    ResolvedFeatureId getId();
-
-    ResolvedSpecId getSpecId();
-
-    boolean hasParams();
-
-    Map<String, Object> getParams();
-
-    Object getParam(String name) throws ProvisioningDescriptionException;
+    FeatureParameterType getType(ArtifactCoords.Ga fpGa, String name) throws ParameterTypeNotFoundException;
 }

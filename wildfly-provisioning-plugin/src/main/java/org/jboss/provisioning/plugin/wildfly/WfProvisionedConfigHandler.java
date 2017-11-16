@@ -98,7 +98,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
                 int i = 0;
                 while(i < addrParams.size()) {
-                    final String value = feature.getParam(addrParams.get(i++));
+                    final Object objectValue = feature.getParam(addrParams.get(i++));
+                    // TODO conversion to string using the type
+                    final String value = objectValue == null ? null : objectValue.toString();
                     if (value == null) {
                         continue;
                     }
@@ -112,7 +114,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             boolean comma = false;
                             i = 0;
                             while(i < opParams.size()) {
-                                final String value = feature.getParam(opParams.get(i++));
+                                // TODO conversion to string using the type
+                                final Object objectValue = feature.getParam(opParams.get(i++));
+                                // TODO conversion to string using the type
+                                final String value = objectValue == null ? null : objectValue.toString();
                                 if (value == null) {
                                     continue;
                                 }
@@ -136,7 +141,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         break;
                     }
                     case WRITE_ATTR: {
-                        final String value = feature.getParam(opParams.get(0));
+                        final Object objectValue = feature.getParam(opParams.get(0));
+                        // TODO conversion to string using the type
+                        final String value = objectValue == null ? null : objectValue.toString();
                         if (value == null) {
                             throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
@@ -144,7 +151,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         break;
                     }
                     case LIST_ADD: {
-                        final String value = feature.getParam(opParams.get(0));
+                        final Object objectValue = feature.getParam(opParams.get(0));
+                        // TODO conversion to string using the type
+                        final String value = objectValue == null ? null : objectValue.toString();
                         if (value == null) {
                             throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
@@ -406,7 +415,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
         if(lookForHost == LOOK_FOR_HOST_IN_SPEC) {
             lookForHost = 0;
-            hostName = feature.getParam(HOST);
+            final Object objectValue = feature.getParam(HOST);
+            // TODO conversion to string using the type
+            hostName = objectValue == null ? null : objectValue.toString();
         }
         if (opsTotal == 0) {
             messageWriter.verbose("      " + feature.getParams());

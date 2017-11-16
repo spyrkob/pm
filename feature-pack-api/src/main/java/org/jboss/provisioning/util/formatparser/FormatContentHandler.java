@@ -15,29 +15,33 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
-
-import java.util.Map;
-
-import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+package org.jboss.provisioning.util.formatparser;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedFeature {
+public abstract class FormatContentHandler {
 
-    boolean hasId();
+    protected final ParsingFormat format;
+    protected final int strIndex;
 
-    ResolvedFeatureId getId();
+    public FormatContentHandler(ParsingFormat format, int strIndex) {
+        this.format = format;
+        this.strIndex = strIndex;
+    }
 
-    ResolvedSpecId getSpecId();
+    public ParsingFormat getFormat() {
+        return format;
+    }
 
-    boolean hasParams();
+    public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
+        throw new UnsupportedOperationException();
+    }
 
-    Map<String, Object> getParams();
+    public void character(char ch) throws FormatParsingException {
+        throw new UnsupportedOperationException();
+    }
 
-    Object getParam(String name) throws ProvisioningDescriptionException;
+    abstract Object getParsedValue() throws FormatParsingException;
 }

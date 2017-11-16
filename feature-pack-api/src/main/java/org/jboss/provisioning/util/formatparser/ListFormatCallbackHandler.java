@@ -15,29 +15,30 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.state;
+package org.jboss.provisioning.util.formatparser;
 
-import java.util.Map;
-
-import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ProvisionedFeature {
+public class ListFormatCallbackHandler extends FormatContentHandler {
 
-    boolean hasId();
+    private final List<Object> list = new ArrayList<>();
 
-    ResolvedFeatureId getId();
+    public ListFormatCallbackHandler(ParsingFormat format, int strIndex) {
+        super(format, strIndex);
+    }
 
-    ResolvedSpecId getSpecId();
+    @Override
+    public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
+        list.add(childHandler.getParsedValue());
+    }
 
-    boolean hasParams();
-
-    Map<String, Object> getParams();
-
-    Object getParam(String name) throws ProvisioningDescriptionException;
+    @Override
+    public Object getParsedValue() throws FormatParsingException {
+        return list;
+    }
 }

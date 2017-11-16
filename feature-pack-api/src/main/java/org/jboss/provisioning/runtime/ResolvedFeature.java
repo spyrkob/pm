@@ -21,16 +21,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.type.FeatureParameterType;
 import org.jboss.provisioning.util.PmCollections;
 
 /**
@@ -52,57 +50,39 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     final int includeNo;
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
-    Map<String, String> params;
+    Map<String, Object> params;
     Map<ResolvedFeatureId, FeatureDependencySpec> deps;
 
     private byte orderingState = FREE;
     private byte batchControl;
 
-    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig fc, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps, int includeNo)
-            throws ProvisioningDescriptionException {
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, int includeNo) {
+        this.includeNo = includeNo;
+        this.id = id;
+        this.spec = spec;
+        initParamsFromId();
+    }
+
+    ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, Object> params, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps, int includeNo)
+            throws ProvisioningException {
         this.includeNo = includeNo;
         this.id = id;
         this.spec = spec;
         this.deps = resolvedDeps;
-        initParams(spec, fc);
+        initParamsFromId();
+        setParams(params);
     }
 
-    private ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, String> params,
-            Map<ResolvedFeatureId, FeatureDependencySpec> deps, int includeNo) {
-        this.includeNo = includeNo;
-        this.id = id;
-        this.spec = spec;
-        this.params = params;
-        this.deps = deps;
-    }
-
-    ResolvedFeature copy(int includeNo) {
+    ResolvedFeature copy(int includeNo) throws ProvisioningException {
         return new ResolvedFeature(id, spec, params.size() > 1 ? new HashMap<>(params) : params, deps.size() > 1 ? new LinkedHashMap<>(deps) : deps, includeNo);
     }
 
-    private void initParams(ResolvedFeatureSpec spec, FeatureConfig fc) throws ProvisioningDescriptionException {
-        if (fc.hasParams()) {
-            if (!spec.xmlSpec.hasParams()) {
-                throw new ProvisioningDescriptionException("Features of type " + spec.id + " don't accept any parameters: " + params);
-            }
-            final Map<String, String> params = fc.getParams();
-            if(params.size() > spec.xmlSpec.getParamsTotal()) {
-                throw new ProvisioningDescriptionException("Provided parameters " + params.keySet() + " do not match " + spec.id + " parameters " + spec.xmlSpec.getParamNames());
-            }
-            if(spec.xmlSpec.getParamsTotal() == 1) {
-                final Entry<String, String> param = params.entrySet().iterator().next();
-                if(!spec.xmlSpec.hasParam(param.getKey())) {
-                    throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, param.getKey()));
-                }
-                this.params = Collections.singletonMap(param.getKey(), param.getValue());
+    private void initParamsFromId() {
+        if(id != null) {
+            if(id.params.size() == 1) {
+                this.params = id.params;
             } else {
-                this.params = new HashMap<>(spec.xmlSpec.getParamsTotal());
-                for(Map.Entry<String, String> param : params.entrySet()) {
-                    if(!spec.xmlSpec.hasParam(param.getKey())) {
-                        throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, param.getKey()));
-                    }
-                    this.params.put(param.getKey(), param.getValue());
-                }
+                this.params = new HashMap<>(id.params);
             }
         } else {
             this.params = Collections.emptyMap();
@@ -206,29 +186,47 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     @Override
-    public Map<String, String> getParams() {
+    public Map<String, Object> getParams() {
         return params;
     }
 
     @Override
-    public String getParam(String name) throws ProvisioningDescriptionException {
+    public Object getParam(String name) throws ProvisioningDescriptionException {
         return params.get(name);
     }
 
-    public String getParamOrDefault(String name) throws ProvisioningDescriptionException {
-        String value = params.get(name);
+    public Object getParamOrDefault(String name) throws ProvisioningException {
+        Object value = params.get(name);
         if(value == null) {
             final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(name);
             if(paramSpec.hasDefaultValue()) {
                 return paramSpec.getDefaultValue();
             }
+            final FeatureParameterType paramType = spec.getTypeForParameter(name);
+            value = paramType.getDefaultValue();
         }
         return value;
     }
 
-    void setParam(String name, String value) throws ProvisioningDescriptionException {
+    public String getParamAsString(String name) throws ProvisioningException {
+        final Object value = params.get(name);
+        if(value == null) {
+            return null;
+        }
+        return spec.getTypeForParameter(name).toString(value);
+    }
+
+    public String getParamOrDefaultAsString(String name) throws ProvisioningException {
+        Object value = getParamOrDefault(name);
+        if(value == null) {
+            return null;
+        }
+        return spec.getTypeForParameter(name).toString(value);
+    }
+
+    void setParam(String name, Object value) throws ProvisioningDescriptionException {
         if(id != null) {
-            final String idValue = id.params.get(name);
+            final Object idValue = id.params.get(name);
             if(idValue != null) {
                 if(!idValue.equals(value)) {
                     throw new ProvisioningDescriptionException("ID parameter " + name + "=" + idValue + " can't be reset to " + value);
@@ -242,17 +240,18 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         params = PmCollections.put(params, name, value);
     }
 
-    void setParams(FeatureConfig config) throws ProvisioningDescriptionException {
-        if(config.hasParams()) {
-            for(Map.Entry<String, String> entry : config.getParams().entrySet()) {
-                setParam(entry.getKey(), entry.getValue());
-            }
+    void setParams(Map<String, Object> params) throws ProvisioningDescriptionException {
+        if(params.isEmpty()) {
+            return;
+        }
+        for(Map.Entry<String, Object> entry : params.entrySet()) {
+            setParam(entry.getKey(), entry.getValue());
         }
     }
 
     void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningDescriptionException {
         if(other.hasParams()) {
-            for(Map.Entry<String, String> entry : other.getParams().entrySet()) {
+            for(Map.Entry<String, Object> entry : other.getParams().entrySet()) {
                 if(overwriteParams) {
                     setParam(entry.getKey(), entry.getValue());
                 } else if(!params.containsKey(entry.getKey())) {
@@ -265,7 +264,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         }
     }
 
-    List<ResolvedFeatureId> resolveRefs() throws ProvisioningDescriptionException {
+    List<ResolvedFeatureId> resolveRefs() throws ProvisioningException {
         return spec.resolveRefs(this);
     }
 

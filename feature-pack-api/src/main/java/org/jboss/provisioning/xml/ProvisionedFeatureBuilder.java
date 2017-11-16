@@ -19,13 +19,11 @@ package org.jboss.provisioning.xml;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -47,7 +45,7 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
 
     private final ResolvedFeatureId id;
     private final ResolvedSpecId specId;
-    private Map<String, String> params = Collections.emptyMap();
+    private Map<String, Object> params = Collections.emptyMap();
 
     private ProvisionedFeatureBuilder(ResolvedFeatureId id, ResolvedSpecId specId) {
         this.id = id;
@@ -60,7 +58,7 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         }
     }
 
-    public ProvisionedFeatureBuilder setParam(String name, String value) {
+    public ProvisionedFeatureBuilder setParam(String name, Object value) {
         if(params.isEmpty()) {
             params = Collections.singletonMap(name, value);
             return this;
@@ -70,7 +68,7 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
                 params = Collections.singletonMap(name, value);
                 return this;
             }
-            final Map.Entry<String, String> entry = params.entrySet().iterator().next();
+            final Map.Entry<String, Object> entry = params.entrySet().iterator().next();
             params = new HashMap<>(2);
             params.put(entry.getKey(), entry.getValue());
         }
@@ -106,12 +104,12 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
     }
 
     @Override
-    public Map<String, String> getParams() {
+    public Map<String, Object> getParams() {
         return params;
     }
 
     @Override
-    public String getParam(String name) {
+    public Object getParam(String name) {
         return params.get(name);
     }
 
@@ -163,13 +161,7 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         }
         if(!params.isEmpty()) {
             buf.append(' ');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
-            while(i.hasNext()) {
-                entry = i.next();
-                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
-            }
+            StringUtils.append(buf, params.entrySet());
         }
         return buf.append(']').toString();
     }

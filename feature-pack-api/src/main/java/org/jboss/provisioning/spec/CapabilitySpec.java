@@ -126,7 +126,7 @@ public class CapabilitySpec {
         if(partTypes[0]) {
             buf.append(parts[0]);
         } else {
-            final String value = feature.getParamOrDefault(parts[0]);
+            final String value = feature.getParamOrDefaultAsString(parts[0]);
             if (value == null) {
                 if (optional) {
                     return null;
@@ -143,7 +143,7 @@ public class CapabilitySpec {
             if(partTypes[i]) {
                 buf.append(parts[i]);
             } else {
-                final String value = feature.getParamOrDefault(parts[i]);
+                final String value = feature.getParamOrDefaultAsString(parts[i]);
                 if (value == null) {
                     if (optional) {
                         return null;
