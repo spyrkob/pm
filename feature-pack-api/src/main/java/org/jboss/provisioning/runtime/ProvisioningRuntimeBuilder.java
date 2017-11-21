@@ -36,8 +36,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.ArtifactResolutionException;
-import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.Errors;
@@ -70,6 +68,7 @@ import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
 import org.jboss.provisioning.xml.PackageXmlParser;
+import org.jboss.provisioning.ArtifactRepositoryManager;
 
 
 /**
@@ -124,7 +123,8 @@ public class ProvisioningRuntimeBuilder {
 
     final long startTime;
     String encoding;
-    ArtifactResolver artifactResolver;
+    String operation;
+    ArtifactRepositoryManager artifactResolver;
     ProvisioningConfig config;
     Path installDir;
     final Path workDir;
@@ -163,7 +163,7 @@ public class ProvisioningRuntimeBuilder {
         return this;
     }
 
-    public ProvisioningRuntimeBuilder setArtifactResolver(ArtifactResolver artifactResolver) {
+    public ProvisioningRuntimeBuilder setArtifactResolver(ArtifactRepositoryManager artifactResolver) {
         this.artifactResolver = artifactResolver;
         return this;
     }
@@ -175,6 +175,11 @@ public class ProvisioningRuntimeBuilder {
 
     public ProvisioningRuntimeBuilder setInstallDir(Path installDir) {
         this.installDir = installDir;
+        return this;
+    }
+
+   public ProvisioningRuntimeBuilder setOperation(String operation) {
+        this.operation = operation;
         return this;
     }
 
@@ -596,7 +601,7 @@ public class ProvisioningRuntimeBuilder {
     }
 
     FeaturePackRuntime.Builder getFpDependency(FeaturePackRuntime.Builder fp, final String fpDepName)
-            throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
+            throws ProvisioningDescriptionException, ProvisioningException {
         if(Constants.THIS.equals(fpDepName)) {
             return this.fpOrigin;
         }
@@ -779,9 +784,8 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private void pushFpConfig(List<FeaturePackConfig> pushed, FeaturePackConfig fpConfig)
-            throws ProvisioningDescriptionException, ProvisioningException, ArtifactResolutionException {
+            throws ProvisioningDescriptionException, ProvisioningException {
         final FeaturePackRuntime.Builder fp = loadFpBuilder(fpConfig.getGav());
-
         if(fp.isStackEmpty()) {
             fp.push(fpConfig);
             pushed.add(fpConfig);
@@ -817,6 +821,7 @@ public class ProvisioningRuntimeBuilder {
             fp.push(fpConfig);
         }
     }
+
 
     FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
         final FeaturePackRuntime.Builder fpRtBuilder = fpRtBuilders.get(gav.toGa());

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,15 +39,27 @@ public class FsTaskList implements FsTask {
     }
 
     public FsTaskList write(String content, String relativeTarget) {
-        return add(new StringToFile(content, relativeTarget));
+        return write(content, relativeTarget, true);
+    }
+
+    public FsTaskList write(String content, String relativeTarget, boolean isContent) {
+        return add(new StringToFile(content, relativeTarget, isContent));
     }
 
     public FsTaskList copy(Path src, String relativeTarget) {
-        return add(new PathCopy(src, relativeTarget));
+        return copy(src, relativeTarget, true);
+    }
+
+    public FsTaskList copy(Path src, String relativeTarget, boolean isContent) {
+        return add(new PathCopy(src, relativeTarget, isContent));
     }
 
     public FsTaskList copyDir(Path src, String relativeTarget, boolean contentOnly) {
-        return add(new DirCopy(src, relativeTarget, contentOnly));
+        return copyDir(src, relativeTarget, contentOnly, true);
+    }
+
+    public FsTaskList copyDir(Path src, String relativeTarget, boolean contentOnly, boolean isContent) {
+        return add(new DirCopy(src, relativeTarget, contentOnly, isContent));
     }
 
     public FsTaskList add(FsTask task) {
@@ -72,5 +84,10 @@ public class FsTaskList implements FsTask {
         for(FsTask task : tasks) {
             task.execute(ctx);
         }
+    }
+
+    @Override
+    public boolean isContent() {
+        return false;
     }
 }

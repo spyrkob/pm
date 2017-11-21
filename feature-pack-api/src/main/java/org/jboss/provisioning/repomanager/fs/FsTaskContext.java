@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
 import java.nio.file.Path;
+import org.jboss.provisioning.Constants;
 
 /**
  *
@@ -51,7 +52,10 @@ public class FsTaskContext {
         this.targetRoot = builder.targetRoot;
     }
 
-    public Path getTargetRoot() {
+    public Path getTargetRoot(boolean content) {
+        if(content) {
+            return targetRoot.resolve(Constants.CONTENT);
+        }
         return targetRoot;
     }
 }

@@ -16,11 +16,12 @@
 # limitations under the License.
 #
 
-echo=on
+echo=off
 BUILD=package
 RUN=run
 DEBUG_MODE="${DEBUG:-false}"
 DEBUG_PORT="${DEBUG_PORT:-8787}"
+GREP="grep"
 
 while [ "$#" -gt 0 ]
 do

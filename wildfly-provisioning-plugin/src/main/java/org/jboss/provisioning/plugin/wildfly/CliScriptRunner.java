@@ -36,9 +36,10 @@ public class CliScriptRunner {
     public static void runCliScript(Path installHome, Path script, MessageWriter messageWriter) throws ProvisioningException {
         final CliCommandBuilder builder = CliCommandBuilder
                 .of(installHome)
+                .addCliArgument("--no-operation-validation")
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
-
+        messageWriter.verbose("Executing jboss console: " + builder.build());
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 

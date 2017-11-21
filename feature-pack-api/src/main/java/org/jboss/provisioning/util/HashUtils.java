@@ -18,6 +18,7 @@ package org.jboss.provisioning.util;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -50,6 +51,22 @@ public class HashUtils {
             DIGEST.reset();
             updateDigest(DIGEST, path);
             return DIGEST.digest();
+        }
+    }
+
+    public static String hashFile(Path path) throws IOException {
+        synchronized (DIGEST) {
+            DIGEST.reset();
+            updateDigest(DIGEST, path);
+            return bytesToHexString(DIGEST.digest());
+        }
+    }
+
+    public static String hash(String content) throws IOException {
+        synchronized (DIGEST) {
+            DIGEST.reset();
+            DIGEST.update(content.getBytes(StandardCharsets.UTF_8));
+            return bytesToHexString(DIGEST.digest());
         }
     }
 

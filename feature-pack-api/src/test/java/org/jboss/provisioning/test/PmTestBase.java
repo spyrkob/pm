@@ -22,10 +22,10 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
-import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.junit.Test;
 
 /**
@@ -34,7 +34,7 @@ import org.junit.Test;
  */
 public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
-    protected abstract void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException;
+    protected abstract void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException;
 
     protected abstract ProvisioningConfig provisionedConfig() throws ProvisioningException;
 

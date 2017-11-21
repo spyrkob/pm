@@ -43,6 +43,10 @@
       <groupId>org.jboss</groupId>
       <artifactId>staxmapper</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.googlecode.java-diff-utils</groupId>
+      <artifactId>diffutils</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

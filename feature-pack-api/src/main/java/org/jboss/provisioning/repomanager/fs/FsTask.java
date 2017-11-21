@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
 import java.io.IOException;
 
@@ -26,4 +26,5 @@ import java.io.IOException;
 interface FsTask {
 
     void execute(FsTaskContext ctx) throws IOException;
+    boolean isContent();
 }

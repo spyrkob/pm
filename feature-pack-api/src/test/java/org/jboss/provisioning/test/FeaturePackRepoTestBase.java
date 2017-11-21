@@ -22,9 +22,9 @@ import java.nio.file.Path;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.TestUtils;
-import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 import org.jboss.provisioning.util.IoUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -58,8 +58,8 @@ public class FeaturePackRepoTestBase {
     protected static void doAfterClass() throws Exception {
     }
 
-    protected static FeaturePackRepoManager getRepoManager() {
-        return FeaturePackRepoManager.newInstance(repoHome);
+    protected static FeaturePackRepositoryManager getRepoManager() {
+        return FeaturePackRepositoryManager.newInstance(repoHome);
     }
 
     protected Path installHome;

@@ -72,6 +72,7 @@ public class XmlParsers {
         new FeatureSpecXmlParser10().plugin(this);
         new FeatureConfigXmlParser10().plugin(this);
         new FeatureGroupXmlParser10().plugin(this);
+        new FileSystemDiffResultParser10().plugin(this);
     }
 
     public void plugin(QName root, XMLElementReader<?> reader) {

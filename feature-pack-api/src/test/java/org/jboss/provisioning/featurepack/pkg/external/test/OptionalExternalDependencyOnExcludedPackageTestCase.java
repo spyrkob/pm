@@ -22,13 +22,12 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
-import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
-
 /**
  *
  * @author Alexey Loubyansky
@@ -36,7 +35,7 @@ import org.jboss.provisioning.test.util.repomanager.FeaturePackRepoManager;
 public class OptionalExternalDependencyOnExcludedPackageTestCase extends PmProvisionConfigTestBase {
 
     @Override
-    protected void setupRepo(FeaturePackRepoManager repoManager) throws ProvisioningDescriptionException {
+    protected void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
             .addDependency("fp2-dep", FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"))

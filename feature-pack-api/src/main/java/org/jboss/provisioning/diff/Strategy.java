@@ -14,21 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning;
+package org.jboss.provisioning.diff;
 
 /**
  *
- * @author Alexey Loubyansky
+ * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
-public class ArtifactResolutionException extends ProvisioningException {
-
-    private static final long serialVersionUID = 1L;
-
-    public ArtifactResolutionException(String message) {
-        super(message);
-    }
-
-    public ArtifactResolutionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+public enum Strategy {
+    THEIRS, OURS, INTERACTIVE;
 }

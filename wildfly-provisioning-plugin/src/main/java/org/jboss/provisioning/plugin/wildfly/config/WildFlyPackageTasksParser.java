@@ -30,8 +30,9 @@ import org.jboss.staxmapper.XMLMapper;
  * @author Alexey Loubyansky
  */
 public class WildFlyPackageTasksParser {
+    public static final String NAMESPACE_2_0 = "urn:wildfly:wildfly-feature-pack-tasks:2.0";
 
-    private static final QName ROOT_2_0 = new QName(WildFlyPackageTasksParser20.NAMESPACE_2_0, WildFlyPackageTasksParser20.Element.TASKS.getLocalName());
+    private static final QName ROOT_2_0 = new QName(NAMESPACE_2_0, WildFlyPackageTasksParser20.Element.TASKS.getLocalName());
 
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
 

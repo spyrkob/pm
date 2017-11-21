@@ -49,7 +49,7 @@ public abstract class PathState {
         if (name != null) {
             final Path path = parent.resolve(name);
             if (!Files.exists(path)) {
-                Assert.fail("Path exists: " + path);
+                Assert.fail("Path doesn't exist: " + path);
             }
             doAssertState(path);
         } else {

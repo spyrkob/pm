@@ -26,7 +26,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
  *
  * @author Alexey Loubyansky
  */
-@GroupCommandDefinition(description = "", name = "provisioned-spec", groupCommands={ProvisionedSpecDisplayCommand.class,ProvisionedSpecExportCommand.class, ProvisionedConfigExportCommand.class})
+@GroupCommandDefinition(description = "", name = "provisioned-spec", groupCommands={ProvisionedSpecDisplayCommand.class,ProvisionedSpecExportCommand.class, DiffCommand.class})
 public class ProvisionedSpecCommand implements Command<CommandInvocation> {
 
     @Override

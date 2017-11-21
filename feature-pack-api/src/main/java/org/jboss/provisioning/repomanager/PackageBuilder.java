@@ -15,20 +15,21 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.repomanager;
+package org.jboss.provisioning.repomanager;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.repomanager.fs.FsTaskContext;
+import org.jboss.provisioning.repomanager.fs.FsTaskList;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.test.util.TestUtils;
-import org.jboss.provisioning.test.util.fs.FsTaskContext;
-import org.jboss.provisioning.test.util.fs.FsTaskList;
+
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 
@@ -99,17 +100,28 @@ public class PackageBuilder {
     }
 
     public PackageBuilder addPath(String relativeTarget, Path src) {
-        getTasks().copy(src, relativeTarget);
+        return addPath(relativeTarget, src, true);
+    }
+
+    public PackageBuilder addPath(String relativeTarget, Path src, boolean isContent) {
+        getTasks().copy(src, relativeTarget, isContent);
         return this;
     }
 
     public PackageBuilder addDir(String relativeTarget, Path src, boolean contentOnly) {
-        getTasks().copyDir(src, relativeTarget, contentOnly);
-        return this;
+        return addDir(relativeTarget, src, contentOnly, true);
     }
 
+    public PackageBuilder addDir(String relativeTarget, Path src, boolean contentOnly, boolean isContent) {
+        getTasks().copyDir(src, relativeTarget, contentOnly, isContent);
+        return this;
+    }
     public PackageBuilder writeContent(String relativeTarget, String content) {
-        getTasks().write(content, relativeTarget);
+        return writeContent(relativeTarget, content, true);
+    }
+
+    public PackageBuilder writeContent(String relativeTarget, String content, boolean isContent) {
+        getTasks().write(content, relativeTarget, isContent);
         return this;
     }
 
@@ -121,10 +133,10 @@ public class PackageBuilder {
         } catch (ProvisioningDescriptionException e) {
             throw new IllegalStateException(e);
         }
-        TestUtils.mkdirs(pkgDir);
         try {
+            Files.createDirectories(pkgDir);
             if(tasks != null && !tasks.isEmpty()) {
-                tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir.resolve(Constants.CONTENT)).build());
+                tasks.execute(FsTaskContext.builder().setTargetRoot(pkgDir).build());
             }
             PackageXmlWriter.getInstance().write(pkgSpec, pkgDir.resolve(Constants.PACKAGE_XML));
         } catch (XMLStreamException | IOException e) {

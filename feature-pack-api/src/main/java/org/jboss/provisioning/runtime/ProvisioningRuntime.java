@@ -18,8 +18,10 @@
 package org.jboss.provisioning.runtime;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,16 +35,16 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.ArtifactResolutionException;
-import org.jboss.provisioning.ArtifactResolver;
-import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.plugin.DiffPlugin;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.diff.FileSystemDiffResult;
+import org.jboss.provisioning.repomanager.FeaturePackBuilder;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
@@ -51,6 +53,12 @@ import org.jboss.provisioning.util.PathsUtils;
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
+import org.jboss.provisioning.ArtifactRepositoryManager;
+import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.plugin.DiffPlugin;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.plugin.UpgradePlugin;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
  *
@@ -103,15 +111,50 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
     }
 
-    public static void exportDiff(ProvisioningRuntime runtime, Path target, Path customizedInstallation) throws ProvisioningException {
+    public static void exportToFeaturePack(ProvisioningRuntime runtime, Path location, Path installationHome) throws ProvisioningDescriptionException, ProvisioningException, IOException {
+        diff(runtime, location, installationHome);
+        FeaturePackRepositoryManager fpRepoManager = FeaturePackRepositoryManager.newInstance(location);
+        Gav gav = ArtifactCoords.newGav(runtime.getParameter("gav"));
+        FeaturePackBuilder fpBuilder = fpRepoManager.installer().newFeaturePack(gav);
+        for (FeaturePackConfig fpConfig : runtime.getProvisioningConfig().getFeaturePacks()) {
+            fpBuilder.addDependency(fpConfig);
+        }
+        runtime.exportDiffResultToFeaturePack(fpBuilder, installationHome);
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(runtime.pluginsDir)) {
+            for(Path file : stream) {
+                if((Files.isRegularFile(file))) {
+                    fpBuilder.addPlugin(file);
+                }
+            }
+        } catch(IOException ioex) {
+            throw new ProvisioningException(ioex);
+        }
+        fpBuilder.getInstaller().install();
+        runtime.artifactResolver.install(gav.toArtifactCoords(), fpRepoManager.resolve(gav.toArtifactCoords()));
+    }
+
+    public static void diff(ProvisioningRuntime runtime, Path target, Path customizedInstallation) throws ProvisioningException, IOException {
         // execute the plug-ins
         runtime.executeDiffPlugins(target, customizedInstallation);
     }
 
+    public static void upgrade(ProvisioningRuntime runtime, Path customizedInstallation) throws ProvisioningException {
+        // execute the plug-ins
+        runtime.executeUpgradePlugins(customizedInstallation);
+         if (Files.exists(customizedInstallation)) {
+            IoUtils.recursiveDelete(customizedInstallation);
+        }
+        try {
+            IoUtils.copy(runtime.installDir, customizedInstallation);
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.copyFile(runtime.installDir, customizedInstallation));
+        }
+    }
+
     private final long startTime;
-    private final ArtifactResolver artifactResolver;
-    private final ProvisioningConfig config;
-    private final Path installDir;
+    private final ArtifactRepositoryManager artifactResolver;
+    private ProvisioningConfig config;
+    private Path installDir;
     private final Path stagedDir;
     private final Path workDir;
     private final Path tmpDir;
@@ -120,6 +163,9 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Map<String, String> parameters;
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
+    private FileSystemDiffResult diff = FileSystemDiffResult.empty();
+    private ClassLoader pluginsClassLoader;
+    private final String operation;
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder, final MessageWriter messageWriter) throws ProvisioningException {
         this.startTime = builder.startTime;
@@ -127,6 +173,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.config = builder.config;
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
+        this.operation = builder.operation;
 
         if(!builder.anonymousConfigs.isEmpty()) {
             for(ProvisionedConfig config : builder.anonymousConfigs) {
@@ -169,6 +216,41 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.messageWriter = messageWriter;
     }
 
+    private ClassLoader getPluginClassloader() throws ProvisioningException {
+        if(pluginsClassLoader != null) {
+            return pluginsClassLoader;
+        }
+        if (pluginsDir != null) {
+            List<java.net.URL> urls = Collections.emptyList();
+            try (Stream<Path> stream = Files.list(pluginsDir)) {
+                final Iterator<Path> i = stream.iterator();
+                while (i.hasNext()) {
+                    switch (urls.size()) {
+                        case 0:
+                            urls = Collections.singletonList(i.next().toUri().toURL());
+                            break;
+                        case 1:
+                            urls = new ArrayList<>(urls);
+                        default:
+                            urls.add(i.next().toUri().toURL());
+                    }
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
+            }
+            if (!urls.isEmpty()) {
+                final Thread thread = Thread.currentThread();
+                pluginsClassLoader = new java.net.URLClassLoader(urls.toArray(
+                        new java.net.URL[urls.size()]), thread.getContextClassLoader());
+            } else {
+                pluginsClassLoader = Thread.currentThread().getContextClassLoader();
+            }
+        } else {
+            pluginsClassLoader = Thread.currentThread().getContextClassLoader();
+        }
+        return pluginsClassLoader;
+    }
+
     private void addConfig(ProvisionedConfig config) {
         configs = PmCollections.add(configs, config);
     }
@@ -189,6 +271,10 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      */
     public Path getInstallDir() {
         return installDir;
+    }
+
+    public void setInstallDir(Path installDir) {
+        this.installDir = installDir;
     }
 
     /**
@@ -227,6 +313,42 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      */
     public MessageWriter getMessageWriter() {
         return messageWriter;
+    }
+
+    public void setDiff(FileSystemDiffResult diff) {
+        this.diff = diff;
+    }
+
+    /**
+     * Returns the result of a diff if such an operation was called previously.
+     *
+     * @return the result of a diff
+     */
+    public FileSystemDiffResult getDiff() {
+        return diff;
+    }
+
+    public void exportDiffResultToFeaturePack(FeaturePackBuilder fpBuilder, Path installationHome) throws ProvisioningException {
+        ClassLoader pluginClassLoader = getPluginClassloader();
+        if (pluginClassLoader != null) {
+            final Thread thread = Thread.currentThread();
+            final ClassLoader ocl = thread.getContextClassLoader();
+            try {
+                thread.setContextClassLoader(pluginClassLoader);
+                diff.toFeaturePack(fpBuilder, this, installationHome);
+            } finally {
+                thread.setContextClassLoader(ocl);
+            }
+        }
+    }
+
+    /**
+     * Returns the current operation being executed.
+     *
+     * @return the current operation being executed.
+     */
+    public String getOperation() {
+        return operation;
     }
 
     /**
@@ -288,10 +410,10 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      *
      * @param coords  artifact coordinates
      * @return  location of the artifact
-     * @throws ArtifactResolutionException  in case the artifact could not be
+     * @throws ArtifactException  in case the artifact could not be
      * resolved for any reason
      */
-    public Path resolveArtifact(ArtifactCoords coords) throws ArtifactResolutionException {
+    public Path resolveArtifact(ArtifactCoords coords) throws ArtifactException {
         return artifactResolver.resolve(coords);
     }
 
@@ -306,38 +428,22 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     }
 
     private void executePlugins() throws ProvisioningException {
-        if(pluginsDir != null) {
-            List<java.net.URL> urls = Collections.emptyList();
-            try(Stream<Path> stream = Files.list(pluginsDir)) {
-                final Iterator<Path> i = stream.iterator();
-                while(i.hasNext()) {
-                    urls = PmCollections.add(urls, i.next().toUri().toURL());
-                }
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
-            }
-            if(!urls.isEmpty()) {
-                final Thread thread = Thread.currentThread();
-                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
-                        new java.net.URL[urls.size()]), thread.getContextClassLoader());
-                final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, ucl);
-                final Iterator<ProvisioningPlugin> pluginIterator = pluginLoader.iterator();
-                if(pluginIterator.hasNext()) {
-                    final ClassLoader ocl = thread.getContextClassLoader();
-                    try {
-                        thread.setContextClassLoader(ucl);
-                        final ProvisioningPlugin plugin = pluginIterator.next();
-                        plugin.postInstall(this);
-                        while(pluginIterator.hasNext()) {
-                            pluginIterator.next().postInstall(this);
-                        }
-                    } finally {
-                        thread.setContextClassLoader(ocl);
-                        try {
-                            ucl.close();
-                        } catch (IOException e) {
-                        }
+        ClassLoader pluginClassLoader = getPluginClassloader();
+        if (pluginClassLoader != null) {
+            final Thread thread = Thread.currentThread();
+            final ServiceLoader<ProvisioningPlugin> pluginLoader = ServiceLoader.load(ProvisioningPlugin.class, pluginClassLoader);
+            final Iterator<ProvisioningPlugin> pluginIterator = pluginLoader.iterator();
+            if (pluginIterator.hasNext()) {
+                final ClassLoader ocl = thread.getContextClassLoader();
+                try {
+                    thread.setContextClassLoader(pluginClassLoader);
+                    final ProvisioningPlugin plugin = pluginIterator.next();
+                    plugin.postInstall(this);
+                    while (pluginIterator.hasNext()) {
+                        pluginIterator.next().postInstall(this);
                     }
+                } finally {
+                    thread.setContextClassLoader(ocl);
                 }
             }
         }
@@ -353,35 +459,45 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
     }
 
-    private void executeDiffPlugins(Path target, Path customizedInstallation) throws ProvisioningException {
-        if(pluginsDir != null) {
-            List<java.net.URL> urls = Collections.emptyList();
-            try(Stream<Path> stream = Files.list(pluginsDir)) {
-                final Iterator<Path> i = stream.iterator();
-                while(i.hasNext()) {
-                    urls = PmCollections.add(urls, i.next().toUri().toURL());
-                }
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readDirectory(pluginsDir), e);
-            }
-            if(!urls.isEmpty()) {
-                final Thread thread = Thread.currentThread();
-                final java.net.URLClassLoader ucl = new java.net.URLClassLoader(urls.toArray(
-                        new java.net.URL[urls.size()]), thread.getContextClassLoader());
-                final ServiceLoader<DiffPlugin> pluginLoader = ServiceLoader.load(DiffPlugin.class, ucl);
-                final Iterator<DiffPlugin> pluginIterator = pluginLoader.iterator();
-                if(pluginIterator.hasNext()) {
-                    final ClassLoader ocl = thread.getContextClassLoader();
-                    try {
-                        thread.setContextClassLoader(ucl);
-                        final DiffPlugin plugin = pluginIterator.next();
-                        plugin.calculateConfiguationChanges(this, customizedInstallation, target);
-                        while(pluginIterator.hasNext()) {
-                            pluginIterator.next().calculateConfiguationChanges(this, customizedInstallation, target);
-                        }
-                    } finally {
-                        thread.setContextClassLoader(ocl);
+    private void executeDiffPlugins(Path target, Path customizedInstallation) throws ProvisioningException, IOException {
+        ClassLoader pluginClassLoader = getPluginClassloader();
+        if (pluginClassLoader != null) {
+            final Thread thread = Thread.currentThread();
+            final ServiceLoader<DiffPlugin> pluginLoader = ServiceLoader.load(DiffPlugin.class, pluginClassLoader);
+            final Iterator<DiffPlugin> pluginIterator = pluginLoader.iterator();
+            if (pluginIterator.hasNext()) {
+                final ClassLoader ocl = thread.getContextClassLoader();
+                try {
+                    thread.setContextClassLoader(pluginClassLoader);
+                    final DiffPlugin plugin = pluginIterator.next();
+                    plugin.computeDiff(this, customizedInstallation, target);
+                    while (pluginIterator.hasNext()) {
+                        pluginIterator.next().computeDiff(this, customizedInstallation, target);
                     }
+                } finally {
+                    thread.setContextClassLoader(ocl);
+                }
+            }
+        }
+    }
+
+    private void executeUpgradePlugins(Path customizedInstallation) throws ProvisioningException {
+        ClassLoader pluginClassLoader = getPluginClassloader();
+        if (pluginClassLoader != null) {
+            final Thread thread = Thread.currentThread();
+            final ServiceLoader<UpgradePlugin> pluginLoader = ServiceLoader.load(UpgradePlugin.class, pluginClassLoader);
+            final Iterator<UpgradePlugin> pluginIterator = pluginLoader.iterator();
+            if (pluginIterator.hasNext()) {
+                final ClassLoader ocl = thread.getContextClassLoader();
+                try {
+                    thread.setContextClassLoader(pluginClassLoader);
+                    final UpgradePlugin plugin = pluginIterator.next();
+                    plugin.upgrade(this, customizedInstallation);
+                    while (pluginIterator.hasNext()) {
+                        pluginIterator.next().upgrade(this, customizedInstallation);
+                    }
+                } finally {
+                    thread.setContextClassLoader(ocl);
                 }
             }
         }

@@ -16,27 +16,25 @@
  */
 package org.jboss.provisioning.plugin.wildfly;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.impl.CommandContextConfiguration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
- * Create a CommandContext instance that will start an embedded server and execute a list of commands on it.
+ * Create an embedded server and execute a list of commands on it.
  * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
 public class EmbeddedServer {
     private final Path installDir;
-    private final Path cliConfig;
     private final MessageWriter messageWriter;
 
-    public EmbeddedServer(Path installDir, Path cliConfig, MessageWriter messageWriter) {
+    public EmbeddedServer(Path installDir, MessageWriter messageWriter) {
         this.installDir = installDir;
-        this.cliConfig = cliConfig;
         this.messageWriter = messageWriter;
     }
 
@@ -46,55 +44,36 @@ public class EmbeddedServer {
      * @throws ProvisioningException
      */
     public void execute(boolean validate, String ... commands) throws ProvisioningException {
-        Properties props = (Properties) System.getProperties().clone();
-        CommandContext ctx = null;
+        execute(validate, Arrays.asList(commands));
+    }
+
+    /**
+     * Starts an embedded server to execute commands
+     * @param commands the list of commands to execute on the embedded server.
+     * @throws ProvisioningException
+     */
+    public void execute(boolean validate, List<String> commands) throws ProvisioningException {
+        List<String> allCommands = new ArrayList<>();
+        allCommands.add(startEmbeddedServerCommand("standalone.xml"));
+        allCommands.addAll(commands);
+        allCommands.add("stop-embedded-server");
         try {
-            if(Files.exists(cliConfig)) {
-                System.setProperty("jboss.cli.config", cliConfig.toString());
-            }
-            ctx = CommandContextFactory.getInstance().newCommandContext(
-                    new CommandContextConfiguration.Builder()
-                            .setSilent(!messageWriter.isVerboseEnabled())
-                            .setEchoCommand(messageWriter.isVerboseEnabled())
-                            .setInitConsole(false)
-//Waiting for WFCORE-3118   .setValidateOperationRequests(validate)
-                            .build());
-            ctx.handle("embed-server --admin-only --server-config=standalone.xml --jboss-home=" + installDir.toAbsolutePath());
-            for (String cmd : commands) {
-                ctx.handle(cmd);
-            }
-            ctx.handle("stop-embedded-server");
-        } catch (Exception e) {
+            Path script = Files.createTempFile("", ".cli");
+            Files.write(script, allCommands);
+            messageWriter.verbose("Cli script %s ", script);
+            CliScriptRunner.runCliScript(installDir, script, messageWriter);
+        } catch (IOException e) {
             messageWriter.error(e, "Error using console");
             messageWriter.verbose(e, null);
             throw new ProvisioningException(e);
-        } finally {
-            if(ctx != null) {
-                ctx.terminateSession();
-                clearXMLConfiguration(props);
-                System.clearProperty("jboss.cli.config");
-            }
         }
     }
 
-    private void clearXMLConfiguration(Properties props) {
-        clearProperty(props, "javax.xml.parsers.DocumentBuilderFactory");
-        clearProperty(props, "javax.xml.parsers.SAXParserFactory");
-        clearProperty(props, "javax.xml.transform.TransformerFactory");
-        clearProperty(props, "javax.xml.xpath.XPathFactory");
-        clearProperty(props, "javax.xml.stream.XMLEventFactory");
-        clearProperty(props, "javax.xml.stream.XMLInputFactory");
-        clearProperty(props, "javax.xml.stream.XMLOutputFactory");
-        clearProperty(props, "javax.xml.datatype.DatatypeFactory");
-        clearProperty(props, "javax.xml.validation.SchemaFactory");
-        clearProperty(props, "org.xml.sax.driver");
-    }
-
-    private void clearProperty(Properties props , String name) {
-        if(props.containsKey(name)) {
-            System.setProperty(name, props.getProperty(name));
-        } else {
-            System.clearProperty(name);
-        }
+    public static String startEmbeddedServerCommand(String config) {
+         String localConfig = "standalone.xml";
+         if(config != null && ! config.isEmpty()) {
+             localConfig = config;
+         }
+         return String.format("embed-server --admin-only --server-config=%s", localConfig);
     }
 }
