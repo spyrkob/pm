@@ -16,13 +16,19 @@
  */
 package org.jboss.provisioning;
 
-import java.nio.file.Path;
-
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ArtifactResolver {
+public class ArtifactException extends ProvisioningException {
 
-    Path resolve(ArtifactCoords coords) throws ArtifactResolutionException;
+    private static final long serialVersionUID = 1L;
+
+    public ArtifactException(String message) {
+        super(message);
+    }
+
+    public ArtifactException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

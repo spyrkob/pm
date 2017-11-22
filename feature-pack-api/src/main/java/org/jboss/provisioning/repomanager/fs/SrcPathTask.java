@@ -15,28 +15,24 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
-import java.io.IOException;
 import java.nio.file.Path;
-
-import org.jboss.provisioning.util.IoUtils;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class PathCopy extends SrcPathTask {
+abstract class SrcPathTask extends RelativeTargetTask {
 
-    protected PathCopy(Path src, String relativeTarget) {
-        super(src, relativeTarget);
+    protected final Path src;
+
+    protected SrcPathTask(Path src, String relativeTarget) {
+        this(src, relativeTarget, true);
     }
 
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.test.util.fs.FsTask#execute(org.jboss.provisioning.test.util.fs.FsTaskContext)
-     */
-    @Override
-    public void execute(FsTaskContext ctx) throws IOException {
-        IoUtils.copy(src, resolveTarget(ctx));
+    protected SrcPathTask(Path src, String relativeTarget, boolean isContent) {
+        super(relativeTarget, isContent);
+        this.src = src;
     }
 }

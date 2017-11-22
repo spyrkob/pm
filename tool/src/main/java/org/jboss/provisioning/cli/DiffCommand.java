@@ -20,10 +20,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
@@ -33,12 +31,8 @@ import org.jboss.provisioning.ProvisioningException;
 /**
  * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
-@CommandDefinition(name="diff", description="Saves current provisioned configuration into the specified file.")
-public class ProvisionedConfigExportCommand extends ProvisioningCommand {
-
-    @Arguments(completer=FileOptionCompleter.class, description="File to save the provisioned spec too.")
-    private List<Resource> fileArg;
-
+@CommandDefinition(name="diff", description="Saves current provisioned configuration changes into a feature pack.")
+public class DiffCommand extends FromInstallationCommand {
     @Option(name = "username", required = true,
             description = "User to connect to provisionned server.")
     protected String username;
@@ -57,16 +51,15 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
     @Option(name = "server-config", required = false, defaultValue = "standalone.xml",
             description = "Server configuration file to use for the provisionned server.")
     protected String serverConfig;
+    @Option(name = "gav", required=true, completer=GavCompleter.class,
+            description = "Feature pack GAV coordinates.")
+    protected String coord;
+    @Option(name="target", completer=FileOptionCompleter.class, required=true,
+            description="Directory to save the feature pack to.")
+    protected Resource exportDirArg;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        if(fileArg == null || fileArg.isEmpty() || fileArg.isEmpty()) {
-            throw new CommandExecutionException("Missing required file path arguments.");
-        }
-        if(fileArg.size() > 2) {
-            throw new CommandExecutionException("The command expects only two argument.");
-        }
-
         Map<String, String> parameters = new HashMap<>(5);
         if (host != null) {
             parameters.put("host", host);
@@ -86,18 +79,13 @@ public class ProvisionedConfigExportCommand extends ProvisioningCommand {
         if (serverConfig != null) {
             parameters.put("server-config", serverConfig);
         }
-        final Resource specTargetResource = fileArg.get(1).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
+        parameters.put("gav", coord);
+        final Resource specTargetResource = exportDirArg.resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
         final Path targetFile = Paths.get(specTargetResource.getAbsolutePath());
         try {
-            getManager(session).exportConfigurationChanges(targetFile, parameters);
+            getManager(session).exportConfigurationChanges(targetFile, parameters, true);
         } catch (ProvisioningException | IOException e) {
             throw new CommandExecutionException("Failed to export provisioned state", e);
         }
-    }
-
-    @Override
-    protected Path getTargetDir(PmSession session) {
-        final Resource specResource = fileArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
-        return Paths.get(specResource.getAbsolutePath());
     }
 }

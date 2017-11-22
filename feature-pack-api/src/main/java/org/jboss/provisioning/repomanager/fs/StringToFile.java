@@ -15,26 +15,30 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.jboss.provisioning.util.IoUtils;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class DirCopy extends SrcPathTask {
+class StringToFile extends RelativeTargetTask {
 
-    private final boolean contentOnly;
+    private final String content;
+    private final boolean isContent;
 
-    DirCopy(Path src, String relativeTarget, boolean contentOnly) {
-        super(src, relativeTarget);
-        this.contentOnly = contentOnly;
+     protected StringToFile(String content, String relativeTarget) {
+        this(relativeTarget, content, true);
+    }
+
+    protected StringToFile(String content, String relativeTarget, boolean isContent) {
+        super(relativeTarget);
+        this.content = content;
+        this.isContent = isContent;
     }
 
     /* (non-Javadoc)
@@ -43,14 +47,16 @@ class DirCopy extends SrcPathTask {
     @Override
     public void execute(FsTaskContext ctx) throws IOException {
         final Path target = resolveTarget(ctx);
-        if(contentOnly) {
-            try(DirectoryStream<Path> stream = Files.newDirectoryStream(src)) {
-                for(Path p : stream) {
-                    IoUtils.copy(p, target);
-                }
-            }
-        } else {
-            IoUtils.copy(src, resolveTarget(ctx));
+        if(!Files.exists(target.getParent())) {
+            Files.createDirectories(target.getParent());
         }
+        try(BufferedWriter writer = Files.newBufferedWriter(target)) {
+            writer.write(content);
+        }
+    }
+
+    @Override
+    public boolean isContent() {
+        return isContent;
     }
 }

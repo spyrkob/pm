@@ -16,6 +16,8 @@
  */
 package org.jboss.provisioning.plugin.wildfly.config;
 
+import static org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasksParser.NAMESPACE_2_0;
+
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.XmlNameProvider;
 import org.jboss.staxmapper.XMLElementReader;
@@ -40,8 +42,6 @@ import java.util.Set;
  * @author Alexey Loubyansky
  */
 class WildFlyPackageTasksParser20 implements XMLElementReader<WildFlyPackageTasks.Builder> {
-
-    public static final String NAMESPACE_2_0 = "urn:wildfly:wildfly-feature-pack-tasks:2.0";
 
     enum Element {
 

@@ -50,7 +50,9 @@ public class CliMain {
                 .addCommand(new InstallCommand())
                 .addCommand(new ProvisionedSpecCommand())
                 .addCommand(new ProvisionSpecCommand())
-                .addCommand(new ProvisionedConfigExportCommand())
+                .addCommand(new DiffCommand())
+                .addCommand(new ChangesCommand())
+                .addCommand(new UpgradeCommand())
                 .addCommand(new UninstallCommand())
                 // filesystem-related commands
                 .addCommand(new CdCommand())

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
 import java.nio.file.Path;
 
@@ -23,12 +23,26 @@ import java.nio.file.Path;
  *
  * @author Alexey Loubyansky
  */
-abstract class SrcPathTask extends RelativeTargetTask {
+public abstract class RelativeTargetTask implements FsTask {
 
-    protected final Path src;
+    private final String relativeTarget;
+    private final boolean isContent;
 
-    protected SrcPathTask(Path src, String relativeTarget) {
-        super(relativeTarget);
-        this.src = src;
+    protected RelativeTargetTask(String relativeTarget) {
+        this(relativeTarget, true);
+    }
+
+    protected RelativeTargetTask(String relativeTarget, boolean isContent) {
+        this.relativeTarget = relativeTarget;
+        this.isContent = isContent;
+    }
+
+    @Override
+    public boolean isContent() {
+        return isContent;
+    }
+
+    protected Path resolveTarget(FsTaskContext ctx) {
+        return ctx.getTargetRoot(isContent()).resolve(relativeTarget);
     }
 }

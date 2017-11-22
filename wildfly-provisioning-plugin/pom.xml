@@ -54,6 +54,12 @@
       <groupId>org.wildfly.core</groupId>
       <artifactId>wildfly-launcher</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -95,9 +101,9 @@
                 <excludes>
                   <exclude>org.jboss.modules:jboss-modules</exclude>
                   <exclude>org.jboss.pm:feature-pack-api</exclude>
-                  <exclude>org.wildfly.core:wildfly-cli</exclude>
+                  <!--<exclude>org.wildfly.core:wildfly-cli</exclude>
                   <exclude>org.wildfly.core:wildfly-controller-client</exclude>
-                  <exclude>org.wildfly.core:wildfly-protocol</exclude>
+                  <exclude>org.wildfly.core:wildfly-protocol</exclude>-->
                 </excludes>
               </artifactSet>
               <filters>

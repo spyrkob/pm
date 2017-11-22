@@ -28,7 +28,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
  *
  * @author Alexey Loubyansky
  */
-class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession> {
+public class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession> {
 
     private Prompt prompt;
 

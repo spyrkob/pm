@@ -36,15 +36,6 @@ public class TestUtils {
 
     private static final Path TMP_DIR = Paths.get(System.getProperty("java.io.tmpdir"));
 
-    public static Path mkTmpDir(String name) {
-        final Path dir = TMP_DIR.resolve(name);
-        if(Files.exists(dir)) {
-            throw new IllegalStateException("Path already exists " + dir);
-        }
-        mkdirs(dir);
-        return dir;
-    }
-
     private static void mkdirs(final Path dir) {
         try {
             Files.createDirectories(dir);
@@ -54,7 +45,7 @@ public class TestUtils {
     }
 
     public static Path mkRandomTmpDir() {
-        return mkTmpDir(UUID.randomUUID().toString());
+        return IoUtils.createTmpDir(UUID.randomUUID().toString());
     }
 
     public static void rm(Path p) {

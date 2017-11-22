@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.repomanager;
+package org.jboss.provisioning.repomanager;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,18 +32,19 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.repomanager.fs.FsTaskContext;
+import org.jboss.provisioning.repomanager.fs.FsTaskList;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageSpec;
-import org.jboss.provisioning.test.util.TestUtils;
-import org.jboss.provisioning.test.util.fs.FsTaskContext;
-import org.jboss.provisioning.test.util.fs.FsTaskList;
+
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeatureGroupXmlWriter;
@@ -56,43 +57,31 @@ import org.jboss.provisioning.xml.FeatureSpecXmlWriter;
  */
 public class FeaturePackBuilder {
 
-    static Path getArtifactPath(Path repoHome, final ArtifactCoords coords) {
-        Path p = repoHome;
-        final String[] groupParts = coords.getGroupId().split("\\.");
-        for (String part : groupParts) {
-            p = p.resolve(part);
-        }
-        p = p.resolve(coords.getArtifactId());
-        p = p.resolve(coords.getVersion());
-        final StringBuilder fileName = new StringBuilder();
-        fileName.append(coords.getArtifactId()).append('-').append(coords.getVersion()).append('.').append(coords.getExtension());
-        return p.resolve(fileName.toString());
-    }
-
     public static FeaturePackBuilder newInstance() {
         return newInstance(null);
     }
 
-    public static FeaturePackBuilder newInstance(FeaturePackRepoManager.Installer installer) {
+    public static FeaturePackBuilder newInstance(FeaturePackInstaller installer) {
         return new FeaturePackBuilder(installer);
     }
 
-    private final FeaturePackRepoManager.Installer installer;
+    private final FeaturePackInstaller installer;
     private final FeaturePackSpec.Builder fpBuilder = FeaturePackSpec.builder();
     private List<PackageBuilder> pkgs = Collections.emptyList();
     private Set<Class<?>> classes = Collections.emptySet();
     private Map<String, Set<String>> services = Collections.emptyMap();
     private String pluginFileName = "plugins.jar";
+    private List<Path> plugins = Collections.emptyList();
     private Map<String, FeatureSpec> specs = Collections.emptyMap();
     private Map<String, FeatureGroupSpec> featureGroups = Collections.emptyMap();
     private FsTaskList tasks;
 
 
-    protected FeaturePackBuilder(FeaturePackRepoManager.Installer repo) {
+    protected FeaturePackBuilder(FeaturePackInstaller repo) {
         this.installer = repo;
     }
 
-    public FeaturePackRepoManager.Installer getInstaller() {
+    public FeaturePackInstaller getInstaller() {
         return installer;
     }
 
@@ -200,6 +189,22 @@ public class FeaturePackBuilder {
         return this;
     }
 
+    public FeaturePackBuilder addPlugin(Path file) {
+        if(plugins.contains(file)) {
+            return this;
+        }
+        switch(plugins.size()) {
+            case 0:
+                plugins = Collections.singletonList(file);
+                break;
+            case 1:
+                plugins = new ArrayList<>(plugins);
+            default:
+                plugins.add(file);
+        }
+        return this;
+    }
+
     public FeaturePackBuilder addPlugin(Class<? extends ProvisioningPlugin> pluginCls) {
         return addService(ProvisioningPlugin.class, pluginCls);
     }
@@ -241,12 +246,12 @@ public class FeaturePackBuilder {
         if(tasks == null) {
             tasks = FsTaskList.newList();
         }
-        tasks.write(content, relativePath);
+        tasks.write(content, relativePath, false);
         return this;
     }
 
-    public FeaturePackSpec build(Path repoHome) throws ProvisioningDescriptionException {
-        final Path fpWorkDir = TestUtils.mkRandomTmpDir();
+    public FeaturePackSpec build(ArtifactRepositoryManager manager) throws ProvisioningDescriptionException {
+        final Path fpWorkDir = IoUtils.createRandomTmpDir();
         final FeaturePackSpec fpSpec;
         try {
             for (PackageBuilder pkg : pkgs) {
@@ -275,7 +280,7 @@ public class FeaturePackBuilder {
                 }
             }
 
-            if(!classes.isEmpty()) {
+            if(!classes.isEmpty() || !plugins.isEmpty()) {
                 addPlugins(fpWorkDir);
             }
             fpSpec = fpBuilder.build();
@@ -285,11 +290,7 @@ public class FeaturePackBuilder {
             if(tasks != null && !tasks.isEmpty()) {
                 tasks.execute(FsTaskContext.builder().setTargetRoot(fpWorkDir.resolve(Constants.RESOURCES)).build());
             }
-
-            final Path fpZip;
-            fpZip = getArtifactPath(repoHome, fpSpec.getGav().toArtifactCoords());
-            TestUtils.mkdirs(fpZip.getParent());
-            ZipUtils.zip(fpWorkDir, fpZip);
+            manager.install(fpSpec.getGav().toArtifactCoords(), fpWorkDir);
             return fpSpec;
         } catch(ProvisioningDescriptionException e) {
             throw e;
@@ -349,6 +350,11 @@ public class FeaturePackBuilder {
             final Path pluginsDir = fpDir.resolve(Constants.PLUGINS);
             ensureDir(pluginsDir);
             ZipUtils.zip(tmpDir, pluginsDir.resolve(pluginFileName));
+            if(!plugins.isEmpty()) {
+                for(Path plugin : plugins) {
+                    Files.copy(plugin, pluginsDir.resolve(plugin.getFileName()));
+                }
+            }
         } finally {
             IoUtils.recursiveDelete(tmpDir);
         }

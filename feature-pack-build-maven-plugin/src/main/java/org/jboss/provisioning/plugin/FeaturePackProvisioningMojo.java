@@ -39,13 +39,17 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.deployment.DeployRequest;
+import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.installation.InstallRequest;
+import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactResolver;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
@@ -53,6 +57,7 @@ import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.plugin.util.LoggerMessageWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlParser;
+import org.jboss.provisioning.ArtifactRepositoryManager;
 
 /**
  *
@@ -111,22 +116,48 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
 
         try {
             ProvisioningManager.builder().setEncoding(encoding).setInstallationHome(installDir)
-                    .setArtifactResolver(new ArtifactResolver() {
+                    .setArtifactResolver(new ArtifactRepositoryManager() {
                         @Override
-                        public Path resolve(ArtifactCoords coords) throws org.jboss.provisioning.ArtifactResolutionException {
+                        public Path resolve(ArtifactCoords coords) throws org.jboss.provisioning.ArtifactException {
                             final ArtifactResult result;
                             try {
                                 result = repoSystem.resolveArtifact(repoSession, getArtifactRequest(coords));
                             } catch (ArtifactResolutionException e) {
-                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactResolution(coords), e);
+                                throw new org.jboss.provisioning.ArtifactException(FpMavenErrors.artifactResolution(coords), e);
                             }
                             if(!result.isResolved()) {
-                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactResolution(coords));
+                                throw new org.jboss.provisioning.ArtifactException(FpMavenErrors.artifactResolution(coords));
                             }
                             if(result.isMissing()) {
-                                throw new org.jboss.provisioning.ArtifactResolutionException(FpMavenErrors.artifactMissing(coords));
+                                throw new org.jboss.provisioning.ArtifactException(FpMavenErrors.artifactMissing(coords));
                             }
                             return Paths.get(result.getArtifact().getFile().toURI());
+                        }
+
+                        @Override
+                        public void install(ArtifactCoords coords, Path file) throws org.jboss.provisioning.ArtifactException {
+                            final InstallRequest request = new InstallRequest();
+                            Artifact artifact = new DefaultArtifact(coords.getGroupId(), coords.getArtifactId(), coords.getClassifier(),
+                                    coords.getExtension(), coords.getVersion());
+                            artifact.setFile(file.toFile());
+                            try {
+                                repoSystem.install(repoSession, request);
+                            } catch (InstallationException ex) {
+                                throw new org.jboss.provisioning.ArtifactException(ex.getMessage(), ex);
+                            }
+                        }
+
+                        @Override
+                        public void deploy(ArtifactCoords coords, Path file) throws org.jboss.provisioning.ArtifactException {
+                            final DeployRequest request = new DeployRequest();
+                            Artifact artifact = new DefaultArtifact(coords.getGroupId(), coords.getArtifactId(), coords.getClassifier(),
+                                    coords.getExtension(), coords.getVersion());
+                            artifact.setFile(file.toFile());
+                            try {
+                                repoSystem.deploy(repoSession, request);
+                            } catch (DeploymentException ex) {
+                                throw new org.jboss.provisioning.ArtifactException(ex.getMessage(), ex);
+                            }
                         }
                     })
                     .setMessageWriter(messageWriter)
@@ -211,7 +242,7 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
         final ArtifactResult result;
         try {
             result = repoSystem.resolveArtifact(repoSession, request);
-        } catch ( ArtifactResolutionException e ) {
+        } catch ( ArtifactException e ) {
             throw new RuntimeException("failed to resolve artifact "+artifact, e);
         }
         System.out.println(artifact.toString() + " " + result.getArtifact().getFile().getAbsolutePath());

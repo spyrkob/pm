@@ -15,37 +15,31 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.repomanager.fs;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+
+import org.jboss.provisioning.util.IoUtils;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class StringToFile extends RelativeTargetTask {
+class PathCopy extends SrcPathTask {
 
-    private final String content;
-
-    protected StringToFile(String content, String relativeTarget) {
-        super(relativeTarget);
-        this.content = content;
+    protected PathCopy(Path src, String relativeTarget) {
+        this(src, relativeTarget, true);
     }
 
+    protected PathCopy(Path src, String relativeTarget, boolean isContent) {
+        super(src, relativeTarget, isContent);
+    }
     /* (non-Javadoc)
      * @see org.jboss.provisioning.test.util.fs.FsTask#execute(org.jboss.provisioning.test.util.fs.FsTaskContext)
      */
     @Override
     public void execute(FsTaskContext ctx) throws IOException {
-        final Path target = resolveTarget(ctx);
-        if(!Files.exists(target.getParent())) {
-            Files.createDirectories(target.getParent());
-        }
-        try(BufferedWriter writer = Files.newBufferedWriter(target)) {
-            writer.write(content);
-        }
+        IoUtils.copy(src, resolveTarget(ctx));
     }
 }

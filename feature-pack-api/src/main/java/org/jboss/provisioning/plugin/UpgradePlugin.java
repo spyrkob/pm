@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.jboss.provisioning.test.util.fs;
+package org.jboss.provisioning.plugin;
 
 import java.nio.file.Path;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.ProvisioningRuntime;
 
 /**
  *
- * @author Alexey Loubyansky
+ * @author Emmanuel Hugonnet (c) 2017 Red Hat, inc.
  */
-public abstract class RelativeTargetTask implements FsTask {
-
-    private final String relativeTarget;
-
-    protected RelativeTargetTask(String relativeTarget) {
-        this.relativeTarget = relativeTarget;
-    }
-
-    protected Path resolveTarget(FsTaskContext ctx) {
-        return ctx.getTargetRoot().resolve(relativeTarget);
-    }
+public interface UpgradePlugin {
+    void upgrade(ProvisioningRuntime runtime, Path customizedInstallation) throws ProvisioningException;
 }

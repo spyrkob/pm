@@ -46,7 +46,7 @@ public class ProvisioningManager {
 
         private String encoding = "UTF-8";
         private Path installationHome;
-        private ArtifactResolver artifactResolver;
+        private ArtifactRepositoryManager artifactResolver;
         private MessageWriter messageWriter;
 
         private Builder() {
@@ -62,7 +62,7 @@ public class ProvisioningManager {
             return this;
         }
 
-        public Builder setArtifactResolver(ArtifactResolver artifactResolver) {
+        public Builder setArtifactResolver(ArtifactRepositoryManager artifactResolver) {
             this.artifactResolver = artifactResolver;
             return this;
         }
@@ -83,7 +83,7 @@ public class ProvisioningManager {
 
     private final String encoding;
     private final Path installationHome;
-    private final ArtifactResolver artifactResolver;
+    private final ArtifactRepositoryManager artifactResolver;
     private final MessageWriter messageWriter;
 
     private ProvisioningConfig provisioningConfig;
@@ -279,7 +279,7 @@ public class ProvisioningManager {
         IoUtils.copy(userProvisionedXml, exportPath);
     }
 
-    public void exportConfigurationChanges(Path location, Map<String, String> parameters) throws ProvisioningException, IOException {
+    public void exportConfigurationChanges(Path location, Map<String, String> parameters, boolean toFeaturePack) throws ProvisioningException, IOException {
         ProvisioningConfig configuration = this.getProvisioningConfig();
         if (configuration == null) {
             final Path userProvisionedXml = PathsUtils.getProvisioningXml(installationHome);
@@ -325,15 +325,109 @@ public class ProvisioningManager {
                         }
                     }));
             reference.provision(configuration);
-            try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+            ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())
                     .setInstallDir(tempInstallationDir)
                     .addAllParameters(parameters)
-                    .build()) {
+                    .setOperation(toFeaturePack ? "diff-to-feature-pack" : "diff");
+            try (ProvisioningRuntime runtime = builder.build()) {
+                if(toFeaturePack) {
+                    runtime.exportToFeaturePack(runtime, location, installationHome);
+                } else {
+                    ProvisioningRuntime.diff(runtime, location, installationHome);
+                    runtime.getDiff().toXML(location, installationHome);
+                }
+            } catch (XMLStreamException | IOException e) {
+                messageWriter.error(e, e.getMessage());
+            }
+        } finally {
+            IoUtils.recursiveDelete(tempInstallationDir);
+        }
+    }
+
+    public void upgrade(ArtifactCoords.Gav fpGav, Map<String, String> parameters) throws ProvisioningException, IOException {
+        ProvisioningConfig configuration = this.getProvisioningConfig();
+        Path tempInstallationDir = IoUtils.createRandomTmpDir();
+        Path stagedDir = IoUtils.createRandomTmpDir();
+        try {
+            ProvisioningManager reference = new ProvisioningManager(ProvisioningManager.builder()
+                    .setArtifactResolver(this.getArtifactResolver())
+                    .setEncoding(this.getEncoding())
+                    .setInstallationHome(tempInstallationDir)
+                    .setMessageWriter(new MessageWriter() {
+                        @Override
+                        public void verbose(Throwable cause, CharSequence message) {
+                            return;
+                        }
+
+                        @Override
+                        public void print(Throwable cause, CharSequence message) {
+                            messageWriter.print(cause, message);
+                        }
+
+                        @Override
+                        public void error(Throwable cause, CharSequence message) {
+                            messageWriter.error(cause, message);
+                        }
+
+                        @Override
+                        public boolean isVerboseEnabled() {
+                            return false;
+                        }
+
+                        @Override
+                        public void close() throws Exception {
+                            return;
+                        }
+                    }));
+            reference.provision(configuration);
+            Files.createDirectories(stagedDir);
+            reference = new ProvisioningManager(ProvisioningManager.builder()
+                    .setArtifactResolver(this.getArtifactResolver())
+                    .setEncoding(this.getEncoding())
+                    .setInstallationHome(stagedDir)
+                    .setMessageWriter(new MessageWriter() {
+                        @Override
+                        public void verbose(Throwable cause, CharSequence message) {
+                            return;
+                        }
+
+                        @Override
+                        public void print(Throwable cause, CharSequence message) {
+                            messageWriter.print(cause, message);
+                        }
+
+                        @Override
+                        public void error(Throwable cause, CharSequence message) {
+                            messageWriter.error(cause, message);
+                        }
+
+                        @Override
+                        public boolean isVerboseEnabled() {
+                            return false;
+                        }
+
+                        @Override
+                        public void close() throws Exception {
+                            return;
+                        }
+                    }));
+            reference.provision(ProvisioningConfig.builder().addFeaturePack(FeaturePackConfig.forGav(fpGav)).build());
+            final ProvisioningRuntimeBuilder diffBuilder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+                    .setArtifactResolver(this.getArtifactResolver())
+                    .setConfig(configuration)
+                    .setEncoding(this.getEncoding())
+                    .setInstallDir(tempInstallationDir)
+                    .addAllParameters(parameters)
+                    .setOperation("upgrade");
+            try (ProvisioningRuntime runtime = diffBuilder.build()) {
                 // install the software
-                ProvisioningRuntime.exportDiff(runtime, location, installationHome);
+                Files.createDirectories(tempInstallationDir.resolve("model_diff"));
+                ProvisioningRuntime.diff(runtime, tempInstallationDir.resolve("model_diff"), installationHome);
+                runtime.setInstallDir(stagedDir);
+                ProvisioningRuntime.upgrade(runtime, installationHome);
             } catch (IOException e) {
                 messageWriter.error(e, e.getMessage());
             }
@@ -346,7 +440,7 @@ public class ProvisioningManager {
         return encoding;
     }
 
-    ArtifactResolver getArtifactResolver() {
+    ArtifactRepositoryManager getArtifactResolver() {
         return artifactResolver;
     }
 

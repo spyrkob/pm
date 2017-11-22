@@ -30,6 +30,13 @@ import org.jboss.provisioning.runtime.ProvisioningRuntime;
  */
 public interface DiffPlugin {
 
-    void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException;
+    void computeDiff(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException;
 
+    default String getParameter(ProvisioningRuntime runtime, String name, String defaultValue) {
+        String value = runtime.getParameter(name);
+        if (value != null && ! value.isEmpty()) {
+            return runtime.getParameter(name);
+        }
+        return defaultValue;
+    }
 }

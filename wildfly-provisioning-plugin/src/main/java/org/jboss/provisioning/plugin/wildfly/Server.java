@@ -91,15 +91,11 @@ public class Server {
 
         private static final Pattern JBOSS_7_STARTED_ML = Pattern.compile(".*JBoss AS 7(\\..*)* \\d+ms .*");
         private static final Pattern WILDFLY_8_STARTED_ML = Pattern.compile(".*JBAS015874: WildFly 8(\\..*)* .* started in \\d+ms .*");
-        private static final Pattern WILDFLY_8_STARTING_ML = Pattern.compile(".*JBAS015899: WildFly 8(\\..*)* .* starting");
         private static final Pattern WILDFLY_9_STARTED_ML = Pattern.compile(".*WFLYSRV0050: WildFly Full \\d+(\\..*)* .* started in \\d+ms .*");
-        private static final Pattern WILDFLY_STARTING_ML = Pattern.compile(".*WFLYSRV0049: WildFly .* \\d+(\\..*)* .* starting");
         private static final Pattern WILDFLY_10_STARTED_ML = Pattern.compile(".*WFLYSRV0025: WildFly .* \\d+(\\..*)* .* started in \\d+ms .*");
 
         private static final Pattern EAP6_STARTED_ML = Pattern.compile(".*JBAS015874: JBoss EAP 6\\.[0-9]?.[0-9]?\\.GA .* \\d+ms .*");
-        private static final Pattern EAP6_STARTING_ML = Pattern.compile(".*JBAS015899: JBoss EAP 6\\.[0-9]?.[0-9]?\\.GA .*");
         private static final Pattern EAP7_STARTED_ML = Pattern.compile(".*WFLYSRV0025: JBoss EAP 7\\.[0-9]?.[0-9]?\\.GA .* \\d+ms .*");
-        private static final Pattern EAP7_STARTING_ML = Pattern.compile(".*WFLYSRV0049: JBoss EAP 7\\.[0-9]?.[0-9]?\\.GA .*");
 
         private final BufferedReader source;
         private volatile boolean started = false;
@@ -124,16 +120,6 @@ public class Server {
 
         private boolean isStarted() {
             return started;
-        }
-
-        private boolean isStarting(String line) {
-            return line.contains("Starting JBoss (MX MicroKernel)") // JBoss 4.x message // NOI18N
-                    || line.contains("Starting JBoss (Microcontainer)") // JBoss 5.0 message // NOI18N
-                    || line.contains("Starting JBossAS") // JBoss 6.0 message // NOI18N
-                    || WILDFLY_8_STARTING_ML.matcher(line).matches()
-                    || WILDFLY_STARTING_ML.matcher(line).matches()
-                    || EAP6_STARTING_ML.matcher(line).matches()
-                    || EAP7_STARTING_ML.matcher(line).matches();
         }
 
         private boolean isStarted(String line) {

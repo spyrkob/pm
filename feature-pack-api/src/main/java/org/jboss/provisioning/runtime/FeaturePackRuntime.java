@@ -293,10 +293,12 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     private final FeaturePackSpec spec;
     private final Path dir;
     private final Map<String, PackageRuntime> packages;
+    private final Map<String, ResolvedFeatureSpec> featureSpecs;
 
     private FeaturePackRuntime(Builder builder) throws ProvisioningException {
         this.spec = builder.spec;
         this.dir = builder.dir;
+        this.featureSpecs = builder.featureSpecs;
 
         Map<String, PackageRuntime> tmpPackages = new LinkedHashMap<>();
         for(String pkgName : builder.pkgOrder) {
@@ -341,10 +343,21 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         return packages.get(name);
     }
 
+    public Set<String> getFeatureSpecNames() {
+        return featureSpecs.keySet();
+    }
+
+    public Collection<ResolvedFeatureSpec> getFeatureSpecs() {
+        return featureSpecs.values();
+    }
+
+    public ResolvedFeatureSpec getFeatureSpec(String name) {
+        return featureSpecs.get(name);
+    }
+
     /**
      * Returns a resource path for a feature-pack.
      *
-     * @param fpGav  GAV of the feature-pack
      * @param path  path to the resource relative to the feature-pack resources directory
      * @return  file-system path for the resource
      * @throws ProvisioningDescriptionException  in case the feature-pack was not found in the layout

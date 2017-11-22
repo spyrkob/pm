@@ -44,7 +44,7 @@ public abstract class ProvisioningCommand extends PmSessionCommand {
     protected ProvisioningManager getManager(PmSession session) {
         final Shell shell = session.getShell();
         return ProvisioningManager.builder()
-                .setArtifactResolver(ArtifactResolverImpl.getInstance())
+                .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
                 .setInstallationHome(getTargetDir(session))
                 .setMessageWriter(new DefaultMessageWriter(shell.out(), shell.out(), verbose))
                 .build();

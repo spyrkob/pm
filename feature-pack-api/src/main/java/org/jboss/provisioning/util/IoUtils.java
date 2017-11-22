@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,7 +31,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -56,7 +60,7 @@ public class IoUtils {
     }
 
     public static void recursiveDelete(Path root) {
-        if (root == null) {
+        if (root == null || !Files.exists(root)) {
             return;
         }
         try {
@@ -129,5 +133,47 @@ public class IoUtils {
 
     public static void writeFile(Path file, String content) throws IOException {
         Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+    }
+
+     public static Map<Path, String> listContents(Path root, PathFilter filter) throws IOException {
+        if (root == null || !Files.exists(root)) {
+            return Collections.emptyMap();
+        }
+        if(Files.isRegularFile(root)) {
+            return Collections.singletonMap(root.relativize(root), HashUtils.hashFile(root));
+        }
+        Map<Path, String> contents = new HashMap<>();
+        Files.walkFileTree(root, new FileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (filter.accept(root.relativize(dir))) {
+                    String[] files = dir.toFile().list();
+                    if (files == null || files.length == 0) {
+                        contents.put(root.relativize(dir), HashUtils.hash(root.relativize(dir).toString()));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if(filter.accept(root.relativize(file))) {
+                    contents.put(root.relativize(file), HashUtils.hashFile(file));
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        return contents;
     }
 }

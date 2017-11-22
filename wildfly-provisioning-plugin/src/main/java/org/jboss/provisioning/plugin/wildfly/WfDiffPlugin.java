@@ -17,12 +17,15 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 
+import java.io.File;
 import java.nio.file.Path;
 
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.diff.FileSystemDiff;
 import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
+import org.jboss.provisioning.util.PathFilter;
 
 /**
  * WildFly plugin to compute the model difference between an instance and a clean provisioned instance.
@@ -31,38 +34,30 @@ import org.jboss.provisioning.runtime.ProvisioningRuntime;
 public class WfDiffPlugin implements DiffPlugin {
 
     private static final String CONFIGURE_SYNC = "/synchronization=simple:add(host=%s, port=%s, protocol=%s, username=%s, password=%s)";
-    private static final String EXPORT_DIFF = "attachment save --operation=/synchronization=simple:export-diff --file=%s";
+    private static final String EXPORT_DIFF = "attachment save --overwrite --operation=/synchronization=simple:export-diff --file=%s";
+
+    private static final PathFilter FILTER_FP = PathFilter.Builder.instance()
+            .addDirectories("*" + File.separatorChar + "tmp", "*" + File.separatorChar + "log","*_xml_history", "model_diff")
+            .addFiles("standalone.xml", "process-uuid", "logging.properties")
+            .build();
+
+    private static final PathFilter FILTER = PathFilter.Builder.instance()
+            .addDirectories("*" + File.separatorChar + "tmp", "model_diff")
+            .addFiles("standalone.xml", "logging.properties")
+            .build();
 
     @Override
-    public void calculateConfiguationChanges(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
+    public void computeDiff(ProvisioningRuntime runtime, Path customizedInstallation, Path target) throws ProvisioningException {
         final MessageWriter messageWriter = runtime.getMessageWriter();
         messageWriter.verbose("WildFly diff plug-in");
-        String host = getParameter(runtime, "host", "127.0.0.1");
-        String port = getParameter(runtime, "port", "9990");
-        String protocol = getParameter(runtime, "protocol", "remote+http");
-        String username = getParameter(runtime, "username", "admin");
-        String password = getParameter(runtime, "password", "passw0rd!");
-        String serverConfig = getParameter(runtime, "server-config", "standalone.xml");
-        Server server = new Server(customizedInstallation.toAbsolutePath(), serverConfig, messageWriter);
-        EmbeddedServer embeddedServer = new EmbeddedServer(
-                runtime.getInstallDir().toAbsolutePath(),
-                runtime.getInstallDir().resolve("bin").resolve("jboss-cli.xml").toAbsolutePath(),
-                messageWriter);
-        try {
-            server.startServer();
-            embeddedServer.execute(true,
-                    String.format(CONFIGURE_SYNC, host, port, protocol, username, password),
-                    String.format(EXPORT_DIFF, target.toAbsolutePath()));
-        } finally {
-            server.stopServer();
-        }
+        FileSystemDiff diff = new FileSystemDiff(messageWriter, runtime.getInstallDir(), customizedInstallation);
+        runtime.setDiff(diff.diff(getFilter(runtime)));
     }
 
-    private String getParameter(ProvisioningRuntime runtime, String name, String defaultValue) {
-        String value = runtime.getParameter(name);
-        if (value != null && ! value.isEmpty()) {
-            return runtime.getParameter(name);
+    private PathFilter getFilter(ProvisioningRuntime runtime) {
+        if("diff-to-feature-pack".equals(runtime.getOperation())) {
+            return FILTER_FP;
         }
-        return defaultValue;
+       return FILTER;
     }
 }

@@ -32,7 +32,7 @@ public class Demo {
     public static void main(String[] args) throws Exception {
 
         final ProvisioningManager pm = ProvisioningManager.builder()
-                .setArtifactResolver(ArtifactResolverImpl.getInstance())
+                .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
                 .setInstallationHome(Paths.get("/home/olubyans/demo/wf"))
                 .build();
 
