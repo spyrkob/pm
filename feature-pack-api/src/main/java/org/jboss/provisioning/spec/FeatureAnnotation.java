@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,12 @@
 
 package org.jboss.provisioning.spec;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.jboss.provisioning.util.PmCollections;
 
@@ -61,8 +64,36 @@ public class FeatureAnnotation {
         return elems.get(name);
     }
 
+    public List<String> getElemAsList(String name) {
+        return parseList(elems.get(name));
+    }
+
     public String getElem(String name, String defaultValue) {
         return elems.getOrDefault(name, defaultValue);
+    }
+
+    public List<String> getElemAsList(String name, String defaultValue) {
+        return parseList(elems.getOrDefault(name, defaultValue));
+    }
+
+    private List<String> parseList(String str) {
+        if (str == null || str.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int comma = str.indexOf(',');
+        if (comma < 1) {
+            return Collections.singletonList(str.trim());
+        }
+        final List<String> list = new ArrayList<>();
+        StringTokenizer tokenizer = new StringTokenizer(str, ",", false);
+        while (tokenizer.hasMoreTokens()) {
+            final String paramName = tokenizer.nextToken().trim();
+            if (paramName.isEmpty()) {
+                continue;
+            }
+            list.add(paramName);
+        }
+        return list;
     }
 
     @Override

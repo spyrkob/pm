@@ -86,6 +86,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return id.name;
     }
 
+    public FeatureSpec getSpec() {
+        return xmlSpec;
+    }
+
     public boolean hasAnnotations() {
         return xmlSpec.hasAnnotations();
     }

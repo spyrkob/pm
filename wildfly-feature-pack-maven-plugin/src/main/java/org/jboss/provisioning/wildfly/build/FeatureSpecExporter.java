@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.xml.stream.XMLStreamException;
 import org.jboss.dmr.ModelNode;
@@ -39,7 +40,13 @@ public class FeatureSpecExporter {
 
     public static void export(ModelNode node, Path directory) throws IOException, ProvisioningDescriptionException, XMLStreamException {
             List<FeatureSpec> specs = new ArrayList<>();
-            List<Property> rootFeatures = node.get("result","feature","children").asPropertyList();
+            ModelNode rootNode = node.require("result").require("feature");
+            List<Property> rootFeatures;
+            if(rootNode.hasDefined("name")) {
+                rootFeatures = Collections.singletonList(new Property(rootNode.require("name").asString(), rootNode));
+            } else {
+                rootFeatures = rootNode.get("children").asPropertyList();
+            }
             for (Property childFeature : rootFeatures) {
                 toFeatureSpec(childFeature, specs);
             }
@@ -75,10 +82,18 @@ public class FeatureSpecExporter {
         }
         if (feature.hasDefined("params")) {
             for (ModelNode param : feature.require("params").asList()) {
-                builder.addParam(FeatureParameterSpec.create(param.get("name").asString(),
-                        param.hasDefined("feature-id") && param.get("feature-id").asBoolean(),
-                        param.hasDefined("nillable") && param.get("nillable").asBoolean(),
-                        param.hasDefined("default") ? convertToCli(param.get("default").asString()) : null));
+                FeatureParameterSpec.Builder featureParamSpecBuilder = FeatureParameterSpec.builder(param.get("name").asString());
+                if(param.hasDefined("feature-id") && param.get("feature-id").asBoolean()) {
+                    featureParamSpecBuilder.setFeatureId();
+                }
+                if( param.hasDefined("nillable") && param.get("nillable").asBoolean()) {
+                    featureParamSpecBuilder.setNillable();
+                }
+                featureParamSpecBuilder.setDefaultValue(param.hasDefined("default") ? convertToCli(param.get("default").asString()) : null);
+                if( param.hasDefined("type")) {
+                    featureParamSpecBuilder.setType(param.get("type").asString());
+                }
+                builder.addParam(featureParamSpecBuilder.build());
             }
         }
         if(feature.hasDefined("refs")) {
