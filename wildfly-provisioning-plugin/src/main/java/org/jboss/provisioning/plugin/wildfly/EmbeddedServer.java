@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,6 +74,6 @@ public class EmbeddedServer {
          if(config != null && ! config.isEmpty()) {
              localConfig = config;
          }
-         return String.format("embed-server --admin-only --server-config=%s", localConfig);
+         return String.format("embed-server --admin-only --std-out=echo --server-config=%s", localConfig);
     }
 }
