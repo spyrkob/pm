@@ -17,12 +17,12 @@
 
 package org.jboss.provisioning.spec;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -37,7 +37,7 @@ public class FeatureReferenceSpec {
         private String name;
         private boolean nillable;
         private boolean include;
-        private Map<String, String> paramMapping = null;
+        private Map<String, String> mappedParams = Collections.emptyMap();
 
         private Builder(String spec) {
             this.featureSpec = spec;
@@ -65,19 +65,12 @@ public class FeatureReferenceSpec {
         }
 
         public Builder mapParam(String localName, String targetName) {
-            if(paramMapping == null) {
-                paramMapping = Collections.singletonMap(localName, targetName);
-            } else {
-                if(paramMapping.size() == 1) {
-                    paramMapping = new HashMap<>(paramMapping);
-                }
-                paramMapping.put(localName, targetName);
-            }
+            mappedParams = PmCollections.put(mappedParams, localName, targetName);
             return this;
         }
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
-            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, include, paramMapping);
+            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, include, mappedParams);
         }
     }
 
@@ -94,18 +87,15 @@ public class FeatureReferenceSpec {
     }
 
     public static FeatureReferenceSpec create(String name, String feature, boolean nillable) throws ProvisioningDescriptionException {
-        return new FeatureReferenceSpec(null, name, feature, nillable, false, null);
+        return new FeatureReferenceSpec(null, name, feature, nillable, false, Collections.emptyMap());
     }
-
-    private static final String[] EMPTY_ARR = new String[0];
 
     final String dependency;
     final String name;
     final SpecId feature;
     final boolean nillable;
     final boolean include;
-    final String[] localParams;
-    final String[] targetParams;
+    final Map<String, String> mappedParams;
 
     private FeatureReferenceSpec(String dependency, String name, String featureSpec, boolean nillable, boolean include, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
         this.dependency = dependency;
@@ -113,18 +103,7 @@ public class FeatureReferenceSpec {
         this.feature = SpecId.fromString(featureSpec);
         this.nillable = nillable;
         this.include = include;
-        if(paramMapping == null || paramMapping.isEmpty()) {
-            this.localParams = EMPTY_ARR;
-            this.targetParams = EMPTY_ARR;
-        } else {
-            this.localParams = new String[paramMapping.size()];
-            this.targetParams = new String[paramMapping.size()];
-            int i = 0;
-            for (Map.Entry<String, String> mapping : paramMapping.entrySet()) {
-                localParams[i] = mapping.getKey();
-                targetParams[i++] = mapping.getValue();
-            }
-        }
+        this.mappedParams = PmCollections.unmodifiable(paramMapping);
     }
 
     public String getDependency() {
@@ -147,16 +126,16 @@ public class FeatureReferenceSpec {
         return include;
     }
 
+    public boolean hasMappedParams() {
+        return !mappedParams.isEmpty();
+    }
+
     public int getParamsMapped() {
-        return localParams.length;
+        return mappedParams.size();
     }
 
-    public String getLocalParam(int i) {
-        return localParams[i];
-    }
-
-    public String getTargetParam(int i) {
-        return targetParams[i];
+    public Map<String,String> getMappedParams() {
+        return mappedParams;
     }
 
     @Override
@@ -166,10 +145,9 @@ public class FeatureReferenceSpec {
         result = prime * result + ((dependency == null) ? 0 : dependency.hashCode());
         result = prime * result + ((feature == null) ? 0 : feature.hashCode());
         result = prime * result + (include ? 1231 : 1237);
-        result = prime * result + Arrays.hashCode(localParams);
+        result = prime * result + ((mappedParams == null) ? 0 : mappedParams.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (nillable ? 1231 : 1237);
-        result = prime * result + Arrays.hashCode(targetParams);
         return result;
     }
 
@@ -194,7 +172,10 @@ public class FeatureReferenceSpec {
             return false;
         if (include != other.include)
             return false;
-        if (!Arrays.equals(localParams, other.localParams))
+        if (mappedParams == null) {
+            if (other.mappedParams != null)
+                return false;
+        } else if (!mappedParams.equals(other.mappedParams))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -202,8 +183,6 @@ public class FeatureReferenceSpec {
         } else if (!name.equals(other.name))
             return false;
         if (nillable != other.nillable)
-            return false;
-        if (!Arrays.equals(targetParams, other.targetParams))
             return false;
         return true;
     }
@@ -222,12 +201,9 @@ public class FeatureReferenceSpec {
         if(include) {
             buf.append(" auto-includes ");
         }
-        if(localParams.length > 0) {
+        if(!mappedParams.isEmpty()) {
             buf.append(' ');
-            buf.append(localParams[0]).append('=').append(targetParams[0]);
-            for (int i = 1; i < localParams.length; ++i) {
-                buf.append(',').append(localParams[i]).append('=').append(targetParams[i]);
-            }
+            StringUtils.append(buf, mappedParams.entrySet());
         }
         return buf.append(']').toString();
     }
