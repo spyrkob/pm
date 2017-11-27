@@ -106,10 +106,10 @@ public class PickFromFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aTwo"))
-                                .setParam("a", "a2")
+                                .setConfigParam("a", "a2")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bTwo"))
-                                .setParam("b", "b2")
+                                .setConfigParam("b", "b2")
                                 .build())
                         .build())
                 .build();

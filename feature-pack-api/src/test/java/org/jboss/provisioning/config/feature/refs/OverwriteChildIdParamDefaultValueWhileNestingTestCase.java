@@ -89,7 +89,7 @@ public class OverwriteChildIdParamDefaultValueWhileNestingTestCase extends PmIns
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
-                                .setParam("p1", "spec")
+                                .setConfigParam("p1", "spec")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("a", "a1").setParam("id", "c1").build())
                                 .build())

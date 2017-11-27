@@ -41,6 +41,10 @@ public class ResolvedFeatureId {
             this.specId = new ResolvedSpecId(gav, spec);
         }
 
+        private Builder(ResolvedSpecId specId) {
+            this.specId = specId;
+        }
+
         public Builder setParam(String name, Object value) {
             params = PmCollections.put(params, name, value);
             return this;
@@ -52,6 +56,10 @@ public class ResolvedFeatureId {
             }
             return new ResolvedFeatureId(specId, params);
         }
+    }
+
+    public static Builder builder(ResolvedSpecId specId) {
+        return new Builder(specId);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav, String spec) {

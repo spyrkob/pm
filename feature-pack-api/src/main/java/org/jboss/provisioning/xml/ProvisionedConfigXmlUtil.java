@@ -275,11 +275,15 @@ public class ProvisionedConfigXmlUtil {
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        final ProvisionedFeatureBuilder featureBuilder = ProvisionedFeatureBuilder.builder(id, specId);
+        final ProvisionedFeatureBuilder featureBuilder = id == null ? ProvisionedFeatureBuilder.builder(specId) :  ProvisionedFeatureBuilder.builder(id);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    config.addFeature(featureBuilder.build());
+                    try {
+                        config.addFeature(featureBuilder.build());
+                    } catch (ProvisioningDescriptionException e) {
+                        throw new XMLStreamException("Failed to instantiate a provisioned feature", reader.getLocation(), e);
+                    }
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
@@ -331,7 +335,7 @@ public class ProvisionedConfigXmlUtil {
         } if(value == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
         }
-        featureBuilder.setParam(name, value);
+        featureBuilder.setConfigParam(name, value);
         ParsingUtils.parseNoContent(reader);
     }
 }

@@ -93,10 +93,10 @@ public class ReferenceIncludeIncludedExternalTestCase extends PmInstallFeaturePa
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a"))
-                                .setParam("a", "aConfig")
-                                .setParam("p", "pConfig").build())
+                                .setConfigParam("a", "aConfig")
+                                .setConfigParam("p", "pConfig").build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
+                                .setConfigParam("a", "a")
                                 .build())
                         .build())
                 .build();

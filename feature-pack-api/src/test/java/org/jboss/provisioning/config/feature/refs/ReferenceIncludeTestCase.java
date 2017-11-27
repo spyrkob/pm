@@ -81,9 +81,9 @@ public class ReferenceIncludeTestCase extends PmInstallFeaturePackTestBase {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).setParam("a", "aOne").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a")).setConfigParam("a", "aOne").build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
+                                .setConfigParam("a", "a")
                                 .build())
                         .build())
                 .build();

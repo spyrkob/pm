@@ -16,6 +16,7 @@
  */
 package org.jboss.provisioning.runtime;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -186,13 +187,23 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     @Override
-    public Map<String, Object> getParams() {
-        return params;
+    public Collection<String> getParamNames() {
+        return params.keySet();
     }
 
     @Override
-    public Object getParam(String name) throws ProvisioningDescriptionException {
+    public Object getResolvedParam(String name) {
         return params.get(name);
+    }
+
+    @Override
+    public String getConfigParam(String name) throws ProvisioningException {
+        return spec.getTypeForParameter(name).toString(params.get(name));
+    }
+
+    @Override
+    public Map<String, Object> getResolvedParams() {
+        return params;
     }
 
     public Object getParamOrDefault(String name) throws ProvisioningException {
@@ -251,10 +262,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
 
     void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningDescriptionException {
         if(other.hasParams()) {
-            for(Map.Entry<String, Object> entry : other.getParams().entrySet()) {
-                if(overwriteParams) {
-                    setParam(entry.getKey(), entry.getValue());
-                } else if(!params.containsKey(entry.getKey())) {
+            for(Map.Entry<String, Object> entry : other.getResolvedParams().entrySet()) {
+                if(overwriteParams || !params.containsKey(entry.getKey())) {
                     setParam(entry.getKey(), entry.getValue());
                 }
             }

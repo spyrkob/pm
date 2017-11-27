@@ -92,13 +92,13 @@ public class LinkChainTestCase extends PmInstallFeaturePackTestBase {
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "Link", "name", "b"))
-                                .setParam("prev", "a")
-                                .setParam("next", "c")
+                                .setConfigParam("prev", "a")
+                                .setConfigParam("next", "c")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "Link", "name", "a"))
-                                .setParam("next", "b").build())
+                                .setConfigParam("next", "b").build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "Link", "name", "c"))
-                                .setParam("prev", "b").build())
+                                .setConfigParam("prev", "b").build())
                         .build())
                 .build();
     }

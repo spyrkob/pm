@@ -92,7 +92,7 @@ public class SimpleModelOnlyConfigsTestCase extends PmInstallFeaturePackTestBase
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setConfigParam("p1", "config1")
                                 .build())
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
@@ -101,7 +101,7 @@ public class SimpleModelOnlyConfigsTestCase extends PmInstallFeaturePackTestBase
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setConfigParam("p1", "config1")
                                 .build())
                         .build())
                 .build();

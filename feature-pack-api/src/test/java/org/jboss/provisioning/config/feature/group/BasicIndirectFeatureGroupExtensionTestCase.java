@@ -91,8 +91,8 @@ public class BasicIndirectFeatureGroupExtensionTestCase extends PmInstallFeature
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specP", "parent", "p1")).build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specC").setParam("parent", "p1").setParam("child", "c1").build())
-                                .setParam("a", "config")
-                                .setParam("b", "config")
+                                .setConfigParam("a", "config")
+                                .setConfigParam("b", "config")
                                 .build())
                         .build())
                 .build();
