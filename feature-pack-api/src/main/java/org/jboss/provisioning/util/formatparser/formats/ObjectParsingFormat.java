@@ -15,45 +15,52 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.formats;
+
+import org.jboss.provisioning.util.formatparser.FormatErrors;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingContext;
+import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NameValueParsingFormat extends ParsingFormatBase {
+public class ObjectParsingFormat extends ParsingFormatBase {
 
-    private static final NameValueParsingFormat INSTANCE = new NameValueParsingFormat();
+    private static final ObjectParsingFormat INSTANCE = new ObjectParsingFormat();
 
-    public static NameValueParsingFormat getInstance() {
+    public static ObjectParsingFormat getInstance() {
         return INSTANCE;
     }
 
-    protected NameValueParsingFormat() {
-        super("NameValue");
+    protected ObjectParsingFormat() {
+        super("Object");
     }
 
     @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
-        if(ctx.charNow() == '=') {
-            ctx.popFormats();
+        switch(ctx.charNow()) {
+            case ',' :
+                ctx.popFormats();
+                break;
+            case '}':
+                ctx.end();
+                break;
+            default:
+                ctx.bounce();
         }
-    }
-
-    @Override
-    public void pushed(ParsingContext ctx) throws FormatParsingException {
-        ctx.pushFormat(StringParsingFormat.getInstance());
     }
 
     @Override
     public void deal(ParsingContext ctx) throws FormatParsingException {
         if(!Character.isWhitespace(ctx.charNow())) {
-            ctx.pushFormat(WildcardParsingFormat.getInstance());
+            ctx.pushFormat(NameValueParsingFormat.getInstance());
         }
     }
 
     @Override
     public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException("Format " + getName() + " has not ended");
+        throw new FormatParsingException(FormatErrors.formatNotCompleted(this));
     }
 }

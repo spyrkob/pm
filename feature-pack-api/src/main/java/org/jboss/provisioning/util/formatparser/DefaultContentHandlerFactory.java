@@ -17,15 +17,26 @@
 
 package org.jboss.provisioning.util.formatparser;
 
+import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.NameValueParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
+import org.jboss.provisioning.util.formatparser.handlers.ListContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.NameValueContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.ObjectContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.StringContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.WildcardContentHandler;
+
 /**
  *
  * @author Alexey Loubyansky
  */
-public class DefaultFormatContentHandlerFactory implements FormatContentHandlerFactory {
+public class DefaultContentHandlerFactory implements FormatContentHandlerFactory {
 
-    private static final DefaultFormatContentHandlerFactory INSTANCE = new DefaultFormatContentHandlerFactory();
+    private static final DefaultContentHandlerFactory INSTANCE = new DefaultContentHandlerFactory();
 
-    public static DefaultFormatContentHandlerFactory getInstance() {
+    public static DefaultContentHandlerFactory getInstance() {
         return INSTANCE;
     }
 
@@ -36,15 +47,15 @@ public class DefaultFormatContentHandlerFactory implements FormatContentHandlerF
     public FormatContentHandler forFormat(ParsingFormat format, int strIndex) throws FormatParsingException {
         final String name = format.getName();
         if(name.equals(StringParsingFormat.getInstance().getName())) {
-            return new StringFormatCallbackHandler(format, strIndex);
+            return new StringContentHandler(format, strIndex);
         } else if(name.equals(ListParsingFormat.getInstance().getName())) {
-            return new ListFormatCallbackHandler(format, strIndex);
+            return new ListContentHandler(format, strIndex);
         } else if(name.equals(ObjectParsingFormat.getInstance().getName())) {
-            return new ObjectFormatCallbackHandler(format, strIndex);
+            return new ObjectContentHandler(format, strIndex);
         } else if(name.equals(NameValueParsingFormat.getInstance().getName())) {
-            return new NameValueFormatCallbackHandler(format, strIndex);
+            return new NameValueContentHandler(format, strIndex);
         } else if(name.equals(WildcardParsingFormat.getInstance().getName())) {
-            return new WildcardCallbackHandler(format, strIndex);
+            return new WildcardContentHandler(format, strIndex);
         } else {
             throw new FormatParsingException("Unknown format " + format);
         }

@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser;
+package org.jboss.provisioning.config.feature.param.type.parser.string;
 
+import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.StringParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.junit.Test;
 
 
@@ -31,6 +32,11 @@ public class StringTypeParserTestCase extends TypeParserTestBase {
     @Override
     protected ParsingFormat getTestFormat() {
         return StringParsingFormat.getInstance();
+    }
+
+    @Test
+    public void testEmptyString() throws Exception {
+        testFormat("", "");
     }
 
     @Test

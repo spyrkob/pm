@@ -15,18 +15,23 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.handlers;
+
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NameValueFormatCallbackHandler extends FormatContentHandler {
+public class NameValueContentHandler extends FormatContentHandler {
 
     String name;
     Object value;
 
-    public NameValueFormatCallbackHandler(ParsingFormat format, int strIndex) {
+    public NameValueContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 

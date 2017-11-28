@@ -15,20 +15,24 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ListFormatCallbackHandler extends FormatContentHandler {
+public class ListContentHandler extends FormatContentHandler {
 
     private final List<Object> list = new ArrayList<>();
 
-    public ListFormatCallbackHandler(ParsingFormat format, int strIndex) {
+    public ListContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 

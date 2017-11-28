@@ -15,7 +15,13 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.formats;
+
+import org.jboss.provisioning.util.formatparser.FormatErrors;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingContext;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
+import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 
 /**
  *
@@ -23,14 +29,29 @@ package org.jboss.provisioning.util.formatparser;
  */
 public class ListParsingFormat extends ParsingFormatBase {
 
-    private static final ListParsingFormat INSTANCE = new ListParsingFormat();
+    private static final ListParsingFormat INSTANCE = new ListParsingFormat(WildcardParsingFormat.getInstance());
 
     public static ListParsingFormat getInstance() {
         return INSTANCE;
     }
 
-    protected ListParsingFormat() {
+    public static ListParsingFormat getInstance(ParsingFormat itemFormat) {
+        assert itemFormat != null : "item format is null";
+        return new ListParsingFormat(itemFormat);
+    }
+
+    private final ParsingFormat itemFormat;
+
+    protected ListParsingFormat(ParsingFormat itemFormat) {
         super("List");
+        this.itemFormat = itemFormat;
+    }
+
+    @Override
+    public void pushed(ParsingContext ctx) throws FormatParsingException {
+        if(ctx.charNow() != '[') {
+            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, '[', ctx.charNow()));
+        }
     }
 
     @Override
@@ -50,12 +71,17 @@ public class ListParsingFormat extends ParsingFormatBase {
     @Override
     public void deal(ParsingContext ctx) throws FormatParsingException {
         if(!Character.isWhitespace(ctx.charNow())) {
-            ctx.pushFormat(WildcardParsingFormat.getInstance());
+            ctx.pushFormat(itemFormat);
         }
     }
 
     @Override
     public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException("Format " + getName() + " has not ended");
+        throw new FormatParsingException(FormatErrors.formatNotCompleted(this));
+    }
+
+    @Override
+    public String toString() {
+        return name + "<" + itemFormat + ">";
     }
 }

@@ -15,17 +15,21 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.handlers;
+
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class StringFormatCallbackHandler extends FormatContentHandler {
+public class StringContentHandler extends FormatContentHandler {
 
     private final StringBuilder buf = new StringBuilder();
 
-    public StringFormatCallbackHandler(ParsingFormat format, int strIndex) {
+    public StringContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 

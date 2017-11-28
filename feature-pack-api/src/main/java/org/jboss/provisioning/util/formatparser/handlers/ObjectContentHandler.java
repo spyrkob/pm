@@ -15,17 +15,26 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.handlers;
+
+import java.util.Collections;
+import java.util.Map;
+
+import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.NameValueParsingFormat;
 
 /**
- * @author Alexey Loubyansky
  *
+ * @author Alexey Loubyansky
  */
-public class WildcardCallbackHandler extends FormatContentHandler {
+public class ObjectContentHandler extends FormatContentHandler {
 
-    private Object result;
+    Map<String, Object> map = Collections.emptyMap();
 
-    public WildcardCallbackHandler(ParsingFormat format, int strIndex) {
+    public ObjectContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 
@@ -34,10 +43,11 @@ public class WildcardCallbackHandler extends FormatContentHandler {
      */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(result != null) {
-            throw new FormatParsingException("The value of the wildcard has already been initialized");
+        if(!childHandler.getFormat().getName().equals(NameValueParsingFormat.getInstance().getName())) {
+            throw new FormatParsingException("Object can't accept " + childHandler.getFormat());
         }
-        result = childHandler.getParsedValue();
+        NameValueContentHandler nameValue = (NameValueContentHandler) childHandler;
+        map = PmCollections.putLinked(map, nameValue.name, nameValue.value);
     }
 
     /* (non-Javadoc)
@@ -45,7 +55,6 @@ public class WildcardCallbackHandler extends FormatContentHandler {
      */
     @Override
     public Object getParsedValue() throws FormatParsingException {
-        return result;
+        return map;
     }
-
 }

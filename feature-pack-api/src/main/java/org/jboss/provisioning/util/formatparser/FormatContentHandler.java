@@ -43,5 +43,5 @@ public abstract class FormatContentHandler {
         throw new UnsupportedOperationException();
     }
 
-    abstract Object getParsedValue() throws FormatParsingException;
+    public abstract Object getParsedValue() throws FormatParsingException;
 }

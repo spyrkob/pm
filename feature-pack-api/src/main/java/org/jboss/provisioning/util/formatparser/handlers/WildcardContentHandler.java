@@ -15,22 +15,21 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser;
+package org.jboss.provisioning.util.formatparser.handlers;
 
-import java.util.Collections;
-import java.util.Map;
-
-import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public class ObjectFormatCallbackHandler extends FormatContentHandler {
+public class WildcardContentHandler extends FormatContentHandler {
 
-    Map<String, Object> map = Collections.emptyMap();
+    private Object result;
 
-    public ObjectFormatCallbackHandler(ParsingFormat format, int strIndex) {
+    public WildcardContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 
@@ -39,11 +38,10 @@ public class ObjectFormatCallbackHandler extends FormatContentHandler {
      */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(!childHandler.getFormat().getName().equals(NameValueParsingFormat.getInstance().getName())) {
-            throw new FormatParsingException("Object can't accept " + childHandler.getFormat());
+        if(result != null) {
+            throw new FormatParsingException("The value of the wildcard has already been initialized");
         }
-        NameValueFormatCallbackHandler nameValue = (NameValueFormatCallbackHandler) childHandler;
-        map = PmCollections.putLinked(map, nameValue.name, nameValue.value);
+        result = childHandler.getParsedValue();
     }
 
     /* (non-Javadoc)
@@ -51,6 +49,7 @@ public class ObjectFormatCallbackHandler extends FormatContentHandler {
      */
     @Override
     public Object getParsedValue() throws FormatParsingException {
-        return map;
+        return result;
     }
+
 }

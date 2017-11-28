@@ -15,15 +15,16 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser;
+package org.jboss.provisioning.config.feature.param.type.parser.wildcard;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.provisioning.util.formatparser.ObjectParsingFormat;
+import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 import org.junit.Test;
 
 
@@ -31,37 +32,35 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class ObjectTypeParserTestCase extends TypeParserTestBase {
+public class WildcardTypeParserTestCase extends TypeParserTestBase {
 
     @Override
     protected ParsingFormat getTestFormat() {
-        return ObjectParsingFormat.getInstance();
+        return WildcardParsingFormat.getInstance();
     }
 
     @Test
-    public void testSimpleKeyValue() throws Exception {
-        test("{a=b}", Collections.singletonMap("a", "b"));
+    public void testEmptyString() throws Exception {
+        testFormat("", null);
     }
 
     @Test
-    public void testSequenceOfKeyValuePairs() throws Exception {
-        final Map<String, String> map = new HashMap<>(3);
+    public void testString() throws Exception {
+        testFormat("a b c", "a b c");
+    }
+
+    @Test
+    public void testList() throws Exception {
+        testFormat("[a b c]", Collections.singletonList("a b c"));
+        testFormat("[a,b,c]", Arrays.asList("a", "b", "c"));
+    }
+
+    @Test
+    public void testObject() throws Exception {
+        testFormat("{a=b}", Collections.singletonMap("a", "b"));
+        final Map<String, String> map = new HashMap<>(2);
         map.put("a", "b");
         map.put("c", "d");
-        map.put("e", "f");
-        test("{a=b, c = d , e =f }", map);
-    }
-
-    @Test
-    public void testListAsValue() throws Exception {
-        test("{a=[b,c , d ]}", Collections.singletonMap("a", Arrays.asList("b", "c", "d")));
-    }
-
-    @Test
-    public void testNestedObjects() throws Exception {
-        final Map<String, String> map = new HashMap<>(2);
-        map.put("c", "d");
-        map.put("e", "f");
-        test("{a={ b = { c=d, e = f }}}", Collections.singletonMap("a", Collections.singletonMap("b", map)));
+        testFormat("{a=b, c = d }", map);
     }
 }

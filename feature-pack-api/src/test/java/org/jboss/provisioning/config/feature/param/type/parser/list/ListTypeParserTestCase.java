@@ -15,15 +15,18 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser;
+package org.jboss.provisioning.config.feature.param.type.parser.list;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.provisioning.util.formatparser.ListParsingFormat;
+import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
+import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.junit.Test;
 
 
@@ -33,19 +36,40 @@ import org.junit.Test;
  */
 public class ListTypeParserTestCase extends TypeParserTestBase {
 
+    private final ListParsingFormat testFormat = ListParsingFormat.getInstance();
+
     @Override
     protected ParsingFormat getTestFormat() {
-        return ListParsingFormat.getInstance();
+        return testFormat;
+    }
+
+    @Test
+    public void testEmptyList() throws Exception {
+        testFormat("[]", Collections.emptyList());
+    }
+
+    @Test
+    public void testIncompleteEmptyList() throws Exception {
+        assertFailure("[",
+                FormatErrors.parsingFailed("[", 1, testFormat, 0),
+                FormatErrors.formatNotCompleted(testFormat));
+    }
+
+    @Test
+    public void testIncompleteList() throws Exception {
+        assertFailure("[a , b",
+                FormatErrors.parsingFailed("[a , b", 6, StringParsingFormat.getInstance(), 5),
+                FormatErrors.formatNotCompleted(testFormat));
     }
 
     @Test
     public void testSimpleListOfStrings() throws Exception {
-        test("[a,b , c ]", Arrays.asList("a", "b", "c"));
+        testFormat("[a,b , c ]", Arrays.asList("a", "b", "c"));
     }
 
     @Test
     public void testNestedListsOfStrings() throws Exception {
-        test("[a,[b , [ c ,d]] ]", Arrays.asList("a", Arrays.asList("b", Arrays.asList("c", "d"))));
+        testFormat("[a,[b , [ c ,d]] ]", Arrays.asList("a", Arrays.asList("b", Arrays.asList("c", "d"))));
     }
 
     @Test
@@ -53,7 +77,7 @@ public class ListTypeParserTestCase extends TypeParserTestBase {
         final Map<String, String> df = new HashMap<>(2);
         df.put("d", "e");
         df.put("f", "g");
-        test("[{a=b} , { d = e , f = g } ]", Arrays.asList(Collections.singletonMap("a", "b"), df));
+        testFormat("[{a=b} , { d = e , f = g } ]", Arrays.asList(Collections.singletonMap("a", "b"), df));
     }
 
     @Test
@@ -61,6 +85,6 @@ public class ListTypeParserTestCase extends TypeParserTestBase {
         final Map<String, String> df = new HashMap<>(2);
         df.put("d", "e");
         df.put("f", "g");
-        test("[a, [b, c] , { d = e , f = g } ]", Arrays.asList("a", Arrays.asList("b", "c"), df));
+        testFormat("[a, [b, c] , { d = e , f = g } ]", Arrays.asList("a", Arrays.asList("b", "c"), df));
     }
 }

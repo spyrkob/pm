@@ -20,6 +20,8 @@ package org.jboss.provisioning.util.formatparser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
+
 /**
  *
  * @author Alexey Loubyansky
@@ -27,11 +29,11 @@ import java.util.List;
 public class FormatParser implements ParsingContext {
 
     public static Object parse(String str) throws FormatParsingException {
-        return parse(DefaultFormatContentHandlerFactory.getInstance(), WildcardParsingFormat.getInstance(), str);
+        return parse(DefaultContentHandlerFactory.getInstance(), WildcardParsingFormat.getInstance(), str);
     }
 
     public static Object parse(ParsingFormat format, String str) throws FormatParsingException {
-        return parse(DefaultFormatContentHandlerFactory.getInstance(), format, str);
+        return parse(DefaultContentHandlerFactory.getInstance(), format, str);
     }
 
     public static Object parse(FormatContentHandlerFactory cbFactory, ParsingFormat format, String str) throws FormatParsingException {
@@ -69,11 +71,17 @@ public class FormatParser implements ParsingContext {
             try {
                 doParse();
             } catch(FormatParsingException e) {
-                final StringBuilder buf = new StringBuilder();
-                buf.append("Parsing of '").append(str).append("' failed at index ").append(chI)
-                .append(" while parsing format ").append(cbStack.get(formatIndex).format)
-                .append(" started on index ").append(cbStack.get(formatIndex).strIndex);
-                throw new FormatParsingException(buf.toString(), e);
+                final ParsingFormat format;
+                final int formatStart;
+                if(formatIndex < 0) {
+                    format = rootFormat;
+                    formatStart = 0;
+                } else {
+                    FormatContentHandler ch = cbStack.get(formatIndex);
+                    format = ch.format;
+                    formatStart = ch.strIndex;
+                }
+                throw new FormatParsingException(FormatErrors.parsingFailed(str, chI, format, formatStart), e);
             }
         }
         return rootCb.getParsedValue();
@@ -94,6 +102,9 @@ public class FormatParser implements ParsingContext {
 
             if (bounced || !breakHandling) {
                 formatIndex = cbStack.size() - 1;
+                if(formatIndex < 0) {
+                    throw new FormatParsingException("EOL");
+                }
 //                if(bounced) {
 //                    System.out.println(charNow() + " bounced to " + cbStack.get(formatIndex).getFormat());
 //                }
@@ -168,6 +179,10 @@ public class FormatParser implements ParsingContext {
                 cbStack.remove(formatIndex--);
                 cbStack.get(formatIndex).addChild(ended);
             }
+        }
+
+        if(cbStack.isEmpty() && chI < str.length() - 1) {
+            throw new FormatParsingException(FormatErrors.formatEndedPrematurely(rootFormat));
         }
     }
 
