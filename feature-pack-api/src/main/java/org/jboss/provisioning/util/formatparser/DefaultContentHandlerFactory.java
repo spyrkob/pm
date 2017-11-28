@@ -45,7 +45,7 @@ public class DefaultContentHandlerFactory implements FormatContentHandlerFactory
      */
     @Override
     public FormatContentHandler forFormat(ParsingFormat format, int strIndex) throws FormatParsingException {
-        final String name = format.getName();
+        final String name = format.getContentType();
         if(name.equals(StringParsingFormat.NAME)) {
             return new StringContentHandler(format, strIndex);
         } else if(name.equals(ListParsingFormat.NAME)) {

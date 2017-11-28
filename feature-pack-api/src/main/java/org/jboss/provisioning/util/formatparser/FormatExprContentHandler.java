@@ -17,7 +17,11 @@
 
 package org.jboss.provisioning.util.formatparser;
 
+import java.util.Map;
+
+import org.jboss.provisioning.util.formatparser.formats.CompositeParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 
@@ -27,8 +31,9 @@ import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
  */
 public class FormatExprContentHandler extends FormatContentHandler {
 
-    private StringBuilder name = new StringBuilder();
-    private FormatExprContentHandler type;
+    private StringBuilder name;
+    private ParsingFormat type;
+    private Map<?,?> elems;
 
     public FormatExprContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
@@ -36,15 +41,21 @@ public class FormatExprContentHandler extends FormatContentHandler {
 
     @Override
     public void character(char ch) throws FormatParsingException {
+        if(name == null) {
+            name = new StringBuilder();
+        }
         name.append(ch);
     }
 
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(type == null) {
-            type = (FormatExprContentHandler) childHandler;
+        if(type != null || elems != null) {
+            throw new FormatParsingException("Type parameter of " + format + " has already been initialized to " + type);
+        }
+        if(FormatExprParsingFormat.COMPOSITE_TYPE_FORMAT_NAME.equals(childHandler.format.getName())) {
+            elems = (Map<?, ?>) childHandler.getContent();
         } else {
-            throw new FormatParsingException("Format " + format + " is complete already");
+            type = (ParsingFormat) childHandler.getContent();
         }
     }
 
@@ -54,8 +65,17 @@ public class FormatExprContentHandler extends FormatContentHandler {
     }
 
     public ParsingFormat resolveFormat() throws FormatParsingException {
-        final String name = this.name.toString();
-        if(name.length() == 0) {
+        final String name = this.name == null ? null : this.name.toString();
+
+        if(elems != null) {
+            final CompositeParsingFormat format = CompositeParsingFormat.newInstance(name);
+            for(Map.Entry<?,?> elem : elems.entrySet()) {
+                format.addElement((String)elem.getKey(), (ParsingFormat)elem.getValue());
+            }
+            return format;
+        }
+
+        if(name == null || name.length() == 0) {
             throw new FormatParsingException("Format type was not specified");
         }
 
@@ -68,12 +88,17 @@ public class FormatExprContentHandler extends FormatContentHandler {
             if(type == null) {
                 return ListParsingFormat.getInstance();
             }
-            return ListParsingFormat.getInstance(type.resolveFormat());
+            return ListParsingFormat.getInstance(type);
         }
 
         if(WildcardParsingFormat.NAME.equals(name)) {
             assertNoTypeParam(name);
             return WildcardParsingFormat.getInstance();
+        }
+
+        if(ObjectParsingFormat.NAME.equals(name)) {
+            assertNoTypeParam(name);
+            return ObjectParsingFormat.getInstance();
         }
 
         throw new FormatParsingException("Unexpected format name " + name);

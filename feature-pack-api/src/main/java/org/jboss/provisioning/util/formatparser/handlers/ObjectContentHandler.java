@@ -22,9 +22,11 @@ import java.util.Map;
 
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.NameValueParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
 
 /**
  *
@@ -43,11 +45,16 @@ public class ObjectContentHandler extends FormatContentHandler {
      */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(!childHandler.getFormat().getName().equals(NameValueParsingFormat.getInstance().getName())) {
-            throw new FormatParsingException("Object can't accept " + childHandler.getFormat());
+        if(!childHandler.getFormat().getName().equals(NameValueParsingFormat.NAME)) {
+            throw new FormatParsingException(FormatErrors.unexpectedChildFormat(format, childHandler.getFormat()));
         }
-        NameValueContentHandler nameValue = (NameValueContentHandler) childHandler;
-        map = PmCollections.putLinked(map, nameValue.name, nameValue.value);
+        final NameValueContentHandler nameValue = (NameValueContentHandler) childHandler;
+        final ObjectParsingFormat objectFormat = (ObjectParsingFormat)format;
+        if(objectFormat.isAcceptsElement(nameValue.name)) {
+            map = PmCollections.putLinked(map, nameValue.name, nameValue.value);
+        } else {
+            throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(format, nameValue.name));
+        }
     }
 
     /* (non-Javadoc)

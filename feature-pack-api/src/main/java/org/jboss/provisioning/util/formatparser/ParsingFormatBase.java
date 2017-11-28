@@ -43,6 +43,11 @@ public class ParsingFormatBase implements ParsingFormat {
         return name;
     }
 
+    @Override
+    public String getContentType() {
+        return name;
+    }
+
     /* (non-Javadoc)
      * @see org.jboss.provisioning.spec.type.ParsingFormat#isWrapper()
      */

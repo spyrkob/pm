@@ -53,7 +53,7 @@ public class ExtendedContentHandlerFactory implements FormatContentHandlerFactor
 
     @Override
     public FormatContentHandler forFormat(ParsingFormat format, int strIndex) throws FormatParsingException {
-        final Class<? extends FormatContentHandler> chClass = chTypes.get(format.getName());
+        final Class<? extends FormatContentHandler> chClass = chTypes.get(format.getContentType());
         if(chClass == null) {
             return delegate.forFormat(format, strIndex);
         }
