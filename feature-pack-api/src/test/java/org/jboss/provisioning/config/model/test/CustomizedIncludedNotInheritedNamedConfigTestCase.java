@@ -97,10 +97,10 @@ public class CustomizedIncludedNotInheritedNamedConfigTestCase extends PmProvisi
                         .setModel("model1")
                         .setProperty("prop1", "c1m1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setConfigParam("p1", "config1")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a2"))
-                                .setParam("p1", "custom1")
+                                .setConfigParam("p1", "custom1")
                                 .build())
                         .build())
                 .build();

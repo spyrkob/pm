@@ -17,15 +17,18 @@
 
 package org.jboss.provisioning.xml;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.state.ProvisionedFeature;
+import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -41,46 +44,105 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         return new ProvisionedFeatureBuilder(null, id);
     }
 
-    public static ProvisionedFeatureBuilder builder(ResolvedFeatureId id, ResolvedSpecId specId) {
-        return new ProvisionedFeatureBuilder(id, specId);
-    }
-
-    private final ResolvedFeatureId id;
     private final ResolvedSpecId specId;
-    private Map<String, String> params = Collections.emptyMap();
+
+    private ResolvedFeatureId id;
+    private ResolvedFeatureId.Builder idBuilder;
+
+    private Map<String, String> configParams = Collections.emptyMap();
+    private Map<String, Object> resolvedParams = Collections.emptyMap();
 
     private ProvisionedFeatureBuilder(ResolvedFeatureId id, ResolvedSpecId specId) {
         this.id = id;
         this.specId = specId;
         if(id != null) {
-            params = id.getParams();
-            if(params.size() > 1) {
-                params = new HashMap<>(params);
+            resolvedParams = id.getParams();
+            if(resolvedParams.size() > 1) {
+                resolvedParams = new HashMap<>(resolvedParams);
+                configParams = new HashMap<>(resolvedParams.size());
+                for(Map.Entry<String, Object> entry : resolvedParams.entrySet()) {
+                    configParams.put(entry.getKey(), entry.getValue().toString());
+                }
+            } else {
+                final Map.Entry<String, Object> entry = resolvedParams.entrySet().iterator().next();
+                configParams = Collections.singletonMap(entry.getKey(), entry.getValue().toString());
             }
+            idBuilder = null;
+        } else {
+            idBuilder = ResolvedFeatureId.builder(specId);
         }
     }
 
-    public ProvisionedFeatureBuilder setParam(String name, String value) {
-        if(params.isEmpty()) {
-            params = Collections.singletonMap(name, value);
-            return this;
-        }
-        if(params.size() == 1) {
-            if(params.containsKey(name)) {
-                params = Collections.singletonMap(name, value);
-                return this;
-            }
-            final Map.Entry<String, String> entry = params.entrySet().iterator().next();
-            params = new HashMap<>(2);
-            params.put(entry.getKey(), entry.getValue());
-        }
-        params.put(name, value);
+    /**
+     * Sets the parameter's configuration value
+     */
+    public ProvisionedFeatureBuilder setConfigParam(String name, String value) {
+        configParams = PmCollections.put(configParams, name, value);
         return this;
     }
 
-    public ProvisionedFeature build() {
-        if(params.size() > 1) {
-            params = Collections.unmodifiableMap(params);
+    /**
+     * Sets the parameter's resolved value.
+     */
+    public ProvisionedFeatureBuilder setResolvedParam(String name, Object value) {
+        resolvedParams = PmCollections.put(resolvedParams, name, value);
+        return this;
+    }
+
+    /**
+     * Sets the parameter's configuration and resolved values.
+     */
+    public ProvisionedFeatureBuilder setParam(String name, String config, Object resolved) {
+        setConfigParam(name, config);
+        setResolvedParam(name, resolved);
+        return this;
+    }
+
+    /**
+     * Sets the parameter's configuration and resolved values to the value passed in.
+     */
+    public ProvisionedFeatureBuilder setParam(String name, String value) {
+        return setParam(name, value, value);
+    }
+
+    /**
+     * Sets the ID parameter's resolved value.
+     */
+    public ProvisionedFeatureBuilder setIdParam(String name, Object value) {
+        if(idBuilder == null) {
+            throw new IllegalStateException("The ID builder has not been initialized");
+        }
+        idBuilder.setParam(name, value);
+        resolvedParams = PmCollections.put(resolvedParams, name, value);
+        return this;
+    }
+
+    /**
+     * Sets the ID parameter's configuration and resolved values.
+     */
+    public ProvisionedFeatureBuilder setIdParam(String name, String config, Object resolved) {
+        setIdParam(name, resolved);
+        setConfigParam(name, config);
+        return this;
+    }
+
+    /**
+     * Sets ID parameter's configuration and resolved values to the value passed in.
+     */
+    public ProvisionedFeatureBuilder setIdParam(String name, String value) {
+        return setIdParam(name, value, value);
+    }
+
+    public ProvisionedFeature build() throws ProvisioningDescriptionException {
+        if(idBuilder != null) {
+            id = idBuilder.build();
+            idBuilder = null;
+        }
+        if(resolvedParams.size() > 1) {
+            resolvedParams = Collections.unmodifiableMap(resolvedParams);
+        }
+        if(configParams.size() > 1) {
+            configParams = Collections.unmodifiableMap(configParams);
         }
         return this;
     }
@@ -102,25 +164,36 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
 
     @Override
     public boolean hasParams() {
-        return !params.isEmpty();
+        return !resolvedParams.isEmpty();
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public Collection<String> getParamNames() {
+        return resolvedParams.keySet();
     }
 
     @Override
-    public String getParam(String name) {
-        return params.get(name);
+    public Object getResolvedParam(String name) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getConfigParam(String name) throws ProvisioningException {
+        return configParams.get(name);
+    }
+
+    @Override
+    public Map<String, Object> getResolvedParams() {
+        return resolvedParams;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((configParams == null) ? 0 : configParams.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((params == null) ? 0 : params.hashCode());
+        result = prime * result + ((resolvedParams == null) ? 0 : resolvedParams.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
         return result;
     }
@@ -134,15 +207,20 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         if (getClass() != obj.getClass())
             return false;
         ProvisionedFeatureBuilder other = (ProvisionedFeatureBuilder) obj;
+        if (configParams == null) {
+            if (other.configParams != null)
+                return false;
+        } else if (!configParams.equals(other.configParams))
+            return false;
         if (id == null) {
             if (other.id != null)
                 return false;
         } else if (!id.equals(other.id))
             return false;
-        if (params == null) {
-            if (other.params != null)
+        if (resolvedParams == null) {
+            if (other.resolvedParams != null)
                 return false;
-        } else if (!params.equals(other.params))
+        } else if (!resolvedParams.equals(other.resolvedParams))
             return false;
         if (specId == null) {
             if (other.specId != null)
@@ -161,15 +239,9 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         } else {
             buf.append(specId);
         }
-        if(!params.isEmpty()) {
+        if(!resolvedParams.isEmpty()) {
             buf.append(' ');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
-            while(i.hasNext()) {
-                entry = i.next();
-                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
-            }
+            StringUtils.append(buf, resolvedParams.entrySet());
         }
         return buf.append(']').toString();
     }

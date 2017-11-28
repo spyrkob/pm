@@ -87,7 +87,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             op = OP;
         }
 
-        String toCommandLine(ProvisionedFeature feature) throws ProvisioningDescriptionException {
+        String toCommandLine(ProvisionedFeature feature) throws ProvisioningException {
             final String line;
             if (this.line != null) {
                 line = this.line;
@@ -98,7 +98,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 }
                 int i = 0;
                 while(i < addrParams.size()) {
-                    final String value = feature.getParam(addrParams.get(i++));
+                    final String value = feature.getConfigParam(addrParams.get(i++));
                     if (value == null) {
                         continue;
                     }
@@ -112,7 +112,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             boolean comma = false;
                             i = 0;
                             while(i < opParams.size()) {
-                                final String value = feature.getParam(opParams.get(i++));
+                                final String value = feature.getConfigParam(opParams.get(i++));
                                 if (value == null) {
                                     continue;
                                 }
@@ -136,7 +136,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         break;
                     }
                     case WRITE_ATTR: {
-                        final String value = feature.getParam(opParams.get(0));
+                        final String value = feature.getConfigParam(opParams.get(0));
                         if (value == null) {
                             throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
@@ -144,7 +144,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         break;
                     }
                     case LIST_ADD: {
-                        final String value = feature.getParam(opParams.get(0));
+                        final String value = feature.getConfigParam(opParams.get(0));
                         if (value == null) {
                             throw new ProvisioningDescriptionException(opParams.get(0) + " parameter is null: " + feature);
                         }
@@ -406,10 +406,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
         if(lookForHost == LOOK_FOR_HOST_IN_SPEC) {
             lookForHost = 0;
-            hostName = feature.getParam(HOST);
+            hostName = feature.getConfigParam(HOST);
         }
         if (opsTotal == 0) {
-            messageWriter.verbose("      " + feature.getParams());
+            messageWriter.verbose("      " + feature.getResolvedParams());
             return;
         }
         for(int i = 0; i < opsTotal; ++i) {

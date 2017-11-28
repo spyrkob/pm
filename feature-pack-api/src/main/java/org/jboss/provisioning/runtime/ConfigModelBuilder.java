@@ -30,7 +30,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
@@ -234,18 +233,18 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return stack.remove(stack.size() - 1);
     }
 
-    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, FeatureConfig config, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps) throws ProvisioningDescriptionException {
+    ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, Object> resolvedParams, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps) throws ProvisioningException {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                feature.setParams(config);
+                feature.setParams(resolvedParams);
                 if(!resolvedDeps.isEmpty()) {
                     feature.addAllDependencies(resolvedDeps);
                 }
                 return feature;
             }
         }
-        final ResolvedFeature feature = new ResolvedFeature(id, spec, config, resolvedDeps, ++featureIncludeCount);
+        final ResolvedFeature feature = new ResolvedFeature(id, spec, resolvedParams, resolvedDeps, ++featureIncludeCount);
         featureGroupStack.addFeature(feature);
         return feature;
     }
@@ -405,7 +404,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
         orderedFeatures = new ArrayList<>(featuresById.size());
         for(SpecFeatures features : featuresBySpec.values()) {
-            orderSpec(features, false);
+            orderFeaturesInSpec(features, false);
         }
 
         featuresById = Collections.emptyMap();
@@ -445,7 +444,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      *   returns null if no loop was detected (despite whether any feature was processed or not)
      * @throws ProvisioningException
      */
-    private List<CircularRefInfo> orderSpec(SpecFeatures features, boolean force) throws ProvisioningException {
+    private List<CircularRefInfo> orderFeaturesInSpec(SpecFeatures features, boolean force) throws ProvisioningException {
         if(!force) {
             if (!features.isFree()) {
                 return null;
@@ -496,14 +495,14 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
         List<CircularRefInfo> circularRefs = null;
         if(feature.spec.xmlSpec.requiresCapabilities()) {
-            circularRefs = orderProviders(feature, circularRefs);
+            circularRefs = orderCapabilityProviders(feature, circularRefs);
         }
         if(!feature.deps.isEmpty()) {
-            circularRefs = orderRefs(feature, feature.deps.keySet(), false, circularRefs);
+            circularRefs = orderReferencedFeatures(feature, feature.deps.keySet(), false, circularRefs);
         }
         List<ResolvedFeatureId> refIds = feature.resolveRefs();
         if(!refIds.isEmpty()) {
-            circularRefs = orderRefs(feature, refIds, true, circularRefs);
+            circularRefs = orderReferencedFeatures(feature, refIds, true, circularRefs);
         }
 
         List<CircularRefInfo> initiatedCircularRefs = Collections.emptyList();
@@ -584,7 +583,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         return null;
     }
 
-    private List<CircularRefInfo> orderProviders(ResolvedFeature feature, List<CircularRefInfo> circularRefs)
+    private List<CircularRefInfo> orderCapabilityProviders(ResolvedFeature feature, List<CircularRefInfo> circularRefs)
             throws ProvisioningException {
         for(CapabilitySpec capSpec : feature.spec.xmlSpec.getRequiredCapabilities()) {
             final String resolvedCap = feature.resolveCapability(capSpec);
@@ -617,7 +616,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             List<CircularRefInfo> firstLoop = null;
             if(!providers.specs.isEmpty()) {
                 for(SpecFeatures specFeatures : providers.specs) {
-                    final List<CircularRefInfo> loop = orderSpec(specFeatures, !specFeatures.isFree());
+                    final List<CircularRefInfo> loop = orderFeaturesInSpec(specFeatures, !specFeatures.isFree());
                     if(providers.isProvided()) {
                         return null;
                     }
@@ -651,9 +650,9 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      * @return  feature ids that form circular dependency loops
      * @throws ProvisioningException
      */
-    private List<CircularRefInfo> orderRefs(ResolvedFeature feature, Collection<ResolvedFeatureId> refIds, boolean specRefs, List<CircularRefInfo> circularRefs) throws ProvisioningException {
+    private List<CircularRefInfo> orderReferencedFeatures(ResolvedFeature feature, Collection<ResolvedFeatureId> refIds, boolean specRefs, List<CircularRefInfo> circularRefs) throws ProvisioningException {
         for(ResolvedFeatureId refId : refIds) {
-            final List<CircularRefInfo> loopedOnFeature = orderRef(feature, refId, specRefs);
+            final List<CircularRefInfo> loopedOnFeature = orderReferencedFeature(feature, refId, specRefs);
             if(loopedOnFeature != null) {
                 if(circularRefs == null) {
                     circularRefs = loopedOnFeature;
@@ -679,13 +678,13 @@ public class ConfigModelBuilder implements ProvisionedConfig {
      * @return  true if the referenced feature was ordered, false if the feature was not ordered because of the circular reference loop
      * @throws ProvisioningException
      */
-    private List<CircularRefInfo> orderRef(ResolvedFeature feature, ResolvedFeatureId refId, boolean specRef) throws ProvisioningException {
+    private List<CircularRefInfo> orderReferencedFeature(ResolvedFeature feature, ResolvedFeatureId refId, boolean specRef) throws ProvisioningException {
         if(orderReferencedSpec && specRef && !feature.spec.id.equals(refId.specId)) {
             final SpecFeatures targetSpecFeatures = featuresBySpec.get(refId.specId);
             if (targetSpecFeatures == null) {
                 throw new ProvisioningDescriptionException(Errors.unresolvedFeatureDep(feature, refId));
             }
-            final List<CircularRefInfo> specLoops = orderSpec(targetSpecFeatures, false);
+            final List<CircularRefInfo> specLoops = orderFeaturesInSpec(targetSpecFeatures, false);
             if (specLoops != null) {
                 List<CircularRefInfo> featureLoops = null;
                 for (int i = 0; i < specLoops.size(); ++i) {

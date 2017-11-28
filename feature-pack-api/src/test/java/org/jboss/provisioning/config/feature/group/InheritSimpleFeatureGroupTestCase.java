@@ -92,10 +92,10 @@ public class InheritSimpleFeatureGroupTestCase extends PmInstallFeaturePackTestB
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "aOne"))
-                                .setParam("a", "a1")
+                                .setConfigParam("a", "a1")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "name", "bOne"))
-                                .setParam("b", "b1")
+                                .setConfigParam("b", "b1")
                                 .build())
                         .build())
                 .build();

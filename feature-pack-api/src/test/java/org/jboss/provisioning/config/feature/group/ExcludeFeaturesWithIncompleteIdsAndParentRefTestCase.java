@@ -102,7 +102,7 @@ public class ExcludeFeaturesWithIncompleteIdsAndParentRefTestCase extends PmInst
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a2"))
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "id", "a1"))
-                                .setParam("a", "a2")
+                                .setConfigParam("a", "a2")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "b1").setParam("left-a", "a1").setParam("right-a", "a2").build())
                                 .build())

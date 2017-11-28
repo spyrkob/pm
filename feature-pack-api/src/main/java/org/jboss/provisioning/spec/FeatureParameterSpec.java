@@ -17,6 +17,7 @@
 
 package org.jboss.provisioning.spec;
 
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 
 /**
@@ -24,6 +25,42 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
  * @author Alexey Loubyansky
  */
 public class FeatureParameterSpec {
+
+    public static class Builder {
+        private final String name;
+        private boolean featureId;
+        private boolean nillable;
+        private String defaultValue;
+        private String type = Constants.BUILT_IN_TYPE_STRING;
+
+        private Builder(String name) {
+            this.name = name;
+        }
+
+        public Builder setFeatureId() {
+            this.featureId = true;
+            return this;
+        }
+
+        public Builder setNillable() {
+            this.nillable = true;
+            return this;
+        }
+
+        Builder setDefaultValue(String value) {
+            this.defaultValue = value;
+            return this;
+        }
+
+        Builder setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public FeatureParameterSpec build() throws ProvisioningDescriptionException {
+            return new FeatureParameterSpec(this);
+        }
+    }
 
     public static FeatureParameterSpec create(String name) throws ProvisioningDescriptionException {
         return new FeatureParameterSpec(name, false, false, null);
@@ -49,6 +86,7 @@ public class FeatureParameterSpec {
     final boolean featureId;
     final boolean nillable;
     final String defaultValue;
+    final String type;
 
     private FeatureParameterSpec(String name, boolean featureId, boolean nillable, String defaultValue) throws ProvisioningDescriptionException {
         if(featureId && nillable) {
@@ -58,6 +96,18 @@ public class FeatureParameterSpec {
         this.featureId = featureId;
         this.nillable = nillable;
         this.defaultValue = defaultValue;
+        this.type = Constants.BUILT_IN_TYPE_STRING;
+    }
+
+    private FeatureParameterSpec(Builder builder) throws ProvisioningDescriptionException {
+        if(builder.featureId && builder.nillable) {
+            throw new ProvisioningDescriptionException("ID parameter " + builder.name + " cannot be nillable.");
+        }
+        this.name = builder.name;
+        this.featureId = builder.featureId;
+        this.nillable = builder.nillable;
+        this.defaultValue = builder.defaultValue;
+        this.type = builder.type;
     }
 
     public String getName() {
@@ -80,6 +130,10 @@ public class FeatureParameterSpec {
         return defaultValue;
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -88,6 +142,7 @@ public class FeatureParameterSpec {
         result = prime * result + (featureId ? 1231 : 1237);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (nillable ? 1231 : 1237);
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
     }
 
@@ -114,6 +169,11 @@ public class FeatureParameterSpec {
             return false;
         if (nillable != other.nillable)
             return false;
+        if (type == null) {
+            if (other.type != null)
+                return false;
+        } else if (!type.equals(other.type))
+            return false;
         return true;
     }
 
@@ -130,6 +190,7 @@ public class FeatureParameterSpec {
         if(nillable) {
             buf.append(" nillable");
         }
+        buf.append(' ').append(type);
         return buf.append(']').toString();
     }
 }

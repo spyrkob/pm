@@ -92,7 +92,7 @@ public class DontIheritConfigsIncludeModelExcludeNamedConfigFromDependencyTestCa
                         .setModel("model1")
                         .setProperty("prop1", "c1m1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setConfigParam("p1", "config1")
                                 .build())
                         .build())
                 .build();

@@ -19,13 +19,13 @@ package org.jboss.provisioning.runtime;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *
@@ -35,13 +35,17 @@ public class ResolvedFeatureId {
 
     public static class Builder {
         private final ResolvedSpecId specId;
-        private Map<String, String> params = Collections.emptyMap();
+        private Map<String, Object> params = Collections.emptyMap();
 
         private Builder(ArtifactCoords.Gav gav, String spec) {
             this.specId = new ResolvedSpecId(gav, spec);
         }
 
-        public Builder setParam(String name, String value) {
+        private Builder(ResolvedSpecId specId) {
+            this.specId = specId;
+        }
+
+        public Builder setParam(String name, Object value) {
             params = PmCollections.put(params, name, value);
             return this;
         }
@@ -52,6 +56,10 @@ public class ResolvedFeatureId {
             }
             return new ResolvedFeatureId(specId, params);
         }
+    }
+
+    public static Builder builder(ResolvedSpecId specId) {
+        return new Builder(specId);
     }
 
     public static Builder builder(ArtifactCoords.Gav gav, String spec) {
@@ -112,7 +120,7 @@ public class ResolvedFeatureId {
             return new ResolvedFeatureId(specId, Collections.singletonMap(str.substring(nextIndex, equals), str.substring(equals + 1)));
         }
 
-        final Map<String, String> params = new HashMap<>(2);
+        final Map<String, Object> params = new HashMap<>(2);
         int lastComma = nextIndex - 1;
         while(endIndex > 0) {
             int equals = str.indexOf('=', lastComma + 2);
@@ -145,12 +153,12 @@ public class ResolvedFeatureId {
     }
 
     final ResolvedSpecId specId;
-    final Map<String, String> params;
+    final Map<String, Object> params;
 
-    ResolvedFeatureId(ResolvedSpecId specId, Map<String, String> params) {
+    ResolvedFeatureId(ResolvedSpecId specId, Map<String, Object> params) {
         this.specId = specId;
-        Map<String, String> filtered = Collections.emptyMap();
-        for(Map.Entry<String, String> entry : params.entrySet()) {
+        Map<String, Object> filtered = Collections.emptyMap();
+        for(Map.Entry<String, Object> entry : params.entrySet()) {
             if(!Constants.PM_UNDEFINED.equals(entry.getValue())) {
                 filtered = PmCollections.put(filtered, entry.getKey(), entry.getValue());
             }
@@ -165,7 +173,7 @@ public class ResolvedFeatureId {
         return specId;
     }
 
-    public Map<String, String> getParams() {
+    public Map<String, Object> getParams() {
         return params;
     }
 
@@ -206,13 +214,7 @@ public class ResolvedFeatureId {
         buf.append(specId);
         if (!params.isEmpty()) {
             buf.append(':');
-            final Iterator<Map.Entry<String, String>> i = params.entrySet().iterator();
-            Map.Entry<String, String> entry = i.next();
-            buf.append(entry.getKey()).append('=').append(entry.getValue());
-            while(i.hasNext()) {
-                entry = i.next();
-                buf.append(',').append(entry.getKey()).append('=').append(entry.getValue());
-            }
+            StringUtils.append(buf, params.entrySet());
         }
         return buf.toString();
     }

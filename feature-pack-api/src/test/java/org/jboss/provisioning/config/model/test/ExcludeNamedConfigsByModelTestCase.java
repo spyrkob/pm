@@ -101,7 +101,7 @@ public class ExcludeNamedConfigsByModelTestCase extends PmProvisionConfigTestBas
                         .setModel("model1")
                         .setProperty("prop1", "c1m1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
+                                .setConfigParam("p1", "config1")
                                 .build())
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
@@ -109,7 +109,7 @@ public class ExcludeNamedConfigsByModelTestCase extends PmProvisionConfigTestBas
                         .setModel("model1")
                         .setProperty("prop1", "c2m1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config2")
+                                .setConfigParam("p1", "config2")
                                 .build())
                         .build())
                 .build();

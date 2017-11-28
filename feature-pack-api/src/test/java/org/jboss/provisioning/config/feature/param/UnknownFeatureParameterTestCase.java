@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.params;
+package org.jboss.provisioning.config.feature.param;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
@@ -26,8 +26,6 @@ import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -85,7 +83,7 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
                             .setParam("p5", "config1")), t.getLocalizedMessage());
         t = t.getCause();
         Assert.assertNotNull(t);
-        Assert.assertEquals("Unknown parameter 'p5' for " + ResolvedFeatureId.create(new ResolvedSpecId(FP_GAV, "specA"),  "name", "a1"), t.getLocalizedMessage());
+        Assert.assertEquals(Errors.unknownFeatureParameter("specA", "p5"), t.getLocalizedMessage());
     }
 
     @Override

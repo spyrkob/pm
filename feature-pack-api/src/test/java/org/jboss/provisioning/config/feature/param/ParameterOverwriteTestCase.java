@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.params;
+package org.jboss.provisioning.config.feature.param;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -96,10 +96,10 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setParam("p1", "config1")
-                                .setParam("p2", "groupConfig2")
-                                .setParam("p3", "group3")
-                                .setParam("p4", "def4")
+                                .setConfigParam("p1", "config1")
+                                .setConfigParam("p2", "groupConfig2")
+                                .setConfigParam("p3", "group3")
+                                .setConfigParam("p4", "def4")
                                 .build())
                         .build())
                 .build();

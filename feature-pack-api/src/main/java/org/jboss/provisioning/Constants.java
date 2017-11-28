@@ -45,4 +45,6 @@ public interface Constants {
     String PROVISIONED_STATE_XML = "provisioned.xml";
 
     String PM_UNDEFINED = "PM_UNDEFINED";
+
+    String BUILT_IN_TYPE_STRING = "String";
 }

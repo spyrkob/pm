@@ -99,12 +99,12 @@ public class PreservedConfigOrderOfFeaturesTestCase extends PmInstallFeaturePack
                                 .build())
 
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specX", "x", "x1"))
-                                .setParam("y", "y3")
+                                .setConfigParam("y", "y3")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specX", "x", "x2"))
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specX", "x", "x3"))
-                                .setParam("y", "y1")
+                                .setConfigParam("y", "y1")
                                 .build())
                         .build())
                 .build();

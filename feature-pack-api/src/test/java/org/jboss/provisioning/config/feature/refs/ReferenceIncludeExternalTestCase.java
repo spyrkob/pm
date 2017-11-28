@@ -85,9 +85,9 @@ public class ReferenceIncludeExternalTestCase extends PmInstallFeaturePackTestBa
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a")).setParam("a", "aSpec").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "a")).setConfigParam("a", "aSpec").build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specB", "name", "b"))
-                                .setParam("a", "a")
+                                .setConfigParam("a", "a")
                                 .build())
                         .build())
                 .build();

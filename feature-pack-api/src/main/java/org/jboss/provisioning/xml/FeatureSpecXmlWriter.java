@@ -106,10 +106,10 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                 if(ref.isInclude()) {
                     addAttribute(refE, Attribute.INCLUDE, TRUE);
                 }
-                for(int i = 0; i < ref.getParamsMapped(); ++i) {
+                for(Map.Entry<String, String> mapping : ref.getMappedParams().entrySet()) {
                     final ElementNode paramE = addElement(refE, Element.PARAMETER);
-                    addAttribute(paramE, Attribute.NAME, ref.getLocalParam(i));
-                    addAttribute(paramE, Attribute.MAPS_TO, ref.getTargetParam(i));
+                    addAttribute(paramE, Attribute.NAME, mapping.getKey());
+                    addAttribute(paramE, Attribute.MAPS_TO, mapping.getValue());
                 }
             }
         }

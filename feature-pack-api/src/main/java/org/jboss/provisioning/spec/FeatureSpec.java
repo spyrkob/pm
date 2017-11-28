@@ -216,7 +216,7 @@ public class FeatureSpec extends PackageDepsSpec {
     public FeatureParameterSpec getParam(String name) throws ProvisioningDescriptionException {
         final FeatureParameterSpec paramSpec = params.get(name);
         if(paramSpec == null) {
-            throw new ProvisioningDescriptionException("Feature spec " + this.getName() + " does not contain parameter " + name);
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this.name, name));
         }
         return paramSpec;
     }
