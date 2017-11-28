@@ -36,12 +36,12 @@ public abstract class FormatContentHandler {
     }
 
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        throw new UnsupportedOperationException();
+        throw new FormatParsingException("Format " + format + " does not support nested formats");
     }
 
     public void character(char ch) throws FormatParsingException {
-        throw new UnsupportedOperationException();
+        throw new FormatParsingException("Format " + format + " does not support character content");
     }
 
-    public abstract Object getParsedValue() throws FormatParsingException;
+    public abstract Object getContent() throws FormatParsingException;
 }

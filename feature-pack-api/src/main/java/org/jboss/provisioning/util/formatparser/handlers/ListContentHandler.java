@@ -17,9 +17,10 @@
 
 package org.jboss.provisioning.util.formatparser.handlers;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
@@ -30,7 +31,7 @@ import org.jboss.provisioning.util.formatparser.ParsingFormat;
  */
 public class ListContentHandler extends FormatContentHandler {
 
-    private final List<Object> list = new ArrayList<>();
+    private List<Object> list = Collections.emptyList();
 
     public ListContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
@@ -38,11 +39,11 @@ public class ListContentHandler extends FormatContentHandler {
 
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        list.add(childHandler.getParsedValue());
+        list = PmCollections.add(list, childHandler.getContent());
     }
 
     @Override
-    public Object getParsedValue() throws FormatParsingException {
+    public Object getContent() throws FormatParsingException {
         return list;
     }
 }

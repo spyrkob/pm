@@ -27,6 +27,8 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  */
 public class StringParsingFormat extends ParsingFormatBase {
 
+    public static final String NAME = "String";
+
     private static final StringParsingFormat INSTANCE = new StringParsingFormat();
 
     public static StringParsingFormat getInstance() {
@@ -34,7 +36,7 @@ public class StringParsingFormat extends ParsingFormatBase {
     }
 
     protected StringParsingFormat() {
-        super("String");
+        super(NAME);
     }
 
     @Override

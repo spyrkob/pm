@@ -39,7 +39,7 @@ public class StringContentHandler extends FormatContentHandler {
     }
 
     @Override
-    public Object getParsedValue() throws FormatParsingException {
+    public Object getContent() throws FormatParsingException {
         return buf.toString().trim();
     }
 }

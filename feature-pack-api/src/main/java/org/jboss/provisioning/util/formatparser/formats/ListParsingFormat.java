@@ -29,6 +29,8 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  */
 public class ListParsingFormat extends ParsingFormatBase {
 
+    public static final String NAME = "List";
+
     private static final ListParsingFormat INSTANCE = new ListParsingFormat(WildcardParsingFormat.getInstance());
 
     public static ListParsingFormat getInstance() {
@@ -43,7 +45,7 @@ public class ListParsingFormat extends ParsingFormatBase {
     private final ParsingFormat itemFormat;
 
     protected ListParsingFormat(ParsingFormat itemFormat) {
-        super("List");
+        super(NAME);
         this.itemFormat = itemFormat;
     }
 
@@ -77,7 +79,32 @@ public class ListParsingFormat extends ParsingFormatBase {
 
     @Override
     public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException(FormatErrors.formatNotCompleted(this));
+        throw new FormatParsingException(FormatErrors.formatIncomplete(this));
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((itemFormat == null) ? 0 : itemFormat.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ListParsingFormat other = (ListParsingFormat) obj;
+        if (itemFormat == null) {
+            if (other.itemFormat != null)
+                return false;
+        } else if (!itemFormat.equals(other.itemFormat))
+            return false;
+        return true;
     }
 
     @Override

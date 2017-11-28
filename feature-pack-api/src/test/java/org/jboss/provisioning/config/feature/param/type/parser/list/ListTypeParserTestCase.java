@@ -52,14 +52,14 @@ public class ListTypeParserTestCase extends TypeParserTestBase {
     public void testIncompleteEmptyList() throws Exception {
         assertFailure("[",
                 FormatErrors.parsingFailed("[", 1, testFormat, 0),
-                FormatErrors.formatNotCompleted(testFormat));
+                FormatErrors.formatIncomplete(testFormat));
     }
 
     @Test
     public void testIncompleteList() throws Exception {
         assertFailure("[a , b",
                 FormatErrors.parsingFailed("[a , b", 6, StringParsingFormat.getInstance(), 5),
-                FormatErrors.formatNotCompleted(testFormat));
+                FormatErrors.formatIncomplete(testFormat));
     }
 
     @Test

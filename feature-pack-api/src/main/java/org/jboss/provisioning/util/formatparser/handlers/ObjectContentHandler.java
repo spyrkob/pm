@@ -54,7 +54,7 @@ public class ObjectContentHandler extends FormatContentHandler {
      * @see org.jboss.provisioning.spec.type.ParsingCallbackHandler#getParsedValue()
      */
     @Override
-    public Object getParsedValue() throws FormatParsingException {
+    public Object getContent() throws FormatParsingException {
         return map;
     }
 }
