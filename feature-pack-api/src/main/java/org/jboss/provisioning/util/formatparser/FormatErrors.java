@@ -23,6 +23,10 @@ package org.jboss.provisioning.util.formatparser;
  */
 public class FormatErrors {
 
+    public static String formatExprDoesNotSupportTypeParam(String name) {
+        return "Format " + name + " does not support type parameters";
+    }
+
     public static String parsingFailed(String str, int errorIndex, ParsingFormat format, int formatStartIndex) {
         return new StringBuilder()
                 .append("Parsing of '").append(str).append("' failed at index ").append(errorIndex)

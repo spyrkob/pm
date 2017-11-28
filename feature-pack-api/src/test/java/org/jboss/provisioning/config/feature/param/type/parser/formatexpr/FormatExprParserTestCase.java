@@ -20,6 +20,7 @@ package org.jboss.provisioning.config.feature.param.type.parser.formatexpr;
 import org.jboss.provisioning.util.formatparser.FormatParser;
 import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,18 +32,35 @@ import org.junit.Test;
 public class FormatExprParserTestCase {
 
     @Test
+    public void testWildcard() throws Exception {
+        Assert.assertEquals(WildcardParsingFormat.getInstance(), FormatParser.resolveFormat("?"));
+        Assert.assertEquals(WildcardParsingFormat.getInstance(), FormatParser.resolveFormat(" ? "));
+    }
+
+    @Test
     public void testString() throws Exception {
         Assert.assertEquals(StringParsingFormat.getInstance(), FormatParser.resolveFormat("String"));
+        Assert.assertEquals(StringParsingFormat.getInstance(), FormatParser.resolveFormat(" String "));
     }
 
     @Test
     public void testListOfWildcards() throws Exception {
         Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List"));
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List<?>"));
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat(" List < ? > "));
     }
 
     @Test
     public void testListOfStrings() throws Exception {
         Assert.assertEquals(ListParsingFormat.getInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("List<String>"));
         Assert.assertEquals(ListParsingFormat.getInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat(" List < String > "));
+    }
+
+    @Test
+    public void testListOfListsOfStrings() throws Exception {
+        Assert.assertEquals(
+                ListParsingFormat.getInstance(
+                        ListParsingFormat.getInstance(
+                                StringParsingFormat.getInstance())), FormatParser.resolveFormat("List<List<String>>"));
     }
 }

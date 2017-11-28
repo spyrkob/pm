@@ -19,6 +19,7 @@ package org.jboss.provisioning.util.formatparser;
 
 import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 
 /**
  *
@@ -59,9 +60,7 @@ public class FormatExprContentHandler extends FormatContentHandler {
         }
 
         if(StringParsingFormat.NAME.equals(name)) {
-            if(type != null) {
-                throw new FormatParsingException("Format " + name + " does not support type parameters");
-            }
+            assertNoTypeParam(name);
             return StringParsingFormat.getInstance();
         }
 
@@ -72,6 +71,17 @@ public class FormatExprContentHandler extends FormatContentHandler {
             return ListParsingFormat.getInstance(type.resolveFormat());
         }
 
+        if(WildcardParsingFormat.NAME.equals(name)) {
+            assertNoTypeParam(name);
+            return WildcardParsingFormat.getInstance();
+        }
+
         throw new FormatParsingException("Unexpected format name " + name);
+    }
+
+    private void assertNoTypeParam(final String name) throws FormatParsingException {
+        if(type != null) {
+            throw new FormatParsingException(FormatErrors.formatExprDoesNotSupportTypeParam(name));
+        }
     }
 }
