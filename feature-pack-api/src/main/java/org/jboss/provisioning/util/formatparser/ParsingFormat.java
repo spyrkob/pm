@@ -25,6 +25,8 @@ public interface ParsingFormat {
 
     String getName();
 
+    String getContentType();
+
     boolean isWrapper();
 
     void pushed(ParsingContext ctx) throws FormatParsingException;

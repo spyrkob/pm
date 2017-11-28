@@ -58,7 +58,7 @@ public abstract class TypeParserTestBase {
     protected void assertFailure(String str, String... msgs) {
         try {
             parseFormat(str);
-            Assert.fail("Exepcted a failure");
+            Assert.fail("Successfully parsed");
         } catch(Throwable t) {
             int i = 0;
             while(t != null && i < msgs.length) {

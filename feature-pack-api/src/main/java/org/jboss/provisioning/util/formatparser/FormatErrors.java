@@ -23,6 +23,10 @@ package org.jboss.provisioning.util.formatparser;
  */
 public class FormatErrors {
 
+    public static String formatExprDoesNotSupportTypeParam(String name) {
+        return "Format " + name + " does not support type parameters";
+    }
+
     public static String parsingFailed(String str, int errorIndex, ParsingFormat format, int formatStartIndex) {
         return new StringBuilder()
                 .append("Parsing of '").append(str).append("' failed at index ").append(errorIndex)
@@ -46,5 +50,16 @@ public class FormatErrors {
         return new StringBuilder()
                 .append("Format ").append(format).append(" expects '").append(expected).append("' as it's starting character, not '").append(actual).append("'")
                 .toString();
+    }
+
+    public static String unexpectedChildFormat(ParsingFormat parent, ParsingFormat child) {
+        return "Format " + parent + " does not expect format " + child + " as a child.";
+    }
+
+    public static String unexpectedCompositeFormatElement(ParsingFormat format, String elem) {
+        if(elem == null) {
+            return "Unexpected attribute for " + format;
+        }
+        return "Format " + format + " does not accept attribute " + elem;
     }
 }

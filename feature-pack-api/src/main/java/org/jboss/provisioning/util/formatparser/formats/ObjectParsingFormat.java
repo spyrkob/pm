@@ -40,6 +40,14 @@ public class ObjectParsingFormat extends ParsingFormatBase {
         super(NAME);
     }
 
+    protected ObjectParsingFormat(String name) {
+        super(name);
+    }
+
+    public boolean isAcceptsElement(String name) {
+        return true;
+    }
+
     @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
         switch(ctx.charNow()) {

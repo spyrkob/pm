@@ -17,15 +17,72 @@
 
 package org.jboss.provisioning.util.formatparser;
 
+import org.jboss.provisioning.util.formatparser.formats.CompositeParsingFormat;
+
 /**
  *
  * @author Alexey Loubyansky
  */
 public class FormatExprParsingFormat extends ParsingFormatBase {
 
+    public static class TypeParameterParsingFormat extends ParsingFormatBase {
+
+        protected TypeParameterParsingFormat() {
+            super("TypeParam");
+        }
+
+        @Override
+        public boolean isWrapper() {
+            return true;
+        }
+
+        @Override
+        public String getContentType() {
+            return "?";
+        }
+
+        @Override
+        public void pushed(ParsingContext ctx) throws FormatParsingException {
+            if(ctx.charNow() != '<') {
+                throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, '<', ctx.charNow()));
+            }
+        }
+
+        @Override
+        public void react(ParsingContext ctx) throws FormatParsingException {
+            switch(ctx.charNow()) {
+                case '>':
+                    ctx.end();
+                    break;
+                default:
+                    ctx.bounce();
+            }
+        }
+
+        @Override
+        public void deal(ParsingContext ctx) throws FormatParsingException {
+            if(!Character.isWhitespace(ctx.charNow())) {
+                ctx.pushFormat(INSTANCE);
+            }
+        }
+
+        @Override
+        public void eol(ParsingContext ctx) throws FormatParsingException {
+            throw new FormatParsingException(FormatErrors.formatIncomplete(this));
+        }
+    }
+
     public static final String NAME = "FormatExpr";
 
     private static final FormatExprParsingFormat INSTANCE = new FormatExprParsingFormat();
+
+    static final String COMPOSITE_TYPE_FORMAT_NAME = "CompositeTypeExpr";
+
+    private static final CompositeParsingFormat COMPOSITE_TYPE_FORMAT = CompositeParsingFormat.newInstance(COMPOSITE_TYPE_FORMAT_NAME)
+            .setAcceptAll(true)
+            .setNameValueSeparator(':')
+            .setDefaultValueFormat(INSTANCE);
+    private static final ParsingFormat TYPE_PARAM_FORMAT = new TypeParameterParsingFormat();
 
     public static FormatExprParsingFormat getInstance() {
         return INSTANCE;
@@ -37,22 +94,7 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
 
     @Override
     public void pushed(ParsingContext ctx) throws FormatParsingException {
-        final char charNow = ctx.charNow();
-        if(Character.isWhitespace(charNow) || charNow == '<') {
-            return;
-        }
-        ctx.content();
-    }
-
-    @Override
-    public void react(ParsingContext ctx) throws FormatParsingException {
-        switch(ctx.charNow()) {
-            case '>':
-                ctx.end();
-                break;
-            default:
-                ctx.bounce();
-        }
+        deal(ctx);
     }
 
     @Override
@@ -60,15 +102,15 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
         if(Character.isWhitespace(ctx.charNow())) {
             return;
         }
-        if(ctx.charNow() == '<') {
-            ctx.pushFormat(INSTANCE);
-        } else {
-            ctx.content();
+        switch(ctx.charNow()) {
+            case '<':
+                ctx.pushFormat(TYPE_PARAM_FORMAT);
+                break;
+            case '{':
+                ctx.pushFormat(COMPOSITE_TYPE_FORMAT);
+                break;
+            default:
+                ctx.content();
         }
-    }
-
-    @Override
-    public void eol(ParsingContext ctx) throws FormatParsingException {
-        //throw new FormatParsingException(FormatErrors.formatIncomplete(this));
     }
 }
