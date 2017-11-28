@@ -28,6 +28,13 @@ import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
  */
 public class FormatParser implements ParsingContext {
 
+    public static ParsingFormat resolveFormat(String expr) throws FormatParsingException {
+        return (ParsingFormat) parse(
+                ExtendedContentHandlerFactory.getInstance()
+                .addContentHandler(FormatExprParsingFormat.NAME, FormatExprContentHandler.class),
+                FormatExprParsingFormat.getInstance(), expr);
+    }
+
     public static Object parse(String str) throws FormatParsingException {
         return parse(DefaultContentHandlerFactory.getInstance(), WildcardParsingFormat.getInstance(), str);
     }
@@ -84,7 +91,7 @@ public class FormatParser implements ParsingContext {
                 throw new FormatParsingException(FormatErrors.parsingFailed(str, chI, format, formatStart), e);
             }
         }
-        return rootCb.getParsedValue();
+        return rootCb.getContent();
     }
 
     private void doParse() throws FormatParsingException {

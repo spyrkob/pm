@@ -41,14 +41,14 @@ public class WildcardContentHandler extends FormatContentHandler {
         if(result != null) {
             throw new FormatParsingException("The value of the wildcard has already been initialized");
         }
-        result = childHandler.getParsedValue();
+        result = childHandler.getContent();
     }
 
     /* (non-Javadoc)
      * @see org.jboss.provisioning.spec.type.ParsingCallbackHandler#getParsedValue()
      */
     @Override
-    public Object getParsedValue() throws FormatParsingException {
+    public Object getContent() throws FormatParsingException {
         return result;
     }
 

@@ -44,11 +44,11 @@ public class NameValueContentHandler extends FormatContentHandler {
             if(!childHandler.getFormat().getName().equals(StringParsingFormat.getInstance().getName())) {
                 throw new FormatParsingException("The name of the entry hasn't been initialized and it can't be " + childHandler.getFormat());
             }
-            name = childHandler.getParsedValue().toString();
+            name = childHandler.getContent().toString();
         } else if(value != null) {
             throw new FormatParsingException("The value has already been initialized for the name '" + name + "'");
         } else {
-            value = childHandler.getParsedValue();
+            value = childHandler.getContent();
         }
     }
 
@@ -56,7 +56,7 @@ public class NameValueContentHandler extends FormatContentHandler {
      * @see org.jboss.provisioning.spec.type.ParsingCallbackHandler#getParsedValue()
      */
     @Override
-    public Object getParsedValue() throws FormatParsingException {
+    public Object getContent() throws FormatParsingException {
         throw new UnsupportedOperationException();
     }
 }

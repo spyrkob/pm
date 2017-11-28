@@ -36,9 +36,9 @@ public class FormatErrors {
                 .toString();
     }
 
-    public static String formatNotCompleted(ParsingFormat format) {
+    public static String formatIncomplete(ParsingFormat format) {
         return new StringBuilder()
-                .append("Format ").append(format).append(" not completed")
+                .append("Format ").append(format).append(" is incomplete")
                 .toString();
     }
 

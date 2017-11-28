@@ -28,6 +28,8 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  */
 public class NameValueParsingFormat extends ParsingFormatBase {
 
+    public static final String NAME = "NameValue";
+
     private static final NameValueParsingFormat INSTANCE = new NameValueParsingFormat();
 
     public static NameValueParsingFormat getInstance() {
@@ -35,7 +37,7 @@ public class NameValueParsingFormat extends ParsingFormatBase {
     }
 
     protected NameValueParsingFormat() {
-        super("NameValue");
+        super(NAME);
     }
 
     @Override
@@ -59,6 +61,6 @@ public class NameValueParsingFormat extends ParsingFormatBase {
 
     @Override
     public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException(FormatErrors.formatNotCompleted(this));
+        throw new FormatParsingException(FormatErrors.formatIncomplete(this));
     }
 }

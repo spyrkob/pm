@@ -46,18 +46,18 @@ public class DefaultContentHandlerFactory implements FormatContentHandlerFactory
     @Override
     public FormatContentHandler forFormat(ParsingFormat format, int strIndex) throws FormatParsingException {
         final String name = format.getName();
-        if(name.equals(StringParsingFormat.getInstance().getName())) {
+        if(name.equals(StringParsingFormat.NAME)) {
             return new StringContentHandler(format, strIndex);
-        } else if(name.equals(ListParsingFormat.getInstance().getName())) {
+        } else if(name.equals(ListParsingFormat.NAME)) {
             return new ListContentHandler(format, strIndex);
-        } else if(name.equals(ObjectParsingFormat.getInstance().getName())) {
+        } else if(name.equals(ObjectParsingFormat.NAME)) {
             return new ObjectContentHandler(format, strIndex);
-        } else if(name.equals(NameValueParsingFormat.getInstance().getName())) {
+        } else if(name.equals(NameValueParsingFormat.NAME)) {
             return new NameValueContentHandler(format, strIndex);
-        } else if(name.equals(WildcardParsingFormat.getInstance().getName())) {
+        } else if(name.equals(WildcardParsingFormat.NAME)) {
             return new WildcardContentHandler(format, strIndex);
         } else {
-            throw new FormatParsingException("Unknown format " + format);
+            throw new FormatParsingException("Unexpected format " + format);
         }
     }
 }

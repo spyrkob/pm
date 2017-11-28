@@ -27,6 +27,8 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  */
 public class WildcardParsingFormat extends ParsingFormatBase {
 
+    public static final String NAME = "?";
+
     private static final WildcardParsingFormat INSTANCE = new WildcardParsingFormat();
 
     public static WildcardParsingFormat getInstance() {
@@ -34,7 +36,7 @@ public class WildcardParsingFormat extends ParsingFormatBase {
     }
 
     private WildcardParsingFormat() {
-        super("*", true);
+        super(NAME, true);
     }
 
     @Override
