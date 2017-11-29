@@ -17,11 +17,12 @@
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -40,10 +41,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import nu.xom.Attribute;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Elements;
+import nu.xom.ParsingException;
+import nu.xom.Serializer;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
@@ -71,7 +77,6 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
 
     private ProvisioningRuntime runtime;
     private PropertyResolver versionResolver;
-    private final Pattern moduleArtifactPattern = Pattern.compile("(\\s*)((<artifact)(\\s+name=\")(\\$\\{)(.*)(\\})(\".*>)|(</artifact>))");
 
     private PropertyResolver tasksProps;
 
@@ -259,105 +264,116 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
     }
 
     private void processModuleTemplate(Path fpModuleDir, final Path installDir, Path moduleTemplate) throws IOException {
-        final String content = IoUtils.readFile(moduleTemplate);
-        final Matcher m = moduleArtifactPattern.matcher(content);
-        int copiedUntil = 0;
-        try (BufferedWriter writer = Files.newBufferedWriter(installDir.resolve(fpModuleDir.relativize(moduleTemplate)))) {
-            while (m.find()) {
-                if (m.end(7) < 0) {
-                    writer.append(content, copiedUntil, m.end(1));
-                    if (thinServer) {
-                        writer.append("</artifact>"); // which is equivalent to writer.append(m.group(2));
-                    } else {
-                        writer.append("</resource-root>");
-                    }
-                    copiedUntil = m.end(2);
+        final Builder builder = new Builder(false);
+        final Document document;
+        try (BufferedReader reader = Files.newBufferedReader(moduleTemplate, StandardCharsets.UTF_8)) {
+            document = builder.build(reader);
+        } catch (ParsingException e) {
+            throw new IOException("Failed to parse document", e);
+        }
+        final Path targetPath = installDir.resolve(fpModuleDir.relativize(moduleTemplate));
+        final Element rootElement = document.getRootElement();
+        if (! rootElement.getLocalName().equals("module")) {
+            // just copy the content and leave
+            Files.copy(moduleTemplate, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return;
+        }
+        // replace version, if any
+        final Attribute versionAttribute = rootElement.getAttribute("version");
+        if (versionAttribute != null) {
+            final String versionExpr = versionAttribute.getValue();
+            if (versionExpr.startsWith("${") && versionExpr.endsWith("}")) {
+                final String exprBody = versionExpr.substring(2, versionExpr.length() - 1);
+                final int optionsIndex = exprBody.indexOf('?');
+                final String artifactName;
+                if (optionsIndex > 0) {
+                    artifactName = exprBody.substring(0, optionsIndex);
                 } else {
-                    writer.append(content, copiedUntil, m.start(0));
-
+                    artifactName = exprBody;
+                }
+                final String resolved = versionResolver.resolveProperty(artifactName);
+                if (resolved != null) {
+                    final ArtifactCoords coords = fromJBossModules(resolved, "jar");
+                    versionAttribute.setValue(coords.getVersion());
+                }
+            }
+        }
+        // replace all artifact declarations
+        final Element resourcesElement = rootElement.getFirstChildElement("resources", rootElement.getNamespaceURI());
+        if (resourcesElement != null) {
+            final Elements artifacts = resourcesElement.getChildElements("artifact", rootElement.getNamespaceURI());
+            final int artifactCount = artifacts.size();
+            for (int i = 0; i < artifactCount; i ++) {
+                final Element element = artifacts.get(i);
+                assert element.getLocalName().equals("artifact");
+                final Attribute attribute = element.getAttribute("name");
+                final String nameExpr = attribute.getValue();
+                if (nameExpr.startsWith("${") && nameExpr.endsWith("}")) {
+                    final String exprBody = nameExpr.substring(2, nameExpr.length() - 1);
+                    final int optionsIndex = exprBody.indexOf('?');
                     final String artifactName;
                     final boolean jandex;
-                    final String property = m.group(6);
-                    final int optionsIndex = property.indexOf('?');
-                    if (optionsIndex > 0) {
-                        artifactName = property.substring(0, optionsIndex);
-                        jandex = property.indexOf("jandex", optionsIndex) >= 0;
+                    if (optionsIndex >= 0) {
+                        artifactName = exprBody.substring(0, optionsIndex);
+                        jandex = nameExpr.indexOf("jandex", optionsIndex) >= 0;
                     } else {
-                        artifactName = property;
+                        artifactName = exprBody;
                         jandex = false;
                     }
-
                     final String resolved = versionResolver.resolveProperty(artifactName);
-                    if (resolved == null) {
-                        writer.append(content, m.start(1), m.end(8));
-                    } else {
-                        final Path targetDir = installDir.resolve(fpModuleDir.relativize(moduleTemplate.getParent()));
+                    if (resolved != null) {
                         final ArtifactCoords coords = fromJBossModules(resolved, "jar");
-                        Path moduleArtifact = null;
+                        final Path moduleArtifact;
 
-                        if (jandex) {
-                            try {
-                                moduleArtifact = runtime.resolveArtifact(coords);
-                            } catch (ProvisioningException e) {
-                                throw new IOException(e);
-                            }
-                            final String artifactFileName = moduleArtifact.getFileName().toString();
-
-                            final int lastDot = artifactFileName.lastIndexOf(".");
-                            final File target = new File(targetDir.toFile(),
-                                    new StringBuilder().append(artifactFileName.substring(0, lastDot))
-                                    .append("-jandex")
-                                    .append(artifactFileName.substring(lastDot)).toString());
-                            try {
-                                JandexIndexer.createIndex(moduleArtifact.toFile(), new FileOutputStream(target));
-                            } catch (IOException e) {
-                                throw new IllegalStateException(e);
-                            }
-                            writer.append(m.group(1));
-                            writer.append("<resource-root path=\"");
-                            writer.append(target.getName());
-                            writer.append("\"/>");
+                        try {
+                            moduleArtifact = runtime.resolveArtifact(coords);
+                        } catch (ProvisioningException e) {
+                            throw new IOException(e);
                         }
-
                         if (thinServer) {
-                            writer.append(content, m.start(1), m.end(4));
-                            writer.append(resolved);
-                            writer.append(m.group(8));
+                            // ignore jandex variable, just resolve coordinates to a string
+                            attribute.setValue(resolved);
                         } else {
-                            if(moduleArtifact == null) {
-                                try {
-                                    moduleArtifact = runtime.resolveArtifact(coords);
-                                } catch (ProvisioningException e) {
-                                    throw new IOException(e);
-                                }
-                            }
+                            final Path targetDir = installDir.resolve(fpModuleDir.relativize(moduleTemplate.getParent()));
                             final String artifactFileName = moduleArtifact.getFileName().toString();
-                            try {
-                                IoUtils.copy(moduleArtifact, targetDir.resolve(artifactFileName));
-                            } catch (IOException e) {
-                                throw new IllegalStateException(e);
-                            }
-                            writer.append(m.group(1));
-                            writer.append("<resource-root path=\"");
-                            writer.append(artifactFileName);
-                            writer.append(m.group(8));
-                        }
+                            final String finalFileName;
 
-                        if (schemaGroups.contains(coords.getGroupId())) {
-                            if(moduleArtifact == null) {
-                                try {
-                                    moduleArtifact = runtime.resolveArtifact(coords);
-                                } catch (ProvisioningException e) {
-                                    throw new IOException(e);
-                                }
+                            if (jandex) {
+                                final int lastDot = artifactFileName.lastIndexOf(".");
+                                final File target = new File(targetDir.toFile(), new StringBuilder()
+                                    .append(artifactFileName.substring(0, lastDot))
+                                    .append("-jandex")
+                                    .append(artifactFileName.substring(lastDot)).toString()
+                                );
+                                JandexIndexer.createIndex(moduleArtifact.toFile(), new FileOutputStream(target));
+                                finalFileName = target.getPath();
+                            } else {
+                                Files.copy(moduleArtifact, targetDir.resolve(artifactFileName), StandardCopyOption.REPLACE_EXISTING);
+                                finalFileName = artifactFileName;
                             }
+                            element.setLocalName("resource-root");
+                            attribute.setLocalName("path");
+                            attribute.setValue(finalFileName);
+                        }
+                        if (schemaGroups.contains(coords.getGroupId())) {
                             extractSchemas(moduleArtifact);
                         }
                     }
-                    copiedUntil = m.end(8);
                 }
+                // if any step fails, don't change anything at all for that artifact
             }
-            writer.append(content, copiedUntil, content.length());
+        }
+        // now serialize the result
+        try (OutputStream outputStream = Files.newOutputStream(targetPath)) {
+            new Serializer(outputStream).write(document);
+        } catch (Throwable t) {
+            try {
+                Files.deleteIfExists(targetPath);
+            } catch (Throwable t2) {
+                t2.addSuppressed(t);
+                throw t2;
+            }
+            throw t;
         }
     }
 
