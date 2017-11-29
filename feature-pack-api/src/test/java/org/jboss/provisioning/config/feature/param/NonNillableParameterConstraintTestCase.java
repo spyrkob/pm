@@ -72,7 +72,7 @@ public class NonNillableParameterConstraintTestCase extends PmInstallFeaturePack
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals(Errors.failedToBuildConfigSpec(null, null), e.getLocalizedMessage());
         Assert.assertNotNull(e.getCause());
         Assert.assertEquals(Errors.nonNillableParameterIsNull(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"), "p1"), e.getCause().getLocalizedMessage());

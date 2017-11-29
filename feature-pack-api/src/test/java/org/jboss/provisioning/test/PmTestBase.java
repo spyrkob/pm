@@ -17,6 +17,8 @@
 
 package org.jboss.provisioning.test;
 
+import java.util.Arrays;
+
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -53,26 +55,46 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
         setupRepo(getRepoManager());
     }
 
+    protected String[] pmErrors() throws ProvisioningException {
+        return null;
+    }
+
     @Test
-    public void main() throws Exception {
+    public void main() throws Throwable {
         final ProvisioningManager pm = getPm();
+        final String[] errors = pmErrors();
+        boolean failed = false;
         try {
             testPm(pm);
             pmSuccess();
-        } catch(ProvisioningException e) {
-            pmFailure(e);
+            if(errors != null) {
+                Assert.fail("Expected failures: " + Arrays.asList(errors));
+            }
+        } catch(Throwable t) {
+            failed = true;
+            if (errors == null) {
+                pmFailure(t);
+            } else {
+                assertErrors(t, errors);
+            }
         }
-        assertProvisionedConfig(pm);
-        assertProvisionedState(pm);
-        assertProvisionedContent();
+        if(failed) {
+            assertProvisioningConfig(pm, null);
+            assertProvisionedState(pm, null);
+            DirState.rootBuilder().build().assertState(installHome);
+        } else {
+            assertProvisionedConfig(pm);
+            assertProvisionedState(pm);
+            assertProvisionedContent();
+        }
     }
 
     protected void pmSuccess() {
     }
 
 
-    protected void pmFailure(ProvisioningException e) throws ProvisioningException {
-        throw e;
+    protected void pmFailure(Throwable t) throws Throwable {
+        throw t;
     }
 
     protected void assertProvisionedState(final ProvisioningManager pm) throws ProvisioningException {
@@ -89,9 +111,11 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
     protected void assertErrors(Throwable t, String... msgs) {
         int i = 0;
-        while(t != null && i < msgs.length) {
-            Assert.assertEquals(msgs[i++], t.getLocalizedMessage());
-            t = t.getCause();
+        if(msgs != null) {
+            while (t != null && i < msgs.length) {
+                Assert.assertEquals(msgs[i++], t.getLocalizedMessage());
+                t = t.getCause();
+            }
         }
         if(t != null) {
             Assert.fail("Unexpected error: " + t.getLocalizedMessage());

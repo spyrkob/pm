@@ -80,7 +80,7 @@ public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTes
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Assert.assertNotNull(e.getCause());
         Throwable t = e.getCause();

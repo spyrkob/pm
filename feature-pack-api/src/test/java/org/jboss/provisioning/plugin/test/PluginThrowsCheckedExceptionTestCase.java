@@ -71,7 +71,7 @@ public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         // expected
     }
 

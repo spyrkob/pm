@@ -73,7 +73,7 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) throws ProvisioningDescriptionException {
+    protected void pmFailure(Throwable e) throws ProvisioningDescriptionException {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Throwable t = e.getCause();
         Assert.assertNotNull(t);
