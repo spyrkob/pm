@@ -19,6 +19,9 @@ package org.jboss.provisioning.wildfly.build;
 import java.util.ArrayList;
 import java.util.List;
 
+import nu.xom.Attribute;
+import nu.xom.Document;
+
 /**
  * @author Stuart Douglas
  */
@@ -26,7 +29,13 @@ class ModuleParseResult {
     final List<ModuleDependency> dependencies = new ArrayList<ModuleDependency>();
     final List<String> resourceRoots = new ArrayList<>();
     final List<ArtifactName> artifacts = new ArrayList<>();
+    final Document document;
     ModuleIdentifier identifier;
+    ArtifactName versionArtifactName;
+
+    ModuleParseResult(final Document document) {
+        this.document = document;
+    }
 
     List<ModuleDependency> getDependencies() {
         return dependencies;
@@ -42,6 +51,14 @@ class ModuleParseResult {
 
     ModuleIdentifier getIdentifier() {
         return identifier;
+    }
+
+    Document getDocument() {
+        return document;
+    }
+
+    ArtifactName getVersionArtifactName() {
+        return versionArtifactName;
     }
 
     static class ModuleDependency {
@@ -71,10 +88,12 @@ class ModuleParseResult {
 
         private final String artifactCoords;
         private final String options;
+        private final Attribute attribute;
 
-        ArtifactName(String artifactCoords, String options) {
+        ArtifactName(String artifactCoords, String options, final Attribute attribute) {
             this.artifactCoords = artifactCoords;
             this.options = options;
+            this.attribute = attribute;
         }
 
         String getArtifactCoords() {
@@ -83,6 +102,10 @@ class ModuleParseResult {
 
         String getOptions() {
             return options;
+        }
+
+        Attribute getAttribute() {
+            return attribute;
         }
 
         @Override
