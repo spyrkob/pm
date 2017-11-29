@@ -38,6 +38,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 
+import nu.xom.ParsingException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -624,7 +625,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         }
                     }
                 }
-            } catch (XMLStreamException e) {
+            } catch (ParsingException e) {
                 throw new IOException(Errors.parseXml(targetXml), e);
             }
 
