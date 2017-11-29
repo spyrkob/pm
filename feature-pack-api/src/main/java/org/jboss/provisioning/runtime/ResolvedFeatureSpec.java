@@ -130,8 +130,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     }
 
     private Object resolveParameter(String name, String value) throws ProvisioningException {
-        final FeatureParameterSpec paramSpec = xmlSpec.getParam(name);
-        return typeProvider.getType(id.gav.toGa(), paramSpec.getType()).fromString(value);
+        try {
+            final FeatureParameterSpec paramSpec = xmlSpec.getParam(name);
+            return typeProvider.getType(id.gav.toGa(), paramSpec.getType()).fromString(value);
+        } catch (ProvisioningException e) {
+            throw new ProvisioningException(Errors.failedToResolveParameter(id, name, value), e);
+        }
     }
 
     ResolvedFeatureId resolveIdFromForeignKey(ResolvedFeatureId parentId, String parentRef, Map<String, String> params) throws ProvisioningException {

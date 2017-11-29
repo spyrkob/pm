@@ -125,6 +125,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         NAME("name"),
         NILLABLE("nillable"),
         OPTIONAL("optional"),
+        TYPE("type"),
         VALUE("value"),
         UNBOUNDED("unbounded"),
 
@@ -519,35 +520,39 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
     }
 
     private FeatureParameterSpec parseParameter(XMLExtendedStreamReader reader) throws XMLStreamException {
-        String name = null;
-        boolean featureId = false;
-        String defaultValue = null;
-        boolean nillable = false;
+        final FeatureParameterSpec.Builder builder = FeatureParameterSpec.builder();
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
                 case NAME:
-                    name = reader.getAttributeValue(i);
+                    builder.setName(reader.getAttributeValue(i));
                     break;
                 case FEATURE_ID:
-                    featureId = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    if(Boolean.parseBoolean(reader.getAttributeValue(i))) {
+                        builder.setFeatureId();
+                    }
                     break;
                 case DEFAULT:
-                    defaultValue = reader.getAttributeValue(i);
+                    builder.setDefaultValue(reader.getAttributeValue(i));
                     break;
                 case NILLABLE:
-                    nillable = Boolean.parseBoolean(reader.getAttributeValue(i));
+                    if(Boolean.parseBoolean(reader.getAttributeValue(i))) {
+                        builder.setNillable();
+                    }
+                    break;
+                case TYPE:
+                    builder.setType(reader.getAttributeValue(i));
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
-        if(name == null) {
+        if(builder.getName() == null) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         ParsingUtils.parseNoContent(reader);
         try {
-            return FeatureParameterSpec.create(name, featureId, nillable, defaultValue);
+            return builder.build();
         } catch (ProvisioningDescriptionException e) {
             throw new XMLStreamException("Failed to create feature parameter", reader.getLocation(), e);
         }

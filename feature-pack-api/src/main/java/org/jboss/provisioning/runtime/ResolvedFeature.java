@@ -71,7 +71,11 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         this.spec = spec;
         this.deps = resolvedDeps;
         initParamsFromId();
-        setParams(params);
+        if (!params.isEmpty()) {
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                setParam(entry.getKey(), entry.getValue(), true);
+            }
+        }
     }
 
     ResolvedFeature copy(int includeNo) throws ProvisioningException {
@@ -153,12 +157,6 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return batchControl == BATCH_END;
     }
 
-    public void addAllDependencies(Map<ResolvedFeatureId, FeatureDependencySpec> deps) throws ProvisioningDescriptionException {
-        for(Map.Entry<ResolvedFeatureId, FeatureDependencySpec> dep : deps.entrySet()) {
-            addDependency(dep.getKey(), dep.getValue());
-        }
-    }
-
     public void addDependency(ResolvedFeatureId id, FeatureDependencySpec depSpec) throws ProvisioningDescriptionException {
         if(deps.containsKey(id)) {
             throw new ProvisioningDescriptionException("Duplicate dependency on " + id + " from " + this.id); // TODO
@@ -235,7 +233,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return spec.getTypeForParameter(name).toString(value);
     }
 
-    void setParam(String name, Object value) throws ProvisioningDescriptionException {
+    void setParam(String name, Object value, boolean overwrite) throws ProvisioningException {
         if(id != null) {
             final Object idValue = id.params.get(name);
             if(idValue != null) {
@@ -248,28 +246,33 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         if(!spec.xmlSpec.hasParam(name)) {
             throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, name));
         }
-        params = PmCollections.put(params, name, value);
-    }
-
-    void setParams(Map<String, Object> params) throws ProvisioningDescriptionException {
-        if(params.isEmpty()) {
+        final Object prevValue = params.get(name);
+        if(prevValue == null) {
+            params = PmCollections.put(params, name, value);
             return;
         }
-        for(Map.Entry<String, Object> entry : params.entrySet()) {
-            setParam(entry.getKey(), entry.getValue());
+        final FeatureParameterType valueType = spec.getTypeForParameter(name);
+        if(valueType.isSupportsMerging()) {
+            params = PmCollections.put(params, name, overwrite ? valueType.merge(prevValue, value) : valueType.merge(value, prevValue));
+        } else if(overwrite) {
+            params = PmCollections.put(params, name, value);
         }
     }
 
-    void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningDescriptionException {
-        if(other.hasParams()) {
-            for(Map.Entry<String, Object> entry : other.getResolvedParams().entrySet()) {
-                if(overwriteParams || !params.containsKey(entry.getKey())) {
-                    setParam(entry.getKey(), entry.getValue());
-                }
+    void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningException {
+        merge(other.deps, other.getResolvedParams(), overwriteParams);
+    }
+
+    void merge(Map<ResolvedFeatureId, FeatureDependencySpec> deps, Map<String, Object> resolvedParams, boolean overwriteParams) throws ProvisioningException {
+        if(!resolvedParams.isEmpty()) {
+            for (Map.Entry<String, Object> entry : resolvedParams.entrySet()) {
+                setParam(entry.getKey(), entry.getValue(), overwriteParams);
             }
         }
-        if(!other.deps.isEmpty()) {
-            addAllDependencies(other.deps);
+        if(!deps.isEmpty()) {
+            for(Map.Entry<ResolvedFeatureId, FeatureDependencySpec> dep : deps.entrySet()) {
+                addDependency(dep.getKey(), dep.getValue());
+            }
         }
     }
 

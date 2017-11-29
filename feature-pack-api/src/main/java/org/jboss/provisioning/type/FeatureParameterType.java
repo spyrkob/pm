@@ -33,5 +33,7 @@ public interface FeatureParameterType {
 
     String toString(Object o) throws ParameterTypeConversionException;
 
+    boolean isSupportsMerging();
+
     Object merge(Object original, Object other) throws ProvisioningException;
 }

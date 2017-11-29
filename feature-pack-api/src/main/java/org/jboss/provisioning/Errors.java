@@ -185,11 +185,13 @@ public interface Errors {
     static String failedToResolveCapability(ResolvedFeature feature, CapabilitySpec cap) {
         final StringBuilder buf = new StringBuilder();
         buf.append("Failed to satisfy capability requirement ").append(cap).append(" for ");
-        if(feature.hasId()) {
-            buf.append(feature.getId());
-        } else {
-            buf.append(" an instance of ").append(feature.getSpecId());
-        }
+        appendFeature(buf, feature);
+        return buf.toString();
+    }
+
+    static String failedToResolveParameter(ResolvedSpecId specId, String name, String value) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to resolve ").append(specId).append(" parameter ").append(name).append(" value ").append(value);
         return buf.toString();
     }
 

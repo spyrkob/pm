@@ -20,6 +20,7 @@ package org.jboss.provisioning.xml;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureAnnotation;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
@@ -126,6 +127,9 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
                 }
                 if(paramSpec.hasDefaultValue()) {
                     addAttribute(paramE, Attribute.DEFAULT, paramSpec.getDefaultValue());
+                }
+                if(paramSpec.getType() != null && !Constants.BUILT_IN_TYPE_STRING.equals(paramSpec.getType())) {
+                    addAttribute(paramE, Attribute.TYPE, paramSpec.getType());
                 }
             }
         }
