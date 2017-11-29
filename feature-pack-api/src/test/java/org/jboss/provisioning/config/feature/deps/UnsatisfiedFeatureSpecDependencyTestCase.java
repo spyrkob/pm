@@ -75,7 +75,7 @@ public class UnsatisfiedFeatureSpecDependencyTestCase extends PmInstallFeaturePa
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals("Failed to build config named config1", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);

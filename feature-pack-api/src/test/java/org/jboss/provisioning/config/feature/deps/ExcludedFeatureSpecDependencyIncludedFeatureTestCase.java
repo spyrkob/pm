@@ -83,7 +83,7 @@ public class ExcludedFeatureSpecDependencyIncludedFeatureTestCase extends PmInst
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals("Failed to build config", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);

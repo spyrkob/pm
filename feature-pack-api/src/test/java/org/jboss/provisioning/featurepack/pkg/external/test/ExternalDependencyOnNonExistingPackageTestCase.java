@@ -62,7 +62,7 @@ public class ExternalDependencyOnNonExistingPackageTestCase extends PmProvisionC
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals(Errors.resolvePackage(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"), "p1"), e.getLocalizedMessage());
         Assert.assertNotNull(e.getCause());
         Assert.assertEquals(Errors.packageNotFound(ArtifactCoords.newGav("org.pm.test", "fp2", "1.0.0.Final"), "p2"), e.getCause().getLocalizedMessage());

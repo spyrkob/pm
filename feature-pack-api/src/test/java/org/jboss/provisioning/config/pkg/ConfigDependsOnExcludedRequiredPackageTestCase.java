@@ -75,7 +75,7 @@ public class ConfigDependsOnExcludedRequiredPackageTestCase extends PmInstallFea
     }
 
     @Override
-    protected void pmFailure(ProvisioningException e) {
+    protected void pmFailure(Throwable e) {
         Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
         Throwable t = e.getCause();
         Assert.assertNotNull(t);

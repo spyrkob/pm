@@ -24,15 +24,11 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
-import org.junit.Assert;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
 
@@ -68,32 +64,17 @@ public class IncompleteListFeatureParameterTestCase extends PmInstallFeaturePack
     }
 
     @Override
-    protected void pmSuccess() {
-        Assert.fail("Parsing error expected");
-    }
-
-    @Override
-    protected void pmFailure(ProvisioningException e) throws ProvisioningException {
-        assertErrors(e, Errors.failedToResolveConfigSpec(null, null),
+    protected String[] pmErrors() throws ProvisioningException {
+        return new String[] {Errors.failedToResolveConfigSpec(null, null),
                 Errors.failedToProcess(FP_GAV, new FeatureConfig("specA").setParam("name", "a1").setParam("my-list", "[c,d")),
                 Errors.failedToResolveParameter(new ResolvedSpecId(FP_GAV, "specA"), "my-list", "[c,d"),
                 "Failed to parse List parameter value",
                 "Parsing of '[c,d' failed while parsing format List<?> started on index 0",
-                "Format List<?> is incomplete");
-    }
-
-    @Override
-    protected ProvisioningConfig provisionedConfig() {
-        return null;
+                "Format List<?> is incomplete"};
     }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
     }
 }
