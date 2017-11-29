@@ -26,6 +26,7 @@ import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.fs.state.DirState;
 import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -84,5 +85,19 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
     protected void assertProvisionedContent() {
         provisionedHomeDir(DirState.rootBuilder().skip(Constants.PROVISIONED_STATE_DIR)).assertState(installHome);
+    }
+
+    protected void assertErrors(Throwable t, String... msgs) {
+        int i = 0;
+        while(t != null && i < msgs.length) {
+            Assert.assertEquals(msgs[i++], t.getLocalizedMessage());
+            t = t.getCause();
+        }
+        if(t != null) {
+            Assert.fail("Unexpected error: " + t.getLocalizedMessage());
+        }
+        if(i < msgs.length - 1) {
+            Assert.fail("Not reported error: " + msgs[i]);
+        }
     }
 }

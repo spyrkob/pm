@@ -28,10 +28,11 @@ public class FormatErrors {
     }
 
     public static String parsingFailed(String str, int errorIndex, ParsingFormat format, int formatStartIndex) {
-        return new StringBuilder()
-                .append("Parsing of '").append(str).append("' failed at index ").append(errorIndex)
-                .append(" while parsing format ").append(format).append(" started on index ").append(formatStartIndex)
-                .toString();
+        final StringBuilder buf = new StringBuilder().append("Parsing of '").append(str).append("' failed");
+        if(str.length() != errorIndex) {
+            buf.append(" at index ").append(errorIndex);
+        }
+        return buf.append(" while parsing format ").append(format).append(" started on index ").append(formatStartIndex).toString();
     }
 
     public static String formatEndedPrematurely(ParsingFormat format) {

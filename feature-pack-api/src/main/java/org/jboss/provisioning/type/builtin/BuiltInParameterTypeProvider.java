@@ -22,6 +22,8 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.type.FeatureParameterType;
 import org.jboss.provisioning.type.ParameterTypeNotFoundException;
 import org.jboss.provisioning.type.ParameterTypeProvider;
+import org.jboss.provisioning.util.formatparser.FormatParser;
+import org.jboss.provisioning.util.formatparser.FormatParsingException;
 
 /**
  * @author Alexey Loubyansky
@@ -40,7 +42,11 @@ public class BuiltInParameterTypeProvider implements ParameterTypeProvider {
         if(Constants.BUILT_IN_TYPE_STRING.equals(name)) {
             return StringParameterType.getInstance();
         } else {
-            throw new ParameterTypeNotFoundException("Unknown feature parameter type: " + name);
+            try {
+                return new FormattedParameterType(name, FormatParser.resolveFormat(name));
+            } catch (FormatParsingException e) {
+                throw new ParameterTypeNotFoundException("Failed to resolve parameter type " + name, e);
+            }
         }
     }
 }

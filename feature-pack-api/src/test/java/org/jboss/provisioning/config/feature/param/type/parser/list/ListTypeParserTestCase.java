@@ -26,7 +26,6 @@ import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBas
 import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.junit.Test;
 
 
@@ -58,7 +57,7 @@ public class ListTypeParserTestCase extends TypeParserTestBase {
     @Test
     public void testIncompleteList() throws Exception {
         assertFailure("[a , b",
-                FormatErrors.parsingFailed("[a , b", 6, StringParsingFormat.getInstance(), 5),
+                FormatErrors.parsingFailed("[a , b", 6, testFormat, 0),
                 FormatErrors.formatIncomplete(testFormat));
     }
 

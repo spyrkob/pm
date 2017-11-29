@@ -27,14 +27,26 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 public class FeatureParameterSpec {
 
     public static class Builder {
-        private final String name;
+        private String name;
         private boolean featureId;
         private boolean nillable;
         private String defaultValue;
         private String type = Constants.BUILT_IN_TYPE_STRING;
 
+        private Builder() {
+        }
+
         private Builder(String name) {
             this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
         }
 
         public Builder setFeatureId() {
@@ -47,12 +59,12 @@ public class FeatureParameterSpec {
             return this;
         }
 
-        Builder setDefaultValue(String value) {
+        public Builder setDefaultValue(String value) {
             this.defaultValue = value;
             return this;
         }
 
-        Builder setType(String type) {
+        public Builder setType(String type) {
             this.type = type;
             return this;
         }
@@ -60,6 +72,14 @@ public class FeatureParameterSpec {
         public FeatureParameterSpec build() throws ProvisioningDescriptionException {
             return new FeatureParameterSpec(this);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(String name) {
+        return new Builder(name);
     }
 
     public static FeatureParameterSpec create(String name) throws ProvisioningDescriptionException {

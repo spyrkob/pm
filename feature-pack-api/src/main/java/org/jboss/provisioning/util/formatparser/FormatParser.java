@@ -54,7 +54,7 @@ public class FormatParser implements ParsingContext {
 
     private String str;
     private int chI;
-    private int formatIndex;
+    private int handlerIndex;
 
     private boolean breakHandling;
     private boolean bounced;
@@ -80,11 +80,11 @@ public class FormatParser implements ParsingContext {
             } catch(FormatParsingException e) {
                 final ParsingFormat format;
                 final int formatStart;
-                if(formatIndex < 0) {
+                if(handlerIndex < 0) {
                     format = rootFormat;
                     formatStart = 0;
                 } else {
-                    FormatContentHandler ch = cbStack.get(formatIndex);
+                    FormatContentHandler ch = cbStack.get(handlerIndex);
                     format = ch.format;
                     formatStart = ch.strIndex;
                 }
@@ -99,46 +99,48 @@ public class FormatParser implements ParsingContext {
 
         while (++chI < str.length()) {
 
-            formatIndex = cbStack.size();
+            handlerIndex = cbStack.size();
             breakHandling = false;
             bounced = false;
-            while (formatIndex > 0 && !breakHandling) {
-                final FormatContentHandler cb = cbStack.get(--formatIndex);
+            while (handlerIndex > 0 && !breakHandling) {
+                final FormatContentHandler cb = cbStack.get(--handlerIndex);
                 cb.getFormat().react(this);
             }
 
             if (bounced || !breakHandling) {
-                formatIndex = cbStack.size() - 1;
-                if(formatIndex < 0) {
+                handlerIndex = cbStack.size() - 1;
+                if(handlerIndex < 0) {
                     throw new FormatParsingException("EOL");
                 }
 //                if(bounced) {
 //                    System.out.println(charNow() + " bounced to " + cbStack.get(formatIndex).getFormat());
 //                }
-                cbStack.get(formatIndex).getFormat().deal(this);
+                cbStack.get(handlerIndex).getFormat().deal(this);
             }
         }
 
-        for (int i = cbStack.size() - 1; i >= 0; --i) {
-            final FormatContentHandler ended = cbStack.get(i);
+        if (handlerIndex >= 0) {
+            FormatContentHandler ended = cbStack.get(handlerIndex--);
             ended.getFormat().eol(this);
-            if (i > 0) {
-                cbStack.get(i - 1).addChild(ended);
+            while (handlerIndex >= 0) {
+                cbStack.get(handlerIndex).addChild(ended);
+                ended = cbStack.get(handlerIndex--);
+                ended.getFormat().eol(this);
             }
         }
     }
 
     @Override
     public void pushFormat(ParsingFormat format) throws FormatParsingException {
-        if(formatIndex != cbStack.size() - 1) {
+        if(handlerIndex != cbStack.size() - 1) {
             final StringBuilder buf = new StringBuilder();
             buf.append(cbStack.get(0).getFormat());
-            if(formatIndex == 0) {
+            if(handlerIndex == 0) {
                 buf.append('!');
             }
             for(int i = 1; i < cbStack.size(); ++i) {
                 buf.append(", ").append(cbStack.get(i).getFormat());
-                if(formatIndex == i) {
+                if(handlerIndex == i) {
                     buf.append('!');
                 }
             }
@@ -147,17 +149,17 @@ public class FormatParser implements ParsingContext {
         breakHandling = true;
         cbStack.add(cbFactory.forFormat(format, chI));
         //System.out.println("pushFormat: " + format + " [" + cbStack.get(formatIndex).getFormat() + ", " + charNow() + "]");
-        ++formatIndex;
+        ++handlerIndex;
         format.pushed(this);
     }
 
     @Override
     public void popFormats() throws FormatParsingException {
         breakHandling = true;
-        if(formatIndex == cbStack.size() - 1) {
+        if(handlerIndex == cbStack.size() - 1) {
             return;
         }
-        for(int i = cbStack.size() - 1; i > formatIndex; --i) {
+        for(int i = cbStack.size() - 1; i > handlerIndex; --i) {
             final FormatContentHandler ended = cbStack.remove(i);
             //System.out.println("poppedFormat: " + ended.getFormat());
             if(!cbStack.isEmpty()) {
@@ -169,22 +171,22 @@ public class FormatParser implements ParsingContext {
     @Override
     public void end() throws FormatParsingException {
         breakHandling = true;
-        --formatIndex; // this is done before the loop for correct error reporting
-        for(int i = cbStack.size() - 1; i >= formatIndex + 1; --i) {
+        --handlerIndex; // this is done before the loop for correct error reporting
+        for(int i = cbStack.size() - 1; i >= handlerIndex + 1; --i) {
             final FormatContentHandler ended = cbStack.remove(i);
             if(!cbStack.isEmpty()) {
                 cbStack.get(i - 1).addChild(ended);
             }
         }
 
-        if(!cbStack.isEmpty() && cbStack.get(formatIndex).format.isWrapper()) {
-            while (formatIndex > 0) {
-                final FormatContentHandler ended = cbStack.get(formatIndex);
+        if(!cbStack.isEmpty() && cbStack.get(handlerIndex).format.isWrapper()) {
+            while (handlerIndex > 0) {
+                final FormatContentHandler ended = cbStack.get(handlerIndex);
                 if(!ended.format.isWrapper()) {
                     break;
                 }
-                cbStack.remove(formatIndex--);
-                cbStack.get(formatIndex).addChild(ended);
+                cbStack.remove(handlerIndex--);
+                cbStack.get(handlerIndex).addChild(ended);
             }
         }
 

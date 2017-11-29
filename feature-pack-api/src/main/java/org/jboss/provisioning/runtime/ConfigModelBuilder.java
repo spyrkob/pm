@@ -86,7 +86,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
             return group;
         }
 
-        Map<ResolvedFeatureId, ResolvedFeature> endGroup() throws ProvisioningDescriptionException {
+        Map<ResolvedFeatureId, ResolvedFeature> endGroup() throws ProvisioningException {
             if (last != 0) {
                 final Map<ResolvedFeatureId, ResolvedFeature> endedGroup = list.get(last--);
                 final Map<ResolvedFeatureId, ResolvedFeature> parentGroup = list.get(last);
@@ -187,7 +187,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         featuresById = featureGroupStack.startGroup();
     }
 
-    void endGroup() throws ProvisioningDescriptionException {
+    void endGroup() throws ProvisioningException {
         featuresById = featureGroupStack.endGroup();
     }
 
@@ -237,10 +237,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(id != null) {
             final ResolvedFeature feature = featuresById.get(id);
             if(feature != null) {
-                feature.setParams(resolvedParams);
-                if(!resolvedDeps.isEmpty()) {
-                    feature.addAllDependencies(resolvedDeps);
-                }
+                feature.merge(resolvedDeps, resolvedParams, true);
                 return feature;
             }
         }
@@ -277,14 +274,10 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         if(!other.featuresBySpec.isEmpty()) {
             for(Map.Entry<ResolvedSpecId, SpecFeatures> entry : other.featuresBySpec.entrySet()) {
                 for(ResolvedFeature feature : entry.getValue().list) {
-                    merge(feature);
+                    featureGroupStack.merge(feature.copy(++featureIncludeCount));
                 }
             }
         }
-    }
-
-    private void merge(ResolvedFeature feature) throws ProvisioningException {
-        featureGroupStack.merge(feature.copy(++featureIncludeCount));
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {

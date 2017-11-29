@@ -239,9 +239,15 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         } else {
             buf.append(specId);
         }
+        if(!configParams.isEmpty()) {
+            buf.append(" config-params:{");
+            StringUtils.append(buf, configParams.entrySet());
+            buf.append('}');
+        }
         if(!resolvedParams.isEmpty()) {
-            buf.append(' ');
+            buf.append(" resolved-params:{");
             StringUtils.append(buf, resolvedParams.entrySet());
+            buf.append('}');
         }
         return buf.append(']').toString();
     }

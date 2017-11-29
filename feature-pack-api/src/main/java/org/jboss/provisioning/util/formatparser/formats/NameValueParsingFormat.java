@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.util.formatparser.formats;
 
-import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingContext;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
@@ -80,14 +79,10 @@ public class NameValueParsingFormat extends ParsingFormatBase {
 
     @Override
     public void deal(ParsingContext ctx) throws FormatParsingException {
-        if(!Character.isWhitespace(ctx.charNow())) {
-            ctx.pushFormat(valueFormat);
+        if(Character.isWhitespace(ctx.charNow())) {
+            return;
         }
-    }
-
-    @Override
-    public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException(FormatErrors.formatIncomplete(this));
+        ctx.pushFormat(valueFormat);
     }
 
     @Override
