@@ -35,8 +35,8 @@ import org.junit.Test;
  */
 public class ListOfListsOfStringsTestCase extends TypeParserTestBase {
 
-    private final ListParsingFormat listOfStrings = ListParsingFormat.getInstance(StringParsingFormat.getInstance());
-    private final ListParsingFormat listOfLists = ListParsingFormat.getInstance(listOfStrings);
+    private final ListParsingFormat listOfStrings = ListParsingFormat.newInstance(StringParsingFormat.getInstance());
+    private final ListParsingFormat listOfLists = ListParsingFormat.newInstance(listOfStrings);
 
     @Override
     protected ParsingFormat getTestFormat() {

@@ -169,13 +169,13 @@ public class FormatParser implements ParsingContext {
     @Override
     public void end() throws FormatParsingException {
         breakHandling = true;
-        for(int i = cbStack.size() - 1; i >= formatIndex; --i) {
+        --formatIndex; // this is done before the loop for correct error reporting
+        for(int i = cbStack.size() - 1; i >= formatIndex + 1; --i) {
             final FormatContentHandler ended = cbStack.remove(i);
             if(!cbStack.isEmpty()) {
                 cbStack.get(i - 1).addChild(ended);
             }
         }
-        --formatIndex;
 
         if(!cbStack.isEmpty() && cbStack.get(formatIndex).format.isWrapper()) {
             while (formatIndex > 0) {

@@ -37,7 +37,7 @@ public class ListOfStringsTestCase extends TypeParserTestBase {
 
     @Override
     protected ParsingFormat getTestFormat() {
-        return ListParsingFormat.getInstance(StringParsingFormat.getInstance());
+        return ListParsingFormat.newInstance(StringParsingFormat.getInstance());
     }
 
     @Test

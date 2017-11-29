@@ -31,20 +31,21 @@ public class NameValueParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "NameValue";
 
-    private static NameValueParsingFormat INSTANCE;
+    public static final char SEPARATOR = '=';
 
     public static NameValueParsingFormat getInstance() {
-        if(INSTANCE == null) {
-            INSTANCE = new NameValueParsingFormat('=', WildcardParsingFormat.getInstance());
-        }
-        return INSTANCE;
+        return new NameValueParsingFormat(SEPARATOR, WildcardParsingFormat.getInstance());
     }
 
-    public static NameValueParsingFormat getInstance(ParsingFormat valueFormat) {
-        return new NameValueParsingFormat('=', valueFormat);
+    public static NameValueParsingFormat newInstance(char separator) {
+        return new NameValueParsingFormat(separator, WildcardParsingFormat.getInstance());
     }
 
-    public static NameValueParsingFormat getInstance(char separator, ParsingFormat valueFormat) {
+    public static NameValueParsingFormat newInstance(ParsingFormat valueFormat) {
+        return new NameValueParsingFormat(SEPARATOR, valueFormat);
+    }
+
+    public static NameValueParsingFormat newInstance(char separator, ParsingFormat valueFormat) {
         return new NameValueParsingFormat(separator, valueFormat);
     }
 
@@ -55,6 +56,10 @@ public class NameValueParsingFormat extends ParsingFormatBase {
         super(NAME);
         this.separator = separator;
         this.valueFormat = valueFormat;
+    }
+
+    public char getSeparator() {
+        return separator;
     }
 
     public ParsingFormat getValueFormat() {

@@ -30,11 +30,11 @@ public class ObjectParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "Object";
 
-    private static final ObjectParsingFormat INSTANCE = new ObjectParsingFormat();
-
     public static ObjectParsingFormat getInstance() {
-        return INSTANCE;
+        return new ObjectParsingFormat();
     }
+
+    protected NameValueParsingFormat nameValueFormat = NameValueParsingFormat.getInstance();
 
     protected ObjectParsingFormat() {
         super(NAME);
@@ -46,6 +46,11 @@ public class ObjectParsingFormat extends ParsingFormatBase {
 
     public boolean isAcceptsElement(String name) {
         return true;
+    }
+
+    public ObjectParsingFormat setNameValueSeparator(char ch) {
+        this.nameValueFormat = NameValueParsingFormat.newInstance(ch);
+        return this;
     }
 
     @Override
@@ -64,13 +69,39 @@ public class ObjectParsingFormat extends ParsingFormatBase {
 
     @Override
     public void deal(ParsingContext ctx) throws FormatParsingException {
-        if(!Character.isWhitespace(ctx.charNow())) {
-            ctx.pushFormat(NameValueParsingFormat.getInstance());
+        if(Character.isWhitespace(ctx.charNow())) {
+            return;
         }
+        ctx.pushFormat(nameValueFormat);
     }
 
     @Override
     public void eol(ParsingContext ctx) throws FormatParsingException {
         throw new FormatParsingException(FormatErrors.formatIncomplete(this));
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((nameValueFormat == null) ? 0 : nameValueFormat.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ObjectParsingFormat other = (ObjectParsingFormat) obj;
+        if (nameValueFormat == null) {
+            if (other.nameValueFormat != null)
+                return false;
+        } else if (!nameValueFormat.equals(other.nameValueFormat))
+            return false;
+        return true;
     }
 }

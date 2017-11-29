@@ -50,10 +50,16 @@ public class FormatExprContentHandler extends FormatContentHandler {
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
         if(type != null || elems != null) {
-            throw new FormatParsingException("Type parameter of " + format + " has already been initialized to " + type);
+            throw new FormatParsingException("Type parameter of " + format + " has already been initialized to " + (type == null ? elems : type));
         }
-        if(FormatExprParsingFormat.COMPOSITE_TYPE_FORMAT_NAME.equals(childHandler.format.getName())) {
+        if (FormatExprParsingFormat.COMPOSITE_TYPE_FORMAT_NAME.equals(childHandler.format.getName())) {
             elems = (Map<?, ?>) childHandler.getContent();
+        } else if (FormatExprParsingFormat.LIST_TYPE_FORMAT_NAME.equals(childHandler.format.getName())) {
+            if(name == null) {
+                name = new StringBuilder();
+            }
+            name.append("List");
+            type = (ParsingFormat) childHandler.getContent();
         } else {
             type = (ParsingFormat) childHandler.getContent();
         }
@@ -88,7 +94,7 @@ public class FormatExprContentHandler extends FormatContentHandler {
             if(type == null) {
                 return ListParsingFormat.getInstance();
             }
-            return ListParsingFormat.getInstance(type);
+            return ListParsingFormat.newInstance(type);
         }
 
         if(WildcardParsingFormat.NAME.equals(name)) {
