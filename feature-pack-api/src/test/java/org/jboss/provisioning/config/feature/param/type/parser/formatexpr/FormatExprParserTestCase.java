@@ -50,20 +50,30 @@ public class FormatExprParserTestCase {
         Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List"));
         Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List<?>"));
         Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat(" List < ? > "));
+
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[?]"));
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[ ? ]"));
+
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[]"));
+        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[ ]"));
     }
 
     @Test
     public void testListOfStrings() throws Exception {
-        Assert.assertEquals(ListParsingFormat.getInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("List<String>"));
-        Assert.assertEquals(ListParsingFormat.getInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat(" List < String > "));
+        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("List<String>"));
+        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat(" List < String > "));
+
+        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[String]"));
+        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[ String ]"));
     }
 
     @Test
     public void testListOfListsOfStrings() throws Exception {
-        Assert.assertEquals(
-                ListParsingFormat.getInstance(
-                        ListParsingFormat.getInstance(
-                                StringParsingFormat.getInstance())), FormatParser.resolveFormat("List<List<String>>"));
+        final ListParsingFormat theType = ListParsingFormat.newInstance(
+                ListParsingFormat.newInstance(
+                        StringParsingFormat.getInstance()));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("List<List<String>>"));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("[[String]]"));
     }
 
     @Test
@@ -82,16 +92,21 @@ public class FormatExprParserTestCase {
 
     @Test
     public void testCompositeWithAttrListOfWildcards() throws Exception {
-        Assert.assertEquals(CompositeParsingFormat.newInstance()
+        final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
                 .addElement("str", StringParsingFormat.getInstance())
-                .addElement("list", ListParsingFormat.getInstance()), FormatParser.resolveFormat("{str:String, list:List}"));
+                .addElement("list", ListParsingFormat.getInstance());
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:List}"));
+
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{str: String, list: []}"));
     }
 
     @Test
     public void testCompositeWithAttrListOfStrings() throws Exception {
-        Assert.assertEquals(CompositeParsingFormat.newInstance()
+        final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
                 .addElement("str", StringParsingFormat.getInstance())
-                .addElement("list", ListParsingFormat.getInstance(StringParsingFormat.getInstance())), FormatParser.resolveFormat("{str:String, list:List<String>}"));
+                .addElement("list", ListParsingFormat.newInstance(StringParsingFormat.getInstance()));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:List<String>}"));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:[String]}"));
     }
 
     @Test
@@ -108,10 +123,44 @@ public class FormatExprParserTestCase {
 
     @Test
     public void testCompositeWithAttrComposite() throws Exception {
-        Assert.assertEquals(CompositeParsingFormat.newInstance()
+        final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
                 .addElement("str", StringParsingFormat.getInstance())
                 .addElement("full-name", CompositeParsingFormat.newInstance()
                         .addElement("first-name", StringParsingFormat.getInstance())
-                        .addElement("last-name", StringParsingFormat.getInstance())), FormatParser.resolveFormat("{str:String, full-name:{first-name:String,last-name:String}}"));
+                        .addElement("last-name", StringParsingFormat.getInstance()));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, full-name:{first-name:String,last-name:String}}"));
+
+        Assert.assertEquals(theType, FormatParser.resolveFormat(
+                "{\n"
+                + "  str : String,\n"
+                + "  full-name : {\n"
+                + "    first-name : String,\n"
+                + "    last-name : String\n"
+                + "  }\n"
+                + "}"));
+    }
+
+    @Test
+    public void testCompositeWithAttrList() throws Exception {
+        final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
+                .addElement("full-name", CompositeParsingFormat.newInstance()
+                        .addElement("first-name", StringParsingFormat.getInstance())
+                        .addElement("last-name", StringParsingFormat.getInstance()))
+                .addElement("addresses", ListParsingFormat.newInstance(
+                        CompositeParsingFormat.newInstance()
+                        .addElement("street", StringParsingFormat.getInstance())
+                        .addElement("city", StringParsingFormat.getInstance())));
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{full-name: {first-name: String, last-name: String}, addresses: List<{street: String, city: String}>}"));
+
+        Assert.assertEquals(theType, FormatParser.resolveFormat("{\n"
+                + "  full-name : {\n"
+                + "    first-name : String,\n"
+                + "    last-name : String\n"
+                + "  },\n"
+                + "  addresses : [{\n"
+                + "    street : String,\n"
+                + "    city : String\n"
+                + "  }]\n"
+                + "}"));
     }
 }

@@ -27,8 +27,13 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
 
     public static class TypeParameterParsingFormat extends ParsingFormatBase {
 
-        protected TypeParameterParsingFormat() {
-            super("TypeParam");
+        private final char start;
+        private final char end;
+
+        protected TypeParameterParsingFormat(String name, char start, char end) {
+            super(name);
+            this.start = start;
+            this.end = end;
         }
 
         @Override
@@ -43,27 +48,26 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
 
         @Override
         public void pushed(ParsingContext ctx) throws FormatParsingException {
-            if(ctx.charNow() != '<') {
+            if(ctx.charNow() != start) {
                 throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, '<', ctx.charNow()));
             }
         }
 
         @Override
         public void react(ParsingContext ctx) throws FormatParsingException {
-            switch(ctx.charNow()) {
-                case '>':
-                    ctx.end();
-                    break;
-                default:
-                    ctx.bounce();
+            if(ctx.charNow() == end) {
+                ctx.end();
+            } else {
+                ctx.bounce();
             }
         }
 
         @Override
         public void deal(ParsingContext ctx) throws FormatParsingException {
-            if(!Character.isWhitespace(ctx.charNow())) {
-                ctx.pushFormat(INSTANCE);
+            if(Character.isWhitespace(ctx.charNow())) {
+                return;
             }
+            ctx.pushFormat(INSTANCE);
         }
 
         @Override
@@ -76,13 +80,17 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
 
     private static final FormatExprParsingFormat INSTANCE = new FormatExprParsingFormat();
 
+    static final String TYPE_PARAM_FORMAT_NAME = "TypeParam";
+    static final String LIST_TYPE_FORMAT_NAME = "ListTypeExpr";
     static final String COMPOSITE_TYPE_FORMAT_NAME = "CompositeTypeExpr";
+
+    private static final ParsingFormat TYPE_PARAM_FORMAT = new TypeParameterParsingFormat(TYPE_PARAM_FORMAT_NAME, '<', '>');
+    private static final ParsingFormat LIST_TYPE_FORMAT = new TypeParameterParsingFormat(LIST_TYPE_FORMAT_NAME, '[', ']');
 
     private static final CompositeParsingFormat COMPOSITE_TYPE_FORMAT = CompositeParsingFormat.newInstance(COMPOSITE_TYPE_FORMAT_NAME)
             .setAcceptAll(true)
             .setNameValueSeparator(':')
             .setDefaultValueFormat(INSTANCE);
-    private static final ParsingFormat TYPE_PARAM_FORMAT = new TypeParameterParsingFormat();
 
     public static FormatExprParsingFormat getInstance() {
         return INSTANCE;
@@ -108,6 +116,9 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
                 break;
             case '{':
                 ctx.pushFormat(COMPOSITE_TYPE_FORMAT);
+                break;
+            case '[':
+                ctx.pushFormat(LIST_TYPE_FORMAT);
                 break;
             default:
                 ctx.content();

@@ -33,7 +33,7 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class CompositeTypeParserTestCase extends TypeParserTestBase {
+public class SimpleCompositeTypeParserTestCase extends TypeParserTestBase {
 
     private final CompositeParsingFormat testFormat = CompositeParsingFormat.newInstance("FullName")
             .addElement("first-name", StringParsingFormat.getInstance())

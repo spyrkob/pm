@@ -41,9 +41,7 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name);
     }
 
-    private Character nameValueSeparator;
     private boolean acceptAll = false;
-    private ParsingFormat defaultValueFormat;
     private Map<String, ParsingFormat> elems = Collections.emptyMap();
 
     protected CompositeParsingFormat(String name) {
@@ -60,34 +58,23 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
     }
 
     public CompositeParsingFormat setDefaultValueFormat(ParsingFormat format) {
-        if(nameValueSeparator == null) {
-            this.defaultValueFormat = NameValueParsingFormat.getInstance(format);
-        } else {
-            this.defaultValueFormat = NameValueParsingFormat.getInstance(nameValueSeparator, format);
-        }
+        this.nameValueFormat = NameValueParsingFormat.newInstance(nameValueFormat.getSeparator(), format);
         return this;
     }
 
     public CompositeParsingFormat addElement(String name) {
-        return addElement(name, defaultValueFormat);
+        return addElement(name, nameValueFormat);
     }
 
     public CompositeParsingFormat addElement(String name, ParsingFormat valueFormat) {
-        NameValueParsingFormat nameValue = null;
-        if(valueFormat == null) {
-            if(defaultValueFormat != null) {
-                nameValue = nameValueSeparator == null ? NameValueParsingFormat.getInstance(defaultValueFormat) : NameValueParsingFormat.getInstance(nameValueSeparator, defaultValueFormat);
-            }
-        } else {
-            nameValue = nameValueSeparator == null ? NameValueParsingFormat.getInstance(valueFormat) : NameValueParsingFormat.getInstance(nameValueSeparator, valueFormat);
-        }
-        elems = PmCollections.put(elems, name, nameValue);
+        elems = PmCollections.put(elems, name, valueFormat == null ? nameValueFormat
+                : NameValueParsingFormat.newInstance(nameValueFormat.getSeparator(), valueFormat));
         return this;
     }
 
+    @Override
     public CompositeParsingFormat setNameValueSeparator(char ch) {
-        this.nameValueSeparator = ch;
-        return this;
+        return (CompositeParsingFormat) super.setNameValueSeparator(ch);
     }
 
     @Override
@@ -117,16 +104,11 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
             if(!acceptAll) {
                 throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(this, null));
             }
+            valueFormat = nameValueFormat;
         } else {
             valueFormat = matchedElem.getValue();
         }
 
-        if(valueFormat == null) {
-            valueFormat = defaultValueFormat;
-            if(valueFormat == null) {
-                throw new FormatParsingException("Format " + this + " attribute " + matchedElem.getKey() + " is missing value format");
-            }
-        }
         ctx.pushFormat(valueFormat);
     }
 
@@ -135,9 +117,7 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + (acceptAll ? 1231 : 1237);
-        result = prime * result + ((defaultValueFormat == null) ? 0 : defaultValueFormat.hashCode());
         result = prime * result + ((elems == null) ? 0 : elems.hashCode());
-        result = prime * result + ((nameValueSeparator == null) ? 0 : nameValueSeparator.hashCode());
         return result;
     }
 
@@ -152,20 +132,10 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         CompositeParsingFormat other = (CompositeParsingFormat) obj;
         if (acceptAll != other.acceptAll)
             return false;
-        if (defaultValueFormat == null) {
-            if (other.defaultValueFormat != null)
-                return false;
-        } else if (!defaultValueFormat.equals(other.defaultValueFormat))
-            return false;
         if (elems == null) {
             if (other.elems != null)
                 return false;
         } else if (!elems.equals(other.elems))
-            return false;
-        if (nameValueSeparator == null) {
-            if (other.nameValueSeparator != null)
-                return false;
-        } else if (!nameValueSeparator.equals(other.nameValueSeparator))
             return false;
         return true;
     }

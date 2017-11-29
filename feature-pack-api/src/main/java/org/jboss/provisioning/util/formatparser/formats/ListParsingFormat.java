@@ -31,13 +31,11 @@ public class ListParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "List";
 
-    private static final ListParsingFormat INSTANCE = new ListParsingFormat(WildcardParsingFormat.getInstance());
-
     public static ListParsingFormat getInstance() {
-        return INSTANCE;
+        return new ListParsingFormat(WildcardParsingFormat.getInstance());
     }
 
-    public static ListParsingFormat getInstance(ParsingFormat itemFormat) {
+    public static ListParsingFormat newInstance(ParsingFormat itemFormat) {
         assert itemFormat != null : "item format is null";
         return new ListParsingFormat(itemFormat);
     }
