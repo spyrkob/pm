@@ -43,7 +43,7 @@ public class BuiltInParameterTypeProvider implements ParameterTypeProvider {
             return StringParameterType.getInstance();
         } else {
             try {
-                return new FormattedParameterType(name, FormatParser.resolveFormat(name));
+                return new FormattedParameterType(FormatParser.resolveFormat(name));
             } catch (FormatParsingException e) {
                 throw new ParameterTypeNotFoundException("Failed to resolve parameter type " + name, e);
             }

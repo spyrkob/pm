@@ -17,26 +17,20 @@
 
 package org.jboss.provisioning.util.formatparser.handlers;
 
-import java.util.Collections;
-import java.util.Map;
-
-import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
-import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.NameValueParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ObjectContentHandler extends FormatContentHandler {
+public class KeyValueContentHandler extends FormatContentHandler {
 
-    Map<String, Object> map = Collections.emptyMap();
+    Object key;
+    Object value;
 
-    public ObjectContentHandler(ParsingFormat format, int strIndex) {
+    public KeyValueContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 
@@ -45,15 +39,12 @@ public class ObjectContentHandler extends FormatContentHandler {
      */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(!childHandler.getFormat().getName().equals(NameValueParsingFormat.NAME)) {
-            throw new FormatParsingException(FormatErrors.unexpectedChildFormat(format, childHandler.getFormat()));
-        }
-        final NameValueContentHandler nameValue = (NameValueContentHandler) childHandler;
-        final ObjectParsingFormat objectFormat = (ObjectParsingFormat)format;
-        if(objectFormat.isAcceptsElement(nameValue.name)) {
-            map = PmCollections.putLinked(map, nameValue.name, nameValue.value);
+        if(key == null) {
+            key = childHandler.getContent();
+        } else if(value != null) {
+            throw new FormatParsingException("The value has already been initialized for the name '" + key + "'");
         } else {
-            throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(format, nameValue.name));
+            value = childHandler.getContent();
         }
     }
 
@@ -62,6 +53,6 @@ public class ObjectContentHandler extends FormatContentHandler {
      */
     @Override
     public Object getContent() throws FormatParsingException {
-        return map;
+        throw new UnsupportedOperationException();
     }
 }

@@ -18,6 +18,8 @@
 package org.jboss.provisioning.util.formatparser;
 
 import org.jboss.provisioning.util.formatparser.formats.CompositeParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.KeyValueParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 
 /**
  *
@@ -87,10 +89,9 @@ public class FormatExprParsingFormat extends ParsingFormatBase {
     private static final ParsingFormat TYPE_PARAM_FORMAT = new TypeParameterParsingFormat(TYPE_PARAM_FORMAT_NAME, '<', '>');
     private static final ParsingFormat LIST_TYPE_FORMAT = new TypeParameterParsingFormat(LIST_TYPE_FORMAT_NAME, '[', ']');
 
-    private static final CompositeParsingFormat COMPOSITE_TYPE_FORMAT = CompositeParsingFormat.newInstance(COMPOSITE_TYPE_FORMAT_NAME)
-            .setAcceptAll(true)
-            .setNameValueSeparator(':')
-            .setDefaultValueFormat(INSTANCE);
+    private static final CompositeParsingFormat COMPOSITE_TYPE_FORMAT = CompositeParsingFormat.newInstance(COMPOSITE_TYPE_FORMAT_NAME,
+            KeyValueParsingFormat.newInstance(StringParsingFormat.getInstance(), ':', INSTANCE))
+            .setAcceptAll(true);
 
     public static FormatExprParsingFormat getInstance() {
         return INSTANCE;

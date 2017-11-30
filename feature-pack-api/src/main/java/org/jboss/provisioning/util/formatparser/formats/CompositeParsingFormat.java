@@ -41,6 +41,10 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name);
     }
 
+    public static CompositeParsingFormat newInstance(String name, KeyValueParsingFormat entryFormat) {
+        return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name, entryFormat);
+    }
+
     private boolean acceptAll = false;
     private Map<String, ParsingFormat> elems = Collections.emptyMap();
 
@@ -48,8 +52,8 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         super(name);
     }
 
-    public String getContentType() {
-        return ObjectParsingFormat.NAME;
+    protected CompositeParsingFormat(String name, KeyValueParsingFormat entryFormat) {
+        super(name, entryFormat);
     }
 
     public CompositeParsingFormat setAcceptAll(boolean acceptAll) {
@@ -57,28 +61,18 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         return this;
     }
 
-    public CompositeParsingFormat setDefaultValueFormat(ParsingFormat format) {
-        this.nameValueFormat = NameValueParsingFormat.newInstance(nameValueFormat.getSeparator(), format);
-        return this;
-    }
-
     public CompositeParsingFormat addElement(String name) {
-        return addElement(name, nameValueFormat);
+        return addElement(name, entryFormat);
     }
 
     public CompositeParsingFormat addElement(String name, ParsingFormat valueFormat) {
-        elems = PmCollections.put(elems, name, valueFormat == null ? nameValueFormat
-                : NameValueParsingFormat.newInstance(nameValueFormat.getSeparator(), valueFormat));
+        elems = PmCollections.put(elems, name, valueFormat == null ? entryFormat
+                : KeyValueParsingFormat.newInstance(entryFormat.getKeyFormat(), entryFormat.getSeparator(), valueFormat));
         return this;
     }
 
     @Override
-    public CompositeParsingFormat setNameValueSeparator(char ch) {
-        return (CompositeParsingFormat) super.setNameValueSeparator(ch);
-    }
-
-    @Override
-    public boolean isAcceptsElement(String name) {
+    public boolean isAcceptsKey(Object name) {
         return acceptAll || elems.containsKey(name);
     }
 
@@ -104,7 +98,7 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
             if(!acceptAll) {
                 throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(this, null));
             }
-            valueFormat = nameValueFormat;
+            valueFormat = entryFormat;
         } else {
             valueFormat = matchedElem.getValue();
         }
@@ -150,10 +144,10 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         if (!elems.isEmpty()) {
             final Iterator<Map.Entry<String, ParsingFormat>> i = elems.entrySet().iterator();
             Map.Entry<String, ParsingFormat> elem = i.next();
-            buf.append(elem.getKey()).append(':').append(((NameValueParsingFormat)elem.getValue()).getValueFormat());
+            buf.append(elem.getKey()).append(':').append(((KeyValueParsingFormat)elem.getValue()).getValueFormat());
             while (i.hasNext()) {
                 elem = i.next();
-                buf.append(',').append(elem.getKey()).append(':').append(((NameValueParsingFormat)elem.getValue()).getValueFormat());
+                buf.append(',').append(elem.getKey()).append(':').append(((KeyValueParsingFormat)elem.getValue()).getValueFormat());
 
             }
         }

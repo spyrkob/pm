@@ -17,16 +17,11 @@
 
 package org.jboss.provisioning.util.formatparser.formats;
 
-import org.jboss.provisioning.util.formatparser.FormatErrors;
-import org.jboss.provisioning.util.formatparser.FormatParsingException;
-import org.jboss.provisioning.util.formatparser.ParsingContext;
-import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
-
 /**
  *
  * @author Alexey Loubyansky
  */
-public class ObjectParsingFormat extends ParsingFormatBase {
+public class ObjectParsingFormat extends MapParsingFormat {
 
     public static final String NAME = "Object";
 
@@ -34,74 +29,15 @@ public class ObjectParsingFormat extends ParsingFormatBase {
         return new ObjectParsingFormat();
     }
 
-    protected NameValueParsingFormat nameValueFormat = NameValueParsingFormat.getInstance();
-
     protected ObjectParsingFormat() {
-        super(NAME);
+        this(NAME);
     }
 
     protected ObjectParsingFormat(String name) {
-        super(name);
+        this(name, KeyValueParsingFormat.newInstance(StringParsingFormat.getInstance(), KeyValueParsingFormat.SEPARATOR, WildcardParsingFormat.getInstance()));
     }
 
-    public boolean isAcceptsElement(String name) {
-        return true;
-    }
-
-    public ObjectParsingFormat setNameValueSeparator(char ch) {
-        this.nameValueFormat = NameValueParsingFormat.newInstance(ch);
-        return this;
-    }
-
-    @Override
-    public void react(ParsingContext ctx) throws FormatParsingException {
-        switch(ctx.charNow()) {
-            case ',' :
-                ctx.popFormats();
-                break;
-            case '}':
-                ctx.end();
-                break;
-            default:
-                ctx.bounce();
-        }
-    }
-
-    @Override
-    public void deal(ParsingContext ctx) throws FormatParsingException {
-        if(Character.isWhitespace(ctx.charNow())) {
-            return;
-        }
-        ctx.pushFormat(nameValueFormat);
-    }
-
-    @Override
-    public void eol(ParsingContext ctx) throws FormatParsingException {
-        throw new FormatParsingException(FormatErrors.formatIncomplete(this));
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((nameValueFormat == null) ? 0 : nameValueFormat.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ObjectParsingFormat other = (ObjectParsingFormat) obj;
-        if (nameValueFormat == null) {
-            if (other.nameValueFormat != null)
-                return false;
-        } else if (!nameValueFormat.equals(other.nameValueFormat))
-            return false;
-        return true;
+    protected ObjectParsingFormat(String name, KeyValueParsingFormat entryFormat) {
+        super(name, entryFormat);
     }
 }

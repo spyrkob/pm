@@ -55,7 +55,7 @@ public class WildcardParsingFormat extends ParsingFormatBase {
                 ctx.pushFormat(ListParsingFormat.getInstance());
                 break;
             case  '{':
-                ctx.pushFormat(ObjectParsingFormat.getInstance());
+                ctx.pushFormat(MapParsingFormat.getInstance());
                 break;
             default:
                 ctx.pushFormat(StringParsingFormat.getInstance());

@@ -18,13 +18,13 @@
 package org.jboss.provisioning.util.formatparser;
 
 import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.NameValueParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.KeyValueParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 import org.jboss.provisioning.util.formatparser.handlers.ListContentHandler;
-import org.jboss.provisioning.util.formatparser.handlers.NameValueContentHandler;
-import org.jboss.provisioning.util.formatparser.handlers.ObjectContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.MapContentHandler;
+import org.jboss.provisioning.util.formatparser.handlers.KeyValueContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.StringContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.WildcardContentHandler;
 
@@ -50,10 +50,10 @@ public class DefaultContentHandlerFactory implements FormatContentHandlerFactory
             return new StringContentHandler(format, strIndex);
         } else if(name.equals(ListParsingFormat.NAME)) {
             return new ListContentHandler(format, strIndex);
-        } else if(name.equals(ObjectParsingFormat.NAME)) {
-            return new ObjectContentHandler(format, strIndex);
-        } else if(name.equals(NameValueParsingFormat.NAME)) {
-            return new NameValueContentHandler(format, strIndex);
+        } else if(name.equals(KeyValueParsingFormat.NAME)) {
+            return new KeyValueContentHandler(format, strIndex);
+        } else if(name.equals(MapParsingFormat.NAME)) {
+            return new MapContentHandler(format, strIndex);
         } else if(name.equals(WildcardParsingFormat.NAME)) {
             return new WildcardContentHandler(format, strIndex);
         } else {

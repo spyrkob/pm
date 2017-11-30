@@ -17,46 +17,33 @@
 
 package org.jboss.provisioning.util.formatparser.handlers;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NameValueContentHandler extends FormatContentHandler {
+public class SetContentHandler extends FormatContentHandler {
 
-    String name;
-    Object value;
+    private Set<Object> set = Collections.emptySet();
 
-    public NameValueContentHandler(ParsingFormat format, int strIndex) {
+    public SetContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.spec.type.ParsingCallbackHandler#addChild(org.jboss.provisioning.spec.type.ParsingCallbackHandler)
-     */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(name == null) {
-            if(!childHandler.getFormat().getName().equals(StringParsingFormat.getInstance().getName())) {
-                throw new FormatParsingException("The name of the entry hasn't been initialized and it can't be " + childHandler.getFormat());
-            }
-            name = childHandler.getContent().toString();
-        } else if(value != null) {
-            throw new FormatParsingException("The value has already been initialized for the name '" + name + "'");
-        } else {
-            value = childHandler.getContent();
-        }
+        set = PmCollections.add(set, childHandler.getContent());
     }
 
-    /* (non-Javadoc)
-     * @see org.jboss.provisioning.spec.type.ParsingCallbackHandler#getParsedValue()
-     */
     @Override
     public Object getContent() throws FormatParsingException {
-        throw new UnsupportedOperationException();
+        return set;
     }
 }

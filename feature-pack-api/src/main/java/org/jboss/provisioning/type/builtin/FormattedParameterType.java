@@ -30,11 +30,9 @@ import org.jboss.provisioning.util.formatparser.ParsingFormat;
  */
 public class FormattedParameterType implements FeatureParameterType {
 
-    protected final String name;
     protected final ParsingFormat format;
 
-    protected FormattedParameterType(String name, ParsingFormat format) {
-        this.name = name;
+    protected FormattedParameterType(ParsingFormat format) {
         this.format = format;
     }
 
@@ -43,7 +41,7 @@ public class FormattedParameterType implements FeatureParameterType {
      */
     @Override
     public String getName() {
-        return name;
+        return format.getName();
     }
 
     @Override
