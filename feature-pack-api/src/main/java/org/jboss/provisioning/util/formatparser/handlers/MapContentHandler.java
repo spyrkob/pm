@@ -34,7 +34,7 @@ import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
  */
 public class MapContentHandler extends FormatContentHandler {
 
-    Map<Object, Object> map = Collections.emptyMap();
+    protected Map<Object, Object> map = Collections.emptyMap();
 
     public MapContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);

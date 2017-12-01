@@ -18,8 +18,9 @@
 package org.jboss.provisioning.config.feature.param.type.parser.formatexpr;
 
 import org.jboss.provisioning.util.formatparser.FormatParser;
+import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.CompositeParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
@@ -47,40 +48,58 @@ public class FormatExprParserTestCase {
 
     @Test
     public void testListOfWildcards() throws Exception {
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List"));
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("List<?>"));
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat(" List < ? > "));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("List"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("List<?>"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat(" List < ? > "));
 
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[?]"));
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[ ? ]"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("[?]"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("[ ? ]"));
 
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[]"));
-        Assert.assertEquals(ListParsingFormat.getInstance(), FormatParser.resolveFormat("[ ]"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("[]"));
+        Assert.assertEquals(CollectionParsingFormat.list(), FormatParser.resolveFormat("[ ]"));
     }
 
     @Test
     public void testListOfStrings() throws Exception {
-        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("List<String>"));
-        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat(" List < String > "));
+        Assert.assertEquals(CollectionParsingFormat.list(StringParsingFormat.getInstance()), FormatParser.resolveFormat("List<String>"));
+        Assert.assertEquals(CollectionParsingFormat.list(StringParsingFormat.getInstance()), FormatParser.resolveFormat(" List < String > "));
 
-        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[String]"));
-        Assert.assertEquals(ListParsingFormat.newInstance(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[ String ]"));
+        Assert.assertEquals(CollectionParsingFormat.list(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[String]"));
+        Assert.assertEquals(CollectionParsingFormat.list(StringParsingFormat.getInstance()), FormatParser.resolveFormat("[ String ]"));
     }
 
     @Test
     public void testListOfListsOfStrings() throws Exception {
-        final ListParsingFormat theType = ListParsingFormat.newInstance(
-                ListParsingFormat.newInstance(
+        final CollectionParsingFormat theType = CollectionParsingFormat.list(
+                CollectionParsingFormat.list(
                         StringParsingFormat.getInstance()));
         Assert.assertEquals(theType, FormatParser.resolveFormat("List<List<String>>"));
         Assert.assertEquals(theType, FormatParser.resolveFormat("[[String]]"));
     }
 
     @Test
+    public void testSetOfWildcards() throws Exception {
+        Assert.assertEquals(CollectionParsingFormat.set(), FormatParser.resolveFormat("Set"));
+        Assert.assertEquals(CollectionParsingFormat.set(), FormatParser.resolveFormat("Set<?>"));
+        Assert.assertEquals(CollectionParsingFormat.set(), FormatParser.resolveFormat(" Set < ? > "));
+    }
+
+    @Test
+    public void testSetOfSetsOfStrings() throws Exception {
+        Assert.assertEquals(CollectionParsingFormat.set(
+                CollectionParsingFormat.set(StringParsingFormat.getInstance())
+                ), FormatParser.resolveFormat("Set<Set<String>>"));
+    }
+
+    @Test
     public void testSimpleNamedComposite() throws Exception {
         Assert.assertEquals(CompositeParsingFormat.newInstance("FullName")
                 .addElement("last-name", StringParsingFormat.getInstance())
-                .addElement("first-name", StringParsingFormat.getInstance()), FormatParser.resolveFormat("FullName{first-name:String, last-name:String}"));
+                .addElement("first-name", StringParsingFormat.getInstance()), FormatParser.resolveFormat("{!name:FullName, first-name:String, last-name:String}"));
+
+        Assert.assertEquals(CompositeParsingFormat.newInstance("FullName")
+                .addElement("last-name", StringParsingFormat.getInstance())
+                .addElement("first-name", StringParsingFormat.getInstance()), FormatParser.resolveFormat("{!name:FullName, !content-type:Map, first-name:String, last-name:String}"));
     }
 
     @Test
@@ -94,7 +113,7 @@ public class FormatExprParserTestCase {
     public void testCompositeWithAttrListOfWildcards() throws Exception {
         final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
                 .addElement("str", StringParsingFormat.getInstance())
-                .addElement("list", ListParsingFormat.getInstance());
+                .addElement("list", CollectionParsingFormat.list());
         Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:List}"));
 
         Assert.assertEquals(theType, FormatParser.resolveFormat("{str: String, list: []}"));
@@ -104,7 +123,7 @@ public class FormatExprParserTestCase {
     public void testCompositeWithAttrListOfStrings() throws Exception {
         final CompositeParsingFormat theType = CompositeParsingFormat.newInstance()
                 .addElement("str", StringParsingFormat.getInstance())
-                .addElement("list", ListParsingFormat.newInstance(StringParsingFormat.getInstance()));
+                .addElement("list", CollectionParsingFormat.list(StringParsingFormat.getInstance()));
         Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:List<String>}"));
         Assert.assertEquals(theType, FormatParser.resolveFormat("{str:String, list:[String]}"));
     }
@@ -146,7 +165,7 @@ public class FormatExprParserTestCase {
                 .addElement("full-name", CompositeParsingFormat.newInstance()
                         .addElement("first-name", StringParsingFormat.getInstance())
                         .addElement("last-name", StringParsingFormat.getInstance()))
-                .addElement("addresses", ListParsingFormat.newInstance(
+                .addElement("addresses", CollectionParsingFormat.list(
                         CompositeParsingFormat.newInstance()
                         .addElement("street", StringParsingFormat.getInstance())
                         .addElement("city", StringParsingFormat.getInstance())));
@@ -162,5 +181,16 @@ public class FormatExprParserTestCase {
                 + "    city : String\n"
                 + "  }]\n"
                 + "}"));
+    }
+
+    @Test
+    public void testMap() throws Exception {
+        Assert.assertEquals(MapParsingFormat.getInstance(), FormatParser.resolveFormat("Map"));
+
+        Assert.assertEquals(MapParsingFormat.getInstance(), FormatParser.resolveFormat("Map<>"));
+
+        Assert.assertEquals(MapParsingFormat.getInstance(StringParsingFormat.getInstance(), StringParsingFormat.getInstance()), FormatParser.resolveFormat("Map<String, String>"));
+
+        Assert.assertEquals(MapParsingFormat.getInstance(StringParsingFormat.getInstance(), CollectionParsingFormat.list(StringParsingFormat.getInstance())), FormatParser.resolveFormat("Map<String, List<String>>"));
     }
 }

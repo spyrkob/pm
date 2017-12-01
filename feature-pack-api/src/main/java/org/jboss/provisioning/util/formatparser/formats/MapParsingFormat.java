@@ -20,6 +20,7 @@ package org.jboss.provisioning.util.formatparser.formats;
 import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingContext;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 
 /**
@@ -35,6 +36,10 @@ public class MapParsingFormat extends ParsingFormatBase {
 
     public static MapParsingFormat getInstance() {
         return new MapParsingFormat();
+    }
+
+    public static MapParsingFormat getInstance(ParsingFormat key, ParsingFormat value) {
+        return getInstance(KeyValueParsingFormat.newInstance(key, value));
     }
 
     public static MapParsingFormat getInstance(KeyValueParsingFormat entryFormat) {
@@ -55,8 +60,16 @@ public class MapParsingFormat extends ParsingFormatBase {
         this(name, KeyValueParsingFormat.getInstance());
     }
 
+    protected MapParsingFormat(String name, String contentType) {
+        this(name, contentType, KeyValueParsingFormat.getInstance());
+    }
+
     protected MapParsingFormat(String name, KeyValueParsingFormat entryFormat) {
-        super(name, NAME);
+        this(name, NAME, entryFormat);
+    }
+
+    protected MapParsingFormat(String name, String contentType, KeyValueParsingFormat entryFormat) {
+        super(name, contentType == null ? NAME : contentType);
         this.entryFormat = entryFormat;
     }
 
@@ -67,6 +80,11 @@ public class MapParsingFormat extends ParsingFormatBase {
     public MapParsingFormat setEntryFormat(KeyValueParsingFormat entryFormat) {
         this.entryFormat = entryFormat;
         return this;
+    }
+
+    @Override
+    public boolean isOpeningChar(char ch) {
+        return ch == OPENING_CHAR;
     }
 
     @Override
@@ -126,5 +144,12 @@ public class MapParsingFormat extends ParsingFormatBase {
         } else if (!entryFormat.equals(other.entryFormat))
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append(NAME).append('<').append(entryFormat.getKeyFormat()).append(',').append(entryFormat.getValueFormat());
+        return buf.append('>').toString();
     }
 }

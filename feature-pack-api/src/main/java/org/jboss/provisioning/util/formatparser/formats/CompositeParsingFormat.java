@@ -41,8 +41,16 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name);
     }
 
+    public static CompositeParsingFormat newInstance(String name, String contentType) {
+        return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name, contentType);
+    }
+
     public static CompositeParsingFormat newInstance(String name, KeyValueParsingFormat entryFormat) {
         return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name, entryFormat);
+    }
+
+    public static CompositeParsingFormat newInstance(String name, String contentType, KeyValueParsingFormat entryFormat) {
+        return new CompositeParsingFormat(name == null ? ObjectParsingFormat.NAME : name, contentType, entryFormat);
     }
 
     private boolean acceptAll = false;
@@ -52,8 +60,16 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
         super(name);
     }
 
+    protected CompositeParsingFormat(String name, String contentType) {
+        super(name, contentType);
+    }
+
     protected CompositeParsingFormat(String name, KeyValueParsingFormat entryFormat) {
         super(name, entryFormat);
+    }
+
+    protected CompositeParsingFormat(String name, String contentType, KeyValueParsingFormat entryFormat) {
+        super(name, contentType, entryFormat);
     }
 
     public CompositeParsingFormat setAcceptAll(boolean acceptAll) {
@@ -137,10 +153,13 @@ public class CompositeParsingFormat extends ObjectParsingFormat {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        if(name != null) {
-            buf.append(name);
-        }
         buf.append('{');
+        if(name != null) {
+            buf.append("!name:").append(name);
+        }
+        if(contentType != null) {
+            buf.append("!content-type:").append(contentType);
+        }
         if (!elems.isEmpty()) {
             final Iterator<Map.Entry<String, ParsingFormat>> i = elems.entrySet().iterator();
             Map.Entry<String, ParsingFormat> elem = i.next();

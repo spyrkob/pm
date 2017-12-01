@@ -29,6 +29,8 @@ public interface ParsingFormat {
 
     boolean isWrapper();
 
+    boolean isOpeningChar(char ch);
+
     void pushed(ParsingContext ctx) throws FormatParsingException;
 
     void react(ParsingContext ctx) throws FormatParsingException;

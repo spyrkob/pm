@@ -27,48 +27,86 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  *
  * @author Alexey Loubyansky
  */
-public class ListParsingFormat extends ParsingFormatBase {
+public class CollectionParsingFormat extends ParsingFormatBase {
 
-    public static final String NAME = "List";
+    public static final String LIST = "List";
+    public static final String SET = "Set";
+
     public static final char OPENING_CHAR = '[';
     public static final char CLOSING_CHAR = ']';
     public static final char ITEM_SEPARATOR_CHAR = ',';
 
-    public static ListParsingFormat getInstance() {
-        return new ListParsingFormat(WildcardParsingFormat.getInstance());
+    public static CollectionParsingFormat list() {
+        return newInstance(LIST);
     }
 
-    public static ListParsingFormat newInstance(ParsingFormat itemFormat) {
-        assert itemFormat != null : "item format is null";
-        return new ListParsingFormat(itemFormat);
+    public static CollectionParsingFormat list(ParsingFormat itemFormat) {
+        return newInstance(LIST, itemFormat);
     }
 
+    public static CollectionParsingFormat list(ParsingFormat itemFormat, char openingChar, char closingChar) {
+        return newInstance(LIST, itemFormat, openingChar, closingChar);
+    }
+
+    public static CollectionParsingFormat set() {
+        return newInstance(SET);
+    }
+
+    public static CollectionParsingFormat set(ParsingFormat itemFormat) {
+        return newInstance(SET, itemFormat);
+    }
+
+    public static CollectionParsingFormat set(ParsingFormat itemFormat, char openingChar, char closingChar) {
+        return newInstance(SET, itemFormat, openingChar, closingChar);
+    }
+
+    public static CollectionParsingFormat newInstance(String type) {
+        return newInstance(type, WildcardParsingFormat.getInstance());
+    }
+
+    public static CollectionParsingFormat newInstance(String type, ParsingFormat itemFormat) {
+        return newInstance(type, itemFormat, OPENING_CHAR, CLOSING_CHAR);
+    }
+
+    public static CollectionParsingFormat newInstance(String type, ParsingFormat itemFormat, char openingChar, char closingChar) {
+        return new CollectionParsingFormat(type, openingChar, closingChar, itemFormat);
+    }
+
+    private final char openingChar;
+    private final char closingChar;
     private final ParsingFormat itemFormat;
 
-    protected ListParsingFormat(ParsingFormat itemFormat) {
-        super(NAME);
+    protected CollectionParsingFormat(String name, char openingChar, char closingChar, ParsingFormat itemFormat) {
+        super(name);
         this.itemFormat = itemFormat;
+        this.openingChar = openingChar;
+        this.closingChar = closingChar;
+    }
+
+    @Override
+    public boolean isOpeningChar(char ch) {
+        return openingChar == ch;
     }
 
     @Override
     public void pushed(ParsingContext ctx) throws FormatParsingException {
-        if(ctx.charNow() != OPENING_CHAR) {
-            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, OPENING_CHAR, ctx.charNow()));
+        if(ctx.charNow() != openingChar) {
+            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, openingChar, ctx.charNow()));
         }
     }
 
     @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
-        switch(ctx.charNow()) {
-            case ITEM_SEPARATOR_CHAR :
-                ctx.popFormats();
-                break;
-            case CLOSING_CHAR:
-                ctx.end();
-                break;
-            default:
-                ctx.bounce();
+        final char charNow = ctx.charNow();
+        if(charNow == ITEM_SEPARATOR_CHAR) {
+            ctx.popFormats();
+            return;
         }
+        if(charNow == closingChar) {
+            ctx.end();
+            return;
+        }
+        ctx.bounce();
     }
 
     @Override
@@ -99,7 +137,7 @@ public class ListParsingFormat extends ParsingFormatBase {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ListParsingFormat other = (ListParsingFormat) obj;
+        CollectionParsingFormat other = (CollectionParsingFormat) obj;
         if (itemFormat == null) {
             if (other.itemFormat != null)
                 return false;

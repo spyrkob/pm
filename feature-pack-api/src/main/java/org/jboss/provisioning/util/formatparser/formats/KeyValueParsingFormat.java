@@ -69,6 +69,11 @@ public class KeyValueParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public boolean isOpeningChar(char ch) {
+        return keyFormat.isOpeningChar(ch);
+    }
+
+    @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
         if(ctx.charNow() == separator) {
             ctx.popFormats();

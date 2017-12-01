@@ -20,6 +20,10 @@ package org.jboss.provisioning.util.formatparser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprContentHandler;
+import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprParsingFormat;
+import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprTypeParamContentHandler;
+import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprTypeParamParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
 
 /**
@@ -31,7 +35,10 @@ public class FormatParser implements ParsingContext {
     public static ParsingFormat resolveFormat(String expr) throws FormatParsingException {
         return (ParsingFormat) parse(
                 ExtendedContentHandlerFactory.getInstance()
-                .addContentHandler(FormatExprParsingFormat.NAME, FormatExprContentHandler.class),
+                .addContentHandler(FormatExprParsingFormat.NAME, FormatExprContentHandler.class)
+                .addContentHandler(FormatExprTypeParamParsingFormat.NAME, FormatExprTypeParamContentHandler.class)
+                .addContentHandler(FormatExprParsingFormat.LIST_TYPE_FORMAT_NAME, FormatExprParsingFormat.ListTypeContentHandler.class)
+                .addContentHandler(FormatExprParsingFormat.COMPOSITE_TYPE_FORMAT_NAME, FormatExprParsingFormat.CompositeTypeContentHandler.class),
                 FormatExprParsingFormat.getInstance(), expr);
     }
 

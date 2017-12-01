@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.jboss.provisioning.util.formatparser.formats;
+package org.jboss.provisioning.util.formatparser.formatexpr;
 
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingContext;
@@ -25,17 +24,20 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  *
  * @author Alexey Loubyansky
  */
-public class StringParsingFormat extends ParsingFormatBase {
+public class FormatExprTypeParamParsingFormat extends ParsingFormatBase {
 
-    public static final String NAME = "String";
+    public static final String NAME = "TypeParam";
 
-    private static final StringParsingFormat INSTANCE = new StringParsingFormat();
+    private static FormatExprTypeParamParsingFormat INSTANCE;
 
-    public static StringParsingFormat getInstance() {
+    public static FormatExprTypeParamParsingFormat getInstance() {
+        if(INSTANCE == null) {
+            return new FormatExprTypeParamParsingFormat();
+        }
         return INSTANCE;
     }
 
-    protected StringParsingFormat() {
+    protected FormatExprTypeParamParsingFormat() {
         super(NAME);
     }
 
@@ -45,12 +47,24 @@ public class StringParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public boolean isWrapper() {
+        return true;
+    }
+
+    @Override
     public void pushed(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
+        deal(ctx);
+    }
+
+    @Override
+    public void react(ParsingContext ctx) throws FormatParsingException {
     }
 
     @Override
     public void deal(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
+        if(Character.isWhitespace(ctx.charNow())) {
+            return;
+        }
+        ctx.pushFormat(FormatExprParsingFormat.INSTANCE);
     }
 }

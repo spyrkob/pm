@@ -21,7 +21,7 @@ package org.jboss.provisioning.util.formatparser;
  *
  * @author Alexey Loubyansky
  */
-public class ParsingFormatBase implements ParsingFormat {
+public abstract class ParsingFormatBase implements ParsingFormat {
 
     protected final String name;
     protected final String contentType;

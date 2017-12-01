@@ -38,7 +38,20 @@ public class ObjectParsingFormat extends MapParsingFormat {
         setEntryFormat(KeyValueParsingFormat.newInstance(StringParsingFormat.getInstance(), KeyValueParsingFormat.SEPARATOR, WildcardParsingFormat.getInstance(this)));
     }
 
+    protected ObjectParsingFormat(String name, String contentType) {
+        super(name, contentType);
+    }
+
     protected ObjectParsingFormat(String name, KeyValueParsingFormat entryFormat) {
         super(name, entryFormat);
+    }
+
+    protected ObjectParsingFormat(String name, String contentType, KeyValueParsingFormat entryFormat) {
+        super(name, contentType, entryFormat);
+    }
+
+    @Override
+    public String toString() {
+        return NAME;
     }
 }

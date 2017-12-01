@@ -17,8 +17,12 @@
 
 package org.jboss.provisioning.util.formatparser.formats;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingContext;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 
 /**
@@ -37,22 +41,25 @@ public class WildcardParsingFormat extends ParsingFormatBase {
         return new WildcardParsingFormat(mapFormat);
     }
 
-    protected final ListParsingFormat list;
-    protected final MapParsingFormat map;
-    protected final StringParsingFormat str;
+    protected List<ParsingFormat> formats;
 
     private WildcardParsingFormat() {
         super(NAME, true);
-        list = ListParsingFormat.newInstance(this);
-        map = MapParsingFormat.getInstance(KeyValueParsingFormat.newInstance(this, this));
-        str = StringParsingFormat.getInstance();
+        formats = new ArrayList<>(3);
+        formats.add(CollectionParsingFormat.list(this));
+        formats.add(MapParsingFormat.getInstance(KeyValueParsingFormat.newInstance(this, this)));
     }
 
     private WildcardParsingFormat(MapParsingFormat mapFormat) {
         super(NAME, true);
-        list = ListParsingFormat.newInstance(this);
-        map = mapFormat;
-        str = StringParsingFormat.getInstance();
+        formats = new ArrayList<>(3);
+        formats.add(CollectionParsingFormat.list(this));
+        formats.add(mapFormat);
+    }
+
+    @Override
+    public boolean isOpeningChar(char ch) {
+        return true;
     }
 
     @Override
@@ -66,15 +73,13 @@ public class WildcardParsingFormat extends ParsingFormatBase {
         if(Character.isWhitespace(ch)) {
             return;
         }
-        switch(ch) {
-            case  ListParsingFormat.OPENING_CHAR:
-                ctx.pushFormat(list);
-                break;
-            case  MapParsingFormat.OPENING_CHAR:
-                ctx.pushFormat(map);
-                break;
-            default:
-                ctx.pushFormat(str);
+        for(ParsingFormat format : formats) {
+            if(!format.isOpeningChar(ch)) {
+                continue;
+            }
+            ctx.pushFormat(format);
+            return;
         }
+        ctx.pushFormat(StringParsingFormat.getInstance());
     }
 }
