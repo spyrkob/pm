@@ -34,7 +34,8 @@ public class ObjectParsingFormat extends MapParsingFormat {
     }
 
     protected ObjectParsingFormat(String name) {
-        this(name, KeyValueParsingFormat.newInstance(StringParsingFormat.getInstance(), KeyValueParsingFormat.SEPARATOR, WildcardParsingFormat.getInstance()));
+        super(name);
+        setEntryFormat(KeyValueParsingFormat.newInstance(StringParsingFormat.getInstance(), KeyValueParsingFormat.SEPARATOR, WildcardParsingFormat.getInstance(this)));
     }
 
     protected ObjectParsingFormat(String name, KeyValueParsingFormat entryFormat) {

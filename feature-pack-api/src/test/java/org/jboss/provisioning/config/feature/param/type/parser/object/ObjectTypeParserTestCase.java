@@ -65,4 +65,11 @@ public class ObjectTypeParserTestCase extends TypeParserTestBase {
         map.put("e", "f");
         test("{a={ b = { c=d, e = f }}}", Collections.singletonMap("a", Collections.singletonMap("b", map)));
     }
+
+    @Test
+    public void testKeyAlwaysString() throws Exception {
+        testFormat("{[a] = [b , c ]}", Collections.singletonMap("[a]", Arrays.asList("b", "c")));
+
+        testFormat("{{a = c}", Collections.singletonMap("{a", "c"));
+    }
 }

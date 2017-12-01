@@ -33,7 +33,12 @@ public class KeyValueParsingFormat extends ParsingFormatBase {
     public static final char SEPARATOR = '=';
 
     public static KeyValueParsingFormat getInstance() {
-        return new KeyValueParsingFormat(WildcardParsingFormat.getInstance(), SEPARATOR, WildcardParsingFormat.getInstance());
+        final WildcardParsingFormat wildcard = WildcardParsingFormat.getInstance();
+        return new KeyValueParsingFormat(wildcard, SEPARATOR, wildcard);
+    }
+
+    public static KeyValueParsingFormat newInstance(ParsingFormat keyFormat, ParsingFormat valueFormat) {
+        return newInstance(keyFormat, SEPARATOR, valueFormat);
     }
 
     public static KeyValueParsingFormat newInstance(ParsingFormat keyFormat, char separator, ParsingFormat valueFormat) {

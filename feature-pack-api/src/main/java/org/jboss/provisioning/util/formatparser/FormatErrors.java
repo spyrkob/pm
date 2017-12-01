@@ -57,7 +57,7 @@ public class FormatErrors {
         return "Format " + parent + " does not expect format " + child + " as a child.";
     }
 
-    public static String unexpectedCompositeFormatElement(ParsingFormat format, String elem) {
+    public static String unexpectedCompositeFormatElement(ParsingFormat format, Object elem) {
         if(elem == null) {
             return "Unexpected attribute for " + format;
         }

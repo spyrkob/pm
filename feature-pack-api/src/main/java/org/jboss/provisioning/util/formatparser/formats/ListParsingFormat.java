@@ -30,6 +30,9 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 public class ListParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "List";
+    public static final char OPENING_CHAR = '[';
+    public static final char CLOSING_CHAR = ']';
+    public static final char ITEM_SEPARATOR_CHAR = ',';
 
     public static ListParsingFormat getInstance() {
         return new ListParsingFormat(WildcardParsingFormat.getInstance());
@@ -49,18 +52,18 @@ public class ListParsingFormat extends ParsingFormatBase {
 
     @Override
     public void pushed(ParsingContext ctx) throws FormatParsingException {
-        if(ctx.charNow() != '[') {
-            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, '[', ctx.charNow()));
+        if(ctx.charNow() != OPENING_CHAR) {
+            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, OPENING_CHAR, ctx.charNow()));
         }
     }
 
     @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
         switch(ctx.charNow()) {
-            case ',' :
+            case ITEM_SEPARATOR_CHAR :
                 ctx.popFormats();
                 break;
-            case ']':
+            case CLOSING_CHAR:
                 ctx.end();
                 break;
             default:

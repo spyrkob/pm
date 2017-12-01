@@ -29,15 +29,26 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
 public class MapParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "Map";
+    public static final char OPENING_CHAR = '{';
+    public static final char CLOSING_CHAR = '}';
+    public static final char ENTRY_SEPARATOR_CHAR = ',';
 
     public static MapParsingFormat getInstance() {
         return new MapParsingFormat();
+    }
+
+    public static MapParsingFormat getInstance(KeyValueParsingFormat entryFormat) {
+        return new MapParsingFormat(entryFormat);
     }
 
     protected KeyValueParsingFormat entryFormat;
 
     protected MapParsingFormat() {
         this(NAME, KeyValueParsingFormat.getInstance());
+    }
+
+    protected MapParsingFormat(KeyValueParsingFormat entryFormat) {
+        this(NAME, entryFormat);
     }
 
     protected MapParsingFormat(String name) {
@@ -59,12 +70,19 @@ public class MapParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public void pushed(ParsingContext ctx) throws FormatParsingException {
+        if(ctx.charNow() != OPENING_CHAR) {
+            throw new FormatParsingException(FormatErrors.unexpectedStartingCharacter(this, OPENING_CHAR, ctx.charNow()));
+        }
+    }
+
+    @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
         switch(ctx.charNow()) {
-            case ',' :
+            case ENTRY_SEPARATOR_CHAR :
                 ctx.popFormats();
                 break;
-            case '}':
+            case CLOSING_CHAR:
                 ctx.end();
                 break;
             default:

@@ -29,14 +29,30 @@ public class WildcardParsingFormat extends ParsingFormatBase {
 
     public static final String NAME = "?";
 
-    private static final WildcardParsingFormat INSTANCE = new WildcardParsingFormat();
-
     public static WildcardParsingFormat getInstance() {
-        return INSTANCE;
+        return new WildcardParsingFormat();
     }
+
+    public static WildcardParsingFormat getInstance(MapParsingFormat mapFormat) {
+        return new WildcardParsingFormat(mapFormat);
+    }
+
+    protected final ListParsingFormat list;
+    protected final MapParsingFormat map;
+    protected final StringParsingFormat str;
 
     private WildcardParsingFormat() {
         super(NAME, true);
+        list = ListParsingFormat.newInstance(this);
+        map = MapParsingFormat.getInstance(KeyValueParsingFormat.newInstance(this, this));
+        str = StringParsingFormat.getInstance();
+    }
+
+    private WildcardParsingFormat(MapParsingFormat mapFormat) {
+        super(NAME, true);
+        list = ListParsingFormat.newInstance(this);
+        map = mapFormat;
+        str = StringParsingFormat.getInstance();
     }
 
     @Override
@@ -51,14 +67,14 @@ public class WildcardParsingFormat extends ParsingFormatBase {
             return;
         }
         switch(ch) {
-            case  '[':
-                ctx.pushFormat(ListParsingFormat.getInstance());
+            case  ListParsingFormat.OPENING_CHAR:
+                ctx.pushFormat(list);
                 break;
-            case  '{':
-                ctx.pushFormat(MapParsingFormat.getInstance());
+            case  MapParsingFormat.OPENING_CHAR:
+                ctx.pushFormat(map);
                 break;
             default:
-                ctx.pushFormat(StringParsingFormat.getInstance());
+                ctx.pushFormat(str);
         }
     }
 }

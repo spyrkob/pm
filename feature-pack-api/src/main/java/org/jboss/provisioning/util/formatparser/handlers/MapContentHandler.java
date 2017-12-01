@@ -50,11 +50,10 @@ public class MapContentHandler extends FormatContentHandler {
         }
         final KeyValueContentHandler entry = (KeyValueContentHandler) childHandler;
         final MapParsingFormat objectFormat = (MapParsingFormat)format;
-        final String name = (String) entry.key;
-        if(objectFormat.isAcceptsKey(name)) {
-            map = PmCollections.putLinked(map, name, entry.value);
+        if(objectFormat.isAcceptsKey(entry.key)) {
+            map = PmCollections.putLinked(map, entry.key, entry.value);
         } else {
-            throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(format, name));
+            throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(format, entry.key));
         }
     }
 
