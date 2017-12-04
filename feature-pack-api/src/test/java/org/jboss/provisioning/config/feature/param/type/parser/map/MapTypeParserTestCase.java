@@ -25,6 +25,7 @@ import java.util.Map;
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -34,9 +35,19 @@ import org.junit.Test;
  */
 public class MapTypeParserTestCase extends TypeParserTestBase {
 
+    private final ParsingFormat testFormat = MapParsingFormat.getInstance();
     @Override
     protected ParsingFormat getTestFormat() {
-        return MapParsingFormat.getInstance();
+        return testFormat;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertFalse(testFormat.isCollection());
+        Assert.assertTrue(testFormat.isMap());
+        Assert.assertFalse(testFormat.isOpeningChar('['));
+        Assert.assertTrue(testFormat.isOpeningChar('{'));
+        Assert.assertFalse(testFormat.isOpeningChar('s'));
     }
 
     @Test

@@ -60,11 +60,18 @@ public interface FeatureParameterType {
     String toString(Object o) throws ParameterTypeConversionException;
 
     /**
+     * Whether the value of the type is a collection value.
+     *
+     * @return true if the type represents a collection, otherwise false
+     */
+    boolean isCollection();
+
+    /**
      * Whether the values of this type can be merged when merging feature configurations.
      *
      * @return  true if the values of the type can be merged, otherwise - false
      */
-    boolean isSupportsMerging();
+    boolean isMergeable();
 
     /**
      * Merges one value of the type into another.

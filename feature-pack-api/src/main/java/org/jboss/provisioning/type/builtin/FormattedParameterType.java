@@ -67,7 +67,12 @@ public class FormattedParameterType implements FeatureParameterType {
     }
 
     @Override
-    public boolean isSupportsMerging() {
+    public boolean isCollection() {
+        return format.isCollection();
+    }
+
+    @Override
+    public boolean isMergeable() {
         return false;
     }
 

@@ -109,7 +109,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return new FeatureGroupSpec(fgSpec);
         }
 
-        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningDescriptionException {
+        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
             ResolvedFeatureSpec resolvedSpec = null;
             if(featureSpecs == null) {
                 featureSpecs = new HashMap<>();

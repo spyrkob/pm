@@ -95,7 +95,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     void validate() throws ProvisioningDescriptionException {
-        for(FeatureParameterSpec param : spec.xmlSpec.getParams()) {
+        for(FeatureParameterSpec param : spec.xmlSpec.getParams().values()) {
             if(!param.isNillable()) {
                 if(!params.containsKey(param.getName())) {
                     if(param.hasDefaultValue()) {
@@ -196,7 +196,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
 
     @Override
     public String getConfigParam(String name) throws ProvisioningException {
-        return spec.getTypeForParameter(name).toString(params.get(name));
+        return spec.paramToString(name, params.get(name));
     }
 
     @Override
@@ -205,24 +205,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     public Object getParamOrDefault(String name) throws ProvisioningException {
-        Object value = params.get(name);
-        if(value == null) {
-            final FeatureParameterSpec paramSpec = spec.xmlSpec.getParam(name);
-            if(paramSpec.hasDefaultValue()) {
-                return paramSpec.getDefaultValue();
-            }
-            final FeatureParameterType paramType = spec.getTypeForParameter(name);
-            value = paramType.getDefaultValue();
-        }
-        return value;
-    }
-
-    public String getParamAsString(String name) throws ProvisioningException {
         final Object value = params.get(name);
-        if(value == null) {
-            return null;
-        }
-        return spec.getTypeForParameter(name).toString(value);
+        return value == null ? spec.getParamDefault(name) : value;
     }
 
     public String getParamOrDefaultAsString(String name) throws ProvisioningException {
@@ -230,7 +214,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         if(value == null) {
             return null;
         }
-        return spec.getTypeForParameter(name).toString(value);
+        return spec.paramToString(name, value);
     }
 
     void setParam(String name, Object value, boolean overwrite) throws ProvisioningException {
@@ -244,7 +228,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
             }
         }
         if(!spec.xmlSpec.hasParam(name)) {
-            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(this, name));
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(spec.id, name));
         }
         final Object prevValue = params.get(name);
         if(prevValue == null) {
@@ -252,7 +236,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
             return;
         }
         final FeatureParameterType valueType = spec.getTypeForParameter(name);
-        if(valueType.isSupportsMerging()) {
+        if(valueType.isMergeable()) {
             params = PmCollections.put(params, name, overwrite ? valueType.merge(prevValue, value) : valueType.merge(value, prevValue));
         } else if(overwrite) {
             params = PmCollections.put(params, name, value);

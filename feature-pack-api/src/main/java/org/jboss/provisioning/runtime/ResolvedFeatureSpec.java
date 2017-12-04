@@ -38,6 +38,7 @@ import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.type.FeatureParameterType;
+import org.jboss.provisioning.type.ParameterTypeConversionException;
 import org.jboss.provisioning.type.ParameterTypeNotFoundException;
 import org.jboss.provisioning.type.ParameterTypeProvider;
 import org.jboss.provisioning.util.PmCollections;
@@ -52,15 +53,31 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
     final ResolvedSpecId id;
     final FeatureSpec xmlSpec;
-    private final ParameterTypeProvider typeProvider;
+    private Map<String, ResolvedFeatureParam> resolvedParamSpecs = Collections.emptyMap();
     private Map<String, ResolvedFeatureSpec> resolvedRefTargets;
     private Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps;
 
 
-    public ResolvedFeatureSpec(ResolvedSpecId specId, ParameterTypeProvider typeProvider, FeatureSpec spec) {
+    public ResolvedFeatureSpec(ResolvedSpecId specId, ParameterTypeProvider typeProvider, FeatureSpec spec) throws ProvisioningException {
         this.id = specId;
-        this.typeProvider = typeProvider;
         this.xmlSpec = spec;
+
+        if(xmlSpec.hasParams()) {
+            for(Map.Entry<String, FeatureParameterSpec> entry : xmlSpec.getParams().entrySet()) {
+                final FeatureParameterSpec param = entry.getValue();
+                resolvedParamSpecs = PmCollections.put(resolvedParamSpecs, param.getName(), resolveParamSpec(param, typeProvider));
+            }
+        }
+    }
+
+    private ResolvedFeatureParam resolveParamSpec(FeatureParameterSpec paramSpec, ParameterTypeProvider typeProvider) throws ProvisioningException {
+        final FeatureParameterType type;
+        try {
+            type = typeProvider.getType(id.gav.toGa(), paramSpec.getType());
+        } catch(ParameterTypeNotFoundException e) {
+            throw new ProvisioningException(Errors.failedToResolveParameter(id, paramSpec.getName()), e);
+        }
+        return new ResolvedFeatureParam(paramSpec, type);
     }
 
     public ResolvedSpecId getId() {
@@ -80,13 +97,20 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     }
 
     public boolean hasParams() {
-        return xmlSpec.hasParams();
+        return !resolvedParamSpecs.isEmpty();
     }
 
     public Set<String> getParamNames() {
-        return xmlSpec.getParamNames();
+        return resolvedParamSpecs.keySet();
     }
 
+    ResolvedFeatureParam getResolvedParam(String name) throws ProvisioningDescriptionException {
+        final ResolvedFeatureParam p = resolvedParamSpecs.get(name);
+        if(p == null) {
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(id, name));
+        }
+        return p;
+    }
     Map<String, Object> resolveNonIdParams(ResolvedFeatureId parentId, String parentRef, Map<String, String> params) throws ProvisioningException {
         Map<String, Object> resolvedParams = Collections.emptyMap();
         if (!params.isEmpty()) {
@@ -94,7 +118,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 if(xmlSpec.getParam(param.getKey()).isFeatureId()) {
                     continue;
                 }
-                resolvedParams = PmCollections.put(resolvedParams, param.getKey(), resolveParameter(param.getKey(), param.getValue()));
+                resolvedParams = PmCollections.put(resolvedParams, param.getKey(), paramFromString(param.getKey(), param.getValue()));
             }
         }
 
@@ -129,13 +153,24 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return resolvedParams;
     }
 
-    private Object resolveParameter(String name, String value) throws ProvisioningException {
+    private Object paramFromString(String name, String value) throws ProvisioningException {
         try {
-            final FeatureParameterSpec paramSpec = xmlSpec.getParam(name);
-            return typeProvider.getType(id.gav.toGa(), paramSpec.getType()).fromString(value);
-        } catch (ProvisioningException e) {
+            return getResolvedParam(name).type.fromString(value);
+        } catch (ParameterTypeConversionException e) {
             throw new ProvisioningException(Errors.failedToResolveParameter(id, name, value), e);
         }
+    }
+
+    String paramToString(String name, Object value) throws ProvisioningException {
+        return getResolvedParam(name).type.toString(value);
+    }
+
+    Object getParamDefault(String name) throws ProvisioningException {
+        return getResolvedParam(name).defaultValue;
+    }
+
+    FeatureParameterType getTypeForParameter(String paramName) throws ParameterTypeNotFoundException, ProvisioningDescriptionException {
+        return getResolvedParam(paramName).type;
     }
 
     ResolvedFeatureId resolveIdFromForeignKey(ResolvedFeatureId parentId, String parentRef, Map<String, String> params) throws ProvisioningException {
@@ -151,11 +186,11 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             parentRef = parentId.specId.name;
         }
 
-        try {
-            final List<FeatureParameterSpec> idParamSpecs = xmlSpec.getIdParams();
-            final Map<String, Object> resolvedParams = new HashMap<>(idParamSpecs.size());
-            final FeatureReferenceSpec refSpec = xmlSpec.getFeatureRef(parentRef);
+        final List<FeatureParameterSpec> idParamSpecs = xmlSpec.getIdParams();
+        final Map<String, Object> resolvedParams = new HashMap<>(idParamSpecs.size());
+        final FeatureReferenceSpec refSpec = xmlSpec.getFeatureRef(parentRef);
 
+        try {
             if (refSpec.hasMappedParams()) {
                 for (Map.Entry<String, String> mapping : refSpec.getMappedParams().entrySet()) {
                     final FeatureParameterSpec param = xmlSpec.getParam(mapping.getKey());
@@ -171,7 +206,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 for(FeatureParameterSpec idParamSpec : idParamSpecs) {
                     String configValue = params.get(idParamSpec.getName());
                     if(configValue != null) {
-                        final Object childValue = getTypeForName(idParamSpec.getType()).fromString(configValue);
+                        final Object childValue = paramFromString(idParamSpec.getName(), configValue);
                         final Object idValue = resolvedParams.put(idParamSpec.getName(), childValue);
                         if(idValue != null && !idValue.equals(childValue)) {
                             throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(id, idParamSpec.getName(), childValue, idValue));
@@ -183,7 +218,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                         continue;
                     }
 
-                    final Object childValue = idParamSpec.hasDefaultValue() ? getTypeForName(idParamSpec.getType()).fromString(idParamSpec.getDefaultValue()) : getTypeForName(idParamSpec.getType()).getDefaultValue();
+                    final Object childValue = getParamDefault(idParamSpec.getName());
                     if(childValue == null) {
                         throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, idParamSpec.getName()));
                     }
@@ -194,7 +229,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                     final Object parentValue = parentId.params.get(idParamSpec.getName());
                     String configValue = params.get(idParamSpec.getName());
                     if(configValue != null) {
-                        final Object childValue = getTypeForName(idParamSpec.getType()).fromString(configValue);
+                        final Object childValue = paramFromString(idParamSpec.getName(), configValue);
                         if(parentValue != null && !parentValue.equals(childValue)) {
                             throw new ProvisioningDescriptionException(Errors.idParamForeignKeyInitConflict(id, idParamSpec.getName(), childValue, parentValue));
                         }
@@ -207,7 +242,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                         continue;
                     }
 
-                    final Object childValue = idParamSpec.hasDefaultValue() ? getTypeForName(idParamSpec.getType()).fromString(idParamSpec.getDefaultValue()) : getTypeForName(idParamSpec.getType()).getDefaultValue();
+                    final Object childValue = getParamDefault(idParamSpec.getName());
                     if(childValue == null) {
                         throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, idParamSpec.getName()));
                     }
@@ -241,28 +276,15 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     }
 
     private Object resolveIdParamValue(Map<String, String> params, final FeatureParameterSpec param) throws ProvisioningException {
-        String strValue = params.get(param.getName());
+        final String strValue = params.get(param.getName());
         if(strValue == null) {
-            strValue = param.getDefaultValue();
-            if(strValue == null) {
-                final Object value = getTypeForName(param.getType()).getDefaultValue();
-                if(value == null) {
-                    throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
-                }
+            final Object value = getParamDefault(param.getName());
+            if (value == null) {
+                throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
             }
+            return value;
         }
-        if(strValue == null) {
-            throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
-        }
-        return getTypeForName(param.getType()).fromString(strValue);
-    }
-
-    FeatureParameterType getTypeForParameter(String paramName) throws ParameterTypeNotFoundException, ProvisioningDescriptionException {
-        return getTypeForName(xmlSpec.getParam(paramName).getType());
-    }
-
-    FeatureParameterType getTypeForName(String typeName) throws ParameterTypeNotFoundException {
-        return typeProvider.getType(id.gav.toGa(), typeName);
+        return paramFromString(param.getName(), strValue);
     }
 
     Map<ResolvedFeatureId, FeatureDependencySpec> resolveSpecDeps(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
@@ -309,7 +331,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return result;
     }
 
-    void resolveRefMappings(ProvisioningRuntimeBuilder rt) throws ProvisioningDescriptionException {
+    void resolveRefMappings(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(!xmlSpec.hasFeatureRefs()) {
             resolvedRefTargets = Collections.emptyMap();
             return;
@@ -330,7 +352,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     }
 
     private ResolvedFeatureSpec resolveRefMapping(ProvisioningRuntimeBuilder rt, final FeaturePackRuntime.Builder ownFp,
-            FeatureReferenceSpec refSpec) throws ProvisioningDescriptionException {
+            FeatureReferenceSpec refSpec) throws ProvisioningException {
         try {
             final ResolvedFeatureSpec resolvedRefSpec;
             if (refSpec.getDependency() == null) {
@@ -493,6 +515,8 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((resolvedDeps == null) ? 0 : resolvedDeps.hashCode());
+        result = prime * result + ((resolvedParamSpecs == null) ? 0 : resolvedParamSpecs.hashCode());
         result = prime * result + ((resolvedRefTargets == null) ? 0 : resolvedRefTargets.hashCode());
         result = prime * result + ((xmlSpec == null) ? 0 : xmlSpec.hashCode());
         return result;
@@ -511,6 +535,16 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             if (other.id != null)
                 return false;
         } else if (!id.equals(other.id))
+            return false;
+        if (resolvedDeps == null) {
+            if (other.resolvedDeps != null)
+                return false;
+        } else if (!resolvedDeps.equals(other.resolvedDeps))
+            return false;
+        if (resolvedParamSpecs == null) {
+            if (other.resolvedParamSpecs != null)
+                return false;
+        } else if (!resolvedParamSpecs.equals(other.resolvedParamSpecs))
             return false;
         if (resolvedRefTargets == null) {
             if (other.resolvedRefTargets != null)

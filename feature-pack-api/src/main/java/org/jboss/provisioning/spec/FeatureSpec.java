@@ -201,12 +201,8 @@ public class FeatureSpec extends PackageDepsSpec {
         return params.size();
     }
 
-    public Set<String> getParamNames() {
-        return params.keySet();
-    }
-
-    public Collection<FeatureParameterSpec> getParams() {
-        return params.values();
+    public Map<String, FeatureParameterSpec> getParams() {
+        return params;
     }
 
     public boolean hasParam(String name) {

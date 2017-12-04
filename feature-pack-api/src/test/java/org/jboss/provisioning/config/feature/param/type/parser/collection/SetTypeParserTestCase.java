@@ -27,6 +27,7 @@ import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBas
 import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -41,6 +42,15 @@ public class SetTypeParserTestCase extends TypeParserTestBase {
     @Override
     protected ParsingFormat getTestFormat() {
         return testFormat;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertTrue(testFormat.isCollection());
+        Assert.assertFalse(testFormat.isMap());
+        Assert.assertTrue(testFormat.isOpeningChar('['));
+        Assert.assertFalse(testFormat.isOpeningChar('{'));
+        Assert.assertFalse(testFormat.isOpeningChar('s'));
     }
 
     @Test

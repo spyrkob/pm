@@ -27,6 +27,7 @@ import java.util.Map;
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -36,9 +37,19 @@ import org.junit.Test;
  */
 public class WildcardTypeParserTestCase extends TypeParserTestBase {
 
+    private final ParsingFormat testFormat = WildcardParsingFormat.getInstance();
     @Override
     protected ParsingFormat getTestFormat() {
-        return WildcardParsingFormat.getInstance();
+        return testFormat;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertFalse(testFormat.isCollection());
+        Assert.assertFalse(testFormat.isMap());
+        Assert.assertTrue(testFormat.isOpeningChar('['));
+        Assert.assertTrue(testFormat.isOpeningChar('{'));
+        Assert.assertTrue(testFormat.isOpeningChar('s'));
     }
 
     @Test

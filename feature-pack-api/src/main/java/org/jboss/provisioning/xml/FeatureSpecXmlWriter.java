@@ -117,7 +117,7 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
 
         if(featureSpec.hasParams()) {
             final ElementNode paramsE = addElement(specE, Element.PARAMETERS);
-            for(FeatureParameterSpec paramSpec : featureSpec.getParams()) {
+            for(FeatureParameterSpec paramSpec : featureSpec.getParams().values()) {
                 final ElementNode paramE = addElement(paramsE, Element.PARAMETER);
                 addAttribute(paramE, Attribute.NAME, paramSpec.getName());
                 if(paramSpec.isFeatureId()) {

@@ -26,6 +26,7 @@ import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -85,7 +86,7 @@ public class UnknownParameterInCapabilityTestCase extends PmInstallFeaturePackTe
         Assert.assertEquals("Failed to satisfy capability requirement cap.$a for org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
-        Assert.assertEquals(Errors.unknownFeatureParameter("specB", "a"), e.getMessage());
+        Assert.assertEquals(Errors.unknownFeatureParameter(new ResolvedSpecId(FP_GAV, "specB"), "a"), e.getMessage());
     }
 
     @Override

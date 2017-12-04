@@ -83,6 +83,11 @@ public class MapParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public boolean isMap() {
+        return true;
+    }
+
+    @Override
     public boolean isOpeningChar(char ch) {
         return ch == OPENING_CHAR;
     }

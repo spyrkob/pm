@@ -20,6 +20,7 @@ package org.jboss.provisioning.config.feature.param.type.parser.string;
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -29,9 +30,20 @@ import org.junit.Test;
  */
 public class StringTypeParserTestCase extends TypeParserTestBase {
 
+    private final ParsingFormat testFormat = StringParsingFormat.getInstance();
+
     @Override
     protected ParsingFormat getTestFormat() {
-        return StringParsingFormat.getInstance();
+        return testFormat;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertFalse(testFormat.isCollection());
+        Assert.assertFalse(testFormat.isMap());
+        Assert.assertTrue(testFormat.isOpeningChar('['));
+        Assert.assertTrue(testFormat.isOpeningChar('{'));
+        Assert.assertTrue(testFormat.isOpeningChar('s'));
     }
 
     @Test
