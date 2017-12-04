@@ -189,6 +189,12 @@ public interface Errors {
         return buf.toString();
     }
 
+    static String failedToResolveParameter(ResolvedSpecId specId, String name) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Failed to resolve ").append(specId).append(" parameter ").append(name);
+        return buf.toString();
+    }
+
     static String failedToResolveParameter(ResolvedSpecId specId, String name, String value) {
         final StringBuilder buf = new StringBuilder();
         buf.append("Failed to resolve ").append(specId).append(" parameter ").append(name).append(" value ").append(value);
@@ -258,11 +264,8 @@ public interface Errors {
         return id + " cannot be included into group " + groupName + " from " + fpGav + " as it's not in the scope of the group";
     }
 
-    static String unknownFeatureParameter(ResolvedFeature feature, String paramName) {
-        final StringBuilder buf = new StringBuilder();
-        buf.append("Unknown parameter '").append(paramName).append("' for ");
-        appendFeature(buf, feature);
-        return buf.toString();
+    static String unknownFeatureParameter(ResolvedSpecId specId, String paramName) {
+        return new StringBuilder().append("Feature spec ").append(specId).append(" does not contain parameter '").append(paramName).toString();
     }
 
     static String unknownFeatureParameter(String featureSpec, String paramName) {

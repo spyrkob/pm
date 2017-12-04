@@ -55,6 +55,11 @@ public class StringParameterType implements FeatureParameterType {
     }
 
     @Override
+    public boolean isCollection() {
+        return false;
+    }
+
+    @Override
     public boolean isMergeable() {
         return false;
     }
