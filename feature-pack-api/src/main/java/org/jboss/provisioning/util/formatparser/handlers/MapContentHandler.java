@@ -17,21 +17,26 @@
 
 package org.jboss.provisioning.util.formatparser.handlers;
 
+import java.util.Collections;
+import java.util.Map;
+
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
+import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.KeyValueParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NameValueContentHandler extends FormatContentHandler {
+public class MapContentHandler extends FormatContentHandler {
 
-    String name;
-    Object value;
+    protected Map<Object, Object> map = Collections.emptyMap();
 
-    public NameValueContentHandler(ParsingFormat format, int strIndex) {
+    public MapContentHandler(ParsingFormat format, int strIndex) {
         super(format, strIndex);
     }
 
@@ -40,15 +45,15 @@ public class NameValueContentHandler extends FormatContentHandler {
      */
     @Override
     public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
-        if(name == null) {
-            if(!childHandler.getFormat().getName().equals(StringParsingFormat.getInstance().getName())) {
-                throw new FormatParsingException("The name of the entry hasn't been initialized and it can't be " + childHandler.getFormat());
-            }
-            name = childHandler.getContent().toString();
-        } else if(value != null) {
-            throw new FormatParsingException("The value has already been initialized for the name '" + name + "'");
+        if(!childHandler.getFormat().getName().equals(KeyValueParsingFormat.NAME)) {
+            throw new FormatParsingException(FormatErrors.unexpectedChildFormat(format, childHandler.getFormat()));
+        }
+        final KeyValueContentHandler entry = (KeyValueContentHandler) childHandler;
+        final MapParsingFormat objectFormat = (MapParsingFormat)format;
+        if(objectFormat.isAcceptsKey(entry.key)) {
+            map = PmCollections.putLinked(map, entry.key, entry.value);
         } else {
-            value = childHandler.getContent();
+            throw new FormatParsingException(FormatErrors.unexpectedCompositeFormatElement(format, entry.key));
         }
     }
 
@@ -57,6 +62,6 @@ public class NameValueContentHandler extends FormatContentHandler {
      */
     @Override
     public Object getContent() throws FormatParsingException {
-        throw new UnsupportedOperationException();
+        return map;
     }
 }

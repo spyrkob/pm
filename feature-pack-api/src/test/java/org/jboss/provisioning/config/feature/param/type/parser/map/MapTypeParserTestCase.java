@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser.object;
+package org.jboss.provisioning.config.feature.param.type.parser.map;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ObjectParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
 import org.junit.Test;
 
 
@@ -32,16 +32,16 @@ import org.junit.Test;
  *
  * @author Alexey Loubyansky
  */
-public class ObjectTypeParserTestCase extends TypeParserTestBase {
+public class MapTypeParserTestCase extends TypeParserTestBase {
 
     @Override
     protected ParsingFormat getTestFormat() {
-        return ObjectParsingFormat.getInstance();
+        return MapParsingFormat.getInstance();
     }
 
     @Test
     public void testSimpleKeyValue() throws Exception {
-        test("{a=b}", Collections.singletonMap("a", "b"));
+        testFormat("{a=b}", Collections.singletonMap("a", "b"));
     }
 
     @Test
@@ -50,12 +50,12 @@ public class ObjectTypeParserTestCase extends TypeParserTestBase {
         map.put("a", "b");
         map.put("c", "d");
         map.put("e", "f");
-        test("{a=b, c = d , e =f }", map);
+        testFormat("{a=b, c = d , e =f }", map);
     }
 
     @Test
     public void testListAsValue() throws Exception {
-        test("{a=[b,c , d ]}", Collections.singletonMap("a", Arrays.asList("b", "c", "d")));
+        testFormat("{a=[b,c , d ]}", Collections.singletonMap("a", Arrays.asList("b", "c", "d")));
     }
 
     @Test
@@ -63,13 +63,6 @@ public class ObjectTypeParserTestCase extends TypeParserTestBase {
         final Map<String, String> map = new HashMap<>(2);
         map.put("c", "d");
         map.put("e", "f");
-        test("{a={ b = { c=d, e = f }}}", Collections.singletonMap("a", Collections.singletonMap("b", map)));
-    }
-
-    @Test
-    public void testKeyAlwaysString() throws Exception {
-        testFormat("{[a] = [b , c ]}", Collections.singletonMap("[a]", Arrays.asList("b", "c")));
-
-        testFormat("{{a = c}", Collections.singletonMap("{a", "c"));
+        testFormat("{a={ b = { c=d, e = f }}}", Collections.singletonMap("a", Collections.singletonMap("b", map)));
     }
 }

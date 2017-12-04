@@ -15,42 +15,34 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser.formats;
+package org.jboss.provisioning.util.formatparser.formatexpr;
 
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
-import org.jboss.provisioning.util.formatparser.ParsingContext;
-import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class StringParsingFormat extends ParsingFormatBase {
+public class FormatExprTypeParamContentHandler extends FormatContentHandler {
 
-    public static final String NAME = "String";
+    private ParsingFormat type;
 
-    private static final StringParsingFormat INSTANCE = new StringParsingFormat();
-
-    public static StringParsingFormat getInstance() {
-        return INSTANCE;
-    }
-
-    protected StringParsingFormat() {
-        super(NAME);
+    public FormatExprTypeParamContentHandler(ParsingFormat format, int strIndex) {
+        super(format, strIndex);
     }
 
     @Override
-    public boolean isOpeningChar(char ch) {
-        return true;
+    public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
+        if(type != null) {
+            throw new FormatParsingException("Type parameter of " + format + " has already been initialized to " + type);
+        }
+        type = (ParsingFormat) childHandler.getContent();
     }
 
     @Override
-    public void pushed(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
-    }
-
-    @Override
-    public void deal(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
+    public Object getContent() throws FormatParsingException {
+        return type;
     }
 }

@@ -15,42 +15,35 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser.formats;
+package org.jboss.provisioning.util.formatparser.handlers;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.formatparser.FormatContentHandler;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
-import org.jboss.provisioning.util.formatparser.ParsingContext;
-import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
+import org.jboss.provisioning.util.formatparser.ParsingFormat;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class StringParsingFormat extends ParsingFormatBase {
+public class SetContentHandler extends FormatContentHandler {
 
-    public static final String NAME = "String";
+    private Set<Object> set = Collections.emptySet();
 
-    private static final StringParsingFormat INSTANCE = new StringParsingFormat();
-
-    public static StringParsingFormat getInstance() {
-        return INSTANCE;
-    }
-
-    protected StringParsingFormat() {
-        super(NAME);
+    public SetContentHandler(ParsingFormat format, int strIndex) {
+        super(format, strIndex);
     }
 
     @Override
-    public boolean isOpeningChar(char ch) {
-        return true;
+    public void addChild(FormatContentHandler childHandler) throws FormatParsingException {
+        set = PmCollections.add(set, childHandler.getContent());
     }
 
     @Override
-    public void pushed(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
-    }
-
-    @Override
-    public void deal(ParsingContext ctx) throws FormatParsingException {
-        ctx.content();
+    public Object getContent() throws FormatParsingException {
+        return set;
     }
 }

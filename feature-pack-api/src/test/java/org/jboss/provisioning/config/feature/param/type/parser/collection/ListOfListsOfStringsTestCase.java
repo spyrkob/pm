@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser.list;
+package org.jboss.provisioning.config.feature.param.type.parser.collection;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,7 +23,7 @@ import java.util.Collections;
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.junit.Test;
 
@@ -35,8 +35,8 @@ import org.junit.Test;
  */
 public class ListOfListsOfStringsTestCase extends TypeParserTestBase {
 
-    private final ListParsingFormat listOfStrings = ListParsingFormat.newInstance(StringParsingFormat.getInstance());
-    private final ListParsingFormat listOfLists = ListParsingFormat.newInstance(listOfStrings);
+    private final CollectionParsingFormat listOfStrings = CollectionParsingFormat.list(StringParsingFormat.getInstance());
+    private final CollectionParsingFormat listOfLists = CollectionParsingFormat.list(listOfStrings);
 
     @Override
     protected ParsingFormat getTestFormat() {

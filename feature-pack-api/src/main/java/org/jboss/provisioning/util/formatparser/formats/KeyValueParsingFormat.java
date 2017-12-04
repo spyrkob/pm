@@ -26,35 +26,38 @@ import org.jboss.provisioning.util.formatparser.ParsingFormatBase;
  *
  * @author Alexey Loubyansky
  */
-public class NameValueParsingFormat extends ParsingFormatBase {
+public class KeyValueParsingFormat extends ParsingFormatBase {
 
-    public static final String NAME = "NameValue";
+    public static final String NAME = "KeyValue";
 
     public static final char SEPARATOR = '=';
 
-    public static NameValueParsingFormat getInstance() {
-        return new NameValueParsingFormat(SEPARATOR, WildcardParsingFormat.getInstance());
+    public static KeyValueParsingFormat getInstance() {
+        final WildcardParsingFormat wildcard = WildcardParsingFormat.getInstance();
+        return new KeyValueParsingFormat(wildcard, SEPARATOR, wildcard);
     }
 
-    public static NameValueParsingFormat newInstance(char separator) {
-        return new NameValueParsingFormat(separator, WildcardParsingFormat.getInstance());
+    public static KeyValueParsingFormat newInstance(ParsingFormat keyFormat, ParsingFormat valueFormat) {
+        return newInstance(keyFormat, SEPARATOR, valueFormat);
     }
 
-    public static NameValueParsingFormat newInstance(ParsingFormat valueFormat) {
-        return new NameValueParsingFormat(SEPARATOR, valueFormat);
+    public static KeyValueParsingFormat newInstance(ParsingFormat keyFormat, char separator, ParsingFormat valueFormat) {
+        return new KeyValueParsingFormat(keyFormat, separator, valueFormat);
     }
 
-    public static NameValueParsingFormat newInstance(char separator, ParsingFormat valueFormat) {
-        return new NameValueParsingFormat(separator, valueFormat);
-    }
-
+    private final ParsingFormat keyFormat;
     private final char separator;
     private final ParsingFormat valueFormat;
 
-    protected NameValueParsingFormat(char separator, ParsingFormat valueFormat) {
+    protected KeyValueParsingFormat(ParsingFormat keyFormat, char separator, ParsingFormat valueFormat) {
         super(NAME);
+        this.keyFormat = keyFormat;
         this.separator = separator;
         this.valueFormat = valueFormat;
+    }
+
+    public ParsingFormat getKeyFormat() {
+        return keyFormat;
     }
 
     public char getSeparator() {
@@ -66,6 +69,11 @@ public class NameValueParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public boolean isOpeningChar(char ch) {
+        return keyFormat.isOpeningChar(ch);
+    }
+
+    @Override
     public void react(ParsingContext ctx) throws FormatParsingException {
         if(ctx.charNow() == separator) {
             ctx.popFormats();
@@ -74,7 +82,7 @@ public class NameValueParsingFormat extends ParsingFormatBase {
 
     @Override
     public void pushed(ParsingContext ctx) throws FormatParsingException {
-        ctx.pushFormat(StringParsingFormat.getInstance());
+        ctx.pushFormat(keyFormat);
     }
 
     @Override
@@ -102,7 +110,7 @@ public class NameValueParsingFormat extends ParsingFormatBase {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        NameValueParsingFormat other = (NameValueParsingFormat) obj;
+        KeyValueParsingFormat other = (KeyValueParsingFormat) obj;
         if (separator != other.separator)
             return false;
         if (valueFormat == null) {

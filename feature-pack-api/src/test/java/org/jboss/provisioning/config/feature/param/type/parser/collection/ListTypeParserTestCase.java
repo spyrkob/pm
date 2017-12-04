@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.type.parser.list;
+package org.jboss.provisioning.config.feature.param.type.parser.collection;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +25,7 @@ import java.util.Map;
 import org.jboss.provisioning.config.feature.param.type.parser.TypeParserTestBase;
 import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
-import org.jboss.provisioning.util.formatparser.formats.ListParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
 import org.junit.Test;
 
 
@@ -35,7 +35,7 @@ import org.junit.Test;
  */
 public class ListTypeParserTestCase extends TypeParserTestBase {
 
-    private final ListParsingFormat testFormat = ListParsingFormat.getInstance();
+    private final ParsingFormat testFormat = CollectionParsingFormat.list();
 
     @Override
     protected ParsingFormat getTestFormat() {
