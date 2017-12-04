@@ -26,6 +26,7 @@ import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.CompositeParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -42,6 +43,15 @@ public class SimpleCompositeTypeParserTestCase extends TypeParserTestBase {
     @Override
     protected ParsingFormat getTestFormat() {
         return testFormat;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertFalse(testFormat.isCollection());
+        Assert.assertTrue(testFormat.isMap());
+        Assert.assertFalse(testFormat.isOpeningChar('['));
+        Assert.assertTrue(testFormat.isOpeningChar('{'));
+        Assert.assertFalse(testFormat.isOpeningChar('s'));
     }
 
     @Test

@@ -55,7 +55,7 @@ public class StringParameterType implements FeatureParameterType {
     }
 
     @Override
-    public boolean isSupportsMerging() {
+    public boolean isMergeable() {
         return false;
     }
 

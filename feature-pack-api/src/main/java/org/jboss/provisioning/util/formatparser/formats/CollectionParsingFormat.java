@@ -84,6 +84,11 @@ public class CollectionParsingFormat extends ParsingFormatBase {
     }
 
     @Override
+    public boolean isCollection() {
+        return true;
+    }
+
+    @Override
     public boolean isOpeningChar(char ch) {
         return openingChar == ch;
     }

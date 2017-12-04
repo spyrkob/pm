@@ -58,6 +58,16 @@ public abstract class ParsingFormatBase implements ParsingFormat {
         return contentType;
     }
 
+    @Override
+    public boolean isMap() {
+        return false;
+    }
+
+    @Override
+    public boolean isCollection() {
+        return false;
+    }
+
     /* (non-Javadoc)
      * @see org.jboss.provisioning.spec.type.ParsingFormat#isWrapper()
      */

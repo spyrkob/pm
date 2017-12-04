@@ -27,6 +27,10 @@ public interface ParsingFormat {
 
     String getContentType();
 
+    boolean isMap();
+
+    boolean isCollection();
+
     boolean isWrapper();
 
     boolean isOpeningChar(char ch);

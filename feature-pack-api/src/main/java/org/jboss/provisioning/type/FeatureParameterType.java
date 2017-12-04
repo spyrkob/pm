@@ -64,7 +64,7 @@ public interface FeatureParameterType {
      *
      * @return  true if the values of the type can be merged, otherwise - false
      */
-    boolean isSupportsMerging();
+    boolean isMergeable();
 
     /**
      * Merges one value of the type into another.

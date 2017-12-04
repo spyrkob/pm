@@ -25,6 +25,7 @@ import org.jboss.provisioning.util.formatparser.FormatErrors;
 import org.jboss.provisioning.util.formatparser.ParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -41,6 +42,15 @@ public class ListOfListsOfStringsTestCase extends TypeParserTestBase {
     @Override
     protected ParsingFormat getTestFormat() {
         return listOfLists;
+    }
+
+    @Test
+    public void testCharacteristics() {
+        Assert.assertTrue(listOfLists.isCollection());
+        Assert.assertFalse(listOfLists.isMap());
+        Assert.assertTrue(listOfLists.isOpeningChar('['));
+        Assert.assertFalse(listOfLists.isOpeningChar('{'));
+        Assert.assertFalse(listOfLists.isOpeningChar('s'));
     }
 
     @Test

@@ -252,7 +252,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
             return;
         }
         final FeatureParameterType valueType = spec.getTypeForParameter(name);
-        if(valueType.isSupportsMerging()) {
+        if(valueType.isMergeable()) {
             params = PmCollections.put(params, name, overwrite ? valueType.merge(prevValue, value) : valueType.merge(value, prevValue));
         } else if(overwrite) {
             params = PmCollections.put(params, name, value);
