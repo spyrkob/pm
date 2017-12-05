@@ -594,20 +594,25 @@ public class ProvisioningRuntimeBuilder {
 
         if(spec.xmlSpec.hasFeatureRefs()) {
             final ResolvedFeature myParent = parentFeature;
+            parentFeature = resolvedFeature;
             for(FeatureReferenceSpec refSpec : spec.xmlSpec.getFeatureRefs()) {
                 if(!refSpec.isInclude()) {
                     continue;
                 }
-                parentFeature = resolvedFeature;
                 final FeaturePackRuntime.Builder refFp = refSpec.getDependency() == null ? fp : getFpDependency(fp, refSpec.getDependency());
                 final ResolvedFeatureSpec refResolvedSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
-                final ResolvedFeatureId refId = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
-                if(refId == null || modelBuilder.includes(refId) || modelBuilder.isFilteredOut(refId.specId, refId)) {
+                final List<ResolvedFeatureId> refIds = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
+                if(refIds.isEmpty()) {
                     continue;
                 }
-                resolveFeatureDepsAndRefs(modelBuilder, refFp, refResolvedSpec, refId, Collections.emptyMap(), Collections.emptyList());
-                parentFeature = myParent;
+                for(ResolvedFeatureId refId : refIds) {
+                    if(modelBuilder.includes(refId) || modelBuilder.isFilteredOut(refId.specId, refId)) {
+                        continue;
+                    }
+                    resolveFeatureDepsAndRefs(modelBuilder, refFp, refResolvedSpec, refId, Collections.emptyMap(), Collections.emptyList());
+                }
             }
+            parentFeature = myParent;
         }
         return resolvedFeature;
     }

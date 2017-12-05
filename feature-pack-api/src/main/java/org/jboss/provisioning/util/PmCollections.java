@@ -37,6 +37,13 @@ public class PmCollections {
         return m.size() > 1 ? Collections.unmodifiableMap(m) : m;
     }
 
+    public static <K,V> Map<K,V> clone(Map<K,V> m) {
+        if(m.size() > 1) {
+            return new HashMap<>(m);
+        }
+        return m;
+    }
+
     public static <K,V> Map<K,V> put(Map<K,V> m, K k, V v) {
         if(m.isEmpty()) {
             return Collections.singletonMap(k, v);
@@ -78,12 +85,28 @@ public class PmCollections {
             return Collections.singletonList(t);
         }
         if(s.size() == 1) {
-            final T first = s.iterator().next();
+            final T first = s.get(0);
             s = new ArrayList<>(2);
             s.add(first);
         }
         s.add(t);
         return s;
+    }
+
+    public static <T> List<T> addAll(List<T> dest, List<T> src) {
+        if(dest.isEmpty()) {
+            return src;
+        }
+        if(src.isEmpty()) {
+            return dest;
+        }
+        if(dest.size() == 1) {
+            final T first = dest.get(0);
+            dest = new ArrayList<>(src.size() + 1);
+            dest.add(first);
+        }
+        dest.addAll(src);
+        return dest;
     }
 
     public static <T> Set<T> unmodifiable(Set<T> s) {
