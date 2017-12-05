@@ -21,13 +21,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
-
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -111,6 +108,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         }
         return p;
     }
+
     Map<String, Object> resolveNonIdParams(ResolvedFeatureId parentId, String parentRef, Map<String, String> params) throws ProvisioningException {
         Map<String, Object> resolvedParams = Collections.emptyMap();
         if (!params.isEmpty()) {
@@ -404,109 +402,169 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         if(resolvedRefTargets.isEmpty()) {
             return Collections.emptyList();
         }
-        if(resolvedRefTargets.size() == 1) {
-            final Entry<String, ResolvedFeatureSpec> refEntry = resolvedRefTargets.entrySet().iterator().next();
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue(), false);
-            return refId == null ? Collections.emptyList() : Collections.singletonList(refId);
-        }
-        final List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
+        List<ResolvedFeatureId> refIds = new ArrayList<>(resolvedRefTargets.size());
         for(Map.Entry<String, ResolvedFeatureSpec> refEntry : resolvedRefTargets.entrySet()) {
-            final ResolvedFeatureId refId = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue(), false);
-            if(refId != null) {
-                refIds.add(refId);
+            final List<ResolvedFeatureId> resolvedIds = resolveRefId(feature, xmlSpec.getFeatureRef(refEntry.getKey()), refEntry.getValue(), false);
+            if(!resolvedIds.isEmpty()) {
+                refIds = PmCollections.addAll(refIds, resolvedIds);
             }
         }
         return refIds;
     }
 
-    ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec)
+    List<ResolvedFeatureId> resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec)
             throws ProvisioningException {
         return resolveRefId(feature, refSpec, targetSpec, true);
     }
 
-    private ResolvedFeatureId resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec, boolean assertRefMapping)
+    private List<ResolvedFeatureId> resolveRefId(final ResolvedFeature feature, final FeatureReferenceSpec refSpec, final ResolvedFeatureSpec targetSpec, boolean assertRefMapping)
             throws ProvisioningException {
         if(assertRefMapping) {
             assertRefParamMapping(refSpec, targetSpec);
         }
-        if(!refSpec.hasMappedParams()) {
-            final List<FeatureParameterSpec> targetIdParams = targetSpec.xmlSpec.getIdParams();
-            if(targetIdParams.size() == 1) {
-                final String paramName = targetIdParams.get(0).getName();
-                final Object paramValue = feature.getParamOrDefault(paramName);
-                if(paramValue == null || paramValue.equals(Constants.PM_UNDEFINED)) {
-                    assertRefNotNillable(feature, refSpec);
-                    return null;
-                }
-                return new ResolvedFeatureId(targetSpec.id, Collections.singletonMap(paramName, paramValue));
-            }
-            final Map<String, Object> params = new HashMap<>(targetIdParams.size());
-            for(FeatureParameterSpec targetIdParam : targetIdParams) {
-                final Object paramValue = feature.getParamOrDefault(targetIdParam.getName());
+
+        ArrayList<Map<String,Object>> paramsList = null;
+        Map<String, Object> params = Collections.emptyMap();
+        if(refSpec.hasMappedParams()) {
+            for (Map.Entry<String, String> mapping : refSpec.getMappedParams().entrySet()) {
+                final String paramName = mapping.getKey();
+                final String refParamName = mapping.getValue();
+
+                final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
+                Object paramValue = feature.getResolvedParam(paramName);
                 if(paramValue == null) {
-                    assertRefNotNillable(feature, refSpec);
-                    return null;
-                } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
-                    params.put(targetIdParam.getName(), paramValue);
+                    paramValue = resolvedParam.defaultValue;
                 }
+                if (paramValue == null) {
+                    assertRefNotNillable(feature, refSpec);
+                    return Collections.emptyList();
+                }
+
+                if(resolvedParam.type.isCollection()) {
+                    final Collection<?> col = (Collection<?>) paramValue;
+                    if(col.isEmpty()) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
+                    if(paramsList == null) {
+                        paramsList = new ArrayList<>(col.size());
+                        paramsList.add(params);
+                    } else {
+                        paramsList.ensureCapacity(paramsList.size()*col.size());
+                    }
+                    final int listSize = paramsList.size();
+                    for(int i = 0; i < listSize; ++i) {
+                        final Map<String, Object> idParams = paramsList.get(i);
+                        int colI = 0;
+                        for(Object item : col) {
+                            if(item.equals(Constants.PM_UNDEFINED)) {
+                                continue;
+                            }
+                            if(colI++ == 0) {
+                                final Map<String, Object> clone = col.size() == 1 ? idParams : PmCollections.clone(idParams);
+                                paramsList.set(i, PmCollections.put(clone, refParamName, item));
+                                continue;
+                            }
+                            paramsList.add(PmCollections.put(PmCollections.clone(idParams), refParamName, item));
+                        }
+                    }
+                    continue;
+                }
+                if(paramValue.equals(Constants.PM_UNDEFINED)) {
+                    continue;
+                }
+                if (paramsList != null) {
+                    for(int i = 0; i < paramsList.size(); ++i) {
+                        paramsList.set(i, PmCollections.put(paramsList.get(i), refParamName, paramValue));
+                    }
+                    continue;
+                }
+                params = PmCollections.put(params, refParamName, paramValue);
             }
-            if(params.isEmpty()) {
+        } else {
+            for(FeatureParameterSpec targetIdParam : targetSpec.xmlSpec.getIdParams()) {
+                final String paramName = targetIdParam.getName();
+                final String refParamName = paramName;
+
+                final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
+                Object paramValue = feature.getResolvedParam(paramName);
+                if(paramValue == null) {
+                    paramValue = resolvedParam.defaultValue;
+                }
+                if (paramValue == null) {
+                    assertRefNotNillable(feature, refSpec);
+                    return Collections.emptyList();
+                }
+
+                if(resolvedParam.type.isCollection()) {
+                    final Collection<?> col = (Collection<?>) paramValue;
+                    if(col.isEmpty()) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
+                    if(paramsList == null) {
+                        paramsList = new ArrayList<>(col.size());
+                        paramsList.add(params);
+                    } else {
+                        paramsList.ensureCapacity(paramsList.size()*col.size());
+                    }
+                    final int listSize = paramsList.size();
+                    for(int i = 0; i < listSize; ++i) {
+                        final Map<String, Object> idParams = paramsList.get(i);
+                        int colI = 0;
+                        for(Object item : col) {
+                            if(item.equals(Constants.PM_UNDEFINED)) {
+                                continue;
+                            }
+                            if(colI++ == 0) {
+                                final Map<String, Object> clone = col.size() == 1 ? idParams : PmCollections.clone(idParams);
+                                paramsList.set(i, PmCollections.put(clone, refParamName, item));
+                                continue;
+                            }
+                            paramsList.add(PmCollections.put(PmCollections.clone(idParams), refParamName, item));
+                        }
+                    }
+                    continue;
+                }
+                if(paramValue.equals(Constants.PM_UNDEFINED)) {
+                    continue;
+                }
+                if (paramsList != null) {
+                    for(int i = 0; i < paramsList.size(); ++i) {
+                        paramsList.set(i, PmCollections.put(paramsList.get(i), refParamName, paramValue));
+                    }
+                    continue;
+                }
+                params = PmCollections.put(params, refParamName, paramValue);
+            }
+        }
+
+        if(paramsList != null) {
+            final List<ResolvedFeatureId> refIds = new ArrayList<>(paramsList.size());
+            for(int i = 0; i < paramsList.size(); ++i) {
+                final Map<String, Object> idParams = paramsList.get(i);
+                if(idParams.isEmpty()) {
+                    // TODO
+                    continue;
+                }
+                refIds.add(new ResolvedFeatureId(targetSpec.id, idParams));
+            }
+            if(refIds.isEmpty()) {
                 assertRefNotNillable(feature, refSpec);
-                return null;
             }
-            return new ResolvedFeatureId(targetSpec.id, params);
-        }
-
-        final Iterator<Map.Entry<String, String>> i = refSpec.getMappedParams().entrySet().iterator();
-        Map.Entry<String, String> mapping = i.next();
-
-        Object paramValue = feature.getParamOrDefault(mapping.getKey());
-        if(paramValue == null) {
-            assertRefNotNillable(feature, refSpec);
-            return null;
-        }
-
-        if(!i.hasNext()) {
-            if(paramValue.equals(Constants.PM_UNDEFINED)) {
-                assertRefNotNillable(feature, refSpec);
-                return null;
-            }
-            return new ResolvedFeatureId(targetSpec.id, Collections.singletonMap(mapping.getValue(), paramValue));
-        }
-
-        Map<String, Object> params = new HashMap<>(refSpec.getParamsMapped());
-        if(!paramValue.equals(Constants.PM_UNDEFINED)) {
-            params.put(mapping.getValue(), paramValue);
-        }
-        while(i.hasNext()) {
-            mapping = i.next();
-            paramValue = feature.getParamOrDefault(mapping.getKey());
-            if(paramValue == null) {
-                assertRefNotNillable(feature, refSpec);
-                return null;
-            } else if(!paramValue.equals(Constants.PM_UNDEFINED)) {
-                params.put(mapping.getValue(), paramValue);
-            }
+            return refIds;
         }
         if(params.isEmpty()) {
             assertRefNotNillable(feature, refSpec);
-            return null;
+            return Collections.emptyList();
         }
-        return new ResolvedFeatureId(targetSpec.id, params);
+        return Collections.singletonList(new ResolvedFeatureId(targetSpec.id, params));
     }
 
     private void assertRefNotNillable(final ResolvedFeature feature, final FeatureReferenceSpec refSpec)
             throws ProvisioningDescriptionException {
         if (!refSpec.isNillable()) {
-            final StringBuilder buf = new StringBuilder();
-            buf.append("Reference ").append(refSpec).append(" of ");
-            if (feature.id != null) {
-                buf.append(feature.id);
-            } else {
-                buf.append(id).append(" configuration ");
-            }
-            buf.append(" cannot be null");
-            throw new ProvisioningDescriptionException(buf.toString());
+            throw new ProvisioningDescriptionException(Errors.nonNillableRefIsNull(feature, refSpec.getName()));
         }
     }
 

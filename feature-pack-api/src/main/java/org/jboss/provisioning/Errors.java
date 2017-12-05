@@ -245,6 +245,13 @@ public interface Errors {
         return "Feature spec " + featureSpec + " does not include a feature reference named " + featureRefName;
     }
 
+    static String nonNillableRefIsNull(ResolvedFeature feature, String refName) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("Reference ").append(refName).append(" of ");
+        appendFeature(buf, feature);
+        return buf.append(" cannot be null").toString();
+    }
+
     static String unresolvedFeatureDep(ResolvedFeature feature, ResolvedFeatureId dep) {
         final StringBuilder buf = new StringBuilder();
         appendFeature(buf, feature);
