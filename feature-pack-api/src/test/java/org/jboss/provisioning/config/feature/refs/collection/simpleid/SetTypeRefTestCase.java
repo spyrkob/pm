@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.simpleid;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -39,7 +39,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleNotMappedRefToOneTestCase extends PmInstallFeaturePackTestBase {
+public class SetTypeRefTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -52,17 +52,14 @@ public class SimpleNotMappedRefToOneTestCase extends PmInstallFeaturePackTestBas
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("a").setType("List<String>").build())
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setName("specA")
-                            .setNillable(false)
-                            .build())
+                    .addParam(FeatureParameterSpec.builder("a").setNillable().setType("Set<String>").build())
+                    .addFeatureRef(FeatureReferenceSpec.create("specA"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
-                            .setParam("a", "[ a1 ]"))
+                            .setParam("a", "[a1]"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
@@ -83,8 +80,7 @@ public class SimpleNotMappedRefToOneTestCase extends PmInstallFeaturePackTestBas
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")).build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1"))
-                                .setConfigParam("a", "[a1]")
-                                .build())
+                                .setConfigParam("a", "[a1]").build())
                         .build())
                 .build();
     }

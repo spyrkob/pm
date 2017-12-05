@@ -15,28 +15,31 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.compoundid;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class SimpleMappedRefInvalidTargetTestCase extends PmInstallFeaturePackTestBase {
+public class NotMappedNillableRefToNoneCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -45,24 +48,24 @@ public class SimpleMappedRefInvalidTargetTestCase extends PmInstallFeaturePackTe
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
+                    .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.createId("a"))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
+                    .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("afk").setType("List<String>").build())
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
-                            .setName("specA")
-                            .setNillable(false)
-                            .mapParam("afk", "a")
-                            .build())
+                    .addParam(FeatureParameterSpec.builder("a").setType("List<String>").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setNillable(true).build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
+                            .setParam("id", "1")
                             .setParam("b", "b1")
-                            .setParam("afk", "[ a1 ,a2]"))
+                            .setParam("a", "[ ]"))
                     .addFeature(
                             new FeatureConfig("specA")
+                            .setParam("id", "1")
                             .setParam("a", "a1"))
                     .build())
             .getInstaller()
@@ -75,15 +78,15 @@ public class SimpleMappedRefInvalidTargetTestCase extends PmInstallFeaturePackTe
     }
 
     @Override
-    protected String[] pmErrors() {
-        return new String[] {
-                Errors.failedToBuildConfigSpec(null, null),
-                "org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:a=a2"
-        };
-    }
-
-    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specB").setParam("id", "1").setParam("b", "b1").build())
+                                .setConfigParam("a", "[]")
+                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP_GAV, "specA").setParam("id", "1").setParam("a", "a1").build()).build())
+                        .build())
+                .build();
     }
 }

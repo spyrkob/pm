@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.simpleid;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
@@ -36,7 +36,7 @@ import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleNotMappedRefInvalidTargetTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleNotMappedNonNillableRefToNoneTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -59,7 +59,7 @@ public class SimpleNotMappedRefInvalidTargetTestCase extends PmInstallFeaturePac
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
-                            .setParam("a", "[a1, a2]"))
+                            .setParam("a", "[]"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
@@ -77,7 +77,7 @@ public class SimpleNotMappedRefInvalidTargetTestCase extends PmInstallFeaturePac
     protected String[] pmErrors() {
         return new String[] {
                 Errors.failedToBuildConfigSpec(null, null),
-                "org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:a=a2"
+                "Reference specA of org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 cannot be null"
         };
     }
 
