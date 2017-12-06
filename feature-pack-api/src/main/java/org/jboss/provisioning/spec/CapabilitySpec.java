@@ -20,10 +20,9 @@ package org.jboss.provisioning.spec;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.runtime.ResolvedFeature;
+import org.jboss.provisioning.runtime.CapabilityResolver;
 import org.jboss.provisioning.util.PmCollections;
 
 /**
@@ -44,11 +43,11 @@ public class CapabilitySpec {
             throw new ProvisioningDescriptionException("str is empty");
         }
 
-        List<String> parts = Collections.emptyList();
-        List<Boolean> partTypes = Collections.emptyList();
+        List<String> elems = Collections.emptyList();
+        List<Boolean> isElemStatic = Collections.emptyList();
         int strI = 0;
         final StringBuilder buf = new StringBuilder();
-        boolean staticPart = true;
+        boolean isStatic = true;
         while(strI < str.length()) {
             final char ch = str.charAt(strI++);
             switch(ch) {
@@ -56,7 +55,7 @@ public class CapabilitySpec {
                     if(buf.length() == 0) {
                         formatError(str);
                     }
-                    if(staticPart) {
+                    if(isStatic) {
                         if(buf.charAt(buf.length() - 1) == '.') {
                             formatError(str);
                         }
@@ -65,17 +64,17 @@ public class CapabilitySpec {
                             break;
                         }
                     }
-                    parts = PmCollections.add(parts, buf.toString());
-                    partTypes = PmCollections.add(partTypes, staticPart);
+                    elems = PmCollections.add(elems, buf.toString());
+                    isElemStatic = PmCollections.add(isElemStatic, isStatic);
                     buf.setLength(0);
-                    staticPart = true;
+                    isStatic = true;
                     break;
                 }
                 case '$': {
                     if(strI > 1 && str.charAt(strI - 2) != '.') {
                         formatError(str);
                     }
-                    staticPart = false;
+                    isStatic = false;
                     break;
                 } default: {
                     if(Character.isWhitespace(ch)) {
@@ -88,22 +87,22 @@ public class CapabilitySpec {
         if(buf.length() == 0) {
             formatError(str);
         }
-        parts = PmCollections.add(parts, buf.toString());
-        partTypes = PmCollections.add(partTypes, staticPart);
-        return new CapabilitySpec(parts, partTypes, optional);
+        elems = PmCollections.add(elems, buf.toString());
+        isElemStatic = PmCollections.add(isElemStatic, isStatic);
+        return new CapabilitySpec(elems, isElemStatic, optional);
     }
 
     private static void formatError(String str) throws ProvisioningDescriptionException {
         throw new ProvisioningDescriptionException("Capability '" + str + "' doesn't follow format [$]part[.[$]part]");
     }
 
-    private final String[] parts;
-    private final Boolean[] partTypes; // true - static part, false - param part
+    private final String[] elems;
+    private final Boolean[] isElemStatic;
     private final boolean optional;
 
-    private CapabilitySpec(List<String> parts, List<Boolean> partTypes, boolean optional) throws ProvisioningDescriptionException {
-        this.parts = parts.toArray(new String[parts.size()]);
-        this.partTypes = partTypes.toArray(new Boolean[partTypes.size()]);
+    private CapabilitySpec(List<String> elems, List<Boolean> elemTypes, boolean optional) throws ProvisioningDescriptionException {
+        this.elems = elems.toArray(new String[elems.size()]);
+        this.isElemStatic = elemTypes.toArray(new Boolean[elemTypes.size()]);
         this.optional = optional;
         if(optional && isStatic()) {
             throw new ProvisioningDescriptionException("Static capability cannot be optional: " + toString());
@@ -115,48 +114,16 @@ public class CapabilitySpec {
     }
 
     public boolean isStatic() {
-        return parts.length == 1 && partTypes[0];
+        return elems.length == 1 && isElemStatic[0];
     }
 
-    public String resolve(ResolvedFeature feature) throws ProvisioningException {
-        if(isStatic()) {
-            return toString();
-        }
-        final StringBuilder buf = new StringBuilder();
-        if(partTypes[0]) {
-            buf.append(parts[0]);
-        } else {
-            final String value = feature.getParamOrDefaultAsString(parts[0]);
-            if (value == null) {
-                if (optional) {
-                    return null;
-                }
-                throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[0]));
-            }
-            if (value.trim().isEmpty()) {
-                throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[0]));
-            }
-            buf.append(value);
-        }
-        for(int i = 1; i < parts.length; ++i) {
-            buf.append('.');
-            if(partTypes[i]) {
-                buf.append(parts[i]);
-            } else {
-                final String value = feature.getParamOrDefaultAsString(parts[i]);
-                if (value == null) {
-                    if (optional) {
-                        return null;
-                    }
-                    throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[i]));
-                }
-                if (value.trim().isEmpty()) {
-                    throw new ProvisioningException(Errors.capabilityMissingParameter(this, parts[i]));
-                }
-                buf.append(value);
+    public boolean resolve(CapabilityResolver resolver) throws ProvisioningException {
+        for(int i = 0; i < elems.length; ++i) {
+            if(!resolver.resolveElement(elems[i], isElemStatic[i])) {
+                return false;
             }
         }
-        return buf.toString();
+        return true;
     }
 
     @Override
@@ -164,8 +131,8 @@ public class CapabilitySpec {
         final int prime = 31;
         int result = 1;
         result = prime * result + (optional ? 1231 : 1237);
-        result = prime * result + Arrays.hashCode(partTypes);
-        result = prime * result + Arrays.hashCode(parts);
+        result = prime * result + Arrays.hashCode(isElemStatic);
+        result = prime * result + Arrays.hashCode(elems);
         return result;
     }
 
@@ -180,29 +147,29 @@ public class CapabilitySpec {
         CapabilitySpec other = (CapabilitySpec) obj;
         if (optional != other.optional)
             return false;
-        if (!Arrays.equals(partTypes, other.partTypes))
+        if (!Arrays.equals(isElemStatic, other.isElemStatic))
             return false;
-        if (!Arrays.equals(parts, other.parts))
+        if (!Arrays.equals(elems, other.elems))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        if(parts.length == 1 && partTypes[0]) {
-            return parts[0];
+        if(elems.length == 1 && isElemStatic[0]) {
+            return elems[0];
         }
         final StringBuilder buf = new StringBuilder();
-        if(!partTypes[0] ) {
+        if(!isElemStatic[0] ) {
             buf.append('$');
         }
-        buf.append(parts[0]);
-        for(int i = 1; i < parts.length; ++i) {
+        buf.append(elems[0]);
+        for(int i = 1; i < elems.length; ++i) {
             buf.append('.');
-            if(!partTypes[i]) {
+            if(!isElemStatic[i]) {
                 buf.append('$');
             }
-            buf.append(parts[i]);
+            buf.append(elems[i]);
         }
         return buf.toString();
     }

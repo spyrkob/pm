@@ -103,10 +103,6 @@ public interface Errors {
         return "Failed to resolve package " + packageName + " in " + fp;
     }
 
-    static String missingParameter(String string) {
-        return "Missing " + string;
-    }
-
     static String unknownPackage(ArtifactCoords.Gav gav, String pkgName) {
         return "Package " + pkgName + " is not found in " + gav;
     }
@@ -182,9 +178,13 @@ public interface Errors {
         return "Parameter " + param + " is missing value to resolve capability " + cap;
     }
 
+    static String illegalCapabilityElement(CapabilitySpec cap, String elem) {
+        return "Failed to resolve capability " + cap + " with illegal element value of '" + elem + "'";
+    }
+
     static String failedToResolveCapability(ResolvedFeature feature, CapabilitySpec cap) {
         final StringBuilder buf = new StringBuilder();
-        buf.append("Failed to satisfy capability requirement ").append(cap).append(" for ");
+        buf.append("Failed to resolve capability ").append(cap).append(" for ");
         appendFeature(buf, feature);
         return buf.toString();
     }
@@ -257,6 +257,13 @@ public interface Errors {
         appendFeature(buf, feature);
         buf.append(" has unresolved dependency on ").append(dep);
         return buf.toString();
+    }
+
+    static String nonNillableParameterIsNull(ResolvedFeature feature, String paramName) {
+        if(feature.hasId()) {
+            return nonNillableParameterIsNull(feature.getId(), paramName);
+        }
+        return nonNillableParameterIsNull(feature.getSpecId(), paramName);
     }
 
     static String nonNillableParameterIsNull(ResolvedSpecId specId, String paramName) {

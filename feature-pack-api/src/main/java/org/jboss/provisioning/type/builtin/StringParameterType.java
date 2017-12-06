@@ -19,6 +19,7 @@ package org.jboss.provisioning.type.builtin;
 
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.CapabilityResolver;
 import org.jboss.provisioning.type.FeatureParameterType;
 import org.jboss.provisioning.type.ParameterTypeConversionException;
 
@@ -67,5 +68,11 @@ public class StringParameterType implements FeatureParameterType {
     @Override
     public Object merge(Object original, Object other) throws ProvisioningException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean resolveCapabilityElement(CapabilityResolver capResolver, Object o) throws ProvisioningException {
+        capResolver.add(o);
+        return true;
     }
 }

@@ -25,7 +25,6 @@ import java.util.Map;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
@@ -100,10 +99,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
                 if(!params.containsKey(param.getName())) {
                     if(param.hasDefaultValue()) {
                         params = PmCollections.put(params, param.getName(), param.getDefaultValue());
-                    } else if(id == null) {
-                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(spec.id, param.getName()));
                     } else {
-                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
+                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(this, param.getName()));
                     }
                 }
             } else if(param.hasDefaultValue() && !params.containsKey(param.getName())) {
@@ -204,19 +201,6 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         return params;
     }
 
-    public Object getParamOrDefault(String name) throws ProvisioningException {
-        final Object value = params.get(name);
-        return value == null ? spec.getParamDefault(name) : value;
-    }
-
-    public String getParamOrDefaultAsString(String name) throws ProvisioningException {
-        Object value = getParamOrDefault(name);
-        if(value == null) {
-            return null;
-        }
-        return spec.paramToString(name, value);
-    }
-
     void setParam(String name, Object value, boolean overwrite) throws ProvisioningException {
         if(id != null) {
             final Object idValue = id.params.get(name);
@@ -262,13 +246,5 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
 
     List<ResolvedFeatureId> resolveRefs() throws ProvisioningException {
         return spec.resolveRefs(this);
-    }
-
-    String resolveCapability(CapabilitySpec cap) throws ProvisioningException {
-        try {
-            return cap.resolve(this);
-        } catch (ProvisioningException e) {
-            throw new ProvisioningException(Errors.failedToResolveCapability(this, cap), e);
-        }
     }
 }

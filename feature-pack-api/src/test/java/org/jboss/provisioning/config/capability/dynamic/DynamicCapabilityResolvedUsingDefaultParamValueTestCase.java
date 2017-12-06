@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.capability.dynamic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;

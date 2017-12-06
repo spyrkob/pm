@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.capability.dynamic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -38,7 +38,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SimplestStaticCapabilityTestCase extends PmInstallFeaturePackTestBase {
+public class OptionalCapabilityRequirementTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,20 +47,28 @@ public class SimplestStaticCapabilityTestCase extends PmInstallFeaturePackTestBa
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.a")
+                    .providesCapability("cap.$a")
                     .addParam(FeatureParameterSpec.createId("a"))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.a")
+                    .requiresCapability("cap.$c", true)
                     .addParam(FeatureParameterSpec.createId("b"))
+                    .addParam(FeatureParameterSpec.create("c", true))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("b", "b1"))
+                            .setParam("b", "b1")
+                            .setParam("c", "a1"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
+                    .addFeature(
+                            new FeatureConfig("specB")
+                            .setParam("b", "b2"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("a", "a2"))
                     .build())
             .getInstaller()
         .install();
@@ -77,7 +85,9 @@ public class SimplestStaticCapabilityTestCase extends PmInstallFeaturePackTestBa
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).setConfigParam("c", "a1").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b2")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a2")).build())
                         .build())
                 .build();
     }

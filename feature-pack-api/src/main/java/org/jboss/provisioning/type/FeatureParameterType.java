@@ -18,6 +18,7 @@
 package org.jboss.provisioning.type;
 
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.CapabilityResolver;
 
 /**
  * Represents a feature parameter type.
@@ -82,4 +83,15 @@ public interface FeatureParameterType {
      * @throws ProvisioningException  in case merging failed
      */
     Object merge(Object original, Object other) throws ProvisioningException;
+
+    /**
+     * Resolves dynamic capability element from the value of the type and adds it
+     * to the capability resolver.
+     *
+     * @param capResolver  capability resolver
+     * @param o  value of the type
+     * @return  true if the value was resolved and added, false otherwise
+     * @throws ProvisioningException  in case the value resolution failed
+     */
+    boolean resolveCapabilityElement(CapabilityResolver capResolver, Object o) throws ProvisioningException;
 }

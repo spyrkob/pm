@@ -17,7 +17,10 @@
 
 package org.jboss.provisioning.type.builtin;
 
+import java.util.Collection;
+
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.runtime.CapabilityResolver;
 import org.jboss.provisioning.type.FeatureParameterType;
 import org.jboss.provisioning.type.ParameterTypeConversionException;
 import org.jboss.provisioning.util.formatparser.FormatParser;
@@ -82,5 +85,15 @@ public class FormattedParameterType implements FeatureParameterType {
     @Override
     public Object merge(Object original, Object other) throws ProvisioningException {
         return other;
+    }
+
+    @Override
+    public boolean resolveCapabilityElement(CapabilityResolver capResolver, Object o) throws ProvisioningException {
+        if(!format.isCollection()) {
+            capResolver.add(o);
+            return true;
+        }
+        capResolver.multiply((Collection<?>)o);
+        return true;
     }
 }
