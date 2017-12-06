@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.simpleid;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
@@ -36,7 +36,7 @@ import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
  *
  * @author Alexey Loubyansky
  */
-public class SimpleMappedNonNillableRefToNoneTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleNotMappedRefInvalidTargetTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -49,18 +49,17 @@ public class SimpleMappedNonNillableRefToNoneTestCase extends PmInstallFeaturePa
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("afk").setType("List<String>").build())
+                    .addParam(FeatureParameterSpec.builder("a").setType("List<String>").build())
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
                             .setName("specA")
                             .setNillable(false)
-                            .mapParam("afk", "a")
                             .build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
-                            .setParam("afk", "[ ]"))
+                            .setParam("a", "[a1, a2]"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
@@ -78,7 +77,7 @@ public class SimpleMappedNonNillableRefToNoneTestCase extends PmInstallFeaturePa
     protected String[] pmErrors() {
         return new String[] {
                 Errors.failedToBuildConfigSpec(null, null),
-                "Reference specA of org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 cannot be null"
+                "org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 has unresolved dependency on org.jboss.pm.test:fp1:1.0.0.Final#specA:a=a2"
         };
     }
 

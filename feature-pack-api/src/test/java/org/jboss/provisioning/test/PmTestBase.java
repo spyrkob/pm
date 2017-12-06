@@ -70,6 +70,8 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
             if(errors != null) {
                 Assert.fail("Expected failures: " + Arrays.asList(errors));
             }
+        } catch(AssertionError e) {
+            throw e;
         } catch(Throwable t) {
             failed = true;
             if (errors == null) {

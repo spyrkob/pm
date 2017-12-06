@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.simpleid;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -39,7 +39,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class SetTypeRefTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleMappedRefToOneTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -52,17 +52,27 @@ public class SetTypeRefTestCase extends PmInstallFeaturePackTestBase {
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("a").setNillable().setType("Set<String>").build())
-                    .addFeatureRef(FeatureReferenceSpec.create("specA"))
+                    .addParam(FeatureParameterSpec.builder("afk").setType("List<String>").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA")
+                            .setName("specA")
+                            .setNillable(false)
+                            .mapParam("afk", "a")
+                            .build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
-                            .setParam("a", "[a1]"))
+                            .setParam("afk", "[ a1 ,a3]"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("a", "a2"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("a", "a3"))
                     .build())
             .getInstaller()
         .install();
@@ -79,8 +89,11 @@ public class SetTypeRefTestCase extends PmInstallFeaturePackTestBase {
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a2")).build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a3")).build())
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1"))
-                                .setConfigParam("a", "[a1]").build())
+                                .setConfigParam("afk", "[a1, a3]")
+                                .build())
                         .build())
                 .build();
     }

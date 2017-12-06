@@ -15,31 +15,28 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.refs.collection;
+package org.jboss.provisioning.config.feature.refs.collection.simpleid;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
-import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class NillableRefWithNullFkTestCase extends PmInstallFeaturePackTestBase {
+public class SimpleMappedNonNillableRefToNoneTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -52,17 +49,18 @@ public class NillableRefWithNullFkTestCase extends PmInstallFeaturePackTestBase 
                     .build())
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("afk").setNillable().setType("List<String>").build())
+                    .addParam(FeatureParameterSpec.builder("afk").setType("List<String>").build())
                     .addFeatureRef(FeatureReferenceSpec.builder("specA")
                             .setName("specA")
-                            .setNillable(true)
+                            .setNillable(false)
                             .mapParam("afk", "a")
                             .build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("b", "b1"))
+                            .setParam("b", "b1")
+                            .setParam("afk", "[ ]"))
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1"))
@@ -77,13 +75,15 @@ public class NillableRefWithNullFkTestCase extends PmInstallFeaturePackTestBase 
     }
 
     @Override
+    protected String[] pmErrors() {
+        return new String[] {
+                Errors.failedToBuildConfigSpec(null, null),
+                "Reference specA of org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 cannot be null"
+        };
+    }
+
+    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")).build())
-                        .build())
-                .build();
+        return null;
     }
 }
