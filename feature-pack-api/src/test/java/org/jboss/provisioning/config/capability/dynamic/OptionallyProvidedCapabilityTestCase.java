@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.capability.dynamic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -23,22 +23,22 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
-import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
+import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class CircularCapabilityRequirementsTestCase extends PmInstallFeaturePackTestBase {
+public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,34 +47,31 @@ public class CircularCapabilityRequirementsTestCase extends PmInstallFeaturePack
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$p1")
-                    .requiresCapability("cap.$p2")
-                    .addParam(FeatureParameterSpec.createId("p1"))
-                    .addParam(FeatureParameterSpec.create("p2"))
+                    .providesCapability("cap.$c", true)
+                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addParam(FeatureParameterSpec.create("c", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .providesCapability("cap.$p1")
-                    .requiresCapability("cap.$p2")
-                    .addParam(FeatureParameterSpec.createId("p1"))
-                    .addParam(FeatureParameterSpec.create("p2"))
+                    .requiresCapability("cap.$c")
+                    .addParam(FeatureParameterSpec.createId("b"))
+                    .addParam(FeatureParameterSpec.create("c"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("p1", "b1")
-                            .setParam("p2", "a1"))
+                            .setParam("b", "b1")
+                            .setParam("c", "c1"))
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("p1", "a1")
-                            .setParam("p2", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("p1", "a2")
-                            .setParam("p2", "b2"))
+                            .setParam("a", "a1")
+                            .setParam("c", "c1"))
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("p1", "b2")
-                            .setParam("p2", "a2"))
+                            .setParam("b", "b2")
+                            .setParam("c", "c2"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("a", "a2"))
                     .build())
             .getInstaller()
         .install();
@@ -86,15 +83,32 @@ public class CircularCapabilityRequirementsTestCase extends PmInstallFeaturePack
     }
 
     @Override
+    protected void pmSuccess() {
+        Assert.fail("There is no cap.a provider");
+    }
+
+    @Override
+    protected void pmFailure(Throwable e) {
+        Assert.assertEquals("Failed to build config", e.getMessage());
+        e = (ProvisioningException) e.getCause();
+        Assert.assertNotNull(e);
+        Assert.assertEquals(
+                "No provider found for capability cap.c2 required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b2 as cap.$c",
+                e.getMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
+    }
+
+    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "p1", "b1")).setConfigParam("p2", "a1").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "p1", "a1")).setConfigParam("p2", "b1").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "p1", "a2")).setConfigParam("p2", "b2").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "p1", "b2")).setConfigParam("p2", "a2").build())
-                        .build())
-                .build();
+        return null;
+    }
+
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.clear().build();
     }
 }

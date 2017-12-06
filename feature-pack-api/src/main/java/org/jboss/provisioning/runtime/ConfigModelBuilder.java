@@ -158,6 +158,8 @@ public class ConfigModelBuilder implements ProvisionedConfig {
     private FeatureGroupScopeStack featureGroupStack = new FeatureGroupScopeStack();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = featureGroupStack.peek();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
+
+    private CapabilityResolver capResolver = new CapabilityResolver();
     private Map<String, CapabilityProviders> capProviders = Collections.emptyMap();
 
     // features in the order they should be processed by the provisioning handlers
@@ -386,8 +388,11 @@ public class ConfigModelBuilder implements ProvisionedConfig {
                         getProviders(cap.toString(), true).add(features);
                     } else {
                         for(ResolvedFeature feature : features.list) {
-                            final String resolvedCap = feature.resolveCapability(cap);
-                            if(resolvedCap != null) {
+                            final List<String> resolvedCaps = capResolver.resolve(cap, feature);
+                            if(resolvedCaps.isEmpty()) {
+                                continue;
+                            }
+                            for(String resolvedCap : resolvedCaps) {
                                 getProviders(resolvedCap, true).add(feature);
                             }
                         }
@@ -578,27 +583,29 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     private List<CircularRefInfo> orderCapabilityProviders(ResolvedFeature feature, List<CircularRefInfo> circularRefs)
             throws ProvisioningException {
-        for(CapabilitySpec capSpec : feature.spec.xmlSpec.getRequiredCapabilities()) {
-            final String resolvedCap = feature.resolveCapability(capSpec);
-            if(resolvedCap == null) {
+        for (CapabilitySpec capSpec : feature.spec.xmlSpec.getRequiredCapabilities()) {
+            final List<String> resolvedCaps = capResolver.resolve(capSpec, feature);
+            if (resolvedCaps.isEmpty()) {
                 continue;
             }
-            final CapabilityProviders providers;
-            try {
-                providers = getProviders(resolvedCap, false);
-            } catch(ProvisioningException e) {
-                throw new ProvisioningException(Errors.noCapabilityProvider(feature, capSpec, resolvedCap));
-            }
-            final List<CircularRefInfo> circles = orderProviders(providers);
-            if(circularRefs == null) {
-                circularRefs = circles;
-            } else {
-                if(circularRefs.size() == 1) {
-                    final CircularRefInfo first = circularRefs.get(0);
-                    circularRefs = new ArrayList<>(1 + circles.size());
-                    circularRefs.add(first);
+            for (String resolvedCap : resolvedCaps) {
+                final CapabilityProviders providers;
+                try {
+                    providers = getProviders(resolvedCap, false);
+                } catch (ProvisioningException e) {
+                    throw new ProvisioningException(Errors.noCapabilityProvider(feature, capSpec, resolvedCap));
                 }
-                circularRefs.addAll(circles);
+                final List<CircularRefInfo> circles = orderProviders(providers);
+                if (circularRefs == null) {
+                    circularRefs = circles;
+                } else {
+                    if (circularRefs.size() == 1) {
+                        final CircularRefInfo first = circularRefs.get(0);
+                        circularRefs = new ArrayList<>(1 + circles.size());
+                        circularRefs.add(first);
+                    }
+                    circularRefs.addAll(circles);
+                }
             }
         }
         return circularRefs;

@@ -163,8 +163,19 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return getResolvedParam(name).type.toString(value);
     }
 
-    Object getParamDefault(String name) throws ProvisioningException {
-        return getResolvedParam(name).defaultValue;
+    boolean resolveCapabilityElement(ResolvedFeature feature, String paramName, CapabilityResolver capResolver) throws ProvisioningException {
+        final ResolvedFeatureParam resolvedParam = getResolvedParam(paramName);
+        Object value = feature.getResolvedParam(paramName);
+        if(value == null) {
+            value = resolvedParam.defaultValue;
+            if(value == null) {
+                if(capResolver.getSpec().isOptional()) {
+                    return false;
+                }
+                throw new ProvisioningException(Errors.capabilityMissingParameter(capResolver.getSpec(), paramName));
+            }
+        }
+        return resolvedParam.type.resolveCapabilityElement(capResolver, value);
     }
 
     FeatureParameterType getTypeForParameter(String paramName) throws ParameterTypeNotFoundException, ProvisioningDescriptionException {
@@ -216,7 +227,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                         continue;
                     }
 
-                    final Object childValue = getParamDefault(idParamSpec.getName());
+                    final Object childValue = getResolvedParam(idParamSpec.getName()).defaultValue;
                     if(childValue == null) {
                         throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, idParamSpec.getName()));
                     }
@@ -240,7 +251,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                         continue;
                     }
 
-                    final Object childValue = getParamDefault(idParamSpec.getName());
+                    final Object childValue = getResolvedParam(idParamSpec.getName()).defaultValue;
                     if(childValue == null) {
                         throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, idParamSpec.getName()));
                     }
@@ -274,15 +285,16 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
     }
 
     private Object resolveIdParamValue(Map<String, String> params, final FeatureParameterSpec param) throws ProvisioningException {
+        final ResolvedFeatureParam resolvedParam = getResolvedParam(param.getName());
         final String strValue = params.get(param.getName());
         if(strValue == null) {
-            final Object value = getParamDefault(param.getName());
+            final Object value = resolvedParam.defaultValue;
             if (value == null) {
                 throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(id, param.getName()));
             }
             return value;
         }
-        return paramFromString(param.getName(), strValue);
+        return resolvedParam.type.fromString(strValue);
     }
 
     Map<ResolvedFeatureId, FeatureDependencySpec> resolveSpecDeps(ProvisioningRuntimeBuilder rt) throws ProvisioningException {

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability;
+package org.jboss.provisioning.config.capability.statics;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -38,7 +38,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTestBase {
+public class SimplestUnsatisfiedStaticCapabilityRequirementTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,31 +47,19 @@ public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTe
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$c", true)
                     .addParam(FeatureParameterSpec.createId("a"))
-                    .addParam(FeatureParameterSpec.create("c", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$c")
+                    .requiresCapability("cap.a")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.create("c"))
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
-                            .setParam("b", "b1")
-                            .setParam("c", "c1"))
+                            .setParam("b", "b1"))
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("a", "a1")
-                            .setParam("c", "c1"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b2")
-                            .setParam("c", "c2"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "a2"))
+                            .setParam("a", "a1"))
                     .build())
             .getInstaller()
         .install();
@@ -92,9 +80,7 @@ public class OptionallyProvidedCapabilityTestCase extends PmInstallFeaturePackTe
         Assert.assertEquals("Failed to build config", e.getMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
-        Assert.assertEquals(
-                "No provider found for capability cap.c2 required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b2 as cap.$c",
-                e.getMessage());
+        Assert.assertEquals("No provider found for capability cap.a required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1", e.getMessage());
     }
 
     @Override
