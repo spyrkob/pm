@@ -20,11 +20,11 @@ package org.jboss.provisioning.util.formatparser;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprContentHandler;
-import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprParsingFormat;
-import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprTypeParamContentHandler;
-import org.jboss.provisioning.util.formatparser.formatexpr.FormatExprTypeParamParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.expr.FormatExprContentHandler;
+import org.jboss.provisioning.util.formatparser.formats.expr.FormatExprParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.expr.FormatExprTypeParamContentHandler;
+import org.jboss.provisioning.util.formatparser.formats.expr.FormatExprTypeParamParsingFormat;
 
 /**
  *

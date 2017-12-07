@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.provisioning.util.formatparser.formatexpr;
+package org.jboss.provisioning.util.formatparser.formats.expr;
 
 import java.util.Collections;
 import java.util.List;
