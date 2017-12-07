@@ -83,6 +83,7 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
         if(failed) {
             assertProvisioningConfig(pm, null);
             assertProvisionedState(pm, null);
+            Assert.assertNull(provisionedState());
             DirState.rootBuilder().build().assertState(installHome);
         } else {
             assertProvisionedConfig(pm);
