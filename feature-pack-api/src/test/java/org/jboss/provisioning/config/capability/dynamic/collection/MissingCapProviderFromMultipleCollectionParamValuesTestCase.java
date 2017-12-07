@@ -19,55 +19,60 @@ package org.jboss.provisioning.config.capability.dynamic.collection;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
-import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class SimpleDynamicCollectionCapabilitiesTestCase extends PmInstallFeaturePackTestBase {
+public class MissingCapProviderFromMultipleCollectionParamValuesTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
 
     @Override
     protected void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$col")
+                    .providesCapability("$a.$p")
                     .addParam(FeatureParameterSpec.createId("a"))
-                    .addParam(FeatureParameterSpec.builder("col").setType("[String]").setDefaultValue("[1, 2]").build())
+                    .addParam(FeatureParameterSpec.createId("p"))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$req")
+                    .requiresCapability("$p1.$p2")
                     .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.create("req"))
+                    .addParam(FeatureParameterSpec.builder("p1").setType("List<String>").build())
+                    .addParam(FeatureParameterSpec.builder("p2").setType("List<String>").build())
                     .build())
             .addConfig(ConfigSpec.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
-                            .setParam("req", "1"))
+                            .setParam("p1", "[ 1 , 2 ]")
+                            .setParam("p2", "[a,b]"))
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("a", "a1"))
+                            .setParam("a", "1")
+                            .setParam("p", "a"))
                     .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b2")
-                            .setParam("req", "2"))
+                            new FeatureConfig("specA")
+                            .setParam("a", "1")
+                            .setParam("p", "b"))
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("a", "2")
+                            .setParam("p", "a"))
                     .build())
             .getInstaller()
         .install();
@@ -79,14 +84,14 @@ public class SimpleDynamicCollectionCapabilitiesTestCase extends PmInstallFeatur
     }
 
     @Override
+    protected String[] pmErrors() {
+        return new String[] {
+                Errors.failedToBuildConfigSpec(null, null),
+                "No provider found for capability 2.b required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 as $p1.$p2"
+        };
+    }
+    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "a1")).setConfigParam("col", "[1, 2]").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).setConfigParam("req", "1").build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b2")).setConfigParam("req",  "2").build())
-                        .build())
-                .build();
+        return null;
     }
 }
