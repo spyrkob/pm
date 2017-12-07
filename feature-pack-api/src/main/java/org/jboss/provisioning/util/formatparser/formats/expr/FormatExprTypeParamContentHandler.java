@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.util.formatparser.formatexpr;
+package org.jboss.provisioning.util.formatparser.formats.expr;
 
 import org.jboss.provisioning.util.formatparser.FormatContentHandler;
 import org.jboss.provisioning.util.formatparser.FormatParsingException;
