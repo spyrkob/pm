@@ -20,25 +20,34 @@ package org.jboss.provisioning.config;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.util.StringUtils;
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public class FeatureGroupConfig extends FeatureGroupConfigSupport {
+public class FeatureGroup extends FeatureGroupSupport {
 
-    public static class Builder extends FeatureGroupConfigBuilderSupport<FeatureGroupConfig, Builder> {
+    public static class Builder extends FeatureGroupBuilderSupport<FeatureGroup, Builder> {
 
-        private Builder(String featureGroupName, boolean inheritFeatures) {
+        protected Builder() {
+            super();
+        }
+
+        protected Builder(String featureGroupName) {
+            super(featureGroupName);
+        }
+
+        protected Builder(String featureGroupName, boolean inheritFeatures) {
             super(featureGroupName);
             this.inheritFeatures = inheritFeatures;
         }
 
         @Override
-        public FeatureGroupConfig build() {
-            return new FeatureGroupConfig(this);
+        public FeatureGroup build() throws ProvisioningDescriptionException {
+            return new FeatureGroup(this);
         }
     }
 
@@ -58,19 +67,19 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         return new Builder(featureGroupName, inheritFeatures);
     }
 
-    public static FeatureGroupConfig forGroup(String featureGroupName) {
-        return new FeatureGroupConfig(null, featureGroupName);
+    public static FeatureGroup forGroup(String featureGroupName) {
+        return new FeatureGroup(null, featureGroupName);
     }
 
-    public static FeatureGroupConfig forGroup(String fpDep, String featureGroupName) {
-        return new FeatureGroupConfig(fpDep, featureGroupName);
+    public static FeatureGroup forGroup(String fpDep, String featureGroupName) {
+        return new FeatureGroup(fpDep, featureGroupName);
     }
 
-    private FeatureGroupConfig(String fpDep, String name) {
+    public FeatureGroup(String fpDep, String name) {
         super(fpDep, name);
     }
 
-    private FeatureGroupConfig(Builder builder) {
+    protected FeatureGroup(FeatureGroupBuilderSupport<?, ?> builder) throws ProvisioningDescriptionException {
         super(builder);
     }
 
@@ -115,6 +124,11 @@ public class FeatureGroupConfig extends FeatureGroupConfigSupport {
         if(!excludedFeatures.isEmpty()) {
             buf.append(" exlcudedFeatures=");
             StringUtils.append(buf, excludedFeatures.keySet());
+        }
+
+        if(!items.isEmpty()) {
+            buf.append(" items=");
+            StringUtils.append(buf, items);
         }
         return buf.append(']').toString();
     }

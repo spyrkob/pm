@@ -21,8 +21,10 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.diff.FileSystemDiffResult;
 
 /**

@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -58,7 +57,7 @@ public class PreservedConfigOrderOfFeaturesTestCase extends PmInstallFeaturePack
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("b", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "fg1"))
@@ -77,7 +76,7 @@ public class PreservedConfigOrderOfFeaturesTestCase extends PmInstallFeaturePack
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("d", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+            .addFeatureGroup(FeatureGroup.builder("fg2")
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("name", "fg2"))
@@ -85,22 +84,22 @@ public class PreservedConfigOrderOfFeaturesTestCase extends PmInstallFeaturePack
                             new FeatureConfig("specD")
                             .setParam("name", "fg2"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(new FeatureConfig("specA").setFpDep("fp1").setParam("name", "config1"))
                     .addFeature(new FeatureConfig("specC").setParam("name", "config1"))
                     .addFeature(new FeatureConfig("specB").setFpDep("fp1").setParam("name", "config1"))
                     .addFeature(new FeatureConfig("specD").setParam("name", "config1"))
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                    .addFeatureGroup(FeatureGroup.builder("fg2")
                             .setInheritFeatures(false)
                             .includeSpec("specD")
                             .build())
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1").setFpDep("fp1")
+                    .addFeatureGroup(FeatureGroup.builder("fg1").setFpDep("fp1")
                             .excludeSpec("specA")
                             .build())
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                    .addFeatureGroup(FeatureGroup.builder("fg2")
                             .excludeFeature(FeatureId.create("specD", "name", "fg2"))
                             .build())
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1").setFpDep("fp1")
+                    .addFeatureGroup(FeatureGroup.builder("fg1").setFpDep("fp1")
                             .setInheritFeatures(false)
                             .includeFeature(FeatureId.create("specA", "name", "fg1"))
                             .build())

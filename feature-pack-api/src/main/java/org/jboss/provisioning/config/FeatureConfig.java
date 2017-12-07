@@ -27,9 +27,6 @@ import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.ConfigItemContainer;
-import org.jboss.provisioning.spec.ConfigItemContainerBuilder;
-import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.PmCollections;
@@ -71,23 +68,25 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
             params = copy.params;
         }
         if(copy.items.isEmpty()) {
-            items = Collections.emptyList();
-        } else if(copy.items.size() == 1) {
-            ConfigItem item = copy.items.get(0);
-            if(!item.isGroup()) {
+            items = copy.items;
+            return;
+        }
+        if(copy.items.size() == 1) {
+            if(copy.items.get(0).isGroup()) {
+                items = copy.items;
+                return;
+            }
+            items = Collections.singletonList(new FeatureConfig((FeatureConfig) copy.items.get(0)));
+            return;
+        }
+        final List<ConfigItem> tmp = new ArrayList<>(copy.items.size());
+        for (ConfigItem item : copy.items) {
+            if (!item.isGroup()) {
                 item = new FeatureConfig((FeatureConfig) item);
             }
-            items = Collections.singletonList(item);
-        } else {
-            final List<ConfigItem> tmp = new ArrayList<>(copy.items.size());
-            for(ConfigItem item : copy.items) {
-                if(!item.isGroup()) {
-                    item = new FeatureConfig((FeatureConfig) item);
-                }
-                tmp.add(item);
-            }
-            items = Collections.unmodifiableList(tmp);
+            tmp.add(item);
         }
+        items = Collections.unmodifiableList(tmp);
     }
 
     public FeatureConfig() {

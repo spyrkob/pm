@@ -19,15 +19,15 @@ package org.jboss.provisioning.featurepack.xml.test;
 import java.nio.file.Paths;
 import java.util.Locale;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FeaturePackXmlParser;
-import org.jboss.provisioning.ArtifactCoords;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -165,11 +165,11 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-default-configs.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
+                .addConfig(ConfigModel.builder().setName("config1").setModel("model1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1").build())
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                    .addFeatureGroup(FeatureGroup.builder("fg1").build())
+                    .addFeatureGroup(FeatureGroup.builder("fg2")
                             .excludeFeature(FeatureId.create("spec1", "p1", "v1"))
                             .build())
                     .addFeature(new FeatureConfig("spec1")
@@ -178,11 +178,11 @@ public class FeaturePackXmlParserTestCase  {
                         .setParam("p1", "v1")
                         .setParam("p2", "v2"))
                     .build())
-                .addConfig(ConfigSpec.builder().setModel("model2")
+                .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop3", "value3")
                     .setProperty("prop4", "value4")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg3").build())
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg4")
+                    .addFeatureGroup(FeatureGroup.builder("fg3").build())
+                    .addFeatureGroup(FeatureGroup.builder("fg4")
                             .excludeFeature(FeatureId.create("spec4", "p1", "v1"))
                             .build())
                     .addFeature(new FeatureConfig("spec5")
@@ -202,13 +202,13 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-unnamed-config.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addConfig(ConfigSpec.builder()
+                .addConfig(ConfigModel.builder()
                         .setProperty("prop1", "value1")
                         .setProperty("prop1", "value1")
                         .setProperty("prop2", "value2")
-                        .addFeatureGroup(FeatureGroupConfig.builder("dep1").build())
-                        .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
-                        .addFeatureGroup(FeatureGroupConfig.builder("dep3")
+                        .addFeatureGroup(FeatureGroup.builder("dep1").build())
+                        .addFeatureGroup(FeatureGroup.builder("dep2").setInheritFeatures(false).build())
+                        .addFeatureGroup(FeatureGroup.builder("dep3")
                                 .setInheritFeatures(false)
                                 .includeSpec("spec1")
                                 .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"))
@@ -222,18 +222,18 @@ public class FeaturePackXmlParserTestCase  {
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                 .build())
-                        .addFeatureGroup(FeatureGroupConfig.builder("dep4").setFpDep("source4").build())
+                        .addFeatureGroup(FeatureGroup.builder("dep4").setFpDep("source4").build())
                         .addFeature(new FeatureConfig("spec1")
-                        .addFeatureDep(FeatureId.fromString("spec2:p1=v1,p2=v2"))
-                        .addFeatureDep(FeatureId.fromString("spec3:p3=v3"))
-                        .setParam("p1", "v1")
-                        .setParam("p2", "v2"))
+                                .addFeatureDep(FeatureId.fromString("spec2:p1=v1,p2=v2"))
+                                .addFeatureDep(FeatureId.fromString("spec3:p3=v3"))
+                                .setParam("p1", "v1")
+                                .setParam("p2", "v2"))
                         .addFeature(new FeatureConfig("spec4")
-                        .setParam("p1", "v1")
-                        .addFeature(new FeatureConfig("spec5")
-                        .addFeature(new FeatureConfig("spec6")
-                        .setParentRef("spec5-ref")
-                        .setParam("p1", "v1"))))
+                                .setParam("p1", "v1")
+                                .addFeature(new FeatureConfig("spec5")
+                                        .addFeature(new FeatureConfig("spec6")
+                                                .setParentRef("spec5-ref")
+                                                .setParam("p1", "v1"))))
                         .addPackageDep("p1")
                         .addPackageDep("p2", true)
                         .addPackageDep("fp1", "p2")

@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.PmCollections;
 
@@ -39,7 +39,7 @@ public class WildFlyFeaturePackBuild {
         private List<FeaturePackDependencySpec> dependencies = Collections.emptyList();
         private Set<String> schemaGroups = Collections.emptySet();
         private Set<String> defaultPackages = Collections.emptySet();
-        private List<ConfigSpec> configs = Collections.emptyList();
+        private List<ConfigModel> configs = Collections.emptyList();
 
         private Builder() {
         }
@@ -59,7 +59,7 @@ public class WildFlyFeaturePackBuild {
             return this;
         }
 
-        public Builder addConfig(ConfigSpec config) {
+        public Builder addConfig(ConfigModel config) {
             configs = PmCollections.add(configs, config);
             return this;
         }
@@ -76,7 +76,7 @@ public class WildFlyFeaturePackBuild {
     private final List<FeaturePackDependencySpec> dependencies;
     private final Set<String> schemaGroups;
     private final Set<String> defaultPackages;
-    private final List<ConfigSpec> configs;
+    private final List<ConfigModel> configs;
 
     private WildFlyFeaturePackBuild(Builder builder) {
         this.dependencies = PmCollections.unmodifiable(builder.dependencies);
@@ -109,7 +109,7 @@ public class WildFlyFeaturePackBuild {
         return !configs.isEmpty();
     }
 
-    public List<ConfigSpec> getConfigs() {
+    public List<ConfigModel> getConfigs() {
         return configs;
     }
 }

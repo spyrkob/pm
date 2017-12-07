@@ -26,10 +26,8 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.spec.ConfigId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.util.StringUtils;
 import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * This class represents a feature-pack configuration to be installed.
@@ -44,10 +42,10 @@ public class FeaturePackConfig extends PackageDepsConfig {
         protected boolean inheritConfigs = true;
         protected boolean inheritModelOnlyConfigs = true;
         protected Set<String> includedModels = Collections.emptySet();
-        protected Map<ConfigId, IncludedConfig> includedConfigs = Collections.emptyMap();
+        protected Map<ConfigId, ConfigModel> includedConfigs = Collections.emptyMap();
         protected Map<String, Boolean> excludedModels = Collections.emptyMap();
         protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
-        protected Map<ConfigId, ConfigSpec> definedConfigs = Collections.emptyMap();
+        protected Map<ConfigId, ConfigModel> definedConfigs = Collections.emptyMap();
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -68,7 +66,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
             return this;
         }
 
-        public Builder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
+        public Builder addConfig(ConfigModel config) throws ProvisioningDescriptionException {
             if(definedConfigs.containsKey(config.getId())) {
                 throw new ProvisioningDescriptionException("Config model with id " + config.getId() + " has already been defined in the configuration of " + gav);
             }
@@ -97,10 +95,10 @@ public class FeaturePackConfig extends PackageDepsConfig {
         }
 
         public Builder includeDefaultConfig(String model, String name) throws ProvisioningDescriptionException {
-            return includeDefaultConfig(IncludedConfig.builder(model, name).build());
+            return includeDefaultConfig(ConfigModel.builder(model, name).build());
         }
 
-        public Builder includeDefaultConfig(IncludedConfig includedConfig) throws ProvisioningDescriptionException {
+        public Builder includeDefaultConfig(ConfigModel includedConfig) throws ProvisioningDescriptionException {
             if(includedConfigs.containsKey(includedConfig.getId())) {
                 throw new ProvisioningDescriptionException("Config model with id " + includedConfig.getId() + " has already been included into the configuration of " + gav);
             }
@@ -155,9 +153,9 @@ public class FeaturePackConfig extends PackageDepsConfig {
     private final boolean inheritModelOnlyConfigs;
     private final Set<String> includedModels;
     private final Map<String, Boolean> excludedModels;
-    private final Map<ConfigId, IncludedConfig> includedConfigs;
+    private final Map<ConfigId, ConfigModel> includedConfigs;
     private final Map<String, Set<String>> excludedConfigs;
-    private final Map<ConfigId, ConfigSpec> definedConfigs;
+    private final Map<ConfigId, ConfigModel> definedConfigs;
 
     protected FeaturePackConfig(Builder builder) {
         super(builder);
@@ -237,11 +235,11 @@ public class FeaturePackConfig extends PackageDepsConfig {
         return includedConfigs.containsKey(id);
     }
 
-    public Collection<IncludedConfig> getIncludedConfigs() {
+    public Collection<ConfigModel> getIncludedConfigs() {
         return includedConfigs.values();
     }
 
-    public IncludedConfig getIncludedConfig(ConfigId id) {
+    public ConfigModel getIncludedConfig(ConfigId id) {
         return includedConfigs.get(id);
     }
 
@@ -249,7 +247,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
         return !definedConfigs.isEmpty();
     }
 
-    public Collection<ConfigSpec> getDefinedConfigs() {
+    public Collection<ConfigModel> getDefinedConfigs() {
         return definedConfigs.values();
     }
 

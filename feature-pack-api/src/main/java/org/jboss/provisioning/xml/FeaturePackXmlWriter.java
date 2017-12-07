@@ -17,8 +17,9 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
+
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.xml.FeaturePackXmlParser10.Attribute;
@@ -54,7 +55,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
         }
 
         if(fpSpec.hasConfigs()) {
-            for(ConfigSpec config : fpSpec.getConfigs()) {
+            for(ConfigModel config : fpSpec.getConfigs()) {
                 fp.addChild(ConfigXmlWriter.getInstance().toElement(config, FeaturePackXmlParser10.NAMESPACE_1_0));
             }
         }

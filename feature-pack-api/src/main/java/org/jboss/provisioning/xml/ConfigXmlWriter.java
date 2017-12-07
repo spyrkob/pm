@@ -18,7 +18,7 @@ package org.jboss.provisioning.xml;
 
 import java.util.Map;
 
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.xml.ConfigXml.Attribute;
 import org.jboss.provisioning.xml.ConfigXml.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -27,7 +27,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
+public class ConfigXmlWriter extends BaseXmlWriter<ConfigModel> {
 
     private static final ConfigXmlWriter INSTANCE = new ConfigXmlWriter();
 
@@ -38,11 +38,11 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigSpec> {
     private ConfigXmlWriter() {
     }
 
-    protected ElementNode toElement(ConfigSpec config) {
+    protected ElementNode toElement(ConfigModel config) {
         return toElement(config, ConfigXml.NAMESPACE_1_0);
     }
 
-    protected ElementNode toElement(ConfigSpec config, String ns) {
+    protected ElementNode toElement(ConfigModel config, String ns) {
         final ElementNode configE = addElement(null, Element.CONFIG.getLocalName(), ns);
         if(config.getName() != null) {
             addAttribute(configE, Attribute.NAME, config.getName());

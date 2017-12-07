@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -63,15 +62,15 @@ public class ThisAsFeatureGroupOriginTestCase extends PmProvisionConfigTestBase 
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(new FeatureConfig("specA").setParam("a", "aOne"))
                     .addFeature(new FeatureConfig("specB").setParam("b", "bOne"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(new FeatureConfig("specD")
                             .setFpDep("fp2")
                             .setParam("d", "dOne")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("this", "fg1")))
+                            .addFeatureGroup(FeatureGroup.forGroup("this", "fg1")))
                     .build())
                     .getInstaller()
         .newFeaturePack(FP2_GAV)

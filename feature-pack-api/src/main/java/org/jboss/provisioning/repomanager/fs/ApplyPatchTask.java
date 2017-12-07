@@ -16,14 +16,15 @@
  */
 package org.jboss.provisioning.repomanager.fs;
 
-import difflib.DiffUtils;
-import difflib.Patch;
-import difflib.PatchFailedException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import difflib.DiffUtils;
+import difflib.Patch;
+import difflib.PatchFailedException;
 
 /**
  *

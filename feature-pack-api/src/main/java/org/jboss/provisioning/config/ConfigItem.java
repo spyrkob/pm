@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.spec;
+package org.jboss.provisioning.config;
 
 /**
  * @author Alexey Loubyansky

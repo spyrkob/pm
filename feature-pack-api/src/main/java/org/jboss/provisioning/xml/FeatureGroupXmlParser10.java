@@ -19,14 +19,14 @@ package org.jboss.provisioning.xml;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroupSpec.Builder> {
+class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroup.Builder> {
 
     public static final QName ROOT_1_0 = new QName(FeatureGroupXml.NAMESPACE_1_0, FeatureGroupXml.Element.FEATURE_GROUP_SPEC.getLocalName());
 
@@ -35,7 +35,7 @@ class FeatureGroupXmlParser10 implements PlugableXmlParser<FeatureGroupSpec.Buil
     }
 
     @Override
-    public void readElement(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder builder) throws XMLStreamException {
+    public void readElement(XMLExtendedStreamReader reader, FeatureGroup.Builder builder) throws XMLStreamException {
         FeatureGroupXml.readFeatureGroupSpec(reader, builder);
     }
 }

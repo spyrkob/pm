@@ -19,11 +19,13 @@ package org.jboss.provisioning.config;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.spec.ConfigItem;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.PackageDepsSpec;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.PmCollections;
 
@@ -31,18 +33,24 @@ import org.jboss.provisioning.util.PmCollections;
  *
  * @author Alexey Loubyansky
  */
-public abstract class FeatureGroupConfigSupport implements ConfigItem {
+public abstract class FeatureGroupSupport extends PackageDepsSpec implements ConfigItem, ConfigItemContainer {
 
     final String fpDep;
     final String name;
+
+    // customizations of the dependencies
     final boolean inheritFeatures;
     final Set<SpecId> includedSpecs;
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<SpecId> excludedSpecs;
     final Map<FeatureId, String> excludedFeatures; // featureId and optional parent-ref
-    final Map<String, FeatureGroupConfig> externalFgConfigs;
+    final Map<String, FeatureGroupSupport> externalFgConfigs;
 
-    protected FeatureGroupConfigSupport(String fpDep, String name) {
+    // added items
+    protected final List<ConfigItem> items;
+
+    protected FeatureGroupSupport(String fpDep, String name) {
+        super();
         this.fpDep = fpDep;
         this.name = name;
         this.inheritFeatures = true;
@@ -51,9 +59,11 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         this.excludedSpecs = Collections.emptySet();
         this.excludedFeatures = Collections.emptyMap();
         this.externalFgConfigs = Collections.emptyMap();
+        this.items = Collections.emptyList();
     }
 
-    protected FeatureGroupConfigSupport(FeatureGroupConfigBuilderSupport<?, ?> builder) {
+    protected FeatureGroupSupport(FeatureGroupBuilderSupport<?, ?> builder) throws ProvisioningDescriptionException {
+        super(builder);
         this.fpDep = builder.fpDep;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
@@ -65,15 +75,17 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         if(builder.externalFgConfigs.isEmpty()) {
             this.externalFgConfigs = Collections.emptyMap();
         } else if(builder.externalFgConfigs.size() == 1) {
-            final Map.Entry<String, FeatureGroupConfig.Builder> entry = builder.externalFgConfigs.entrySet().iterator().next();
+            final Map.Entry<String, FeatureGroup.Builder> entry = builder.externalFgConfigs.entrySet().iterator().next();
             this.externalFgConfigs = Collections.singletonMap(entry.getKey(), entry.getValue().build());
         } else {
-            final Map<String, FeatureGroupConfig> tmp = new LinkedHashMap<>(builder.externalFgConfigs.size());
-            for(Map.Entry<String, FeatureGroupConfig.Builder> entry : builder.externalFgConfigs.entrySet()) {
+            final Map<String, FeatureGroup> tmp = new LinkedHashMap<>(builder.externalFgConfigs.size());
+            for(Map.Entry<String, FeatureGroup.Builder> entry : builder.externalFgConfigs.entrySet()) {
                 tmp.put(entry.getKey(), entry.getValue().build());
             }
             this.externalFgConfigs = Collections.unmodifiableMap(tmp);
         }
+
+        this.items = PmCollections.unmodifiable(builder.items);
     }
 
     @Override
@@ -138,14 +150,29 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         return !externalFgConfigs.isEmpty();
     }
 
-    public Map<String, FeatureGroupConfig> getExternalFeatureGroups() {
+    public Map<String, FeatureGroupSupport> getExternalFeatureGroups() {
         return externalFgConfigs;
+    }
+
+    @Override
+    public boolean hasItems() {
+        return !items.isEmpty();
+    }
+
+    @Override
+    public List<ConfigItem> getItems() {
+        return items;
+    }
+
+    @Override
+    public boolean isResetFeaturePackOrigin() {
+        return true;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
         result = prime * result + ((externalFgConfigs == null) ? 0 : externalFgConfigs.hashCode());
@@ -153,6 +180,7 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
         result = prime * result + ((includedSpecs == null) ? 0 : includedSpecs.hashCode());
         result = prime * result + (inheritFeatures ? 1231 : 1237);
+        result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -161,11 +189,11 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
-        FeatureGroupConfigSupport other = (FeatureGroupConfigSupport) obj;
+        FeatureGroupSupport other = (FeatureGroupSupport) obj;
         if (excludedFeatures == null) {
             if (other.excludedFeatures != null)
                 return false;
@@ -197,6 +225,11 @@ public abstract class FeatureGroupConfigSupport implements ConfigItem {
         } else if (!includedSpecs.equals(other.includedSpecs))
             return false;
         if (inheritFeatures != other.inheritFeatures)
+            return false;
+        if (items == null) {
+            if (other.items != null)
+                return false;
+        } else if (!items.equals(other.items))
             return false;
         if (name == null) {
             if (other.name != null)

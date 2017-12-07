@@ -18,9 +18,6 @@ package org.jboss.provisioning.diff;
 
 
 
-import difflib.DiffUtils;
-import difflib.Patch;
-import difflib.PatchFailedException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,7 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import org.jboss.provisioning.MessageWriter;
+
+import difflib.DiffUtils;
+import difflib.Patch;
+import difflib.PatchFailedException;
 
 /**
  *

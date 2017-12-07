@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.util.StringUtils;
 import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * Represents provisioned installation.

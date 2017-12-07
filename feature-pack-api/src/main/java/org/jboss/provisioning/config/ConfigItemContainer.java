@@ -14,26 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.provisioning.config;
 
-package org.jboss.provisioning.spec;
-
-import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-
+import java.util.List;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public interface ConfigItemContainerBuilder<B extends ConfigItemContainerBuilder<B>> {
+public interface ConfigItemContainer {
 
-    B addConfigItem(ConfigItem item);
+    boolean hasItems();
 
-    default B addFeatureGroup(FeatureGroupConfig dep) {
-        return addConfigItem(dep);
-    }
+    List<ConfigItem> getItems();
 
-    default B addFeature(FeatureConfig feature) {
-        return addConfigItem(feature);
-    }
+     boolean isResetFeaturePackOrigin();
 }

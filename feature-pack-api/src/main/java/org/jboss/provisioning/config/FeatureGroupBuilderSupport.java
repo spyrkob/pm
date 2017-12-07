@@ -18,11 +18,13 @@
 package org.jboss.provisioning.config;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureId;
+import org.jboss.provisioning.spec.PackageDepsSpecBuilder;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.util.PmCollections;
 
@@ -30,21 +32,28 @@ import org.jboss.provisioning.util.PmCollections;
  * @author Alexey Loubyansky
  *
  */
-public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupConfigSupport, B extends FeatureGroupConfigBuilderSupport<T, B>> {
+public abstract class FeatureGroupBuilderSupport<T extends FeatureGroupSupport, B extends FeatureGroupBuilderSupport<T, B>>
+    extends PackageDepsSpecBuilder<B>
+    implements ConfigItemContainerBuilder<B> {
 
-    String fpDep;
-    String name;
-    boolean inheritFeatures = true;
-    Set<SpecId> includedSpecs = Collections.emptySet();
-    Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
-    Set<SpecId> excludedSpecs = Collections.emptySet();
-    Map<FeatureId, String> excludedFeatures = Collections.emptyMap();
-    Map<String, FeatureGroupConfig.Builder> externalFgConfigs = Collections.emptyMap();
+    protected String fpDep;
+    protected String name;
 
-    protected FeatureGroupConfigBuilderSupport() {
+    // dependency customizations
+    protected boolean inheritFeatures = true;
+    protected Set<SpecId> includedSpecs = Collections.emptySet();
+    protected Map<FeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
+    protected Set<SpecId> excludedSpecs = Collections.emptySet();
+    protected Map<FeatureId, String> excludedFeatures = Collections.emptyMap();
+    protected Map<String, FeatureGroup.Builder> externalFgConfigs = Collections.emptyMap();
+
+    // added items
+    protected List<ConfigItem> items = Collections.emptyList();
+
+    protected FeatureGroupBuilderSupport() {
     }
 
-    protected FeatureGroupConfigBuilderSupport(String name) {
+    protected FeatureGroupBuilderSupport(String name) {
         this.name = name;
     }
 
@@ -173,17 +182,24 @@ public abstract class FeatureGroupConfigBuilderSupport<T extends FeatureGroupCon
         return (B) this;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addConfigItem(ConfigItem item) {
+        items = PmCollections.add(items, item);
+        return (B) this;
+    }
+
     public abstract T build() throws ProvisioningDescriptionException;
 
-    private FeatureGroupConfig.Builder getExternalFgConfig(String fpDep) {
+    private FeatureGroup.Builder getExternalFgConfig(String fpDep) {
         if(fpDep == null) {
             throw new IllegalArgumentException();
         }
-        FeatureGroupConfig.Builder fgBuilder = externalFgConfigs.get(fpDep);
+        FeatureGroup.Builder fgBuilder = externalFgConfigs.get(fpDep);
         if(fgBuilder != null) {
             return fgBuilder;
         }
-        fgBuilder = FeatureGroupConfig.builder(inheritFeatures);
+        fgBuilder = FeatureGroup.builder(inheritFeatures);
         externalFgConfigs = PmCollections.putLinked(externalFgConfigs, fpDep, fgBuilder);
         return fgBuilder;
     }

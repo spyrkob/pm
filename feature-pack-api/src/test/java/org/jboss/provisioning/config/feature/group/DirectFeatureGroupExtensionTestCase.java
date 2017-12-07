@@ -23,14 +23,13 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -55,13 +54,13 @@ public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTes
             .addSpec(FeatureSpec.builder("specP")
                     .addParam(FeatureParameterSpec.createId("parent"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("group1")
+            .addFeatureGroup(FeatureGroup.builder("group1")
                     .addFeature(
                             new FeatureConfig("specP")
                             .setParam("parent", "p1"))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.builder("group1")
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("group1")
                             .includeFeature(FeatureId.create("specP", "parent", "p2"))
                             .build())
                     .build())

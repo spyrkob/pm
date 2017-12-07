@@ -24,9 +24,9 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -55,7 +55,7 @@ public class SingleConfigModelFromMultipleFeaturePacksTestCase extends PmProvisi
                     .addParam(FeatureParameterSpec.create("p3"))
                     .addParam(FeatureParameterSpec.create("p4", "spec"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop1", "fp1config1")
                     .setProperty("prop2", "fp1config1")
                     .setProperty("prop3", "fp1config1")
@@ -65,13 +65,13 @@ public class SingleConfigModelFromMultipleFeaturePacksTestCase extends PmProvisi
                             .setParam("p2", "config1")
                             .setParam("p3", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+            .addConfig(ConfigModel.builder().setModel("model1").setName("main")
                     .setProperty("prop2", "fp1main")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p2", "main"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model2")
+            .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop2", "fp1config2")
                     .setProperty("prop3", "fp1config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -87,13 +87,13 @@ public class SingleConfigModelFromMultipleFeaturePacksTestCase extends PmProvisi
                     .addParam(FeatureParameterSpec.create("p2"))
                     .addParam(FeatureParameterSpec.create("p3", "spec"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+            .addConfig(ConfigModel.builder().setModel("model1").setName("main")
                     .setProperty("prop4", "fp2main")
                     .addFeature(new FeatureConfig().setSpecName("specB")
                             .setParam("name", "b1")
                             .setParam("p2", "main"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop2", "fp2config1")
                     .setProperty("prop3", "fp2config1")
                     .setProperty("prop4", "fp2config1")
@@ -102,7 +102,7 @@ public class SingleConfigModelFromMultipleFeaturePacksTestCase extends PmProvisi
                             .setParam("p1", "config1")
                             .setParam("p2", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model2")
+            .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop2", "fp2config2")
                     .addFeature(new FeatureConfig().setSpecName("specB")
                             .setParam("name", "b1")

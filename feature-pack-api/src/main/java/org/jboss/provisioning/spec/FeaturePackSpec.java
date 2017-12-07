@@ -27,9 +27,10 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.util.DescrFormatter;
-import org.jboss.provisioning.util.StringUtils;
 import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * This class describes the feature-pack as it is available in the repository.
@@ -44,8 +45,8 @@ public class FeaturePackSpec {
         private Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies = Collections.emptyMap();
         private Map<String, FeaturePackDependencySpec> dependencyByName = Collections.emptyMap();
         private Set<String> defPackages = Collections.emptySet();
-        private List<ConfigSpec> defConfigs = Collections.emptyList();
-        private ConfigSpec unnamedConfig;
+        private List<ConfigModel> defConfigs = Collections.emptyList();
+        private ConfigModel unnamedConfig;
 
         protected Builder() {
             this(null);
@@ -70,7 +71,7 @@ public class FeaturePackSpec {
             return this;
         }
 
-        public Builder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
+        public Builder addConfig(ConfigModel config) throws ProvisioningDescriptionException {
             assert config != null : "config is null";
             if(config.getName() == null && config.getModel() == null) {
                 if (unnamedConfig != null) {
@@ -125,7 +126,7 @@ public class FeaturePackSpec {
     private final Map<ArtifactCoords.Ga, FeaturePackDependencySpec> dependencies;
     private final Map<String, FeaturePackDependencySpec> dependencyByName;
     private final Set<String> defPackages;
-    private final List<ConfigSpec> defConfigs;
+    private final List<ConfigModel> defConfigs;
 
     protected FeaturePackSpec(Builder builder) {
         this.gav = builder.gav;
@@ -143,7 +144,7 @@ public class FeaturePackSpec {
         return !defConfigs.isEmpty();
     }
 
-    public List<ConfigSpec> getConfigs() {
+    public List<ConfigModel> getConfigs() {
         return defConfigs;
     }
 

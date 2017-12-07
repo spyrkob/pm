@@ -29,7 +29,6 @@ import org.jboss.provisioning.repomanager.fs.FsTaskContext;
 import org.jboss.provisioning.repomanager.fs.FsTaskList;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
-
 import org.jboss.provisioning.util.LayoutUtils;
 import org.jboss.provisioning.xml.PackageXmlWriter;
 

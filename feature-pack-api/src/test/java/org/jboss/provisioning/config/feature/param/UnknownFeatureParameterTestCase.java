@@ -18,15 +18,15 @@
 package org.jboss.provisioning.config.feature.param;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -51,7 +51,7 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", "def1"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")

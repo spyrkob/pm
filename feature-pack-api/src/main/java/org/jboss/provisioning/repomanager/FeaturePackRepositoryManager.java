@@ -26,8 +26,8 @@ import java.util.logging.Logger;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactException;
-import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.ArtifactRepositoryManager;
+import org.jboss.provisioning.util.ZipUtils;
 
 /**
  *

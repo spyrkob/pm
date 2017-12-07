@@ -35,9 +35,9 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigId;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
@@ -59,7 +59,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         final FeaturePackSpec spec;
         boolean ordered;
         private Map<String, ResolvedFeatureSpec> featureSpecs = null;
-        private Map<String, FeatureGroupSpec> fgSpecs = null;
+        private Map<String, FeatureGroup> fgSpecs = null;
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
@@ -87,8 +87,8 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             pkgOrder.add(name);
         }
 
-        FeatureGroupSpec getFeatureGroupSpec(String name) throws ProvisioningException {
-            FeatureGroupSpec fgSpec = null;
+        FeatureGroup getFeatureGroupSpec(String name) throws ProvisioningException {
+            FeatureGroup fgSpec = null;
             if(fgSpecs == null) {
                 fgSpecs = new HashMap<>();
             } else {
@@ -106,7 +106,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 }
                 fgSpecs.put(name, fgSpec);
             }
-            return new FeatureGroupSpec(fgSpec);
+            return fgSpec;
         }
 
         ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {

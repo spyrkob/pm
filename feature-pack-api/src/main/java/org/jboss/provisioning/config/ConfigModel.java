@@ -21,25 +21,34 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.provisioning.spec.ConfigId;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.StringUtils;
 
 /**
- *
  * @author Alexey Loubyansky
+ *
  */
-public class IncludedConfig extends FeatureGroupConfigSupport {
+public class ConfigModel extends FeatureGroupSupport {
 
-    public static class Builder extends FeatureGroupConfigBuilderSupport<IncludedConfig, Builder> {
+    public static class Builder extends FeatureGroupBuilderSupport<ConfigModel, Builder> {
 
-        private final String model;
+        private String model;
         private Map<String, String> props = Collections.emptyMap();
 
-        private Builder(String model, String name) {
+        protected Builder() {
+            super();
+        }
+
+        protected Builder(String model, String name) {
             super(name);
             this.model = model;
+        }
+
+        public Builder setModel(String model) {
+            this.model = model;
+            return this;
         }
 
         @Override
@@ -49,9 +58,14 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
         }
 
         @Override
-        public IncludedConfig build() {
-            return new IncludedConfig(this);
+        public ConfigModel build() throws ProvisioningDescriptionException {
+            return new ConfigModel(this);
         }
+
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static Builder builder(String model, String name) {
@@ -61,7 +75,7 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
     final ConfigId id;
     final Map<String, String> props;
 
-    private IncludedConfig(Builder builder) {
+    protected ConfigModel(Builder builder) throws ProvisioningDescriptionException {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
         this.props = PmCollections.unmodifiable(builder.props);
@@ -102,7 +116,7 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        IncludedConfig other = (IncludedConfig) obj;
+        ConfigModel other = (ConfigModel) obj;
         if (id == null) {
             if (other.id != null)
                 return false;
@@ -115,6 +129,7 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
             return false;
         return true;
     }
+
 
     @Override
     public String toString() {
@@ -158,6 +173,11 @@ public class IncludedConfig extends FeatureGroupConfigSupport {
         if(!excludedFeatures.isEmpty()) {
             buf.append(" exlcudedFeatures=");
             StringUtils.append(buf, excludedFeatures.keySet());
+        }
+
+        if(!items.isEmpty()) {
+            buf.append(" items=");
+            StringUtils.append(buf, items);
         }
         return buf.append(']').toString();
     }

@@ -23,10 +23,9 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -63,7 +62,7 @@ public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBa
                             .setInclude(true)
                             .build())
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1")
+            .addConfig(ConfigModel.builder().setName("config1")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "b")
@@ -76,7 +75,7 @@ public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBa
     @Override
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
         return FeaturePackConfig.builder(FP_GAV)
-                .includeDefaultConfig(IncludedConfig.builder(null, "config1").excludeFeature(FeatureId.create("specA", "name", "a")).build())
+                .includeDefaultConfig(ConfigModel.builder(null, "config1").excludeFeature(FeatureId.create("specA", "name", "a")).build())
                 .build();
     }
 

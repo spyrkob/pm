@@ -19,6 +19,7 @@ package org.jboss.provisioning.xml;
 import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.spec.FeaturePackSpec;

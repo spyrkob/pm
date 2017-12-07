@@ -23,9 +23,9 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -55,7 +55,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                     .addParam(FeatureParameterSpec.create("p3", true))
                     .addParam(FeatureParameterSpec.create("p4", "spec"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop1", "config1")
                     .setProperty("prop2", "config1")
                     .setProperty("prop3", "config1")
@@ -65,7 +65,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                             .setParam("p2", "config1")
                             .setParam("p3", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -74,13 +74,13 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                             .setParam("p3", "config2"))
                     .addPackageDep("model1.p1")
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+            .addConfig(ConfigModel.builder().setModel("model1").setName("main")
                     .setProperty("prop3", "main")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p3", "main"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model2")
+            .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -99,7 +99,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
         return FeaturePackConfig.builder(FP_GAV)
                 .excludeConfigModel("model1")
-                .addConfig(ConfigSpec.builder()
+                .addConfig(ConfigModel.builder()
                         .setModel("model1")
                         .setName("custom1")
                         .setProperty("prop3", "custom1")
@@ -107,7 +107,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
                                 .setParam("name", "a1")
                                 .setParam("p3", "custom1"))
                         .build())
-                .addConfig(ConfigSpec.builder().setName("custom2").setModel("model2").build())
+                .addConfig(ConfigModel.builder().setName("custom2").setModel("model2").build())
                 .build();
     }
 

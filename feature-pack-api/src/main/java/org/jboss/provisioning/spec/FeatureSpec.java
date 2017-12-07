@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.util.StringUtils;
 import org.jboss.provisioning.util.PmCollections;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  *

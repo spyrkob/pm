@@ -23,9 +23,9 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -57,7 +57,7 @@ public class SimplestFeatureSpecDependencyTestCase extends PmInstallFeaturePackT
                     .addParam(FeatureParameterSpec.create("b", true))
                     .addFeatureDep(FeatureDependencySpec.create(FeatureId.create("specA", "id", "a")))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("id", "b"))

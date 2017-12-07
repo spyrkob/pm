@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -66,7 +65,7 @@ public class ResolvedFeatureMapWithIncompleteResolvedIdAsKeysTestCase extends Pm
                     .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.createId("a"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("id", "b1"))
@@ -80,24 +79,24 @@ public class ResolvedFeatureMapWithIncompleteResolvedIdAsKeysTestCase extends Pm
                             new FeatureConfig("specC")
                             .setParam("id", "c2"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+            .addFeatureGroup(FeatureGroup.builder("fg2")
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a1")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                            .addFeatureGroup(FeatureGroup.builder("fg1")
                                     .setInheritFeatures(false)
                                     .includeFeature(FeatureId.create("specB", "id", "b1"))
                                     .includeFeature(FeatureId.create("specC", "id", "c1"))
                                     .build()))
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a2")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                            .addFeatureGroup(FeatureGroup.builder("fg1")
                                     .setInheritFeatures(false)
                                     .includeFeature(FeatureId.create("specB", "id", "b1"))
                                     .includeFeature(FeatureId.create("specC", "id", "c1"))
                                     .build()))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("fg2")
                             .excludeSpec("specB")
                             .includeFeature(FeatureId.builder("specB").setParam("id", "b1").setParam("a", "a1").build())
                             .excludeSpec("specC")

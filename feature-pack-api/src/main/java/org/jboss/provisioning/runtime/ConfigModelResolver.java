@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -41,7 +42,7 @@ import org.jboss.provisioning.util.PmCollections;
  *
  * @author Alexey Loubyansky
  */
-public class ConfigModelBuilder implements ProvisionedConfig {
+public class ConfigModelResolver implements ProvisionedConfig {
 
     private static final class CircularRefInfo {
         final ResolvedFeature loopedOn;
@@ -136,20 +137,20 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         }
     }
 
-    public static ConfigModelBuilder anonymous() {
-        return new ConfigModelBuilder(null, null);
+    public static ConfigModelResolver anonymous() {
+        return new ConfigModelResolver(null, null);
     }
 
-    public static ConfigModelBuilder forName(String name) {
-        return new ConfigModelBuilder(null, name);
+    public static ConfigModelResolver forName(String name) {
+        return new ConfigModelResolver(null, name);
     }
 
-    public static ConfigModelBuilder forModel(String model) {
-        return new ConfigModelBuilder(model, null);
+    public static ConfigModelResolver forModel(String model) {
+        return new ConfigModelResolver(model, null);
     }
 
-    public static ConfigModelBuilder forConfig(String model, String name) {
-        return new ConfigModelBuilder(model, name);
+    public static ConfigModelResolver forConfig(String model, String name) {
+        return new ConfigModelResolver(model, name);
     }
 
     final String model;
@@ -170,7 +171,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
 
-    private ConfigModelBuilder(String model, String name) {
+    private ConfigModelResolver(String model, String name) {
         this.model = model;
         this.name = name;
     }
@@ -261,7 +262,7 @@ public class ConfigModelBuilder implements ProvisionedConfig {
         features.list.add(feature);
     }
 
-    void merge(ConfigModelBuilder other) throws ProvisioningException {
+    void merge(ConfigModelResolver other) throws ProvisioningException {
         if(!other.props.isEmpty()) {
             if(props.isEmpty()) {
                 props = other.props;

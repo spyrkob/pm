@@ -36,6 +36,8 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactException;
+import org.jboss.provisioning.ArtifactRepositoryManager;
+import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -43,8 +45,12 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.diff.FileSystemDiffResult;
+import org.jboss.provisioning.plugin.DiffPlugin;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.plugin.UpgradePlugin;
 import org.jboss.provisioning.repomanager.FeaturePackBuilder;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
@@ -53,12 +59,6 @@ import org.jboss.provisioning.util.PathsUtils;
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
-import org.jboss.provisioning.ArtifactRepositoryManager;
-import org.jboss.provisioning.Constants;
-import org.jboss.provisioning.plugin.DiffPlugin;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.plugin.UpgradePlugin;
-import org.jboss.provisioning.spec.FeaturePackSpec;
 
 /**
  *
@@ -181,18 +181,18 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             }
         }
         if(!builder.nameOnlyConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> config : builder.nameOnlyConfigs.entrySet()) {
+            for(Map.Entry<String, ConfigModelResolver> config : builder.nameOnlyConfigs.entrySet()) {
                 addConfig(config.getValue());
             }
         }
         if(!builder.modelOnlyConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelBuilder> config : builder.modelOnlyConfigs.entrySet()) {
+            for(Map.Entry<String, ConfigModelResolver> config : builder.modelOnlyConfigs.entrySet()) {
                 addConfig(config.getValue());
             }
         }
         if(!builder.namedModelConfigs.isEmpty()) {
-            for(Map.Entry<String, Map<String, ConfigModelBuilder>> namedConfigs : builder.namedModelConfigs.entrySet()) {
-                for(Map.Entry<String, ConfigModelBuilder> config : namedConfigs.getValue().entrySet()) {
+            for(Map.Entry<String, Map<String, ConfigModelResolver>> namedConfigs : builder.namedModelConfigs.entrySet()) {
+                for(Map.Entry<String, ConfigModelResolver> config : namedConfigs.getValue().entrySet()) {
                     addConfig(config.getValue());
                 }
             }

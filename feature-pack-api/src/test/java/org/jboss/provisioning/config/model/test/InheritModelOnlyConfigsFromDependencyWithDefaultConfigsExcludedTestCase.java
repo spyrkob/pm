@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -60,11 +59,11 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addPackageDep("fc1.p1")
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(new FeatureConfig("specB").setParam("name", "b"))
                     .addPackageDep("fg1.p1")
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop1", "config1")
                     .setProperty("prop2", "config1")
                     .setProperty("prop3", "config1")
@@ -74,7 +73,7 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
                             .setParam("p2", "config1")
                             .setParam("p3", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -82,16 +81,16 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+            .addConfig(ConfigModel.builder().setModel("model1").setName("main")
                     .setProperty("prop3", "main")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p3", "main"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model2")
+            .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
+                    .addFeatureGroup(FeatureGroup.forGroup("fg1"))
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p2", "config2")
@@ -112,7 +111,7 @@ public class InheritModelOnlyConfigsFromDependencyWithDefaultConfigsExcludedTest
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
                     .setInheritConfigs(false)
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setModel("model1")
                     .setName("fp2")
                     .addFeature(new FeatureConfig("specA")

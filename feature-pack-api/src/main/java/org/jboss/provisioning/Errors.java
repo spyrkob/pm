@@ -132,7 +132,7 @@ public interface Errors {
     }
 
     static String packageExcludeInclude(String packageName) {
-        return "Package " + packageName + " is explicitly excluded and included";
+        return "Attempt to explicitly include and exclude package " + packageName;
     }
 
     static String duplicateDependencyName(String name) {

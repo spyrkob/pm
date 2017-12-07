@@ -21,13 +21,14 @@ import java.io.Reader;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.FeatureGroup;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupXmlParser implements XmlParser<FeatureGroupSpec> {
+public class FeatureGroupXmlParser implements XmlParser<FeatureGroup> {
 
     private static final FeatureGroupXmlParser INSTANCE = new FeatureGroupXmlParser();
 
@@ -39,9 +40,13 @@ public class FeatureGroupXmlParser implements XmlParser<FeatureGroupSpec> {
     }
 
     @Override
-    public FeatureGroupSpec parse(final Reader input) throws XMLStreamException {
-        final FeatureGroupSpec.Builder configBuilder = FeatureGroupSpec.builder();
+    public FeatureGroup parse(final Reader input) throws XMLStreamException {
+        final FeatureGroup.Builder configBuilder = FeatureGroup.builder();
         XmlParsers.parse(input, configBuilder);
-        return configBuilder.build();
+        try {
+            return configBuilder.build();
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to parse feature-group xml", e);
+        }
     }
 }

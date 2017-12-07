@@ -33,18 +33,17 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactRepositoryManager;
-import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.repomanager.fs.FsTaskContext;
 import org.jboss.provisioning.repomanager.fs.FsTaskList;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageSpec;
-
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeatureGroupXmlWriter;
@@ -73,7 +72,7 @@ public class FeaturePackBuilder {
     private String pluginFileName = "plugins.jar";
     private List<Path> plugins = Collections.emptyList();
     private Map<String, FeatureSpec> specs = Collections.emptyMap();
-    private Map<String, FeatureGroupSpec> featureGroups = Collections.emptyMap();
+    private Map<String, FeatureGroup> featureGroups = Collections.emptyMap();
     private FsTaskList tasks;
 
 
@@ -148,7 +147,7 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public FeaturePackBuilder addFeatureGroup(FeatureGroupSpec featureGroup) throws ProvisioningDescriptionException {
+    public FeaturePackBuilder addFeatureGroup(FeatureGroup featureGroup) throws ProvisioningDescriptionException {
         if(featureGroups.isEmpty()) {
             featureGroups = Collections.singletonMap(featureGroup.getName(), featureGroup);
         } else {
@@ -163,7 +162,7 @@ public class FeaturePackBuilder {
         return this;
     }
 
-    public FeaturePackBuilder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
+    public FeaturePackBuilder addConfig(ConfigModel config) throws ProvisioningDescriptionException {
         fpBuilder.addConfig(config);
         return this;
     }
@@ -275,7 +274,7 @@ public class FeaturePackBuilder {
                 final Path fgsDir = fpWorkDir.resolve(Constants.FEATURE_GROUPS);
                 ensureDir(fgsDir);
                 final FeatureGroupXmlWriter fgWriter = FeatureGroupXmlWriter.getInstance();
-                for(FeatureGroupSpec fg : featureGroups.values()) {
+                for(FeatureGroup fg : featureGroups.values()) {
                     fgWriter.write(fg, fgsDir.resolve(fg.getName() + ".xml"));
                 }
             }

@@ -30,7 +30,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -177,7 +177,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                             }
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder config = ConfigSpec.builder();
+                            final ConfigModel.Builder config = ConfigModel.builder();
                             ConfigXml.readConfig(reader, config);
                             try {
                                 fpBuilder.addConfig(config.build());

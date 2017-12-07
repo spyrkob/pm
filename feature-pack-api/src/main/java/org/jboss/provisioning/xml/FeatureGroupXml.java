@@ -28,12 +28,11 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.ConfigItemContainerBuilder;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-import org.jboss.provisioning.config.FeatureGroupConfigBuilderSupport;
+import org.jboss.provisioning.config.FeatureGroup;
+import org.jboss.provisioning.config.FeatureGroupBuilderSupport;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.ConfigItemContainerBuilder;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -158,7 +157,7 @@ public class FeatureGroupXml {
         super();
     }
 
-    public static void readFeatureGroupSpec(XMLExtendedStreamReader reader, FeatureGroupSpec.Builder groupBuilder) throws XMLStreamException {
+    public static void readFeatureGroupSpec(XMLExtendedStreamReader reader, FeatureGroup.Builder groupBuilder) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         String name = null;
         for (int i = 0; i < count; i++) {
@@ -256,7 +255,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static FeatureGroupConfig readFeatureGroupDependency(String fpDep, XMLExtendedStreamReader reader) throws XMLStreamException {
+    public static FeatureGroup readFeatureGroupDependency(String fpDep, XMLExtendedStreamReader reader) throws XMLStreamException {
         String name = null;
         Boolean inheritFeatures = null;
         final int count = reader.getAttributeCount();
@@ -276,15 +275,19 @@ public class FeatureGroupXml {
         if (name == null && inheritFeatures != null) {
             throw new XMLStreamException(Attribute.INHERIT_FEATURES + " attribute can't be used w/o attribute " + Attribute.NAME);
         }
-        final FeatureGroupConfig.Builder depBuilder = FeatureGroupConfig.builder(name).setFpDep(fpDep);
+        final FeatureGroup.Builder depBuilder = FeatureGroup.builder(name).setFpDep(fpDep);
         if(inheritFeatures != null) {
             depBuilder.setInheritFeatures(inheritFeatures);
         }
         readFeatureGroupConfigBody(reader, depBuilder);
-        return depBuilder.build();
+        try {
+            return depBuilder.build();
+        } catch (ProvisioningDescriptionException e) {
+            throw new XMLStreamException("Failed to parse feature group dependency", reader.getLocation(), e);
+        }
     }
 
-    public static void readFeatureGroupConfigBody(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+    public static void readFeatureGroupConfigBody(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?, ?> builder) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
@@ -315,7 +318,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProps(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+    private static void readProps(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?, ?> builder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -341,7 +344,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProp(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+    private static void readProp(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?, ?> builder) throws XMLStreamException {
         String name = null;
         String value = null;
         final int count = reader.getAttributeCount();
@@ -373,7 +376,7 @@ public class FeatureGroupXml {
         ParsingUtils.parseNoContent(reader);
     }
 
-    private static void readFeaturePackIncludeExclude(XMLExtendedStreamReader reader, FeatureGroupConfigBuilderSupport<?, ?> builder) throws XMLStreamException {
+    private static void readFeaturePackIncludeExclude(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?, ?> builder) throws XMLStreamException {
         String dependency = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -413,7 +416,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readInclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupConfigBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
+    private static void readInclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
         String spec = null;
         String featureIdStr = null;
         String parentRef = null;
@@ -497,7 +500,7 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readExclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupConfigBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
+    private static void readExclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupBuilderSupport<?, ?> depBuilder) throws XMLStreamException {
         String spec = null;
         String featureIdStr = null;
         String parentRef = null;

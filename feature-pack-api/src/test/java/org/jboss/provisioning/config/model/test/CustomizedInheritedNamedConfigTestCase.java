@@ -23,11 +23,10 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -54,7 +53,7 @@ public class CustomizedInheritedNamedConfigTestCase extends PmProvisionConfigTes
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
+            .addConfig(ConfigModel.builder().setName("config1").setModel("model1")
                     .setProperty("prop1", "c1m1")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
@@ -66,7 +65,7 @@ public class CustomizedInheritedNamedConfigTestCase extends PmProvisionConfigTes
                             .setParam("name", "a3")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model2")
+            .addConfig(ConfigModel.builder().setName("config1").setModel("model2")
                     .setProperty("prop1", "c1m2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
@@ -76,12 +75,12 @@ public class CustomizedInheritedNamedConfigTestCase extends PmProvisionConfigTes
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
                     .setInheritConfigs(true)
-                    .includeDefaultConfig(IncludedConfig.builder("model1", "config1")
+                    .includeDefaultConfig(ConfigModel.builder("model1", "config1")
                             .excludeFeature(FeatureId.fromString("specA:name=a3"))
                             .includeFeature(FeatureId.fromString("specA:name=a2"), new FeatureConfig().setParam("p1", "custom1"))
                             .build())
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1").setModel("model1")
+            .addConfig(ConfigModel.builder().setName("config1").setModel("model1")
                     .addFeature(new FeatureConfig("specA")
                             .setFpDep("fp1")
                             .setParam("name", "a5")

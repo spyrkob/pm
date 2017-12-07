@@ -20,10 +20,9 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
 import org.jboss.provisioning.xml.util.ElementNode;
@@ -123,7 +122,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             if(defConfigsE == null) {
                 defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
-            for (IncludedConfig config : featurePack.getIncludedConfigs()) {
+            for (ConfigModel config : featurePack.getIncludedConfigs()) {
                 final ElementNode includeElement = addElement(defConfigsE, Element.INCLUDE.getLocalName(), ns);
                 if(config.getModel() != null) {
                     addAttribute(includeElement, Attribute.MODEL, config.getModel());
@@ -133,7 +132,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         }
 
         if(featurePack.hasDefinedConfigs()) {
-            for (ConfigSpec config : featurePack.getDefinedConfigs()) {
+            for (ConfigModel config : featurePack.getDefinedConfigs()) {
                 fp.addChild(ConfigXmlWriter.getInstance().toElement(config, ns));
             }
         }

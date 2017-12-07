@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;

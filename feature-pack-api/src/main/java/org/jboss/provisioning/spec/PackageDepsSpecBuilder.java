@@ -16,8 +16,10 @@
  */
 package org.jboss.provisioning.spec;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.provisioning.util.PmCollections;
@@ -85,5 +87,40 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
 
     public boolean hasPackageDeps() {
         return localPkgDeps != null || !externalPkgDeps.isEmpty();
+    }
+
+    protected List<PackageDependencySpec> buildLocalPackageDeps() {
+        return getValueList(localPkgDeps);
+    }
+
+    protected Map<String, List<PackageDependencySpec>> buildExternalPackageDeps() {
+        if(externalPkgDeps.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        if(externalPkgDeps.size() == 1) {
+            final Map.Entry<String, Map<String, PackageDependencySpec>> first = externalPkgDeps.entrySet().iterator().next();
+            return Collections.singletonMap(first.getKey(), getValueList(first.getValue()));
+        }
+        final Map<String, List<PackageDependencySpec>> tmp = new HashMap<>(externalPkgDeps.size());
+        for (Map.Entry<String, Map<String, PackageDependencySpec>> externalEntry : externalPkgDeps.entrySet()) {
+            tmp.put(externalEntry.getKey(), getValueList(externalEntry.getValue()));
+        }
+        return PmCollections.unmodifiable(tmp);
+    }
+
+    private static List<PackageDependencySpec> getValueList(Map<String, PackageDependencySpec> localPkgDeps) {
+        final List<PackageDependencySpec> list;
+        if(localPkgDeps.isEmpty()) {
+            list = Collections.emptyList();
+        } else if(localPkgDeps.size() == 1) {
+            list = Collections.singletonList(localPkgDeps.entrySet().iterator().next().getValue());
+        } else {
+            final List<PackageDependencySpec> tmp = new ArrayList<>(localPkgDeps.size());
+            for(Map.Entry<String, PackageDependencySpec> entry : localPkgDeps.entrySet()) {
+                tmp.add(entry.getValue());
+            }
+            list = Collections.unmodifiableList(tmp);
+        }
+        return list;
     }
 }

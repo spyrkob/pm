@@ -18,8 +18,8 @@ package org.jboss.provisioning.wildfly.build;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.ConfigXml;
@@ -196,9 +196,13 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             parsePackageSchemas(reader, builder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder config = ConfigSpec.builder();
+                            final ConfigModel.Builder config = ConfigModel.builder();
                             ConfigXml.readConfig(reader, config);
-                            builder.addConfig(config.build());
+                            try {
+                                builder.addConfig(config.build());
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to create a config model instance", e);
+                            }
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -307,7 +311,7 @@ class FeaturePackBuildModelParser20 implements XMLElementReader<WildFlyFeaturePa
                             ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder();
+                            final ConfigModel.Builder configBuilder = ConfigModel.builder();
                             ConfigXml.readConfig(reader, configBuilder);
                             try {
                                 depBuilder.addConfig(configBuilder.build());

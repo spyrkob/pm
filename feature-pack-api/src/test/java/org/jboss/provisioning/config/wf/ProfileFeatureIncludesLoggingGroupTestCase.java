@@ -22,16 +22,15 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -161,7 +160,7 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                     .addParam(FeatureParameterSpec.create("default-interface", false))
                     .addFeatureRef(FeatureReferenceSpec.builder("interface").mapParam("default-interface", "name").build())
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("logging")
+            .addFeatureGroup(FeatureGroup.builder("logging")
                     .addFeature(
                             new FeatureConfig("logging")
                             .addFeature(new FeatureConfig("logging-console-handler"))
@@ -188,7 +187,7 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                                     .setParam("name", "COLOR-PATTERN")
                                     .setParam("pattern", "%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n")))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeature(
@@ -197,11 +196,11 @@ public class ProfileFeatureIncludesLoggingGroupTestCase extends PmInstallFeature
                     .addFeature(
                             new FeatureConfig("profile")
                             .setParam("profile", "default")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("logging")))
+                            .addFeatureGroup(FeatureGroup.forGroup("logging")))
                     .addFeature(
                             new FeatureConfig("profile")
                             .setParam("profile", "ha")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("logging"))
+                            .addFeatureGroup(FeatureGroup.forGroup("logging"))
                             .addFeature(
                                     new FeatureConfig("logging")
                                     .addFeature(

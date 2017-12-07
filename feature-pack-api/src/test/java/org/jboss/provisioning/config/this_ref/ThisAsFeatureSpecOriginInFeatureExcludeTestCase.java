@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -64,8 +63,8 @@ public class ThisAsFeatureSpecOriginInFeatureExcludeTestCase extends PmProvision
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg2").setFpDep("fp2").excludeFeature("this", FeatureId.fromString("specB:b=bOne,d=dOne")).build())
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("fg2").setFpDep("fp2").excludeFeature("this", FeatureId.fromString("specB:b=bOne,d=dOne")).build())
                     .build())
                     .getInstaller()
         .newFeaturePack(FP2_GAV)
@@ -74,7 +73,7 @@ public class ThisAsFeatureSpecOriginInFeatureExcludeTestCase extends PmProvision
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+            .addFeatureGroup(FeatureGroup.builder("fg2")
                     .addFeature(new FeatureConfig("specD").setParam("d", "dOne")
                     .addFeature(new FeatureConfig("specA").setFpDep("fp1").setParam("a", "aOne"))
                     .addFeature(new FeatureConfig("specB").setFpDep("fp1").setParam("b", "bOne"))

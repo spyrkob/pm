@@ -20,6 +20,7 @@ package org.jboss.provisioning.repomanager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.provisioning.ProvisioningDescriptionException;

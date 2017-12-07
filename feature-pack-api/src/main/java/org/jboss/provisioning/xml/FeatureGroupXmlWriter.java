@@ -17,13 +17,13 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Map;
+
+import org.jboss.provisioning.config.ConfigItem;
+import org.jboss.provisioning.config.ConfigItemContainer;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-import org.jboss.provisioning.config.FeatureGroupConfigSupport;
+import org.jboss.provisioning.config.FeatureGroup;
+import org.jboss.provisioning.config.FeatureGroupSupport;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.ConfigItemContainer;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
-import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.xml.FeatureGroupXml.Attribute;
@@ -34,7 +34,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
+public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
 
     private static final String FALSE = "false";
     private static final String TRUE = "true";
@@ -48,11 +48,11 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     private FeatureGroupXmlWriter() {
     }
 
-    protected ElementNode toElement(FeatureGroupSpec config) {
+    protected ElementNode toElement(FeatureGroup config) {
         return toElement(config, FeatureGroupXml.NAMESPACE_1_0);
     }
 
-    protected ElementNode toElement(FeatureGroupSpec featureGroup, String ns) {
+    protected ElementNode toElement(FeatureGroup featureGroup, String ns) {
         final ElementNode fgE = addElement(null, Element.FEATURE_GROUP_SPEC.getLocalName(), ns);
         if(featureGroup.getName() != null) {
             addAttribute(fgE, Attribute.NAME, featureGroup.getName());
@@ -85,19 +85,19 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
                 parent = configE;
             }
             if(item.isGroup()) {
-                writeFeatureGroupDependency(parent, (FeatureGroupConfig) item, ns);
+                writeFeatureGroupDependency(parent, (FeatureGroup) item, ns);
             } else {
                 addFeatureConfig(parent, (FeatureConfig) item, ns);
             }
         }
     }
 
-    private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroupConfig dep, String ns) {
+    private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroup dep, String ns) {
         final ElementNode depE = addElement(depsE, Element.FEATURE_GROUP.getLocalName(), ns);
         addFeatureGroupDepBody(dep, ns, depE);
     }
 
-    public static void addFeatureGroupDepBody(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
+    public static void addFeatureGroupDepBody(FeatureGroupSupport dep, String ns, final ElementNode depE) {
         addAttribute(depE, Attribute.NAME, dep.getName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
@@ -112,7 +112,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         }
         addFeatureGroupIncludeExclude(dep, ns, depE);
         if(dep.hasExternalFeatureGroups()) {
-            for(Map.Entry<String, FeatureGroupConfig> entry : dep.getExternalFeatureGroups().entrySet()) {
+            for(Map.Entry<String, FeatureGroupSupport> entry : dep.getExternalFeatureGroups().entrySet()) {
                 final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
                 addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);
@@ -120,7 +120,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         }
     }
 
-    private static void addFeatureGroupIncludeExclude(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
+    private static void addFeatureGroupIncludeExclude(FeatureGroupSupport dep, String ns, final ElementNode depE) {
         if(dep.hasExcludedSpecs()) {
             for(SpecId spec : dep.getExcludedSpecs()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);

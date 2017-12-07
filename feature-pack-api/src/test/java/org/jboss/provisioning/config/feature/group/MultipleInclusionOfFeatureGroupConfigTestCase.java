@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -68,7 +67,7 @@ public class MultipleInclusionOfFeatureGroupConfigTestCase extends PmInstallFeat
                     .addParam(FeatureParameterSpec.createId("c"))
                     .addParam(FeatureParameterSpec.create("prop", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fgC")
+            .addFeatureGroup(FeatureGroup.builder("fgC")
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("c", "c1")
@@ -78,12 +77,12 @@ public class MultipleInclusionOfFeatureGroupConfigTestCase extends PmInstallFeat
                             .setParam("c", "c2")
                             .setParam("prop", "fgC"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fgB")
+            .addFeatureGroup(FeatureGroup.builder("fgB")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")
                             .setParam("prop", "fgB")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fgC")
+                            .addFeatureGroup(FeatureGroup.builder("fgC")
                                     .setInheritFeatures(true)
                                     .includeFeature(FeatureId.create("specC", "c", "c1"), new FeatureConfig().setParam("prop", "fgB"))
                                     .build()))
@@ -91,17 +90,17 @@ public class MultipleInclusionOfFeatureGroupConfigTestCase extends PmInstallFeat
                             new FeatureConfig("specB")
                             .setParam("b", "b2")
                             .setParam("prop", "fgB")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fgC")
+                            .addFeatureGroup(FeatureGroup.builder("fgC")
                                     .setInheritFeatures(true)
                                     .includeFeature(FeatureId.create("specC", "c", "c1"), new FeatureConfig().setParam("prop", "fgB"))
                                     .build()))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fgA")
+            .addFeatureGroup(FeatureGroup.builder("fgA")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("a", "a1")
                             .setParam("prop", "fgA")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fgB")
+                            .addFeatureGroup(FeatureGroup.builder("fgB")
                                     .setInheritFeatures(true)
                                     .includeFeature(FeatureId.create("specB", "b", "b1"), new FeatureConfig().setParam("prop", "fgA"))
                                     .includeFeature(FeatureId.builder("specC").setParam("b", "b1").setParam("c", "c1").build(), new FeatureConfig().setParam("prop", "fgA"))
@@ -110,14 +109,14 @@ public class MultipleInclusionOfFeatureGroupConfigTestCase extends PmInstallFeat
                             new FeatureConfig("specA")
                             .setParam("a", "a2")
                             .setParam("prop", "fgA")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fgB")
+                            .addFeatureGroup(FeatureGroup.builder("fgB")
                                     .setInheritFeatures(true)
                                     .includeFeature(FeatureId.create("specB", "b", "b1"), new FeatureConfig().setParam("prop", "fgA"))
                                     .includeFeature(FeatureId.builder("specC").setParam("b", "b1").setParam("c", "c1").build(), new FeatureConfig().setParam("prop", "fgA"))
                                     .build()))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fgA"))
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.forGroup("fgA"))
                     .build())
             .getInstaller()
         .install();

@@ -22,18 +22,17 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
@@ -56,7 +55,7 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
                     .addParam(FeatureParameterSpec.create("p3", "def3"))
                     .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("group1")
+            .addFeatureGroup(FeatureGroup.builder("group1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")
@@ -64,8 +63,8 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
                             .setParam("p2", "group2")
                             .setParam("p3", "group3"))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.builder("group1")
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("group1")
                             .includeFeature(FeatureId.create("specA", "name", "a1"),
                                     new FeatureConfig("specA")
                                     .setParam("name", "a1")

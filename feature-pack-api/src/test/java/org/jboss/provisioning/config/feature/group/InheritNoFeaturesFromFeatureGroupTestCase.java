@@ -21,16 +21,15 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
+import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 
 /**
@@ -51,7 +50,7 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("b", false))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne")
@@ -69,10 +68,10 @@ public class InheritNoFeaturesFromFeatureGroupTestCase extends PmInstallFeatureP
                             .setParam("name", "bTwo")
                             .setParam("b", "b2"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                    .addFeatureGroup(FeatureGroup.builder("fg1")
                             .setInheritFeatures(false)
                             .build())
                     .build())

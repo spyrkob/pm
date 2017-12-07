@@ -23,9 +23,9 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -50,29 +50,29 @@ public class SimpleModelOnlyConfigsTestCase extends PmInstallFeaturePackTestBase
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("config1")
+            .addConfig(ConfigModel.builder().setModel("config1")
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("config2")
+            .addConfig(ConfigModel.builder().setModel("config2")
                     .setProperty("prop1", "value3")
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config2"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("config3")
+            .addConfig(ConfigModel.builder().setModel("config3")
                     .setProperty("prop1", "value3")
                     .setProperty("prop2", "value4")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p1", "config2"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config-a").setModel("config1").build())
-            .addConfig(ConfigSpec.builder().setName("config-b").setModel("config1").build())
+            .addConfig(ConfigModel.builder().setName("config-a").setModel("config1").build())
+            .addConfig(ConfigModel.builder().setName("config-b").setModel("config1").build())
             .getInstaller()
         .install();
     }

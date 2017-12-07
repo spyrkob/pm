@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -62,7 +61,7 @@ public class IncludeFeaturesWithIncompleteIdsAndParentRefTestCase extends PmInst
                     .addParam(FeatureParameterSpec.createId("left-a"))
                     .addParam(FeatureParameterSpec.createId("right-a"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParentRef("parent")
                             .setParam("id", "a1"))
@@ -77,10 +76,10 @@ public class IncludeFeaturesWithIncompleteIdsAndParentRefTestCase extends PmInst
                             .setParam("id", "b1")
                             .setParam("left-a", "a1"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a2")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                            .addFeatureGroup(FeatureGroup.builder("fg1")
                                     .setInheritFeatures(false)
                                     .includeFeature(FeatureId.create("specA", "id", "a1"), new FeatureConfig().setParentRef("parent"))
                                     .includeFeature(FeatureId.builder("specB").setParam("id", "b1").setParam("right-a", "a1").build(), new FeatureConfig().setParentRef("left"))

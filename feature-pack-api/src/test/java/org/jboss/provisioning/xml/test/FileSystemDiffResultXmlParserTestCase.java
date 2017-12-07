@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import java.nio.file.Paths;
 import java.util.Locale;
+
 import org.jboss.provisioning.diff.FileSystemDiffResult;
 import org.jboss.provisioning.test.util.XmlParserValidator;
 import org.jboss.provisioning.xml.FileSystemDiffResultParser;

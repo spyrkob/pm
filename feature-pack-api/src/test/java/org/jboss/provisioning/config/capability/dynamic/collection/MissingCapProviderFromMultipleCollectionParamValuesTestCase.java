@@ -24,8 +24,8 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedState;
@@ -55,7 +55,7 @@ public class MissingCapProviderFromMultipleCollectionParamValuesTestCase extends
                     .addParam(FeatureParameterSpec.builder("p1").setType("List<String>").build())
                     .addParam(FeatureParameterSpec.builder("p2").setType("List<String>").build())
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("b", "b1")

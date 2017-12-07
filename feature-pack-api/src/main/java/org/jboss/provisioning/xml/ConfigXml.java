@@ -28,7 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -143,7 +143,7 @@ public class ConfigXml {
         super();
     }
 
-    public static void readConfig(XMLExtendedStreamReader reader, ConfigSpec.Builder configBuilder) throws XMLStreamException {
+    public static void readConfig(XMLExtendedStreamReader reader, ConfigModel.Builder configBuilder) throws XMLStreamException {
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -196,7 +196,7 @@ public class ConfigXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProps(XMLExtendedStreamReader reader, ConfigSpec.Builder config) throws XMLStreamException {
+    private static void readProps(XMLExtendedStreamReader reader, ConfigModel.Builder config) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -222,7 +222,7 @@ public class ConfigXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readProp(XMLExtendedStreamReader reader, ConfigSpec.Builder config) throws XMLStreamException {
+    private static void readProp(XMLExtendedStreamReader reader, ConfigModel.Builder config) throws XMLStreamException {
         String name = null;
         String value = null;
         final int count = reader.getAttributeCount();

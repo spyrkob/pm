@@ -17,14 +17,10 @@
 
 package org.jboss.provisioning.spec;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -46,35 +42,8 @@ public abstract class PackageDepsSpec {
     }
 
     protected PackageDepsSpec(PackageDepsSpecBuilder<?> builder) {
-        this.localPkgDeps = getValueList(builder.localPkgDeps);
-        if(builder.externalPkgDeps.isEmpty()) {
-            externalPkgDeps = Collections.emptyMap();
-        } else if(builder.externalPkgDeps.size() == 1) {
-            final Map.Entry<String, Map<String, PackageDependencySpec>> first = builder.externalPkgDeps.entrySet().iterator().next();
-            externalPkgDeps = Collections.singletonMap(first.getKey(), getValueList(first.getValue()));
-        } else {
-            final Map<String, List<PackageDependencySpec>> tmp = new HashMap<>(builder.externalPkgDeps.size());
-            for(Map.Entry<String, Map<String, PackageDependencySpec>> externalEntry : builder.externalPkgDeps.entrySet()) {
-                tmp.put(externalEntry.getKey(), getValueList(externalEntry.getValue()));
-            }
-            externalPkgDeps = PmCollections.unmodifiable(tmp);
-        }
-    }
-
-    private static List<PackageDependencySpec> getValueList(Map<String, PackageDependencySpec> localPkgDeps) {
-        final List<PackageDependencySpec> list;
-        if(localPkgDeps.isEmpty()) {
-            list = Collections.emptyList();
-        } else if(localPkgDeps.size() == 1) {
-            list = Collections.singletonList(localPkgDeps.entrySet().iterator().next().getValue());
-        } else {
-            final List<PackageDependencySpec> tmp = new ArrayList<>(localPkgDeps.size());
-            for(Map.Entry<String, PackageDependencySpec> entry : localPkgDeps.entrySet()) {
-                tmp.add(entry.getValue());
-            }
-            list = Collections.unmodifiableList(tmp);
-        }
-        return list;
+        this.localPkgDeps = builder.buildLocalPackageDeps();
+        this.externalPkgDeps = builder.buildExternalPackageDeps();
     }
 
     public boolean hasPackageDeps() {

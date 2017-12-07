@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -52,25 +51,25 @@ public class FeatureGroupOptionalPackageDependenciesTestCase extends PmInstallFe
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", true))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(new FeatureConfig("specA")
                             .setParam("name", "afg1"))
                     .addPackageDep("fg1.pkg1")
                     .addPackageDep("fg1.pkg2", true)
                     .addPackageDep("fg1.pkg3", true)
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
+            .addFeatureGroup(FeatureGroup.builder("fg2")
+                    .addFeatureGroup(FeatureGroup.forGroup("fg1"))
                     .addFeature(new FeatureConfig("specA")
                             .setParam("name", "afg2"))
                     .addPackageDep("fg2.pkg1")
                     .addPackageDep("fg2.pkg2", true)
                     .addPackageDep("fg2.pkg3", true)
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
+                    .addFeatureGroup(FeatureGroup.forGroup("fg2"))
                     .build())
             .newPackage("fg1.pkg1")
                 .getFeaturePack()

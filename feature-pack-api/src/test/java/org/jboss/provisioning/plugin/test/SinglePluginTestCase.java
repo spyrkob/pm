@@ -18,6 +18,7 @@
 package org.jboss.provisioning.plugin.test;
 
 import java.io.IOException;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;

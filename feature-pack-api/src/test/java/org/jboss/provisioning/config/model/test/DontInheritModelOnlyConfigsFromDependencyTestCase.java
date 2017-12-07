@@ -23,9 +23,9 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -54,7 +54,7 @@ public class DontInheritModelOnlyConfigsFromDependencyTestCase extends PmInstall
                     .addParam(FeatureParameterSpec.create("p3", true))
                     .addParam(FeatureParameterSpec.create("p4", "spec"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop1", "config1")
                     .setProperty("prop2", "config1")
                     .setProperty("prop3", "config1")
@@ -64,7 +64,7 @@ public class DontInheritModelOnlyConfigsFromDependencyTestCase extends PmInstall
                             .setParam("p2", "config1")
                             .setParam("p3", "config1"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1")
+            .addConfig(ConfigModel.builder().setModel("model1")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -72,13 +72,13 @@ public class DontInheritModelOnlyConfigsFromDependencyTestCase extends PmInstall
                             .setParam("p2", "config2")
                             .setParam("p3", "config2"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model1").setName("main")
+            .addConfig(ConfigModel.builder().setModel("model1").setName("main")
                     .setProperty("prop3", "main")
                     .addFeature(new FeatureConfig().setSpecName("specA")
                             .setParam("name", "a1")
                             .setParam("p3", "main"))
                     .build())
-            .addConfig(ConfigSpec.builder().setModel("model2")
+            .addConfig(ConfigModel.builder().setModel("model2")
                     .setProperty("prop2", "config2")
                     .setProperty("prop3", "config2")
                     .addFeature(new FeatureConfig().setSpecName("specA")
@@ -91,7 +91,7 @@ public class DontInheritModelOnlyConfigsFromDependencyTestCase extends PmInstall
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
                     .setInheritModelOnlyConfigs(false)
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setModel("model1")
                     .setName("fp2")
                     .addFeature(new FeatureConfig("specA")

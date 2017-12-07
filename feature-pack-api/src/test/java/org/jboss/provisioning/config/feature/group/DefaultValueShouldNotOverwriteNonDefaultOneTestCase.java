@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -52,20 +51,20 @@ public class DefaultValueShouldNotOverwriteNonDefaultOneTestCase extends PmInsta
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("a", "specA"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne")
                             .setParam("a", "fg1"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg2")
+            .addFeatureGroup(FeatureGroup.builder("fg2")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne"))
                     .build())
-            .addConfig(ConfigSpec.builder()
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg1"))
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fg2"))
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.forGroup("fg1"))
+                    .addFeatureGroup(FeatureGroup.forGroup("fg2"))
                     .build())
             .getInstaller()
         .install();
