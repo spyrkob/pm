@@ -112,7 +112,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         }
         addFeatureGroupIncludeExclude(dep, ns, depE);
         if(dep.hasExternalFeatureGroups()) {
-            for(Map.Entry<String, FeatureGroupSupport> entry : dep.getExternalFeatureGroups().entrySet()) {
+            for(Map.Entry<String, FeatureGroup> entry : dep.getExternalFeatureGroups().entrySet()) {
                 final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
                 addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);

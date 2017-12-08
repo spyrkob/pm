@@ -44,7 +44,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
     final Map<FeatureId, FeatureConfig> includedFeatures;
     final Set<SpecId> excludedSpecs;
     final Map<FeatureId, String> excludedFeatures; // featureId and optional parent-ref
-    final Map<String, FeatureGroupSupport> externalFgConfigs;
+    final Map<String, FeatureGroup> externalFgConfigs;
 
     // added items
     protected final List<ConfigItem> items;
@@ -150,7 +150,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         return !externalFgConfigs.isEmpty();
     }
 
-    public Map<String, FeatureGroupSupport> getExternalFeatureGroups() {
+    public Map<String, FeatureGroup> getExternalFeatureGroups() {
         return externalFgConfigs;
     }
 

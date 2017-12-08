@@ -367,7 +367,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
         handler.done();
     }
 
-    public ProvisionedConfig build(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
+    public ProvisionedConfig resolve(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         if(featuresById.isEmpty()) {
             return this;
         }
