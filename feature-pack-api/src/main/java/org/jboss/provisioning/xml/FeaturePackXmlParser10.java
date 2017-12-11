@@ -307,6 +307,15 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                         case DEFAULT_CONFIGS:
                             ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
                             break;
+                        case CONFIG:
+                            final ConfigModel.Builder config = ConfigModel.builder();
+                            ConfigXml.readConfig(reader, config);
+                            try {
+                                depBuilder.addConfig(config.build());
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
+                            }
+                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }

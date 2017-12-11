@@ -127,7 +127,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
                 if(config.getModel() != null) {
                     addAttribute(includeElement, Attribute.MODEL, config.getModel());
                 }
-                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, ns, includeElement);
+                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, includeElement, ns);
             }
         }
 

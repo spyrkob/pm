@@ -94,10 +94,10 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
 
     private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroup dep, String ns) {
         final ElementNode depE = addElement(depsE, Element.FEATURE_GROUP.getLocalName(), ns);
-        addFeatureGroupDepBody(dep, ns, depE);
+        addFeatureGroupDepBody(dep, depE, ns);
     }
 
-    public static void addFeatureGroupDepBody(FeatureGroupSupport dep, String ns, final ElementNode depE) {
+    public static void addFeatureGroupDepBody(FeatureGroupSupport dep, final ElementNode depE, String ns) {
         addAttribute(depE, Attribute.NAME, dep.getName());
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
@@ -111,12 +111,16 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
             }
         }
         addFeatureGroupIncludeExclude(dep, ns, depE);
+        writeFeatureGroupSpecBody(depE, dep, ns);
         if(dep.hasExternalFeatureGroups()) {
             for(Map.Entry<String, FeatureGroup> entry : dep.getExternalFeatureGroups().entrySet()) {
                 final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
                 addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);
             }
+        }
+        if(dep.hasPackageDeps()) {
+            PackageXmlWriter.writePackageDeps(dep, addElement(depE, Element.PACKAGES));
         }
     }
 

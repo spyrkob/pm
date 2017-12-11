@@ -338,7 +338,17 @@ public class ProvisioningRuntimeBuilder {
             final ConfigModelResolver configResolver = getConfigResolver(definedConfig.getId());
             configResolver.overwriteProps(definedConfig.getProperties());
             configResolver.overwriteProps(customizedConfig.getProperties());
-            return processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
+            boolean contributed = processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
+
+            if(customizedConfig.hasPackageDeps()) {
+                processPackageDeps(fp, customizedConfig);
+            }
+            if(customizedConfig.hasItems()) {
+                configResolver.startGroup();
+                contributed |= processConfigItemContainer(configResolver, fp, customizedConfig);
+                configResolver.endGroup();
+            }
+            return contributed;
         }
         processConfig(fp, definedConfig); // it may be empty but it may trigger the model-only merge into its model
         return true;

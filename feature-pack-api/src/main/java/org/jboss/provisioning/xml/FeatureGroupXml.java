@@ -304,8 +304,19 @@ public class FeatureGroupXml {
                         case FEATURE_PACK:
                             readFeaturePackIncludeExclude(reader, builder);
                             break;
+                        case FEATURE_GROUP:
+                            builder.addFeatureGroup(readFeatureGroupDependency(null, reader));
+                            break;
+                        case FEATURE:
+                            final FeatureConfig nested = new FeatureConfig();
+                            readFeatureConfig(reader, nested);
+                            builder.addFeature(nested);
+                            break;
                         case PROPS:
                             readProps(reader, builder);
+                            break;
+                        case PACKAGES:
+                            PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, builder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -404,6 +415,17 @@ public class FeatureGroupXml {
                             break;
                         case EXCLUDE:
                             readExclude(reader, dependency, builder);
+                            break;
+                        case FEATURE_GROUP:
+                            builder.addFeatureGroup(readFeatureGroupDependency(null, reader));
+                            break;
+                        case FEATURE:
+                            final FeatureConfig nested = new FeatureConfig();
+                            readFeatureConfig(reader, nested);
+                            builder.addFeature(nested);
+                            break;
+                        case PACKAGES:
+                            PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, builder);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
