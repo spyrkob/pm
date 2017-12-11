@@ -340,7 +340,8 @@ public class ProvisioningRuntimeBuilder {
             configResolver.overwriteProps(customizedConfig.getProperties());
             return processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
         }
-        return processConfig(fp, definedConfig);
+        processConfig(fp, definedConfig); // it may be empty but it may trigger the model-only merge into its model
+        return true;
     }
 
     private boolean processConfig(FeaturePackRuntime.Builder fp, ConfigModel config) throws ProvisioningException {
