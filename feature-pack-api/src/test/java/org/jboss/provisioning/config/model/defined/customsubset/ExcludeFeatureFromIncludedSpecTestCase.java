@@ -72,7 +72,7 @@ public class ExcludeFeatureFromIncludedSpecTestCase extends PmProvisionConfigTes
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
-                        .includeDefaultConfig(ConfigModel.builder("model1", "config1")
+                        .addConfig(ConfigModel.builder("model1", "config1")
                                 .setInheritFeatures(false)
                                 .includeSpec("specB")
                                 .excludeFeature(FeatureId.create("specB", "name", "b1"))

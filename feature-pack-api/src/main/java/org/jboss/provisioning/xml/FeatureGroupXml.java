@@ -417,10 +417,11 @@ public class FeatureGroupXml {
                             readExclude(reader, dependency, builder);
                             break;
                         case FEATURE_GROUP:
-                            builder.addFeatureGroup(readFeatureGroupDependency(null, reader));
+                            builder.addFeatureGroup(readFeatureGroupDependency(dependency, reader));
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
+                            nested.setFpDep(dependency);
                             readFeatureConfig(reader, nested);
                             builder.addFeature(nested);
                             break;

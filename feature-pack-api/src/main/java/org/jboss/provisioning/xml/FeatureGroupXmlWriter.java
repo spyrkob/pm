@@ -58,6 +58,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
             addAttribute(fgE, Attribute.NAME, featureGroup.getName());
         }
 
+        //addFeatureGroupIncludeExclude(featureGroup, ns, fgE);
         writeFeatureGroupSpecBody(fgE, featureGroup, ns);
 
         if(featureGroup.hasPackageDeps()) {
@@ -98,7 +99,9 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
     }
 
     public static void addFeatureGroupDepBody(FeatureGroupSupport dep, final ElementNode depE, String ns) {
-        addAttribute(depE, Attribute.NAME, dep.getName());
+        if(dep.getName() != null) {
+            addAttribute(depE, Attribute.NAME, dep.getName());
+        }
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
         }
@@ -124,7 +127,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         }
     }
 
-    private static void addFeatureGroupIncludeExclude(FeatureGroupSupport dep, String ns, final ElementNode depE) {
+    static void addFeatureGroupIncludeExclude(FeatureGroupSupport dep, String ns, final ElementNode depE) {
         if(dep.hasExcludedSpecs()) {
             for(SpecId spec : dep.getExcludedSpecs()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);

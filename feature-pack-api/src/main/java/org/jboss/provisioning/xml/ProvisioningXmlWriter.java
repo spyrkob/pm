@@ -22,6 +22,7 @@ import java.util.Map;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Attribute;
 import org.jboss.provisioning.xml.ProvisioningXmlParser10.Element;
@@ -122,12 +123,14 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             if(defConfigsE == null) {
                 defConfigsE = addElement(fp, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
-            for (ConfigModel config : featurePack.getIncludedConfigs()) {
+            for (ConfigId config : featurePack.getIncludedConfigs()) {
                 final ElementNode includeElement = addElement(defConfigsE, Element.INCLUDE.getLocalName(), ns);
                 if(config.getModel() != null) {
                     addAttribute(includeElement, Attribute.MODEL, config.getModel());
                 }
-                FeatureGroupXmlWriter.addFeatureGroupDepBody(config, includeElement, ns);
+                if(config.getName() != null) {
+                    addAttribute(includeElement, Attribute.NAME, config.getName());
+                }
             }
         }
 

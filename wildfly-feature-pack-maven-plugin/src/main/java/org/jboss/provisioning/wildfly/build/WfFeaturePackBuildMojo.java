@@ -61,6 +61,7 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.layout.FeaturePackLayout;
@@ -474,8 +475,13 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                 }
                 if(depConfig.hasIncludedConfigs()) {
-                    for(ConfigModel includedConfig : depConfig.getIncludedConfigs()) {
+                    for(ConfigId includedConfig : depConfig.getIncludedConfigs()) {
                         depBuilder.includeDefaultConfig(includedConfig);
+                    }
+                }
+                if(depConfig.hasDefinedConfigs()) {
+                    for(ConfigModel config : depConfig.getDefinedConfigs()) {
+                        depBuilder.addConfig(config);
                     }
                 }
                 fpBuilder.addDependency(depSpec.getName(), depBuilder.build());

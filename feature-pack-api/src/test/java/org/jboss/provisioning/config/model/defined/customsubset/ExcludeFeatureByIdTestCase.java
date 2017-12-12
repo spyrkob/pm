@@ -68,7 +68,7 @@ public class ExcludeFeatureByIdTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
                 .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
-                        .includeDefaultConfig(ConfigModel.builder("model1", "config1")
+                        .addConfig(ConfigModel.builder("model1", "config1")
                                 .excludeFeature(FeatureId.fromString("specA:name=a2"))
                                 .build())
                         .build())

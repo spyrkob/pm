@@ -333,21 +333,21 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private boolean processDefinedConfig(FeaturePackRuntime.Builder fp, FeaturePackConfig fpConfig, ConfigModel definedConfig) throws ProvisioningException {
-        final ConfigModel customizedConfig = fpConfig.getIncludedConfig(definedConfig.getId());
+        final ConfigModel customizedConfig = fpConfig.getDefinedConfig(definedConfig.getId());
         if(customizedConfig != null) {
             final ConfigModelResolver configResolver = getConfigResolver(definedConfig.getId());
             configResolver.overwriteProps(definedConfig.getProperties());
             configResolver.overwriteProps(customizedConfig.getProperties());
             boolean contributed = processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
-
-            if(customizedConfig.hasPackageDeps()) {
-                processPackageDeps(fp, customizedConfig);
-            }
-            if(customizedConfig.hasItems()) {
-                configResolver.startGroup();
-                contributed |= processConfigItemContainer(configResolver, fp, customizedConfig);
-                configResolver.endGroup();
-            }
+//
+//            if(customizedConfig.hasPackageDeps()) {
+//                processPackageDeps(fp, customizedConfig);
+//            }
+//            if(customizedConfig.hasItems()) {
+//                configResolver.startGroup();
+//                contributed |= processConfigItemContainer(configResolver, fp, customizedConfig);
+//                configResolver.endGroup();
+//            }
             return contributed;
         }
         processConfig(fp, definedConfig); // it may be empty but it may trigger the model-only merge into its model

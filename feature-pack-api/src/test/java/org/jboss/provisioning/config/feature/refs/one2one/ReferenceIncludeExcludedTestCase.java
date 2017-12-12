@@ -75,7 +75,7 @@ public class ReferenceIncludeExcludedTestCase extends PmInstallFeaturePackTestBa
     @Override
     protected FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException {
         return FeaturePackConfig.builder(FP_GAV)
-                .includeDefaultConfig(ConfigModel.builder(null, "config1").excludeFeature(FeatureId.create("specA", "name", "a")).build())
+                .addConfig(ConfigModel.builder(null, "config1").excludeFeature(FeatureId.create("specA", "name", "a")).build())
                 .build();
     }
 

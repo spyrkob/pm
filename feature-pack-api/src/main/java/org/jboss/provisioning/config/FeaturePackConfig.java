@@ -42,7 +42,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
         protected boolean inheritConfigs = true;
         protected boolean inheritModelOnlyConfigs = true;
         protected Set<String> includedModels = Collections.emptySet();
-        protected Map<ConfigId, ConfigModel> includedConfigs = Collections.emptyMap();
+        protected Set<ConfigId> includedConfigs = Collections.emptySet();
         protected Map<String, Boolean> excludedModels = Collections.emptyMap();
         protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
         protected Map<ConfigId, ConfigModel> definedConfigs = Collections.emptyMap();
@@ -95,14 +95,14 @@ public class FeaturePackConfig extends PackageDepsConfig {
         }
 
         public Builder includeDefaultConfig(String model, String name) throws ProvisioningDescriptionException {
-            return includeDefaultConfig(ConfigModel.builder(model, name).build());
+            return includeDefaultConfig(new ConfigId(model, name));
         }
 
-        public Builder includeDefaultConfig(ConfigModel includedConfig) throws ProvisioningDescriptionException {
-            if(includedConfigs.containsKey(includedConfig.getId())) {
-                throw new ProvisioningDescriptionException("Config model with id " + includedConfig.getId() + " has already been included into the configuration of " + gav);
+        public Builder includeDefaultConfig(ConfigId configId) throws ProvisioningDescriptionException {
+            if(includedConfigs.contains(configId)) {
+                throw new ProvisioningDescriptionException("Config model with id " + configId + " has already been included into the configuration of " + gav);
             }
-            includedConfigs = PmCollections.put(includedConfigs, includedConfig.getId(), includedConfig);
+            includedConfigs = PmCollections.add(includedConfigs, configId);
             return this;
         }
 
@@ -153,7 +153,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
     private final boolean inheritModelOnlyConfigs;
     private final Set<String> includedModels;
     private final Map<String, Boolean> excludedModels;
-    private final Map<ConfigId, ConfigModel> includedConfigs;
+    private final Set<ConfigId> includedConfigs;
     private final Map<String, Set<String>> excludedConfigs;
     private final Map<ConfigId, ConfigModel> definedConfigs;
 
@@ -232,19 +232,19 @@ public class FeaturePackConfig extends PackageDepsConfig {
     }
 
     public boolean isConfigIncluded(ConfigId id) {
-        return includedConfigs.containsKey(id);
+        return includedConfigs.contains(id);
     }
 
-    public Collection<ConfigModel> getIncludedConfigs() {
-        return includedConfigs.values();
-    }
-
-    public ConfigModel getIncludedConfig(ConfigId id) {
-        return includedConfigs.get(id);
+    public Set<ConfigId> getIncludedConfigs() {
+        return includedConfigs;
     }
 
     public boolean hasDefinedConfigs() {
         return !definedConfigs.isEmpty();
+    }
+
+    public ConfigModel getDefinedConfig(ConfigId configId) {
+        return definedConfigs.get(configId);
     }
 
     public Collection<ConfigModel> getDefinedConfigs() {
@@ -332,7 +332,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
         }
         if(!includedConfigs.isEmpty()) {
             builder.append(" included configs ");
-            StringUtils.append(builder, includedConfigs.values());
+            StringUtils.append(builder, includedConfigs);
         }
         if(!definedConfigs.isEmpty()) {
             builder.append(" defined configs ");

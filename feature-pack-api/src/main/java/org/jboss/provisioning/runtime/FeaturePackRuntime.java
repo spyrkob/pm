@@ -176,32 +176,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             return popped;
         }
 
-        void recordConfigStack() {
-            final List<FeaturePackConfig> copy;
-            if(fpConfigStack.isEmpty()) {
-                copy = Collections.emptyList();
-            } else if(fpConfigStack.size() == 1) {
-                copy = Collections.singletonList(fpConfigStack.get(0));
-            } else {
-                copy = new ArrayList<>(fpConfigStack.size());
-                for(int i = 0; i < copy.size(); ++i) {
-                    copy.add(fpConfigStack.get(i));
-                }
-            }
-            recordedStacks = PmCollections.add(recordedStacks, copy);
-        }
-
-        void activateConfigStack(int i) throws ProvisioningException {
-            if(recordedStacks.size() <= i) {
-                throw new ProvisioningException("Stack index " + i + " is exceeding the current stack size " + recordedStacks.size());
-            }
-            blockedPackageInheritance = null;
-            blockedConfigInheritance = null;
-            final List<FeaturePackConfig> stack = recordedStacks.get(i);
-            for(int j = 0; j < stack.size(); ++j) {
-                push(stack.get(j));
-            }
-        }
 
         boolean isPackageIncluded(String packageName) {
             int i = fpConfigStack.size() - 1;
@@ -284,6 +258,33 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 }
             }
             return false;
+        }
+
+        void recordConfigStack() {
+            final List<FeaturePackConfig> copy;
+            if(fpConfigStack.isEmpty()) {
+                copy = Collections.emptyList();
+            } else if(fpConfigStack.size() == 1) {
+                copy = Collections.singletonList(fpConfigStack.get(0));
+            } else {
+                copy = new ArrayList<>(fpConfigStack.size());
+                for(int i = 0; i < copy.size(); ++i) {
+                    copy.add(fpConfigStack.get(i));
+                }
+            }
+            recordedStacks = PmCollections.add(recordedStacks, copy);
+        }
+
+        void activateConfigStack(int i) throws ProvisioningException {
+            if(recordedStacks.size() <= i) {
+                throw new ProvisioningException("Stack index " + i + " is exceeding the current stack size " + recordedStacks.size());
+            }
+            blockedPackageInheritance = null;
+            blockedConfigInheritance = null;
+            final List<FeaturePackConfig> stack = recordedStacks.get(i);
+            for(int j = 0; j < stack.size(); ++j) {
+                push(stack.get(j));
+            }
         }
 
         FeaturePackRuntime build() throws ProvisioningException {

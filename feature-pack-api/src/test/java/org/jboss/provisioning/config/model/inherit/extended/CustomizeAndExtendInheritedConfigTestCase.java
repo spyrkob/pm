@@ -75,7 +75,7 @@ public class CustomizeAndExtendInheritedConfigTestCase extends PmProvisionConfig
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FeaturePackConfig.builder(FP1_GAV)
                     .setInheritConfigs(true)
-                    .includeDefaultConfig(ConfigModel.builder("model1", "config1")
+                    .addConfig(ConfigModel.builder("model1", "config1")
                             .excludeFeature(FeatureId.fromString("specA:name=a3"))
                             .includeFeature(FeatureId.fromString("specA:name=a2"), new FeatureConfig().setParam("p1", "custom1"))
                             .build())

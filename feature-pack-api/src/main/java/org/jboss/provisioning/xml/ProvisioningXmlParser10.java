@@ -30,6 +30,7 @@ import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.FeaturePackConfig.Builder;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -103,7 +104,6 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         GROUP_ID("groupId"),
         INHERIT("inherit"),
         INHERIT_UNNAMED_MODELS("inherit-unnamed-models"),
-        INHERIT_FEATURES("inherit-features"),
         MODEL("model"),
         NAME("name"),
         NAMED_MODELS_ONLY("named-models-only"),
@@ -306,7 +306,6 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
     private static void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
         String name = null;
         String model = null;
-        Boolean inheritFeatures = null;
         Boolean namedConfigsOnly = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -316,9 +315,6 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                     break;
                 case MODEL:
                     model = reader.getAttributeValue(i);
-                    break;
-                case INHERIT_FEATURES:
-                    inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 case NAMED_MODELS_ONLY:
                     namedConfigsOnly = Boolean.parseBoolean(reader.getAttributeValue(i));
@@ -333,13 +329,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 if (name == null) {
                     fpBuilder.includeConfigModel(model);
                 } else {
-                    final ConfigModel.Builder configBuilder = ConfigModel.builder(model, name);
-                    if(inheritFeatures != null) {
-                        configBuilder.setInheritFeatures(inheritFeatures);
-                    }
-                    FeatureGroupXml.readFeatureGroupConfigBody(reader, configBuilder);
-                    fpBuilder.includeDefaultConfig(configBuilder.build());
-                    return;
+                    fpBuilder.includeDefaultConfig(new ConfigId(model, name));
                 }
             } else if (name == null) {
                 if(namedConfigsOnly != null) {
