@@ -267,27 +267,15 @@ public class ProvisioningRuntimeBuilder {
 
         boolean contributed = false;
 
-        for(ConfigModel defaultConfig : fp.spec.getConfigs()) {
-            final ConfigId configId = defaultConfig.getId();
-            if(configId.isAnonymous()) {
-                if(fpConfig.isInheritConfigs()) {
-                    contributed |= processDefinedConfig(fp, fpConfig, defaultConfig);
-                }
-            } else if(configId.isModelOnly()) {
-                if(fpConfig.isInheritModelOnlyConfigs()) {
-                    if(!fp.isModelOnlyConfigExcluded(configId)) {
-                        recordModelOnlyConfig(fpConfig, defaultConfig);
-                    }
-                } else if(fp.isModelOnlyConfigIncluded(configId)) {
-                    recordModelOnlyConfig(fpConfig, defaultConfig);
-                }
-            } else if (fpConfig.isInheritConfigs()) {
-                if (!fp.isConfigExcluded(configId)) {
-                    contributed |= processDefinedConfig(fp, fpConfig, defaultConfig);
-                }
-            } else if (fp.isConfigIncluded(configId)) {
-                contributed |= processDefinedConfig(fp, fpConfig, defaultConfig);
+        for(ConfigModel config : fp.spec.getConfigs()) {
+            if(isFilteredOut(fpConfig, fp, config.getId())) {
+                continue;
             }
+            if(config.getId().isModelOnly()) {
+                recordModelOnlyConfig(fpConfig, config);
+                continue;
+            }
+            contributed |= processDefinedConfig(fp, fpConfig, config);
         }
 
         if(fpConfig.isInheritPackages()) {
@@ -324,6 +312,22 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
+    private boolean isFilteredOut(FeaturePackConfig fpConfig, FeaturePackRuntime.Builder fp, ConfigId configId) {
+        if(configId.isAnonymous()) {
+            return !fpConfig.isInheritConfigs();
+        }
+        if(configId.isModelOnly()) {
+            if(fpConfig.isInheritModelOnlyConfigs()) {
+                return fp.isModelOnlyConfigExcluded(configId);
+            }
+            return !fp.isModelOnlyConfigIncluded(configId);
+        }
+        if (fpConfig.isInheritConfigs()) {
+            return fp.isConfigExcluded(configId);
+        }
+        return !fp.isConfigIncluded(configId);
+    }
+
     private void recordModelOnlyConfig(FeaturePackConfig fpConfig, ConfigModel configSpec) {
         modelOnlyConfigSpecs = PmCollections.add(modelOnlyConfigSpecs, configSpec);
         modelOnlyFpConfigs = PmCollections.add(modelOnlyFpConfigs, fpConfig);
@@ -338,17 +342,7 @@ public class ProvisioningRuntimeBuilder {
             final ConfigModelResolver configResolver = getConfigResolver(definedConfig.getId());
             configResolver.overwriteProps(definedConfig.getProperties());
             configResolver.overwriteProps(customizedConfig.getProperties());
-            boolean contributed = processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
-//
-//            if(customizedConfig.hasPackageDeps()) {
-//                processPackageDeps(fp, customizedConfig);
-//            }
-//            if(customizedConfig.hasItems()) {
-//                configResolver.startGroup();
-//                contributed |= processConfigItemContainer(configResolver, fp, customizedConfig);
-//                configResolver.endGroup();
-//            }
-            return contributed;
+            return processFeatureGroup(configResolver, fp, customizedConfig, definedConfig);
         }
         processConfig(fp, definedConfig); // it may be empty but it may trigger the model-only merge into its model
         return true;
@@ -419,7 +413,7 @@ public class ProvisioningRuntimeBuilder {
         if(includedFg.hasExternalFeatureGroups()) {
             for(Map.Entry<String, FeatureGroup> entry : includedFg.getExternalFeatureGroups().entrySet()) {
                 final FeaturePackRuntime.Builder depFpRt = getFpDependency(fp, entry.getKey());
-                if(modelResolver.pushConfig(depFpRt.gav, resolveFeatureGroupConfig(depFpRt, entry.getValue()))) {
+                if (modelResolver.pushConfig(depFpRt.gav, resolveFeatureGroupConfig(depFpRt, entry.getValue()))) {
                     pushedConfigs = PmCollections.add(pushedConfigs, depFpRt);
                 }
             }
