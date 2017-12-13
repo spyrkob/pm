@@ -161,6 +161,8 @@ public class ProvisioningRuntimeBuilder {
         for (FeaturePackConfig fpConfig : fpConfigs) {
             processFpConfig(fpConfig);
         }
+        // can be called but not meaningful popFpConfigs(fpConfigs);
+
         resolveConfigs();
 
         switch(fpRtBuildersOrdered.size()) {
@@ -254,7 +256,9 @@ public class ProvisioningRuntimeBuilder {
             final Collection<FeaturePackDependencySpec> fpDeps = fp.spec.getDependencies();
             pushedDepConfigs = new ArrayList<>(fpDeps.size());
             for (FeaturePackDependencySpec fpDep : fpDeps) {
-                pushFpConfig(pushedDepConfigs, fpDep.getTarget());
+                if(pushFpConfig(fpDep.getTarget())) {
+                    pushedDepConfigs.add(fpDep.getTarget());
+                }
             }
             if (!pushedDepConfigs.isEmpty()) {
                 for (FeaturePackConfig depConfig : pushedDepConfigs) {
@@ -297,14 +301,14 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if (!pushedDepConfigs.isEmpty()) {
-            popFpConfigs(pushedDepConfigs);
-        }
-
         if (fpConfig.hasDefinedConfigs()) {
             for (ConfigModel config : fpConfig.getDefinedConfigs()) {
                 contributed |= processConfig(fp, config);
             }
+        }
+
+        if (!pushedDepConfigs.isEmpty()) {
+            popFpConfigs(pushedDepConfigs);
         }
 
         if(!fp.ordered && contributed) {
@@ -637,30 +641,19 @@ public class ProvisioningRuntimeBuilder {
         return resolvedDeps;
     }
 
-    private void popFpConfigs(List<FeaturePackConfig> fpConfigs) throws ProvisioningException {
+    private void popFpConfigs(Collection<FeaturePackConfig> fpConfigs) throws ProvisioningException {
         for (FeaturePackConfig fpConfig : fpConfigs) {
             final Gav fpGav = fpConfig.getGav();
-            final FeaturePackRuntime.Builder fp = loadFpBuilder(fpGav);
-            final FeaturePackConfig popped = fp.pop();
-            if (popped.hasIncludedPackages()) {
-                for (PackageConfig pkgConfig : popped.getIncludedPackages()) {
-                    if (!fp.isPackageExcluded(pkgConfig.getName())) {
-                        resolvePackage(fp, pkgConfig.getName());
-                    } else {
-                        throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(fp.gav, pkgConfig.getName()));
-                    }
-                }
-            }
+            loadFpBuilder(fpGav).pop();
         }
     }
 
-    private void pushFpConfig(List<FeaturePackConfig> pushed, FeaturePackConfig fpConfig)
+    private boolean pushFpConfig(FeaturePackConfig fpConfig)
             throws ProvisioningDescriptionException, ProvisioningException {
         final FeaturePackRuntime.Builder fp = loadFpBuilder(fpConfig.getGav());
         if(fp.isStackEmpty()) {
             fp.push(fpConfig);
-            pushed.add(fpConfig);
-            return;
+            return true;
         }
 
         boolean doPush = false;
@@ -683,14 +676,12 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        if(!doPush && fpConfig.hasDefinedConfigs() && fp.isInheritConfigs()) {
-            doPush = true;
-        }
+        doPush |= fpConfig.hasDefinedConfigs() && fp.isInheritConfigs();
 
         if(doPush) {
-            pushed.add(fpConfig);
             fp.push(fpConfig);
         }
+        return doPush;
     }
 
 
@@ -784,43 +775,38 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
-        if(pkgDeps.hasExternalPackageDeps()) {
-            final Collection<String> depNames = pkgDeps.getExternalPackageSources();
-            final List<FeaturePackConfig> pushedConfigs = new ArrayList<>(depNames.size());
-            for(String depName : depNames) {
-                pushFpConfig(pushedConfigs, fp.spec.getDependency(depName).getTarget());
+        if(!pkgDeps.hasExternalPackageDeps()) {
+            return;
+        }
+        for (String depName : pkgDeps.getExternalPackageSources()) {
+            final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
+            final FeaturePackRuntime.Builder targetFp = loadFpBuilder(depSpec.getTarget().getGav());
+            if (targetFp == null) {
+                throw new IllegalStateException(
+                        depSpec.getName() + " " + depSpec.getTarget().getGav() + " has not been layed out yet");
             }
-            for(String depName : depNames) {
-                final FeaturePackDependencySpec depSpec = fp.spec.getDependency(depName);
-                final FeaturePackRuntime.Builder targetFp = loadFpBuilder(depSpec.getTarget().getGav());
-                if(targetFp == null) {
-                    throw new IllegalStateException(depSpec.getName() + " " + depSpec.getTarget().getGav() + " has not been layed out yet");
+            boolean resolvedPackages = false;
+            for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
+                if (targetFp.isPackageExcluded(pkgDep.getName())) {
+                    if (!pkgDep.isOptional()) {
+                        throw new ProvisioningDescriptionException(
+                                Errors.unsatisfiedPackageDependency(targetFp.gav, pkgDep.getName()));
+                    }
+                    continue;
                 }
-                boolean resolvedPackages = false;
-                for(PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
-                    if(targetFp.isPackageExcluded(pkgDep.getName())) {
-                        if(!pkgDep.isOptional()) {
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(targetFp.gav, pkgDep.getName()));
-                        }
+                try {
+                    resolvePackage(targetFp, pkgDep.getName());
+                    resolvedPackages = true;
+                } catch (ProvisioningDescriptionException e) {
+                    if (pkgDep.isOptional()) {
                         continue;
+                    } else {
+                        throw e;
                     }
-                    try {
-                        resolvePackage(targetFp, pkgDep.getName());
-                        resolvedPackages = true;
-                    } catch(ProvisioningDescriptionException e) {
-                        if(pkgDep.isOptional()) {
-                            continue;
-                        } else {
-                            throw e;
-                        }
-                    }
-                }
-                if(!targetFp.ordered && resolvedPackages) {
-                    orderFpRtBuilder(targetFp);
                 }
             }
-            if (!pushedConfigs.isEmpty()) {
-                popFpConfigs(pushedConfigs);
+            if (!targetFp.ordered && resolvedPackages) {
+                orderFpRtBuilder(targetFp);
             }
         }
     }
