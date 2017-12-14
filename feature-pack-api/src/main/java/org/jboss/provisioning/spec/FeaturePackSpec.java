@@ -140,11 +140,11 @@ public class FeaturePackSpec {
         return gav;
     }
 
-    public boolean hasConfigs() {
+    public boolean hasDefinedConfigs() {
         return !defConfigs.isEmpty();
     }
 
-    public List<ConfigModel> getConfigs() {
+    public Collection<ConfigModel> getDefinedConfigs() {
         return defConfigs;
     }
 

@@ -271,7 +271,7 @@ public class ProvisioningRuntimeBuilder {
 
         boolean contributed = false;
 
-        for(ConfigModel config : fp.spec.getConfigs()) {
+        for(ConfigModel config : fp.spec.getDefinedConfigs()) {
             if(isFilteredOut(fpConfig, fp, config.getId())) {
                 continue;
             }
@@ -332,8 +332,8 @@ public class ProvisioningRuntimeBuilder {
         return !fp.isConfigIncluded(configId);
     }
 
-    private void recordModelOnlyConfig(FeaturePackConfig fpConfig, ConfigModel configSpec) {
-        modelOnlyConfigSpecs = PmCollections.add(modelOnlyConfigSpecs, configSpec);
+    private void recordModelOnlyConfig(FeaturePackConfig fpConfig, ConfigModel config) {
+        modelOnlyConfigSpecs = PmCollections.add(modelOnlyConfigSpecs, config);
         modelOnlyFpConfigs = PmCollections.add(modelOnlyFpConfigs, fpConfig);
         for(Map.Entry<ArtifactCoords.Ga, FeaturePackRuntime.Builder> entry : this.fpRtBuilders.entrySet()) {
             entry.getValue().recordConfigStack();
@@ -684,6 +684,23 @@ public class ProvisioningRuntimeBuilder {
         return doPush;
     }
 
+    private void pushConfigs(FeaturePackRuntime.Builder fp, FeaturePackConfig fpConfig) throws ProvisioningException {
+        if(!fpConfig.hasDefinedConfigs()) {
+            return;
+        }
+        for(ConfigModel config : fpConfig.getDefinedConfigs()) {
+            if(isFilteredOut(fpConfig, fp, config.getId())) {
+                continue;
+            }
+            if(config.getId().isModelOnly()) {
+                recordModelOnlyConfig(fpConfig, config);
+                continue;
+            }
+
+            final ConfigModelResolver configResolver = getConfigResolver(config.getId());
+            configResolver.pushConfig(fp.gav, resolveFeatureGroupConfig(fp, config));
+        }
+    }
 
     FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
         final FeaturePackRuntime.Builder fpRtBuilder = fpRtBuilders.get(gav.toGa());

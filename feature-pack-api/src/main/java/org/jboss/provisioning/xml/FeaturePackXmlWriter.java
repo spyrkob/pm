@@ -54,8 +54,8 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             }
         }
 
-        if(fpSpec.hasConfigs()) {
-            for(ConfigModel config : fpSpec.getConfigs()) {
+        if(fpSpec.hasDefinedConfigs()) {
+            for(ConfigModel config : fpSpec.getDefinedConfigs()) {
                 fp.addChild(ConfigXmlWriter.getInstance().toElement(config, FeaturePackXmlParser10.NAMESPACE_1_0));
             }
         }
