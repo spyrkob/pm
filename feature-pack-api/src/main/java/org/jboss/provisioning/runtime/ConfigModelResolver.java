@@ -194,26 +194,25 @@ public class ConfigModelResolver implements ProvisionedConfig {
         featuresById = featureGroupStack.endGroup();
     }
 
-    boolean pushConfig(ArtifactCoords.Gav gav, ResolvedFeatureGroupConfig fgConfig) {
-        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(gav);
+    boolean pushConfig(ResolvedFeatureGroupConfig fgConfig) {
+        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(fgConfig.fp.gav);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
-            fgConfigStacks.put(gav, fgConfigStack);
+            fgConfigStacks.put(fgConfig.fp.gav, fgConfigStack);
+            fgConfigStack.add(fgConfig);
+            return true;
+        }
+        if(fgConfig.fg.getId() == null) {
             fgConfigStack.add(fgConfig);
             return true;
         }
         int i = fgConfigStack.size() - 1;
         while(i >= 0) {
             final ResolvedFeatureGroupConfig pushedFgConfig = fgConfigStack.get(i--);
-            if(pushedFgConfig.name == null) {
-                if(fgConfig.name == null) {
-                    if(fgConfig.isSubsetOf(pushedFgConfig)) {
-                        return false;
-                    } else {
-                        break;
-                    }
-                }
-            } else if(pushedFgConfig.name.equals(fgConfig.name)) {
+            if(pushedFgConfig.fg.getId() == null) {
+                continue;
+            }
+            if(pushedFgConfig.fg.getId().equals(fgConfig.fg.getId())) {
                 if(fgConfig.isSubsetOf(pushedFgConfig)) {
                     return false;
                 } else {

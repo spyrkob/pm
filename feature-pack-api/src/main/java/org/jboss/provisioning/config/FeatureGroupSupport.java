@@ -88,6 +88,10 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         this.items = PmCollections.unmodifiable(builder.items);
     }
 
+    public Object getId() {
+        return name;
+    }
+
     @Override
     public String getFpDep() {
         return fpDep;

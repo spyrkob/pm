@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroupSupport;
 
 /**
  *
@@ -29,15 +30,20 @@ import org.jboss.provisioning.config.FeatureConfig;
  */
 public class ResolvedFeatureGroupConfig {
 
-    final String name;
+    final ConfigModelResolver configResolver;
+    final FeaturePackRuntime.Builder fp;
+    final FeatureGroupSupport fg;
+
     boolean inheritFeatures = true;
     Set<ResolvedSpecId> includedSpecs = Collections.emptySet();
     Map<ResolvedFeatureId, FeatureConfig> includedFeatures = Collections.emptyMap();
     Set<ResolvedSpecId> excludedSpecs = Collections.emptySet();
     Set<ResolvedFeatureId> excludedFeatures = Collections.emptySet();
 
-    ResolvedFeatureGroupConfig(String name) {
-        this.name = name;
+    ResolvedFeatureGroupConfig(FeaturePackRuntime.Builder fp, ConfigModelResolver configResolver, FeatureGroupSupport fg) {
+        this.configResolver = configResolver;
+        this.fp = fp;
+        this.fg = fg;
     }
 
     ResolvedFeatureGroupConfig setInheritFeatures(boolean inheritFeatures) {
@@ -54,8 +60,8 @@ public class ResolvedFeatureGroupConfig {
     }
 
     boolean isSubsetOf(ResolvedFeatureGroupConfig other) {
-        if(!this.name.equals(other.name)) {
-            throw new IllegalArgumentException("Can't compare group " + this.name + " to " + other.name);
+        if(this.fg.getId() == null || other.fg.getId() == null) {
+            throw new IllegalArgumentException("Can't compare group anonymous groups");
         }
         if(inheritFeatures) {
             if(other.inheritFeatures) {

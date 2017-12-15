@@ -35,13 +35,11 @@ import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
 public class CustomizeInheritedConfigInDefinedConfigTestCase extends PmProvisionConfigTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
