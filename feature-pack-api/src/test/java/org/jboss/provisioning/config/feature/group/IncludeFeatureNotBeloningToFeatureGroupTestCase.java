@@ -43,7 +43,7 @@ import org.junit.Assert;
  *
  * @author Alexey Loubyansky
  */
-public class DirectFeatureGroupExtensionTestCase extends PmInstallFeaturePackTestBase {
+public class IncludeFeatureNotBeloningToFeatureGroupTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 

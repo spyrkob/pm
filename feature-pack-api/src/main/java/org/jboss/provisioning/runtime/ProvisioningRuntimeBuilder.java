@@ -626,7 +626,7 @@ public class ProvisioningRuntimeBuilder {
         return tmp;
     }
 
-    private boolean processConfigItemContainer(ConfigModelResolver modelBuilder, FeaturePackRuntime.Builder fp, ConfigItemContainer ciContainer) throws ProvisioningException {
+    private boolean processConfigItemContainer(ConfigModelResolver configResolver, FeaturePackRuntime.Builder fp, ConfigItemContainer ciContainer) throws ProvisioningException {
         boolean resolvedFeatures = false;
         final FeaturePackRuntime.Builder prevFpOrigin = this.fpOrigin;
         if(ciContainer.isResetFeaturePackOrigin()) {
@@ -638,9 +638,12 @@ public class ProvisioningRuntimeBuilder {
                 try {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
-                        resolvedFeatures |= processFeatureGroup(modelBuilder, itemFp, nestedFg, itemFp.getFeatureGroupSpec(nestedFg.getName()));
+                        resolvedFeatures |= processFeatureGroup(configResolver, itemFp, nestedFg, itemFp.getFeatureGroupSpec(nestedFg.getName()));
+                        if(nestedFg.hasItems()) {
+                            resolvedFeatures |= processConfigItemContainer(configResolver, itemFp, nestedFg);
+                        }
                     } else {
-                        resolvedFeatures |= resolveFeature(modelBuilder, itemFp, (FeatureConfig) item);
+                        resolvedFeatures |= resolveFeature(configResolver, itemFp, (FeatureConfig) item);
                     }
                 } catch (ProvisioningException e) {
                     throw new ProvisioningException(item.isGroup() ?
