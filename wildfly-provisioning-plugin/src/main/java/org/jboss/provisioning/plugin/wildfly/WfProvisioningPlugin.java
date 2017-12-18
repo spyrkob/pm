@@ -346,7 +346,7 @@ public class WfProvisioningPlugin implements ProvisioningPlugin {
                                     .append(artifactFileName.substring(lastDot)).toString()
                                 );
                                 JandexIndexer.createIndex(moduleArtifact.toFile(), new FileOutputStream(target));
-                                finalFileName = target.getPath();
+                                finalFileName = target.getName();
                             } else {
                                 Files.copy(moduleArtifact, targetDir.resolve(artifactFileName), StandardCopyOption.REPLACE_EXISTING);
                                 finalFileName = artifactFileName;
