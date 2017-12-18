@@ -76,13 +76,13 @@ public class DependencyConfigCustomizedInProvisioningConfigTestCase extends PmPr
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP1_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP1_GAV)
                         .addConfig(ConfigModel.builder("model1", "config1")
                                 .excludeSpec("specA")
                                 .includeFeature(FeatureId.create("specA", "name", "a3"))
                                 .build())
                         .build())
-                .addFeaturePack(FP2_GAV)
+                .addFeaturePackDep(FP2_GAV)
                 .build();
     }
 

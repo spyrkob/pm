@@ -30,7 +30,7 @@ import org.jboss.provisioning.util.StringUtils;
  */
 public class FeatureGroup extends FeatureGroupSupport {
 
-    public static class Builder extends FeatureGroupBuilderSupport<FeatureGroup, Builder> {
+    public static class Builder extends FeatureGroupBuilderSupport<Builder> {
 
         protected Builder() {
             super();
@@ -45,7 +45,6 @@ public class FeatureGroup extends FeatureGroupSupport {
             this.inheritFeatures = inheritFeatures;
         }
 
-        @Override
         public FeatureGroup build() throws ProvisioningDescriptionException {
             return new FeatureGroup(this);
         }
@@ -79,7 +78,7 @@ public class FeatureGroup extends FeatureGroupSupport {
         super(fpDep, name);
     }
 
-    protected FeatureGroup(FeatureGroupBuilderSupport<?, ?> builder) throws ProvisioningDescriptionException {
+    protected FeatureGroup(FeatureGroupBuilderSupport<?> builder) throws ProvisioningDescriptionException {
         super(builder);
     }
 

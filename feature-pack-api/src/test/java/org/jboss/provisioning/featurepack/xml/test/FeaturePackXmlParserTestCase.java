@@ -109,8 +109,8 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-named-dependency.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addDependency("dep1", FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
-                .addDependency("deptwo", FeaturePackConfig
+                .addFeaturePackDep("dep1", FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
+                .addFeaturePackDep("deptwo", FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2"))
                         .excludePackage("excluded-package1")
                         .excludePackage("excluded-package2")
@@ -128,15 +128,15 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
-                .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
-                .addDependency(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", "0.0.2"))
                         .excludePackage("excluded-package1")
                         .excludePackage("excluded-package2")
                         .includePackage("included-package1")
                         .includePackage("included-package2")
                         .build())
-                .addDependency(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.dep.group2", "dep3", "0.0.2"), false)
                         .excludePackage("excluded-package1")
                         .includePackage("included-package1")
@@ -152,8 +152,8 @@ public class FeaturePackXmlParserTestCase  {
         FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-1.0-version-optional.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", null))
-                .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)))
-                .addDependency(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", null)))
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group2", "dep2", null)))
                 .addDefaultPackage("package1")
                 .addDefaultPackage("package2")
                 .build();

@@ -117,8 +117,8 @@ public class ConfigModelMergedFromIndependentFeaturePacksTestCase extends PmProv
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.forGav(FP1_GAV))
-                .addFeaturePack(FeaturePackConfig.forGav(FP2_GAV))
+                .addFeaturePackDep(FeaturePackConfig.forGav(FP1_GAV))
+                .addFeaturePackDep(FeaturePackConfig.forGav(FP2_GAV))
                 .build();
     }
 

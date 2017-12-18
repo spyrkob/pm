@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.provisioning.config.ConfigModel;
-import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.PmCollections;
 
 /**

@@ -31,7 +31,7 @@ public abstract class PmInstallFeaturePackTestBase extends PmTestBase {
 
     @Override
     protected ProvisioningConfig provisionedConfig() throws ProvisioningDescriptionException {
-        return ProvisioningConfig.builder().addFeaturePack(featurePackConfig()).build();
+        return ProvisioningConfig.builder().addFeaturePackDep(featurePackConfig()).build();
     }
 
     protected abstract FeaturePackConfig featurePackConfig() throws ProvisioningDescriptionException;

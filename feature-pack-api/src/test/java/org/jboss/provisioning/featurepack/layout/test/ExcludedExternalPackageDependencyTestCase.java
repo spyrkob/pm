@@ -43,7 +43,7 @@ public class ExcludedExternalPackageDependencyTestCase {
 
         final ProvisioningLayout.Builder builder = ProvisioningLayout.builder()
                 .addFeaturePack(FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
-                        .addDependency("fp2dep", FeaturePackConfig.builder(fp2Gav)
+                        .addFeaturePackDep("fp2dep", FeaturePackConfig.builder(fp2Gav)
                                 .excludePackage("p1")
                                 .build())
                         .addDefaultPackage("p1"))
@@ -68,7 +68,7 @@ public class ExcludedExternalPackageDependencyTestCase {
 
         final ProvisioningLayout.Builder builder = ProvisioningLayout.builder()
                 .addFeaturePack(FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
-                        .addDependency("fp2dep", FeaturePackConfig.builder(fp2Gav)
+                        .addFeaturePackDep("fp2dep", FeaturePackConfig.builder(fp2Gav)
                                 .excludePackage("p1")
                                 .build())
                         .addDefaultPackage("p1"))

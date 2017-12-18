@@ -99,7 +99,7 @@ public class AddFeatureGroupExtendedSubsetTestCase extends PmProvisionConfigTest
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .addConfig(ConfigModel.builder("model1", "config1")
                                 .addFeatureGroup(FeatureGroup.builder("group1")
                                         .excludeSpec("specB")

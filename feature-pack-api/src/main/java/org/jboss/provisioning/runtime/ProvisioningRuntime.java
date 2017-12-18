@@ -116,7 +116,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         FeaturePackRepositoryManager fpRepoManager = FeaturePackRepositoryManager.newInstance(location);
         Gav gav = ArtifactCoords.newGav(runtime.getParameter("gav"));
         FeaturePackBuilder fpBuilder = fpRepoManager.installer().newFeaturePack(gav);
-        for (FeaturePackConfig fpConfig : runtime.getProvisioningConfig().getFeaturePacks()) {
+        for (FeaturePackConfig fpConfig : runtime.getProvisioningConfig().getFeaturePackDeps()) {
             fpBuilder.addDependency(fpConfig);
         }
         runtime.exportDiffResultToFeaturePack(fpBuilder, installationHome);

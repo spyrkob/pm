@@ -69,7 +69,6 @@ import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.WfConstants;
-import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.IoUtils;
@@ -484,7 +483,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                         depBuilder.addConfig(config);
                     }
                 }
-                fpBuilder.addDependency(depSpec.getName(), depBuilder.build());
+                fpBuilder.addFeaturePackDep(depSpec.getName(), depBuilder.build());
                 final Path depZip = resolveArtifact(depGav.toArtifactCoords());
                 fpDependencies.put(depSpec.getName(), FeaturePackLayoutDescriber.describeFeaturePackZip(depZip));
             }

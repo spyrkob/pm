@@ -32,7 +32,7 @@ import org.jboss.provisioning.util.PmCollections;
  * @author Alexey Loubyansky
  *
  */
-public abstract class FeatureGroupBuilderSupport<T extends FeatureGroupSupport, B extends FeatureGroupBuilderSupport<T, B>>
+public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSupport<B>>
     extends PackageDepsSpecBuilder<B>
     implements ConfigItemContainerBuilder<B> {
 
@@ -188,8 +188,6 @@ public abstract class FeatureGroupBuilderSupport<T extends FeatureGroupSupport, 
         items = PmCollections.add(items, item);
         return (B) this;
     }
-
-    public abstract T build() throws ProvisioningDescriptionException;
 
     private FeatureGroup.Builder getExternalFgConfig(String fpDep) {
         if(fpDep == null) {

@@ -62,7 +62,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         this.items = Collections.emptyList();
     }
 
-    protected FeatureGroupSupport(FeatureGroupBuilderSupport<?, ?> builder) throws ProvisioningDescriptionException {
+    protected FeatureGroupSupport(FeatureGroupBuilderSupport<?> builder) throws ProvisioningDescriptionException {
         super(builder);
         this.fpDep = builder.fpDep;
         this.name = builder.name;

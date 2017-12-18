@@ -44,7 +44,7 @@ public class ProvisioningWithConfigTestCase {
         ProvisioningConfig found = validator
                 .validateAndParse("xml/provisioning/provisioning-config.xml", null, null);
         ProvisioningConfig expected = ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
+                .addFeaturePackDep(FeaturePackConfig.builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
                         .setInheritConfigs(false)
                         .includeConfigModel("model1")
                         .excludeConfigModel("model2")

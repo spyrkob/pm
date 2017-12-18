@@ -67,7 +67,7 @@ public class CustomizeFeatureConfigTestCase extends PmProvisionConfigTestBase {
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .addConfig(ConfigModel.builder("model1", "config1")
                                 .includeFeature(FeatureId.create("specA", "name", "a1"), new FeatureConfig().setParam("p1", "custom"))
                                 .build())

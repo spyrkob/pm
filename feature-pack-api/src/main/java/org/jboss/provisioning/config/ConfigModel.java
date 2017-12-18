@@ -32,7 +32,7 @@ import org.jboss.provisioning.util.StringUtils;
  */
 public class ConfigModel extends FeatureGroupSupport {
 
-    public static class Builder extends FeatureGroupBuilderSupport<ConfigModel, Builder> {
+    public static class Builder extends FeatureGroupBuilderSupport<Builder> {
 
         private String model;
         private Map<String, String> props = Collections.emptyMap();
@@ -57,11 +57,9 @@ public class ConfigModel extends FeatureGroupSupport {
             return this;
         }
 
-        @Override
         public ConfigModel build() throws ProvisioningDescriptionException {
             return new ConfigModel(this);
         }
-
     }
 
     public static Builder builder() {

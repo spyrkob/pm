@@ -90,7 +90,7 @@ public class FeaturePackBuilder {
     }
 
     public FeaturePackBuilder addDependency(String name, FeaturePackConfig dep) throws ProvisioningDescriptionException {
-        fpBuilder.addDependency(name, dep);
+        fpBuilder.addFeaturePackDep(name, dep);
         return this;
     }
 

@@ -86,7 +86,7 @@ public class IncludeNamedConfigsByModelTestCase extends PmProvisionConfigTestBas
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .setInheritConfigs(false)
                         .includeConfigModel("model1")
                         .build())

@@ -25,7 +25,6 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.spec.PackageSpec;
@@ -67,13 +66,12 @@ public class ProvisioningLayout {
                     for(PackageSpec pkg : fp.getPackages()) {
                         if(pkg.hasExternalPackageDeps()) {
                             for(String depName : pkg.getExternalPackageSources()) {
-                                final FeaturePackDependencySpec fpDepSpec;
+                                final FeaturePackConfig fpDepConfig;
                                 try {
-                                    fpDepSpec = fpSpec.getDependency(depName);
+                                    fpDepConfig = fpSpec.getFeaturePackDep(depName);
                                 } catch(ProvisioningDescriptionException e) {
                                     throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), depName), e);
                                 }
-                                final FeaturePackConfig fpDepConfig = fpDepSpec.getTarget();
                                 final FeaturePackLayout fpDepLayout = featurePacks.get(fpDepConfig.getGav().toGa());
                                 if(fpDepLayout == null) {
                                     throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDepConfig.getGav()));

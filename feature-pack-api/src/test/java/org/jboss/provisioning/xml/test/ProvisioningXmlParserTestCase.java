@@ -84,9 +84,9 @@ public class ProvisioningXmlParserTestCase {
         ProvisioningConfig found = validator
                 .validateAndParse("xml/provisioning/provisioning-1.0.xml", null, null);
         ProvisioningConfig expected = ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")))
-                .addFeaturePack(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2")))
-                .addFeaturePack(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1")))
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2")))
+                .addFeaturePackDep(FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
                 .build();
         Assert.assertEquals(expected, found);
     }

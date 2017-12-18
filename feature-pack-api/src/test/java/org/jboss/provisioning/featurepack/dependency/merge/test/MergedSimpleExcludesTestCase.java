@@ -82,7 +82,7 @@ public class MergedSimpleExcludesTestCase extends PmProvisionConfigTestBase {
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(
+                .addFeaturePackDep(
                         FeaturePackConfig.forGav(
                                 ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")))
                 .build();

@@ -88,7 +88,7 @@ public class CustomizedIncludedConfigTestCase extends PmProvisionConfigTestBase 
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FP2_GAV)
+                .addFeaturePackDep(FP2_GAV)
                 .build();
     }
 

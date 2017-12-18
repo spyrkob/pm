@@ -85,7 +85,7 @@ public class ThisAsFeatureSpecOriginInSpecExcludeTestCase extends PmProvisionCon
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FP1_GAV)
+                .addFeaturePackDep(FP1_GAV)
                 .build();
     }
 

@@ -65,7 +65,7 @@ public class OptionalExternalDependencyFromIncludedOnExcludedPackageTestCase ext
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                .addFeaturePackDep(FeaturePackConfig.builder(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
                         .includePackage("p1").build())
                 .build();
     }

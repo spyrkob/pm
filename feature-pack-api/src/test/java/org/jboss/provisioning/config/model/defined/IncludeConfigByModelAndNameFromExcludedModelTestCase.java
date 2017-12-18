@@ -70,7 +70,7 @@ public class IncludeConfigByModelAndNameFromExcludedModelTestCase extends PmProv
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .setInheritConfigs(true)
                         .excludeConfigModel("model1")
                         .includeDefaultConfig("model1", "config1")

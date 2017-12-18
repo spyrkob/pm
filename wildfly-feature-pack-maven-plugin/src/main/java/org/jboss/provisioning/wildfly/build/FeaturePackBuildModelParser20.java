@@ -20,7 +20,6 @@ import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.provisioning.xml.ConfigXml;
 import org.jboss.provisioning.xml.FeaturePackPackagesConfigParser10;

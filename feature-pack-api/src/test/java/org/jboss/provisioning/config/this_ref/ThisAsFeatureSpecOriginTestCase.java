@@ -101,7 +101,7 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FP2_GAV)
+                .addFeaturePackDep(FP2_GAV)
                 .build();
     }
 

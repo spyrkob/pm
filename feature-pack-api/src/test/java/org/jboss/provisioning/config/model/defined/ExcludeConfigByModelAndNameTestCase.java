@@ -82,7 +82,7 @@ public class ExcludeConfigByModelAndNameTestCase extends PmProvisionConfigTestBa
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .excludeDefaultConfig("model2", "config2")
                         .build())
                 .build();

@@ -77,7 +77,7 @@ public class CustomizedIncludedDefinedConfigTestCase extends PmProvisionConfigTe
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig.builder(FP_GAV)
+                .addFeaturePackDep(FeaturePackConfig.builder(FP_GAV)
                         .setInheritConfigs(false)
                         .includeDefaultConfig("model1", "config1")
                         .addConfig(ConfigModel.builder("model1", "config1")

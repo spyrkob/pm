@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.installation.test;
+package org.jboss.provisioning.installation.pkgs;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -65,9 +65,9 @@ public class OriginalPackageSetOverridesDependencyChosenPackagesTestCase extends
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(
+                .addFeaturePackDep(
                         FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Alpha-SNAPSHOT")))
-                .addFeaturePack(
+                .addFeaturePackDep(
                         FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final")))
                 .build();
     }
