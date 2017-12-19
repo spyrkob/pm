@@ -15,30 +15,31 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability.dynamic.collection;
+package org.jboss.provisioning.config.feature.param.basic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
-import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
-import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
+import org.jboss.provisioning.test.util.fs.state.DirState;
+import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
+import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTestBase {
+public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,28 +48,17 @@ public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTes
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$a")
-                    .addParam(FeatureParameterSpec.createId("a"))
-                    .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$col")
-                    .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("col").setType("Set<String>").setDefaultValue("[1,2 , 3 ]").build())
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("p1", "def1"))
                     .build())
             .addConfig(ConfigModel.builder()
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("a", "3"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "2"))
+                            .setParam("name", "a1")
+                            .setParam("p5", "config1"))
                     .build())
+            .newPackage("p1", true)
+                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -77,17 +67,37 @@ public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTes
     protected FeaturePackConfig featurePackConfig() {
         return FeaturePackConfig.forGav(FP_GAV);
     }
+    @Override
+    protected void pmSuccess() {
+        Assert.fail();
+    }
+
+    @Override
+    protected void pmFailure(Throwable e) throws ProvisioningDescriptionException {
+        Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
+        Throwable t = e.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.failedToProcess(FP_GAV,
+                new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p5", "config1")), t.getLocalizedMessage());
+        t = t.getCause();
+        Assert.assertNotNull(t);
+        Assert.assertEquals(Errors.unknownFeatureParameter("specA", "p5"), t.getLocalizedMessage());
+    }
+
+    @Override
+    protected ProvisioningConfig provisionedConfig() {
+        return null;
+    }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
-                .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "3")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "1")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "2")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).setConfigParam("col", "[1, 2, 3]").build())
-                        .build())
-                .build();
+        return null;
+    }
+
+    @Override
+    protected DirState provisionedHomeDir(DirBuilder builder) {
+        return builder.clear().build();
     }
 }

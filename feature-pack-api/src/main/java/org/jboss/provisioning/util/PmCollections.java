@@ -76,6 +76,26 @@ public class PmCollections {
         return m;
     }
 
+    public static <K,V> Map<K,V> remove(Map<K,V> m, K k) {
+        if(!m.containsKey(k)) {
+            return m;
+        }
+        switch(m.size()) {
+            case 1:
+                return Collections.emptyMap();
+            case 2:
+                for(Map.Entry<K, V> e : m.entrySet()) {
+                    if(e.getKey().equals(k)) {
+                        continue;
+                    }
+                    return Collections.singletonMap(e.getKey(), e.getValue());
+                }
+            default:
+                m.remove(k);
+        }
+        return m;
+    }
+
     public static <T> List<T> unmodifiable(List<T> l) {
         return l.size() > 1 ? Collections.unmodifiableList(l) : l;
     }
@@ -129,6 +149,26 @@ public class PmCollections {
         return s;
     }
 
+    public static <T> Set<T> remove(Set<T> s, T t) {
+        if(!s.contains(t)) {
+            return s;
+        }
+        switch(s.size()) {
+            case 1:
+                return Collections.emptySet();
+            case 2:
+                for(T i : s) {
+                    if(i.equals(t)) {
+                        continue;
+                    }
+                    return Collections.singleton(i);
+                }
+            default:
+                s.remove(t);
+        }
+        return s;
+    }
+
     public static <T> Set<T> addLinked(Set<T> s, T t) {
         if(s.isEmpty()) {
             return Collections.singleton(t);
@@ -143,5 +183,9 @@ public class PmCollections {
         }
         s.add(t);
         return s;
+    }
+
+    public static <T> Set<T> clone(Set<T> s) {
+        return s.size() > 1 ? new HashSet<>(s) : s;
     }
 }

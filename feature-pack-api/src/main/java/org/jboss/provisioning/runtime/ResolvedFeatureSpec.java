@@ -102,6 +102,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return resolvedParamSpecs.keySet();
     }
 
+    Map<String, ResolvedFeatureParam> getResolvedParams() {
+        return resolvedParamSpecs;
+    }
+
     ResolvedFeatureParam getResolvedParam(String name) throws ProvisioningDescriptionException {
         final ResolvedFeatureParam p = resolvedParamSpecs.get(name);
         if(p == null) {
@@ -168,7 +172,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         final ResolvedFeatureParam resolvedParam = getResolvedParam(paramName);
         Object value = feature.getResolvedParam(paramName);
         if(value == null) {
-            value = resolvedParam.defaultValue;
+            value = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
             if(value == null) {
                 if(capResolver.getSpec().isOptional()) {
                     return false;
@@ -445,12 +449,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
                 final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
                 Object paramValue = feature.getResolvedParam(paramName);
-                if(paramValue == null) {
-                    paramValue = resolvedParam.defaultValue;
-                }
                 if (paramValue == null) {
-                    assertRefNotNillable(feature, refSpec);
-                    return Collections.emptyList();
+                    paramValue = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
+                    if (paramValue == null) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
                 }
 
                 if(resolvedParam.type.isCollection()) {
@@ -501,12 +505,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
                 final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
                 Object paramValue = feature.getResolvedParam(paramName);
-                if(paramValue == null) {
-                    paramValue = resolvedParam.defaultValue;
-                }
                 if (paramValue == null) {
-                    assertRefNotNillable(feature, refSpec);
-                    return Collections.emptyList();
+                    paramValue = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
+                    if (paramValue == null) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
                 }
 
                 if(resolvedParam.type.isCollection()) {

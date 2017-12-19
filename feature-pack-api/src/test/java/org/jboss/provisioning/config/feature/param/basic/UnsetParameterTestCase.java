@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param;
+package org.jboss.provisioning.config.feature.param.basic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -40,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
+public class UnsetParameterTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,8 +50,8 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.create("p1", "def1"))
-                    .addParam(FeatureParameterSpec.create("p2", "def2"))
+                    .addParam(FeatureParameterSpec.builder("p1").setDefaultValue("def1").setNillable().build())
+                    .addParam(FeatureParameterSpec.builder("p2").setDefaultValue("def2").setNillable().build())
                     .addParam(FeatureParameterSpec.create("p3", "def3"))
                     .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
@@ -69,12 +69,12 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
                                     new FeatureConfig("specA")
                                     .setParam("name", "a1")
                                     .setParam("p1", "groupConfig1")
-                                    .setParam("p2", "groupConfig2"))
+                                    .unsetParam("p2"))
                             .build())
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "config1"))
+                            .unsetParam("p1"))
                     .build())
             .newPackage("p1", true)
                 .getFeaturePack()
@@ -95,8 +95,6 @@ public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setConfigParam("p1", "config1")
-                                .setConfigParam("p2", "groupConfig2")
                                 .setConfigParam("p3", "group3")
                                 .setConfigParam("p4", "def4")
                                 .build())

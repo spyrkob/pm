@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability.dynamic.collection;
+package org.jboss.provisioning.config.feature.param.basic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -24,8 +24,10 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -38,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTestBase {
+public class ResetParameterTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -47,28 +49,35 @@ public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTes
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$a")
-                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("p1", "def1"))
+                    .addParam(FeatureParameterSpec.create("p2", "def2"))
+                    .addParam(FeatureParameterSpec.create("p3", "def3"))
+                    .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$col")
-                    .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("col").setType("Set<String>").setDefaultValue("[1,2 , 3 ]").build())
+            .addFeatureGroup(FeatureGroup.builder("group1")
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p1", "group1")
+                            .setParam("p2", "group2")
+                            .setParam("p3", "group3"))
                     .build())
             .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("group1")
+                            .includeFeature(FeatureId.create("specA", "name", "a1"),
+                                    new FeatureConfig("specA")
+                                    .setParam("name", "a1")
+                                    .setParam("p1", "groupConfig1")
+                                    .resetParam("p2"))
+                            .build())
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("a", "3"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "2"))
+                            .setParam("name", "a1")
+                            .resetParam("p1"))
                     .build())
+            .newPackage("p1", true)
+                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -81,12 +90,16 @@ public class RequiredByDefaultParamValueTestCase extends PmInstallFeaturePackTes
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("p1")
+                        .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "3")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "1")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "a", "2")).build())
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specB", "b", "b1")).setConfigParam("col", "[1, 2, 3]").build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
+                                .setConfigParam("p1", "def1")
+                                .setConfigParam("p2", "def2")
+                                .setConfigParam("p3", "group3")
+                                .setConfigParam("p4", "def4")
+                                .build())
                         .build())
                 .build();
     }

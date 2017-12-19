@@ -179,9 +179,21 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         }
         if(fc.hasParams()) {
             for(Map.Entry<String, String> param : fc.getParams().entrySet()) {
-                final ElementNode paramE = addElement(fcE, Element.PARAMETER.getLocalName(), ns);
+                final ElementNode paramE = addElement(fcE, Element.PARAM.getLocalName(), ns);
                 addAttribute(paramE, Attribute.NAME, param.getKey());
                 addAttribute(paramE, Attribute.VALUE, param.getValue());
+            }
+        }
+        if(fc.hasResetParams()) {
+            for(String param : fc.getResetParams()) {
+                final ElementNode paramE = addElement(fcE, Element.RESET_PARAM.getLocalName(), ns);
+                addAttribute(paramE, Attribute.PARAM, param);
+            }
+        }
+        if(fc.hasUnsetParams()) {
+            for(String param : fc.getUnsetParams()) {
+                final ElementNode paramE = addElement(fcE, Element.UNSET_PARAM.getLocalName(), ns);
+                addAttribute(paramE, Attribute.PARAM, param);
             }
         }
         writeFeatureGroupSpecBody(fcE, fc, ns);

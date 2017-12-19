@@ -22,12 +22,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.state.ProvisionedFeature;
 import org.jboss.provisioning.type.FeatureParameterType;
 import org.jboss.provisioning.util.PmCollections;
@@ -52,6 +52,8 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     final ResolvedFeatureId id;
     final ResolvedFeatureSpec spec;
     Map<String, Object> params;
+    Set<String> resetParams = Collections.emptySet();
+    Set<String> unsetParams = Collections.emptySet();
     Map<ResolvedFeatureId, FeatureDependencySpec> deps;
 
     private byte orderingState = FREE;
@@ -61,7 +63,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         this.includeNo = includeNo;
         this.id = id;
         this.spec = spec;
-        initParamsFromId();
+        params = id == null ? new HashMap<>() : new HashMap<>(id.params);
     }
 
     ResolvedFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, Object> params, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps, int includeNo)
@@ -70,7 +72,7 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         this.id = id;
         this.spec = spec;
         this.deps = resolvedDeps;
-        initParamsFromId();
+        this.params = id == null ? new HashMap<>() : new HashMap<>(id.params);
         if (!params.isEmpty()) {
             for (Map.Entry<String, Object> entry : params.entrySet()) {
                 setParam(entry.getKey(), entry.getValue(), true);
@@ -79,34 +81,29 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
     }
 
     ResolvedFeature copy(int includeNo) throws ProvisioningException {
-        return new ResolvedFeature(id, spec, params.size() > 1 ? new HashMap<>(params) : params, deps.size() > 1 ? new LinkedHashMap<>(deps) : deps, includeNo);
-    }
-
-    private void initParamsFromId() {
-        if(id != null) {
-            if(id.params.size() == 1) {
-                this.params = id.params;
-            } else {
-                this.params = new HashMap<>(id.params);
-            }
-        } else {
-            this.params = Collections.emptyMap();
+        final ResolvedFeature copy = new ResolvedFeature(id, spec, params.size() > 1 ? new HashMap<>(params) : params, deps.size() > 1 ? new LinkedHashMap<>(deps) : deps, includeNo);
+        if(!resetParams.isEmpty()) {
+            copy.resetParams = PmCollections.clone(resetParams);
         }
+        if(!unsetParams.isEmpty()) {
+            copy.unsetParams = PmCollections.clone(unsetParams);
+        }
+        return copy;
     }
 
     void validate() throws ProvisioningDescriptionException {
-        for(FeatureParameterSpec param : spec.xmlSpec.getParams().values()) {
-            if(!param.isNillable()) {
-                if(!params.containsKey(param.getName())) {
-                    if(param.hasDefaultValue()) {
-                        params = PmCollections.put(params, param.getName(), param.getDefaultValue());
-                    } else {
-                        throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(this, param.getName()));
-                    }
-                }
-            } else if(param.hasDefaultValue() && !params.containsKey(param.getName())) {
-                params = PmCollections.put(params, param.getName(), param.getDefaultValue());
+        for(Map.Entry<String, ResolvedFeatureParam> entry : spec.getResolvedParams().entrySet()) {
+            final ResolvedFeatureParam param = entry.getValue();
+            if(params.containsKey(entry.getKey())) {
+                continue;
             }
+            if(param.defaultValue == null || unsetParams.contains(entry.getKey())) {
+                if(param.spec.isNillable()) {
+                    continue;
+                }
+                throw new ProvisioningDescriptionException(Errors.nonNillableParameterIsNull(this, entry.getKey()));
+            }
+            params.put(entry.getKey(), param.defaultValue);
         }
     }
 
@@ -215,21 +212,113 @@ public class ResolvedFeature extends CapabilityProvider implements ProvisionedFe
         if(!spec.xmlSpec.hasParam(name)) {
             throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(spec.id, name));
         }
+
+        if(unsetParams.contains(name)) {
+            if(!overwrite) {
+                return;
+            }
+            unsetParams = PmCollections.remove(unsetParams, name);
+            params.put(name, value);
+            return;
+        }
+
+        if(resetParams.contains(name)) {
+            if(!overwrite) {
+                return;
+            }
+            resetParams = PmCollections.remove(resetParams, name);
+            params.put(name, value);
+            return;
+        }
+
         final Object prevValue = params.get(name);
         if(prevValue == null) {
-            params = PmCollections.put(params, name, value);
+            params.put(name, value);
             return;
         }
         final FeatureParameterType valueType = spec.getTypeForParameter(name);
         if(valueType.isMergeable()) {
-            params = PmCollections.put(params, name, overwrite ? valueType.merge(prevValue, value) : valueType.merge(value, prevValue));
-        } else if(overwrite) {
-            params = PmCollections.put(params, name, value);
+            params.put(name, overwrite ? valueType.merge(prevValue, value) : valueType.merge(value, prevValue));
+            return;
+        }
+        if(overwrite) {
+            params.put(name, value);
+        }
+    }
+
+    boolean isUnset(String name) {
+        return unsetParams.contains(name);
+    }
+
+    void unsetParam(String name, boolean overwrite) throws ProvisioningDescriptionException {
+        if(!spec.xmlSpec.hasParam(name)) {
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(spec.id, name));
+        }
+        if(id.params.containsKey(name)) {
+            throw new ProvisioningDescriptionException(Errors.featureIdParameterCantBeUnset(id, name));
+        }
+        if(unsetParams.contains(name)) {
+            return;
+        }
+        if (resetParams.contains(name)) {
+            if(!overwrite) {
+                return;
+            }
+            resetParams = PmCollections.remove(resetParams, name);
+        } else if (overwrite) {
+            params.remove(name);
+        } else if (params.containsKey(name)) {
+            return;
+        }
+        unsetParams = PmCollections.add(unsetParams, name);
+    }
+
+    void unsetAllParams(Set<String> names, boolean overwrite) throws ProvisioningDescriptionException {
+        if(names.isEmpty()) {
+            return;
+        }
+        for(String name : names) {
+            unsetParam(name, overwrite);
+        }
+    }
+
+    void resetParam(String name) throws ProvisioningDescriptionException {
+        if(!spec.xmlSpec.hasParam(name)) {
+            throw new ProvisioningDescriptionException(Errors.unknownFeatureParameter(spec.id, name));
+        }
+        if(id.params.containsKey(name)) {
+            throw new ProvisioningDescriptionException(Errors.featureIdParameterCantBeReset(id, name));
+        }
+        if(resetParams.contains(name)) {
+            return;
+        }
+        if(unsetParams.contains(name)) {
+            unsetParams = PmCollections.remove(unsetParams, name);
+        } else {
+            params.remove(name);
+        }
+        resetParams = PmCollections.add(resetParams, name);
+    }
+
+    void resetAllParams(Set<String> names) throws ProvisioningDescriptionException {
+        if(names.isEmpty()) {
+            return;
+        }
+        for(String name : names) {
+            resetParam(name);
         }
     }
 
     void merge(ResolvedFeature other, boolean overwriteParams) throws ProvisioningException {
         merge(other.deps, other.getResolvedParams(), overwriteParams);
+        if(!other.unsetParams.isEmpty()) {
+            unsetAllParams(other.unsetParams, overwriteParams);
+        }
+        if(overwriteParams) {
+            if(!other.resetParams.isEmpty()) {
+                resetAllParams(other.resetParams);
+            }
+        }
     }
 
     void merge(Map<ResolvedFeatureId, FeatureDependencySpec> deps, Map<String, Object> resolvedParams, boolean overwriteParams) throws ProvisioningException {

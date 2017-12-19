@@ -52,6 +52,8 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
 
     SpecId specId;
     Map<String, String> params = Collections.emptyMap();
+    Set<String> unsetParams = Collections.emptySet();
+    Set<String> resetParams = Collections.emptySet();
     Map<FeatureId, FeatureDependencySpec> deps = Collections.emptyMap();
     protected List<ConfigItem> items = Collections.emptyList();
     String parentRef;
@@ -67,6 +69,8 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
         } else {
             params = copy.params;
         }
+        unsetParams = PmCollections.clone(copy.unsetParams);
+        resetParams = PmCollections.clone(copy.resetParams);
         if(copy.items.isEmpty()) {
             items = copy.items;
             return;
@@ -153,7 +157,47 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     public String putParam(String name, String value) {
         final String prevValue = params.get(name);
         params = PmCollections.put(params, name, value);
+        if(!unsetParams.isEmpty()) {
+            unsetParams = PmCollections.remove(unsetParams, name);
+        }
+        if(!resetParams.isEmpty()) {
+            resetParams = PmCollections.remove(resetParams, name);
+        }
         return prevValue;
+    }
+
+    public FeatureConfig unsetParam(String name) {
+        unsetParams = PmCollections.add(unsetParams, name);
+        params = PmCollections.remove(params, name);
+        if(!resetParams.isEmpty()) {
+            resetParams = PmCollections.remove(resetParams, name);
+        }
+        return this;
+    }
+
+    public boolean hasUnsetParams() {
+        return !unsetParams.isEmpty();
+    }
+
+    public Set<String> getUnsetParams() {
+        return unsetParams;
+    }
+
+    public FeatureConfig resetParam(String name) {
+        resetParams = PmCollections.add(resetParams, name);
+        params = PmCollections.remove(params, name);
+        if(!unsetParams.isEmpty()) {
+            unsetParams = PmCollections.remove(unsetParams, name);
+        }
+        return this;
+    }
+
+    public boolean hasResetParams() {
+        return !resetParams.isEmpty();
+    }
+
+    public Set<String> getResetParams() {
+        return resetParams;
     }
 
     public FeatureConfig addFeatureDep(FeatureId featureId) throws ProvisioningDescriptionException {
@@ -210,7 +254,9 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
         result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
+        result = prime * result + ((resetParams == null) ? 0 : resetParams.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
+        result = prime * result + ((unsetParams == null) ? 0 : unsetParams.hashCode());
         return result;
     }
 
@@ -248,10 +294,20 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
                 return false;
         } else if (!parentRef.equals(other.parentRef))
             return false;
+        if (resetParams == null) {
+            if (other.resetParams != null)
+                return false;
+        } else if (!resetParams.equals(other.resetParams))
+            return false;
         if (specId == null) {
             if (other.specId != null)
                 return false;
         } else if (!specId.equals(other.specId))
+            return false;
+        if (unsetParams == null) {
+            if (other.unsetParams != null)
+                return false;
+        } else if (!unsetParams.equals(other.unsetParams))
             return false;
         return true;
     }
@@ -266,6 +322,14 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
         if (!params.isEmpty()) {
             buf.append(' ');
             StringUtils.append(buf, params.entrySet());
+        }
+        if (!unsetParams.isEmpty()) {
+            buf.append(" unset=");
+            StringUtils.append(buf, unsetParams);
+        }
+        if (!resetParams.isEmpty()) {
+            buf.append(" reset=");
+            StringUtils.append(buf, resetParams);
         }
         if(parentRef != null) {
             buf.append(" parentRef=").append(parentRef);

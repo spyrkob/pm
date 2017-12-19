@@ -61,9 +61,11 @@ public class FeatureGroupXml {
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
         PACKAGES("packages"),
-        PARAMETER("param"),
+        PARAM("param"),
         PROP("prop"),
         PROPS("props"),
+        RESET_PARAM("reset"),
+        UNSET_PARAM("unset"),
 
         // default unknown element
         UNKNOWN(null);
@@ -72,7 +74,7 @@ public class FeatureGroupXml {
 
         static {
             elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
+                    .collect(Collectors.toMap(val -> val.name, val -> val));
         }
 
         static Element of(String localName) {
@@ -112,6 +114,7 @@ public class FeatureGroupXml {
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         OPTIONAL("optional"),
+        PARAM("param"),
         PARENT_REF("parent-ref"),
         SPEC("spec"),
         VALUE("value"),
@@ -504,13 +507,19 @@ public class FeatureGroupXml {
                         case DEPENDS:
                             readFeatureDependency(reader, fc);
                             break;
-                        case PARAMETER:
+                        case PARAM:
                             readParameter(reader, fc);
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
                             readFeatureConfig(reader, nested);
                             fc.addFeature(nested);
+                            break;
+                        case RESET_PARAM:
+                            fc.resetParam(readParamAttr(reader));
+                            break;
+                        case UNSET_PARAM:
+                            fc.unsetParam(readParamAttr(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -604,7 +613,7 @@ public class FeatureGroupXml {
                         case DEPENDS:
                             readFeatureDependency(reader, config);
                             break;
-                        case PARAMETER:
+                        case PARAM:
                             readParameter(reader, config);
                             break;
                         case FEATURE:
@@ -617,6 +626,12 @@ public class FeatureGroupXml {
                             break;
                         case FEATURE_PACK:
                             readFeaturePackDependency(reader, config);
+                            break;
+                        case RESET_PARAM:
+                            config.resetParam(readParamAttr(reader));
+                            break;
+                        case UNSET_PARAM:
+                            config.unsetParam(readParamAttr(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -701,5 +716,25 @@ public class FeatureGroupXml {
         }
         ParsingUtils.parseNoContent(reader);
         config.setParam(name, value);
+    }
+
+    private static String readParamAttr(XMLExtendedStreamReader reader) throws XMLStreamException {
+        String name = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case PARAM:
+                    name = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedAttribute(reader, i);
+            }
+        }
+        if (name == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.PARAM));
+        }
+        ParsingUtils.parseNoContent(reader);
+        return name;
     }
 }

@@ -15,31 +15,32 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param;
+package org.jboss.provisioning.config.feature.param.basic;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
-import org.junit.Assert;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBase {
+public class ParameterOverwriteTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,12 +51,30 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", "def1"))
+                    .addParam(FeatureParameterSpec.create("p2", "def2"))
+                    .addParam(FeatureParameterSpec.create("p3", "def3"))
+                    .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
-            .addConfig(ConfigModel.builder()
+            .addFeatureGroup(FeatureGroup.builder("group1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")
-                            .setParam("p5", "config1"))
+                            .setParam("p1", "group1")
+                            .setParam("p2", "group2")
+                            .setParam("p3", "group3"))
+                    .build())
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.builder("group1")
+                            .includeFeature(FeatureId.create("specA", "name", "a1"),
+                                    new FeatureConfig("specA")
+                                    .setParam("name", "a1")
+                                    .setParam("p1", "groupConfig1")
+                                    .setParam("p2", "groupConfig2"))
+                            .build())
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p1", "config1"))
                     .build())
             .newPackage("p1", true)
                 .getFeaturePack()
@@ -67,37 +86,21 @@ public class UnknownFeatureParameterTestCase extends PmInstallFeaturePackTestBas
     protected FeaturePackConfig featurePackConfig() {
         return FeaturePackConfig.forGav(FP_GAV);
     }
-    @Override
-    protected void pmSuccess() {
-        Assert.fail();
-    }
-
-    @Override
-    protected void pmFailure(Throwable e) throws ProvisioningDescriptionException {
-        Assert.assertEquals(Errors.failedToResolveConfigSpec(null, null), e.getLocalizedMessage());
-        Throwable t = e.getCause();
-        Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.failedToProcess(FP_GAV,
-                new FeatureConfig("specA")
-                            .setParam("name", "a1")
-                            .setParam("p5", "config1")), t.getLocalizedMessage());
-        t = t.getCause();
-        Assert.assertNotNull(t);
-        Assert.assertEquals(Errors.unknownFeatureParameter("specA", "p5"), t.getLocalizedMessage());
-    }
-
-    @Override
-    protected ProvisioningConfig provisionedConfig() {
-        return null;
-    }
 
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
+                        .addPackage("p1")
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
+                                .setConfigParam("p1", "config1")
+                                .setConfigParam("p2", "groupConfig2")
+                                .setConfigParam("p3", "group3")
+                                .setConfigParam("p4", "def4")
+                                .build())
+                        .build())
+                .build();
     }
 }

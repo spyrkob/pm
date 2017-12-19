@@ -707,6 +707,12 @@ public class ProvisioningRuntimeBuilder {
         final ResolvedFeature myParent = parentFeature;
         parentFeature = resolveFeatureDepsAndRefs(modelBuilder, fp, spec, resolvedId,
                 spec.resolveNonIdParams(parentFeature == null ? null : parentFeature.id, fc.getParentRef(), fc.getParams()), fc.getFeatureDeps());
+        if(fc.hasUnsetParams()) {
+            parentFeature.unsetAllParams(fc.getUnsetParams(), true);
+        }
+        if(fc.hasResetParams()) {
+            parentFeature.resetAllParams(fc.getResetParams());
+        }
         processConfigItemContainer(modelBuilder, fp, fc);
         parentFeature = myParent;
         return true;

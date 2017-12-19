@@ -290,6 +290,14 @@ public interface Errors {
         return new StringBuilder().append("Feature spec ").append(specId).append(" does not contain parameter '").append(paramName).toString();
     }
 
+    static String featureIdParameterCantBeUnset(ResolvedFeatureId id, String paramName) {
+        return new StringBuilder().append("Parameter ").append(paramName).append(" of ").append(id).append(" cannot be unset").toString();
+    }
+
+    static String featureIdParameterCantBeReset(ResolvedFeatureId id, String paramName) {
+        return new StringBuilder().append("Parameter ").append(paramName).append(" of ").append(id).append(" cannot be reset").toString();
+    }
+
     static String unknownFeatureParameter(String featureSpec, String paramName) {
         final StringBuilder buf = new StringBuilder();
         buf.append("Feature spec ").append(featureSpec).append(" does not define parameter ").append(paramName);
