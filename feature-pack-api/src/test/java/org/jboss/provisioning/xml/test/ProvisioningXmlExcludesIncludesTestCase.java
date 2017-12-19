@@ -40,16 +40,16 @@ public class ProvisioningXmlExcludesIncludesTestCase {
     public void readExcludes() throws Exception {
         ProvisioningConfig found = validator.validateAndParse("xml/provisioning/exclude-package.xml");
         ProvisioningConfig expected = ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
                         .excludePackage("p1")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2"))
                         .excludePackage("p2")
                         .excludePackage("p3")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
                 .build();
         Assert.assertEquals(expected, found);
@@ -59,16 +59,16 @@ public class ProvisioningXmlExcludesIncludesTestCase {
     public void readIncludes() throws Exception {
         ProvisioningConfig found = validator.validateAndParse("xml/provisioning/include-package.xml");
         ProvisioningConfig expected = ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
                         .includePackage("p1")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2"))
                         .includePackage("p2")
                         .includePackage("p3")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .forGav(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3")))
                 .build();
         Assert.assertEquals(expected, found);
@@ -88,17 +88,17 @@ public class ProvisioningXmlExcludesIncludesTestCase {
     public void readIncludeExcludePackages() throws Exception {
         ProvisioningConfig found = validator.validateAndParse("xml/provisioning/include-exclude-packages.xml");
         ProvisioningConfig expected = ProvisioningConfig.builder()
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp1", "0.0.1"))
                         .setInheritPackages(false)
                         .includePackage("p1")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group1", "fp2", "0.0.2"))
                         .excludePackage("p2")
                         .includePackage("p3")
                         .build())
-                .addFeaturePack(FeaturePackConfig
+                .addFeaturePackDep(FeaturePackConfig
                         .builder(ArtifactCoords.newGav("org.jboss.group2", "fp3", "0.0.3"))
                         .excludePackage("p2")
                         .includePackage("p3")

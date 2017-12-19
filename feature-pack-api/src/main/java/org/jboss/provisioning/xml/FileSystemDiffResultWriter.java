@@ -21,7 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import javax.xml.stream.XMLStreamException;
+
 import org.jboss.provisioning.diff.FileSystemDiffResult;
 import org.jboss.provisioning.xml.FileSystemDiffResultParser.Element;
 import org.jboss.provisioning.xml.util.AttributeValue;

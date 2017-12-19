@@ -17,15 +17,15 @@
 
 package org.jboss.provisioning.util.formatparser;
 
-import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.CollectionParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.KeyValueParsingFormat;
+import org.jboss.provisioning.util.formatparser.formats.MapParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.StringParsingFormat;
 import org.jboss.provisioning.util.formatparser.formats.WildcardParsingFormat;
+import org.jboss.provisioning.util.formatparser.handlers.KeyValueContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.ListContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.MapContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.SetContentHandler;
-import org.jboss.provisioning.util.formatparser.handlers.KeyValueContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.StringContentHandler;
 import org.jboss.provisioning.util.formatparser.handlers.WildcardContentHandler;
 

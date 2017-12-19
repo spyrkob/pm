@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -58,7 +57,7 @@ public class ExcludeFeaturesFromParentFeaturePacksFeatureGroupTestCase extends P
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("b", false))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "aOne")
@@ -87,8 +86,8 @@ public class ExcludeFeaturesFromParentFeaturePacksFeatureGroupTestCase extends P
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("d", false))
                     .build())
-                .addFeatureGroup(FeatureGroupSpec.builder("fg2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("fp1", "fg1"))
+                .addFeatureGroup(FeatureGroup.builder("fg2")
+                    .addFeatureGroup(FeatureGroup.forGroup("fp1", "fg1"))
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("name", "cOne")
@@ -98,9 +97,9 @@ public class ExcludeFeaturesFromParentFeaturePacksFeatureGroupTestCase extends P
                             .setParam("name", "dOne")
                             .setParam("d", "d1"))
                     .build())
-                .addConfig(ConfigSpec.builder()
+                .addConfig(ConfigModel.builder()
                         .setName("config1")
-                        .addFeatureGroup(FeatureGroupConfig.builder("fg2")
+                        .addFeatureGroup(FeatureGroup.builder("fg2")
                                 .excludeFeature("fp1", FeatureId.create("specA", "name", "aOne"))
                                 .excludeFeature("fp1", FeatureId.create("specB", "name", "bOne"))
                                 .build())

@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -101,6 +102,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         return resolvedParamSpecs.keySet();
     }
 
+    Map<String, ResolvedFeatureParam> getResolvedParams() {
+        return resolvedParamSpecs;
+    }
+
     ResolvedFeatureParam getResolvedParam(String name) throws ProvisioningDescriptionException {
         final ResolvedFeatureParam p = resolvedParamSpecs.get(name);
         if(p == null) {
@@ -167,7 +172,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         final ResolvedFeatureParam resolvedParam = getResolvedParam(paramName);
         Object value = feature.getResolvedParam(paramName);
         if(value == null) {
-            value = resolvedParam.defaultValue;
+            value = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
             if(value == null) {
                 if(capResolver.getSpec().isOptional()) {
                     return false;
@@ -318,7 +323,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         if(resolvedSpecDeps.isEmpty()) {
             if(depSpecs.size() == 1) {
                 final FeatureDependencySpec depSpec = depSpecs.iterator().next();
-                final FeaturePackRuntime.Builder depFp = depSpec.getDependency() == null ? ownFp : rt.getFpDependency(ownFp, depSpec.getDependency());
+                final FeaturePackRuntime.Builder depFp = depSpec.getDependency() == null ? ownFp : rt.getFpDependency(ownFp.spec, depSpec.getDependency());
                 final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(depSpec.getFeatureId().getSpec().getName());
                 return Collections.singletonMap(depResolvedSpec.resolveFeatureId(depSpec.getFeatureId().getParams()), depSpec);
             }
@@ -328,7 +333,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             result.putAll(resolvedSpecDeps);
         }
         for (FeatureDependencySpec userDep : depSpecs) {
-            final FeaturePackRuntime.Builder depFp = userDep.getDependency() == null ? ownFp : rt.getFpDependency(ownFp, userDep.getDependency());
+            final FeaturePackRuntime.Builder depFp = userDep.getDependency() == null ? ownFp : rt.getFpDependency(ownFp.spec, userDep.getDependency());
             final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(userDep.getFeatureId().getSpec().getName());
             final ResolvedFeatureId depId = depResolvedSpec.resolveFeatureId(userDep.getFeatureId().getParams());
             final FeatureDependencySpec specDep = result.put(depId, userDep);
@@ -369,7 +374,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
                 resolvedRefSpec = ownFp.getFeatureSpec(refSpec.getFeature().getName());
             } else {
                 final FeaturePackRuntime.Builder refFp = rt
-                        .getFpBuilder(ownFp.spec.getDependency(refSpec.getDependency()).getTarget().getGav());
+                        .getFpBuilder(ownFp.spec.getFeaturePackDep(refSpec.getDependency()).getGav());
                 resolvedRefSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
             }
             assertRefParamMapping(refSpec, resolvedRefSpec);
@@ -444,12 +449,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
                 final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
                 Object paramValue = feature.getResolvedParam(paramName);
-                if(paramValue == null) {
-                    paramValue = resolvedParam.defaultValue;
-                }
                 if (paramValue == null) {
-                    assertRefNotNillable(feature, refSpec);
-                    return Collections.emptyList();
+                    paramValue = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
+                    if (paramValue == null) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
                 }
 
                 if(resolvedParam.type.isCollection()) {
@@ -500,12 +505,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
                 final ResolvedFeatureParam resolvedParam = resolvedParamSpecs.get(paramName);
                 Object paramValue = feature.getResolvedParam(paramName);
-                if(paramValue == null) {
-                    paramValue = resolvedParam.defaultValue;
-                }
                 if (paramValue == null) {
-                    assertRefNotNillable(feature, refSpec);
-                    return Collections.emptyList();
+                    paramValue = feature.isUnset(paramName) ? null : resolvedParam.defaultValue;
+                    if (paramValue == null) {
+                        assertRefNotNillable(feature, refSpec);
+                        return Collections.emptyList();
+                    }
                 }
 
                 if(resolvedParam.type.isCollection()) {

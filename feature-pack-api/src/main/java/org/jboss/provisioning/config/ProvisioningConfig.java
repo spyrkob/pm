@@ -16,82 +16,34 @@
  */
 package org.jboss.provisioning.config;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.stream.XMLStreamException;
-
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.util.PmCollections;
-import org.jboss.provisioning.xml.ProvisioningXmlWriter;
+import org.jboss.provisioning.util.StringUtils;
 
 /**
  * The configuration of the installation to be provisioned.
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningConfig {
+public class ProvisioningConfig extends FeaturePackDepsConfig {
 
-    public static class Builder {
-
-        private Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks = Collections.emptyMap();
+    public static class Builder extends FeaturePackDepsConfigBuilder<Builder> {
 
         private Builder() {
         }
 
         private Builder(ProvisioningConfig provisioningConfig) throws ProvisioningDescriptionException {
-            for(FeaturePackConfig fp : provisioningConfig.getFeaturePacks()) {
-                addFeaturePack(fp);
+            for(FeaturePackConfig fp : provisioningConfig.getFeaturePackDeps()) {
+                addFeaturePackDep(fp);
             }
         }
 
-        public Builder addFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningDescriptionException {
-            return addFeaturePack(FeaturePackConfig.forGav(fpGav));
-        }
-
-        public Builder addFeaturePack(FeaturePackConfig fp) throws ProvisioningDescriptionException {
-            final ArtifactCoords.Ga gaPart = fp.getGav().toGa();
-            if(featurePacks.containsKey(gaPart)) {
-                throw new ProvisioningDescriptionException(Errors.featurePackVersionConflict(fp.getGav(), featurePacks.get(gaPart).getGav()));
-            }
-            featurePacks = PmCollections.putLinked(featurePacks, gaPart, fp);
-            return this;
-        }
-
-        public Builder removeFeaturePack(ArtifactCoords.Gav gav) throws ProvisioningException {
-            final FeaturePackConfig fpConfig = featurePacks.get(gav.toGa());
-            if(fpConfig == null) {
-                throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-            }
-            if(!fpConfig.getGav().equals(gav)) {
-                throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-            }
-            if(featurePacks.size() == 1) {
-                featurePacks = Collections.emptyMap();
-            } else {
-                featurePacks.remove(gav.toGa());
-            }
-            return this;
+        public Builder addFeaturePackDep(ArtifactCoords.Gav fpGav) throws ProvisioningDescriptionException {
+            return addFeaturePackDep(FeaturePackConfig.forGav(fpGav));
         }
 
         public ProvisioningConfig build() {
-            return new ProvisioningConfig(PmCollections.unmodifiable(featurePacks));
-        }
-
-        public void exportToXml(Path location) throws IOException {
-            final ProvisioningConfig config = build();
-            try {
-                ProvisioningXmlWriter.getInstance().write(config, location);
-            } catch (XMLStreamException e) {
-                throw new IllegalStateException(e);
-            }
+            return new ProvisioningConfig(this);
         }
     }
 
@@ -111,37 +63,15 @@ public class ProvisioningConfig {
         return new Builder(provisioningConfig);
     }
 
-    private Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks;
-
-    private ProvisioningConfig(Map<ArtifactCoords.Ga, FeaturePackConfig> featurePacks) {
-        this.featurePacks = featurePacks;
-    }
-
-    public boolean hasFeaturePacks() {
-        return !featurePacks.isEmpty();
-    }
-
-    public boolean containsFeaturePack(ArtifactCoords.Ga gaPart) {
-        return featurePacks.containsKey(gaPart);
-    }
-
-    public Set<ArtifactCoords.Ga> getFeaturePackGaParts() {
-        return featurePacks.keySet();
-    }
-
-    public Collection<FeaturePackConfig> getFeaturePacks() {
-        return featurePacks.values();
-    }
-
-    public FeaturePackConfig getFeaturePack(ArtifactCoords.Ga gaPart) {
-        return featurePacks.get(gaPart);
+    private ProvisioningConfig(Builder builder) {
+        super(builder);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
-        result = prime * result + ((featurePacks == null) ? 0 : featurePacks.hashCode());
+        int result = super.hashCode();
+        result = prime * result + ((fpDeps == null) ? 0 : fpDeps.hashCode());
         return result;
     }
 
@@ -149,21 +79,24 @@ public class ProvisioningConfig {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null)
+        if (!super.equals(obj))
             return false;
         if (getClass() != obj.getClass())
             return false;
         ProvisioningConfig other = (ProvisioningConfig) obj;
-        if (featurePacks == null) {
-            if (other.featurePacks != null)
+        if (fpDeps == null) {
+            if (other.fpDeps != null)
                 return false;
-        } else if (!featurePacks.equals(other.featurePacks))
+        } else if (!fpDeps.equals(other.fpDeps))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return featurePacks.values().toString();
+        final StringBuilder buf = new StringBuilder().append('[');
+        StringUtils.append(buf, fpDeps.values());
+        append(buf);
+        return buf.append(']').toString();
     }
 }

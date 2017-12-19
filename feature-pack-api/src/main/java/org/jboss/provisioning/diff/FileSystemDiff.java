@@ -18,8 +18,6 @@ package org.jboss.provisioning.diff;
 
 import static org.jboss.provisioning.util.IoUtils.listContents;
 
-import difflib.DiffUtils;
-import difflib.Patch;
 import java.io.IOException;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
@@ -32,8 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.util.PathFilter;
+
+import difflib.DiffUtils;
+import difflib.Patch;
 
 /**
  *

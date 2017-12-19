@@ -19,6 +19,7 @@ package org.jboss.provisioning.test.util.fs.state;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import org.jboss.provisioning.test.util.TestUtils;
 import org.junit.Assert;
 

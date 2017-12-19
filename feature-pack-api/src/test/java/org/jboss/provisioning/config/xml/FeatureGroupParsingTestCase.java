@@ -28,8 +28,7 @@ import java.nio.file.Paths;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.xml.FeatureGroupXmlParser;
 import org.junit.Assert;
@@ -43,11 +42,11 @@ public class FeatureGroupParsingTestCase {
 
     @Test
     public void testMain() throws Exception {
-        final FeatureGroupSpec xmlConfig = parseConfig("feature-group.xml");
-        final FeatureGroupSpec expected = FeatureGroupSpec.builder("groupName")
-                .addFeatureGroup(FeatureGroupConfig.builder("dep1").setInheritFeatures(true).build())
-                .addFeatureGroup(FeatureGroupConfig.builder("dep2").setInheritFeatures(false).build())
-                .addFeatureGroup(FeatureGroupConfig.builder("dep3")
+        final FeatureGroup xmlConfig = parseConfig("feature-group.xml");
+        final FeatureGroup expected = FeatureGroup.builder("groupName")
+                .addFeatureGroup(FeatureGroup.builder("dep1").setInheritFeatures(true).build())
+                .addFeatureGroup(FeatureGroup.builder("dep2").setInheritFeatures(false).build())
+                .addFeatureGroup(FeatureGroup.builder("dep3")
                         .setInheritFeatures(false)
                         .includeSpec("spec1")
                         .includeFeature(FeatureId.fromString("spec2:p1=v1,p2=v2"),
@@ -73,7 +72,7 @@ public class FeatureGroupParsingTestCase {
                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                         .build())
-                .addFeatureGroup(FeatureGroupConfig.forGroup("source4", "dep4"))
+                .addFeatureGroup(FeatureGroup.forGroup("source4", "dep4"))
                 .addFeature(
                         new FeatureConfig("spec1")
                         .setFpDep("source4")
@@ -114,7 +113,7 @@ public class FeatureGroupParsingTestCase {
         }
     }
 
-    private static FeatureGroupSpec parseConfig(String xml) throws Exception {
+    private static FeatureGroup parseConfig(String xml) throws Exception {
         final Path path = getResource("xml/config/" + xml);
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             return FeatureGroupXmlParser.getInstance().parse(reader);

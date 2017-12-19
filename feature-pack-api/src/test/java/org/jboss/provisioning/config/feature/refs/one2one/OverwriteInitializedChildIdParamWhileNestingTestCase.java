@@ -26,14 +26,13 @@ import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -66,7 +65,7 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
                     .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.create("a", true, false, "def"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("groupC")
+            .addFeatureGroup(FeatureGroup.builder("groupC")
                     .addFeature(
                             new FeatureConfig("specC")
                             .setParam("id", "c1")
@@ -75,11 +74,11 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
                             new FeatureConfig("specC")
                             .setParam("id", "c2"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("id", "a1")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("groupC")))
+                            .addFeatureGroup(FeatureGroup.forGroup("groupC")))
                     .build())
             .getInstaller()
         .install();
@@ -103,7 +102,7 @@ public class OverwriteInitializedChildIdParamWhileNestingTestCase extends PmInst
         Assert.assertEquals(Errors.failedToProcess(FP_GAV,
                 new FeatureConfig("specA")
                             .setParam("id", "a1")
-                            .addFeatureGroup(FeatureGroupConfig.forGroup("groupC"))), e.getLocalizedMessage());
+                            .addFeatureGroup(FeatureGroup.forGroup("groupC"))), e.getLocalizedMessage());
         e = (ProvisioningException) e.getCause();
         Assert.assertNotNull(e);
         Assert.assertEquals(Errors.failedToProcess(FP_GAV, "groupC"), e.getLocalizedMessage());

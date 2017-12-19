@@ -17,8 +17,9 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
@@ -27,11 +28,12 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
-import org.jboss.provisioning.config.FeaturePackConfig.Builder;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.ConfigCustomizationsBuilder;
+import org.jboss.provisioning.config.ConfigId;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.FeaturePackDepsConfigBuilder;
 import org.jboss.provisioning.util.ParsingUtils;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
 
@@ -52,6 +54,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
         INSTALLATION("installation"),
+        NAME("name"),
         PACKAGES("packages"),
 
         // default unknown element
@@ -104,7 +107,6 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         GROUP_ID("groupId"),
         INHERIT("inherit"),
         INHERIT_UNNAMED_MODELS("inherit-unnamed-models"),
-        INHERIT_FEATURES("inherit-features"),
         MODEL("model"),
         NAME("name"),
         NAMED_MODELS_ONLY("named-models-only"),
@@ -113,14 +115,14 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         // default unknown attribute
         UNKNOWN(null);
 
-        private static final Map<QName, Attribute> attributes;
+        private static final Map<String, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> val.name, val -> val));
         }
 
-        static Attribute of(QName qName) {
-            final Attribute attribute = attributes.get(qName);
+        static Attribute of(String name) {
+            final Attribute attribute = attributes.get(name);
             return attribute == null ? UNKNOWN : attribute;
         }
 
@@ -174,10 +176,18 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                     switch (element) {
                         case FEATURE_PACK:
                             hasFp = true;
+                            readFeaturePackDep(reader, builder);
+                            break;
+                        case DEFAULT_CONFIGS:
+                            ProvisioningXmlParser10.parseDefaultConfigs(reader, builder);
+                            break;
+                        case CONFIG:
+                            final ConfigModel.Builder config = ConfigModel.builder();
+                            ConfigXml.readConfig(reader, config);
                             try {
-                                builder.addFeaturePack(readFeaturePack(reader));
+                                builder.addConfig(config.build());
                             } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException("Failed to add feature-pack", e);
+                                throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
                             }
                             break;
                         default:
@@ -193,13 +203,15 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private FeaturePackConfig readFeaturePack(XMLExtendedStreamReader reader) throws XMLStreamException {
-        final int count = reader.getAttributeCount();
+    static void readFeaturePackDep(XMLExtendedStreamReader reader, FeaturePackDepsConfigBuilder<?> fpBuilder) throws XMLStreamException {
         String groupId = null;
         String artifactId = null;
-        String version = "LATEST";
+        String version = null;
+        final int count = reader.getAttributeCount();
+        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
         for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i).getLocalPart());
+            required.remove(attribute);
             switch (attribute) {
                 case GROUP_ID:
                     groupId = reader.getAttributeValue(i);
@@ -214,40 +226,44 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                     throw ParsingUtils.unexpectedContent(reader);
             }
         }
-        if (groupId == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.GROUP_ID));
+        if (!required.isEmpty()) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        if (artifactId == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ARTIFACT_ID));
-        }
-
-        final FeaturePackConfig.Builder fpBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
-
+        String name = null;
+        final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
-                    return fpBuilder.build();
+                    try {
+                        fpBuilder.addFeaturePackDep(name, depBuilder.build());
+                    } catch (ProvisioningDescriptionException e) {
+                        throw new XMLStreamException("Failed to add feature-pack configuration dependency", e);
+                    }
+                    return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getLocalName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
-                        case DEFAULT_CONFIGS:
-                            parseDefaultConfigs(reader, fpBuilder);
-                            break;
-                        case CONFIG:
-                            final ConfigSpec.Builder configBuilder = ConfigSpec.builder();
-                            ConfigXml.readConfig(reader, configBuilder);
-                            try {
-                                fpBuilder.addConfig(configBuilder.build());
-                            } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException(e);
-                            }
-                            break;
                         case PACKAGES:
                             try {
-                                FeaturePackPackagesConfigParser10.readPackages(reader, fpBuilder);
+                                FeaturePackPackagesConfigParser10.readPackages(reader, depBuilder);
                             } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException(e);
+                                throw new XMLStreamException("Failed to parse " + Element.PACKAGES.getLocalName() + ": " + e.getLocalizedMessage(), reader.getLocation(), e);
+                            }
+                            break;
+                        case NAME:
+                            name = reader.getElementText();
+                            break;
+                        case DEFAULT_CONFIGS:
+                            ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
+                            break;
+                        case CONFIG:
+                            final ConfigModel.Builder config = ConfigModel.builder();
+                            ConfigXml.readConfig(reader, config);
+                            try {
+                                depBuilder.addConfig(config.build());
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new XMLStreamException("Failed to parse " + Element.CONFIG, reader.getLocation(), e);
                             }
                             break;
                         default:
@@ -260,12 +276,11 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 }
             }
         }
-        throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static void parseDefaultConfigs(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
+    public static void parseDefaultConfigs(XMLExtendedStreamReader reader, ConfigCustomizationsBuilder<?> fpBuilder) throws XMLStreamException {
         for (int i = 0; i < reader.getAttributeCount(); i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i).getLocalPart());
             switch (attribute) {
                 case INHERIT:
                     fpBuilder.setInheritConfigs(Boolean.parseBoolean(reader.getAttributeValue(i)));
@@ -304,22 +319,18 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void parseConfigModelRef(XMLExtendedStreamReader reader, Builder fpBuilder, boolean include) throws XMLStreamException {
+    private static void parseConfigModelRef(XMLExtendedStreamReader reader, ConfigCustomizationsBuilder<?> fpBuilder, boolean include) throws XMLStreamException {
         String name = null;
         String model = null;
-        Boolean inheritFeatures = null;
         Boolean namedConfigsOnly = null;
         for (int i = 0; i < reader.getAttributeCount(); i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i).getLocalPart());
             switch (attribute) {
                 case NAME:
                     name = reader.getAttributeValue(i);
                     break;
                 case MODEL:
                     model = reader.getAttributeValue(i);
-                    break;
-                case INHERIT_FEATURES:
-                    inheritFeatures = Boolean.parseBoolean(reader.getAttributeValue(i));
                     break;
                 case NAMED_MODELS_ONLY:
                     namedConfigsOnly = Boolean.parseBoolean(reader.getAttributeValue(i));
@@ -334,13 +345,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                 if (name == null) {
                     fpBuilder.includeConfigModel(model);
                 } else {
-                    final IncludedConfig.Builder configBuilder = IncludedConfig.builder(model, name);
-                    if(inheritFeatures != null) {
-                        configBuilder.setInheritFeatures(inheritFeatures);
-                    }
-                    FeatureGroupXml.readFeatureGroupConfigBody(reader, configBuilder);
-                    fpBuilder.includeDefaultConfig(configBuilder.build());
-                    return;
+                    fpBuilder.includeDefaultConfig(new ConfigId(model, name));
                 }
             } else if (name == null) {
                 if(namedConfigsOnly != null) {

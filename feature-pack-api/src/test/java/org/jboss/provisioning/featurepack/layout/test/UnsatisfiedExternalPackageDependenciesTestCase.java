@@ -43,7 +43,7 @@ public class UnsatisfiedExternalPackageDependenciesTestCase {
 
         final ProvisioningLayout.Builder builder = ProvisioningLayout.builder()
                 .addFeaturePack(FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
-                        .addDependency("fp2dep", FeaturePackConfig.forGav(fp2Gav))
+                        .addFeaturePackDep("fp2dep", FeaturePackConfig.forGav(fp2Gav))
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
                                 .addPackageDep("fp2dep", "p2")
@@ -66,7 +66,7 @@ public class UnsatisfiedExternalPackageDependenciesTestCase {
 
         final ProvisioningLayout.Builder builder = ProvisioningLayout.builder()
                 .addFeaturePack(FeaturePackLayout.builder(FeaturePackSpec.builder(fp1Gav)
-                        .addDependency("fp2dep", FeaturePackConfig.forGav(fp2Gav))
+                        .addFeaturePackDep("fp2dep", FeaturePackConfig.forGav(fp2Gav))
                         .addDefaultPackage("p1"))
                         .addPackage(PackageSpec.builder("p1")
                                 .addPackageDep("fp2dep", "p2", true)

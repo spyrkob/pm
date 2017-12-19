@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.xml.FeatureConfigXmlParser;
 import org.junit.Assert;
@@ -57,7 +57,7 @@ public class FeatureConfigXmlParsingTestCase {
                         .setParam("param3", "value3")
                         .addFeature(FeatureConfig.newConfig("grandchild-spec")
                                 .setParam("param4", "value4")))
-                .addFeatureGroup(FeatureGroupConfig.builder("group1")
+                .addFeatureGroup(FeatureGroup.builder("group1")
                         .includeFeature(FeatureId.create("spec3", "p1", "v1"),
                                 new FeatureConfig("spec3")
                                 .setParam("p1", "v1")
@@ -78,7 +78,7 @@ public class FeatureConfigXmlParsingTestCase {
                 .addFeature(FeatureConfig.newConfig("child-spec")
                         .setParentRef("feature-spec-ref")
                         .setParam("param5", "value5"))
-                .addFeatureGroup(FeatureGroupConfig.builder("group2")
+                .addFeatureGroup(FeatureGroup.builder("group2")
                         .setFpDep("fp2")
                         .includeFeature(FeatureId.create("spec1", "p1", "v1"),
                                 new FeatureConfig("spec1")

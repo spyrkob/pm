@@ -111,6 +111,10 @@ public interface Errors {
         return "Feature-pack " + gav + " is not found";
     }
 
+    static String unknownFeaturePackDependency(ArtifactCoords.Ga ga) {
+        return ga + " is not found amonth the feature-pack dependencies";
+    }
+
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
         return "Feature-pack " + gav.toGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
     }
@@ -132,15 +136,19 @@ public interface Errors {
     }
 
     static String packageExcludeInclude(String packageName) {
-        return "Package " + packageName + " is explicitly excluded and included";
+        return "Attempt to explicitly include and exclude package " + packageName;
     }
 
     static String duplicateDependencyName(String name) {
         return "Dependency with name " + name + " already exists";
     }
 
-    static String unknownDependencyName(Gav gav, String depName) {
+    static String unknownFeaturePackDependencyName(Gav gav, String depName) {
         return "Dependency " + depName + " not found in " + gav + " feature-pack description";
+    }
+
+    static String unknownFeaturePackDependencyName(String depName) {
+        return depName + " was not found among the feature-pack dependencies";
     }
 
     static String featurePackAlreadyInstalled(Gav gav) {
@@ -280,6 +288,14 @@ public interface Errors {
 
     static String unknownFeatureParameter(ResolvedSpecId specId, String paramName) {
         return new StringBuilder().append("Feature spec ").append(specId).append(" does not contain parameter '").append(paramName).toString();
+    }
+
+    static String featureIdParameterCantBeUnset(ResolvedFeatureId id, String paramName) {
+        return new StringBuilder().append("Parameter ").append(paramName).append(" of ").append(id).append(" cannot be unset").toString();
+    }
+
+    static String featureIdParameterCantBeReset(ResolvedFeatureId id, String paramName) {
+        return new StringBuilder().append("Parameter ").append(paramName).append(" of ").append(id).append(" cannot be reset").toString();
     }
 
     static String unknownFeatureParameter(String featureSpec, String paramName) {

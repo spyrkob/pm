@@ -18,6 +18,7 @@
 package org.jboss.provisioning.plugin.test;
 
 import java.io.IOException;
+
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -90,7 +91,7 @@ public class MultiplePluginsTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(
+                .addFeaturePackDep(
                         FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final")))
                 .build();
     }

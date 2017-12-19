@@ -24,8 +24,8 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.ConfigSpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
@@ -54,7 +54,7 @@ public class UnsatisfiedFeatureDependencyTestCase extends PmInstallFeaturePackTe
             .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("id"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1")
+            .addConfig(ConfigModel.builder().setName("config1")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("id", "b")

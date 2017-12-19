@@ -82,7 +82,7 @@ public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConf
     @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
         return ProvisioningConfig.builder()
-                .addFeaturePack(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
+                .addFeaturePackDep(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
                 .build();
     }
 

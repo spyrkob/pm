@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -65,14 +64,14 @@ public class ExcludedReferenceIncludedFeatureTestCase extends PmInstallFeaturePa
                             .setInclude(true)
                             .build())
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("name", "b")
                             .setParam("a", "a"))
                     .build())
-            .addConfig(ConfigSpec.builder().setName("config1")
-                    .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+            .addConfig(ConfigModel.builder().setName("config1")
+                    .addFeatureGroup(FeatureGroup.builder("fg1")
                             .excludeFeature(FeatureId.create("specA", "name", "a"))
                             .build())
                     .build())

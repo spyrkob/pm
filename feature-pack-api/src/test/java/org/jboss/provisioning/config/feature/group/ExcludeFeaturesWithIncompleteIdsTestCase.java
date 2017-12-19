@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
@@ -65,7 +64,7 @@ public class ExcludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                     .addParam(FeatureParameterSpec.createId("id"))
                     .addParam(FeatureParameterSpec.createId("a"))
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("fg1")
+            .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(
                             new FeatureConfig("specB")
                             .setParam("id", "b1"))
@@ -79,10 +78,10 @@ public class ExcludeFeaturesWithIncompleteIdsTestCase extends PmInstallFeaturePa
                             new FeatureConfig("specC")
                             .setParam("id", "c2"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .addFeature(FeatureConfig.newConfig("specA")
                             .setParam("id", "a1")
-                            .addFeatureGroup(FeatureGroupConfig.builder("fg1")
+                            .addFeatureGroup(FeatureGroup.builder("fg1")
                                     .setInheritFeatures(true)
                                     .excludeFeature(FeatureId.create("specB", "id", "b1"))
                                     .excludeFeature(FeatureId.create("specC", "id", "c1"))

@@ -16,19 +16,14 @@
  */
 package org.jboss.provisioning.config;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.spec.ConfigId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.util.StringUtils;
 import org.jboss.provisioning.util.PmCollections;
 
 /**
@@ -36,18 +31,14 @@ import org.jboss.provisioning.util.PmCollections;
  *
  * @author Alexey Loubyansky
  */
-public class FeaturePackConfig extends PackageDepsConfig {
+public class FeaturePackConfig extends ConfigCustomizations {
 
-    public static class Builder extends PackageDepsConfigBuilder<Builder> {
+    public static class Builder extends ConfigCustomizationsBuilder<Builder> {
 
         protected final ArtifactCoords.Gav gav;
-        protected boolean inheritConfigs = true;
-        protected boolean inheritModelOnlyConfigs = true;
-        protected Set<String> includedModels = Collections.emptySet();
-        protected Map<ConfigId, IncludedConfig> includedConfigs = Collections.emptyMap();
-        protected Map<String, Boolean> excludedModels = Collections.emptyMap();
-        protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
-        protected Map<ConfigId, ConfigSpec> definedConfigs = Collections.emptyMap();
+        protected boolean inheritPackages = true;
+        protected Set<String> excludedPackages = Collections.emptySet();
+        protected Map<String, PackageConfig> includedPackages = Collections.emptyMap();
 
         protected Builder(ArtifactCoords.Gav gav) {
             this(gav, true);
@@ -58,78 +49,42 @@ public class FeaturePackConfig extends PackageDepsConfig {
             this.inheritPackages = inheritPackages;
         }
 
-        public Builder setInheritConfigs(boolean inherit) {
-            this.inheritConfigs = inherit;
+        public Builder setInheritPackages(boolean inheritSelectedPackages) {
+            this.inheritPackages = inheritSelectedPackages;
             return this;
         }
 
-        public Builder setInheritModelOnlyConfigs(boolean inheritModelOnlyConfigs) {
-            this.inheritModelOnlyConfigs = inheritModelOnlyConfigs;
+        public Builder excludePackage(String packageName) throws ProvisioningDescriptionException {
+            if(includedPackages.containsKey(packageName)) {
+                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageName));
+            }
+            excludedPackages = PmCollections.add(excludedPackages, packageName);
             return this;
         }
 
-        public Builder addConfig(ConfigSpec config) throws ProvisioningDescriptionException {
-            if(definedConfigs.containsKey(config.getId())) {
-                throw new ProvisioningDescriptionException("Config model with id " + config.getId() + " has already been defined in the configuration of " + gav);
+        public Builder excludeAllPackages(Collection<String> packageNames) throws ProvisioningDescriptionException {
+            for(String packageName : packageNames) {
+                excludePackage(packageName);
             }
-            definedConfigs = PmCollections.putLinked(definedConfigs, config.getId(), config);
             return this;
         }
 
-        public Builder excludeConfigModel(String model) throws ProvisioningDescriptionException {
-            return excludeConfigModel(model, true);
-        }
-
-        public Builder excludeConfigModel(String model, boolean namedConfigsOnly) throws ProvisioningDescriptionException {
-            if(includedModels.contains(model)) {
-                throw new ProvisioningDescriptionException("Model " + model + " has been included");
+        public Builder includeAllPackages(Collection<PackageConfig> packageConfigs) throws ProvisioningDescriptionException {
+            for(PackageConfig packageConfig : packageConfigs) {
+                includePackage(packageConfig);
             }
-            excludedModels = PmCollections.put(excludedModels, model, namedConfigsOnly);
             return this;
         }
 
-        public Builder includeConfigModel(String name) throws ProvisioningDescriptionException {
-            if(excludedModels.containsKey(name)) {
-                throw new ProvisioningDescriptionException("Model " + name + " has been excluded");
-            }
-            includedModels = PmCollections.add(includedModels, name);
-            return this;
+        public Builder includePackage(String packageName) throws ProvisioningDescriptionException {
+            return includePackage(PackageConfig.forName(packageName));
         }
 
-        public Builder includeDefaultConfig(String model, String name) throws ProvisioningDescriptionException {
-            return includeDefaultConfig(IncludedConfig.builder(model, name).build());
-        }
-
-        public Builder includeDefaultConfig(IncludedConfig includedConfig) throws ProvisioningDescriptionException {
-            if(includedConfigs.containsKey(includedConfig.getId())) {
-                throw new ProvisioningDescriptionException("Config model with id " + includedConfig.getId() + " has already been included into the configuration of " + gav);
+        private Builder includePackage(PackageConfig packageConfig) throws ProvisioningDescriptionException {
+            if(excludedPackages.contains(packageConfig.getName())) {
+                throw new ProvisioningDescriptionException(Errors.packageExcludeInclude(packageConfig.getName()));
             }
-            includedConfigs = PmCollections.put(includedConfigs, includedConfig.getId(), includedConfig);
-            return this;
-        }
-
-        public Builder excludeDefaultConfig(String model, String name) {
-            if(excludedConfigs.isEmpty()) {
-                excludedConfigs = Collections.singletonMap(model, Collections.singleton(name));
-                return this;
-            }
-            Set<String> names = excludedConfigs.get(model);
-            if(names == null) {
-                if(excludedConfigs.size() == 1) {
-                    excludedConfigs = new HashMap<>(excludedConfigs);
-                }
-                excludedConfigs.put(model, Collections.singleton(name));
-            } else {
-                if(names.size() == 1) {
-                    names = new HashSet<>(names);
-                    if(excludedConfigs.size() == 1) {
-                        excludedConfigs = Collections.singletonMap(model, names);
-                    } else {
-                        excludedConfigs.put(model, names);
-                    }
-                }
-                names.add(name);
-            }
+            includedPackages = PmCollections.put(includedPackages, packageConfig.getName(), packageConfig);
             return this;
         }
 
@@ -151,120 +106,59 @@ public class FeaturePackConfig extends PackageDepsConfig {
     }
 
     private final ArtifactCoords.Gav gav;
-    private final boolean inheritConfigs;
-    private final boolean inheritModelOnlyConfigs;
-    private final Set<String> includedModels;
-    private final Map<String, Boolean> excludedModels;
-    private final Map<ConfigId, IncludedConfig> includedConfigs;
-    private final Map<String, Set<String>> excludedConfigs;
-    private final Map<ConfigId, ConfigSpec> definedConfigs;
+    protected final boolean inheritPackages;
+    protected final Set<String> excludedPackages;
+    protected final Map<String, PackageConfig> includedPackages;
 
     protected FeaturePackConfig(Builder builder) {
         super(builder);
         assert builder.gav != null : "gav is null";
         this.gav = builder.gav;
-        this.inheritConfigs = builder.inheritConfigs;
-        this.inheritModelOnlyConfigs = builder.inheritModelOnlyConfigs;
-        this.includedModels = PmCollections.unmodifiable(builder.includedModels);
-        this.excludedModels = PmCollections.unmodifiable(builder.excludedModels);
-        this.includedConfigs = PmCollections.unmodifiable(builder.includedConfigs);
-        this.excludedConfigs = PmCollections.unmodifiable(builder.excludedConfigs);
-        this.definedConfigs = PmCollections.unmodifiable(builder.definedConfigs);
+        this.inheritPackages = builder.inheritPackages;
+        this.excludedPackages = PmCollections.unmodifiable(builder.excludedPackages);
+        this.includedPackages = PmCollections.unmodifiable(builder.includedPackages);
     }
 
     public ArtifactCoords.Gav getGav() {
         return gav;
     }
 
-    public boolean isInheritConfigs() {
-        return inheritConfigs;
+    public boolean isInheritPackages() {
+        return inheritPackages;
     }
 
-    public boolean isInheritModelOnlyConfigs() {
-        return inheritModelOnlyConfigs;
+    public boolean hasIncludedPackages() {
+        return !includedPackages.isEmpty();
     }
 
-    public boolean hasFullModelsIncluded() {
-        return !includedModels.isEmpty();
+    public boolean isPackageIncluded(String packageName) {
+        return includedPackages.containsKey(packageName);
     }
 
-    public Set<String> getFullModelsIncluded() {
-        return includedModels;
+    public Collection<PackageConfig> getIncludedPackages() {
+        return includedPackages.values();
     }
 
-    public boolean isConfigModelIncluded(ConfigId configId) {
-        return includedModels.contains(configId.getModel());
+    public boolean hasExcludedPackages() {
+        return !excludedPackages.isEmpty();
     }
 
-    public boolean hasFullModelsExcluded() {
-        return !excludedModels.isEmpty();
+    public boolean isPackageExcluded(String packageName) {
+        return excludedPackages.contains(packageName);
     }
 
-    public Map<String, Boolean> getFullModelsExcluded() {
-        return excludedModels;
-    }
-
-    public boolean isConfigModelExcluded(ConfigId configId) {
-        final Boolean namedOnly = excludedModels.get(configId.getModel());
-        if(namedOnly == null) {
-            return false;
-        }
-        return namedOnly ? configId.getName() != null : true;
-    }
-
-    public boolean hasExcludedConfigs() {
-        return !excludedConfigs.isEmpty();
-    }
-
-    public boolean isConfigExcluded(ConfigId configId) {
-        final Set<String> names = excludedConfigs.get(configId.getModel());
-        return names == null ? false : names.contains(configId.getName());
-    }
-
-    public Set<String> getExcludedModels() {
-        return excludedConfigs.keySet();
-    }
-
-    public Set<String> getExcludedConfigs(String model) {
-        return excludedConfigs.get(model);
-    }
-
-    public boolean hasIncludedConfigs() {
-        return !includedConfigs.isEmpty();
-    }
-
-    public boolean isConfigIncluded(ConfigId id) {
-        return includedConfigs.containsKey(id);
-    }
-
-    public Collection<IncludedConfig> getIncludedConfigs() {
-        return includedConfigs.values();
-    }
-
-    public IncludedConfig getIncludedConfig(ConfigId id) {
-        return includedConfigs.get(id);
-    }
-
-    public boolean hasDefinedConfigs() {
-        return !definedConfigs.isEmpty();
-    }
-
-    public Collection<ConfigSpec> getDefinedConfigs() {
-        return definedConfigs.values();
+    public Set<String> getExcludedPackages() {
+        return excludedPackages;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((definedConfigs == null) ? 0 : definedConfigs.hashCode());
-        result = prime * result + ((excludedConfigs == null) ? 0 : excludedConfigs.hashCode());
-        result = prime * result + ((excludedModels == null) ? 0 : excludedModels.hashCode());
+        result = prime * result + ((excludedPackages == null) ? 0 : excludedPackages.hashCode());
         result = prime * result + ((gav == null) ? 0 : gav.hashCode());
-        result = prime * result + ((includedConfigs == null) ? 0 : includedConfigs.hashCode());
-        result = prime * result + ((includedModels == null) ? 0 : includedModels.hashCode());
-        result = prime * result + (inheritConfigs ? 1231 : 1237);
-        result = prime * result + (inheritModelOnlyConfigs ? 1231 : 1237);
+        result = prime * result + ((includedPackages == null) ? 0 : includedPackages.hashCode());
+        result = prime * result + (inheritPackages ? 1231 : 1237);
         return result;
     }
 
@@ -277,39 +171,22 @@ public class FeaturePackConfig extends PackageDepsConfig {
         if (getClass() != obj.getClass())
             return false;
         FeaturePackConfig other = (FeaturePackConfig) obj;
-        if (definedConfigs == null) {
-            if (other.definedConfigs != null)
+        if (excludedPackages == null) {
+            if (other.excludedPackages != null)
                 return false;
-        } else if (!definedConfigs.equals(other.definedConfigs))
-            return false;
-        if (excludedConfigs == null) {
-            if (other.excludedConfigs != null)
-                return false;
-        } else if (!excludedConfigs.equals(other.excludedConfigs))
-            return false;
-        if (excludedModels == null) {
-            if (other.excludedModels != null)
-                return false;
-        } else if (!excludedModels.equals(other.excludedModels))
+        } else if (!excludedPackages.equals(other.excludedPackages))
             return false;
         if (gav == null) {
             if (other.gav != null)
                 return false;
         } else if (!gav.equals(other.gav))
             return false;
-        if (includedConfigs == null) {
-            if (other.includedConfigs != null)
+        if (includedPackages == null) {
+            if (other.includedPackages != null)
                 return false;
-        } else if (!includedConfigs.equals(other.includedConfigs))
+        } else if (!includedPackages.equals(other.includedPackages))
             return false;
-        if (includedModels == null) {
-            if (other.includedModels != null)
-                return false;
-        } else if (!includedModels.equals(other.includedModels))
-            return false;
-        if (inheritConfigs != other.inheritConfigs)
-            return false;
-        if (inheritModelOnlyConfigs != other.inheritModelOnlyConfigs)
+        if (inheritPackages != other.inheritPackages)
             return false;
         return true;
     }
@@ -318,41 +195,7 @@ public class FeaturePackConfig extends PackageDepsConfig {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("[").append(gav.toString());
-        if(!inheritConfigs) {
-            builder.append(" inheritConfigs=false");
-        }
-        if(!inheritModelOnlyConfigs) {
-            builder.append(" inheritModelOnlyConfigs=false");
-        }
-        if(!this.excludedModels.isEmpty()) {
-            builder.append(" excluded models ");
-            StringUtils.append(builder, excludedModels.entrySet());
-        }
-        if(!excludedConfigs.isEmpty()) {
-            builder.append(" excluded configs ");
-            StringUtils.append(builder, excludedConfigs.entrySet());
-        }
-        if(!includedConfigs.isEmpty()) {
-            builder.append(" included configs ");
-            StringUtils.append(builder, includedConfigs.values());
-        }
-        if(!definedConfigs.isEmpty()) {
-            builder.append(" defined configs ");
-            StringUtils.append(builder, definedConfigs.values());
-        }
-        if(!inheritPackages) {
-            builder.append(" inheritPackages=false");
-        }
-        if(!excludedPackages.isEmpty()) {
-            final String[] array = excludedPackages.toArray(new String[excludedPackages.size()]);
-            Arrays.sort(array);
-            builder.append(" excluded ").append(Arrays.asList(array));
-        }
-        if(!includedPackages.isEmpty()) {
-            final String[] array = includedPackages.keySet().toArray(new String[includedPackages.size()]);
-            Arrays.sort(array);
-            builder.append(" included ").append(Arrays.asList(array));
-        }
+        append(builder);
         return builder.append("]").toString();
     }
 }

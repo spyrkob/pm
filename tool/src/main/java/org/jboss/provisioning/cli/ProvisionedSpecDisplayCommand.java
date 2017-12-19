@@ -52,10 +52,10 @@ public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
             } catch (ProvisioningException e) {
                 throw new CommandExecutionException("Failed to read provisioned state", e);
             }
-            if (provisionedState == null || !provisionedState.hasFeaturePacks()) {
+            if (provisionedState == null || !provisionedState.hasFeaturePackDeps()) {
                 return;
             }
-            for (FeaturePackConfig fp : provisionedState.getFeaturePacks()) {
+            for (FeaturePackConfig fp : provisionedState.getFeaturePackDeps()) {
                 session.println(fp.getGav().toString());
             }
         }

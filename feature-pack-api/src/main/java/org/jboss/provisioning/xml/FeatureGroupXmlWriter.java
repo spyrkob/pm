@@ -17,13 +17,13 @@
 package org.jboss.provisioning.xml;
 
 import java.util.Map;
+
+import org.jboss.provisioning.config.ConfigItem;
+import org.jboss.provisioning.config.ConfigItemContainer;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
-import org.jboss.provisioning.config.FeatureGroupConfigSupport;
+import org.jboss.provisioning.config.FeatureGroup;
+import org.jboss.provisioning.config.FeatureGroupSupport;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
-import org.jboss.provisioning.spec.ConfigItemContainer;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
-import org.jboss.provisioning.spec.ConfigItem;
 import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.SpecId;
 import org.jboss.provisioning.xml.FeatureGroupXml.Attribute;
@@ -34,7 +34,7 @@ import org.jboss.provisioning.xml.util.ElementNode;
  *
  * @author Alexey Loubyansky
  */
-public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
+public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
 
     private static final String FALSE = "false";
     private static final String TRUE = "true";
@@ -48,16 +48,17 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
     private FeatureGroupXmlWriter() {
     }
 
-    protected ElementNode toElement(FeatureGroupSpec config) {
+    protected ElementNode toElement(FeatureGroup config) {
         return toElement(config, FeatureGroupXml.NAMESPACE_1_0);
     }
 
-    protected ElementNode toElement(FeatureGroupSpec featureGroup, String ns) {
+    protected ElementNode toElement(FeatureGroup featureGroup, String ns) {
         final ElementNode fgE = addElement(null, Element.FEATURE_GROUP_SPEC.getLocalName(), ns);
         if(featureGroup.getName() != null) {
             addAttribute(fgE, Attribute.NAME, featureGroup.getName());
         }
 
+        //addFeatureGroupIncludeExclude(featureGroup, ns, fgE);
         writeFeatureGroupSpecBody(fgE, featureGroup, ns);
 
         if(featureGroup.hasPackageDeps()) {
@@ -85,20 +86,22 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
                 parent = configE;
             }
             if(item.isGroup()) {
-                writeFeatureGroupDependency(parent, (FeatureGroupConfig) item, ns);
+                writeFeatureGroupDependency(parent, (FeatureGroup) item, ns);
             } else {
                 addFeatureConfig(parent, (FeatureConfig) item, ns);
             }
         }
     }
 
-    private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroupConfig dep, String ns) {
+    private static void writeFeatureGroupDependency(ElementNode depsE, FeatureGroup dep, String ns) {
         final ElementNode depE = addElement(depsE, Element.FEATURE_GROUP.getLocalName(), ns);
-        addFeatureGroupDepBody(dep, ns, depE);
+        addFeatureGroupDepBody(dep, depE, ns);
     }
 
-    public static void addFeatureGroupDepBody(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
-        addAttribute(depE, Attribute.NAME, dep.getName());
+    public static void addFeatureGroupDepBody(FeatureGroupSupport dep, final ElementNode depE, String ns) {
+        if(dep.getName() != null) {
+            addAttribute(depE, Attribute.NAME, dep.getName());
+        }
         if(!dep.isInheritFeatures()) {
             addAttribute(depE, Attribute.INHERIT_FEATURES, FALSE);
         }
@@ -111,16 +114,20 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
             }
         }
         addFeatureGroupIncludeExclude(dep, ns, depE);
+        writeFeatureGroupSpecBody(depE, dep, ns);
         if(dep.hasExternalFeatureGroups()) {
-            for(Map.Entry<String, FeatureGroupConfig> entry : dep.getExternalFeatureGroups().entrySet()) {
+            for(Map.Entry<String, FeatureGroup> entry : dep.getExternalFeatureGroups().entrySet()) {
                 final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
                 addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
                 addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);
             }
         }
+        if(dep.hasPackageDeps()) {
+            PackageXmlWriter.writePackageDeps(dep, addElement(depE, Element.PACKAGES));
+        }
     }
 
-    private static void addFeatureGroupIncludeExclude(FeatureGroupConfigSupport dep, String ns, final ElementNode depE) {
+    static void addFeatureGroupIncludeExclude(FeatureGroupSupport dep, String ns, final ElementNode depE) {
         if(dep.hasExcludedSpecs()) {
             for(SpecId spec : dep.getExcludedSpecs()) {
                 final ElementNode excludeE = addElement(depE, Element.EXCLUDE.getLocalName(), ns);
@@ -172,9 +179,21 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroupSpec> {
         }
         if(fc.hasParams()) {
             for(Map.Entry<String, String> param : fc.getParams().entrySet()) {
-                final ElementNode paramE = addElement(fcE, Element.PARAMETER.getLocalName(), ns);
+                final ElementNode paramE = addElement(fcE, Element.PARAM.getLocalName(), ns);
                 addAttribute(paramE, Attribute.NAME, param.getKey());
                 addAttribute(paramE, Attribute.VALUE, param.getValue());
+            }
+        }
+        if(fc.hasResetParams()) {
+            for(String param : fc.getResetParams()) {
+                final ElementNode paramE = addElement(fcE, Element.RESET_PARAM.getLocalName(), ns);
+                addAttribute(paramE, Attribute.PARAM, param);
+            }
+        }
+        if(fc.hasUnsetParams()) {
+            for(String param : fc.getUnsetParams()) {
+                final ElementNode paramE = addElement(fcE, Element.UNSET_PARAM.getLocalName(), ns);
+                addAttribute(paramE, Attribute.PARAM, param);
             }
         }
         writeFeatureGroupSpecBody(fcE, fc, ns);

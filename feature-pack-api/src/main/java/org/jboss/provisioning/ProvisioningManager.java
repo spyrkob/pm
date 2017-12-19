@@ -157,16 +157,16 @@ public class ProvisioningManager {
     public void install(FeaturePackConfig fpConfig) throws ProvisioningException {
         final ProvisioningConfig provisioningConfig = this.getProvisioningConfig();
         if(provisioningConfig == null) {
-            provision(ProvisioningConfig.builder().addFeaturePack(fpConfig).build());
-        } else if(provisioningConfig.containsFeaturePack(fpConfig.getGav().toGa())) {
-            final FeaturePackConfig presentConfig = provisioningConfig.getFeaturePack(fpConfig.getGav().toGa());
+            provision(ProvisioningConfig.builder().addFeaturePackDep(fpConfig).build());
+        } else if(provisioningConfig.hasFeaturePackDep(fpConfig.getGav().toGa())) {
+            final FeaturePackConfig presentConfig = provisioningConfig.getFeaturePackDep(fpConfig.getGav().toGa());
             if(presentConfig.getGav().equals(fpConfig.getGav())) {
                 throw new ProvisioningException(Errors.featurePackAlreadyInstalled(fpConfig.getGav()));
             } else {
                 throw new ProvisioningException(Errors.featurePackVersionConflict(fpConfig.getGav(), presentConfig.getGav()));
             }
         } else {
-            provision(ProvisioningConfig.builder(provisioningConfig).addFeaturePack(fpConfig).build());
+            provision(ProvisioningConfig.builder(provisioningConfig).addFeaturePackDep(fpConfig).build());
         }
     }
 
@@ -180,10 +180,10 @@ public class ProvisioningManager {
         final ProvisioningConfig provisioningConfig = getProvisioningConfig();
         if(provisioningConfig == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!provisioningConfig.containsFeaturePack(gav.toGa())) {
+        } else if(!provisioningConfig.hasFeaturePackDep(gav.toGa())) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         } else {
-            provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePack(gav).build());
+            provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePackDep(gav).build());
         }
     }
 
@@ -218,7 +218,7 @@ public class ProvisioningManager {
             }
         }
 
-        if(!provisioningConfig.hasFeaturePacks()) {
+        if(!provisioningConfig.hasFeaturePackDeps()) {
             if(Files.exists(installationHome)) {
                 try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
                     for(Path p : stream) {
@@ -414,7 +414,7 @@ public class ProvisioningManager {
                             return;
                         }
                     }));
-            reference.provision(ProvisioningConfig.builder().addFeaturePack(FeaturePackConfig.forGav(fpGav)).build());
+            reference.provision(ProvisioningConfig.builder().addFeaturePackDep(FeaturePackConfig.forGav(fpGav)).build());
             final ProvisioningRuntimeBuilder diffBuilder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)

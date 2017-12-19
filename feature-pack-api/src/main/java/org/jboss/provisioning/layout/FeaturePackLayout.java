@@ -87,7 +87,7 @@ public class FeaturePackLayout {
                     if(pkg.hasExternalPackageDeps()) {
                         for(String depName : pkg.getExternalPackageSources()) {
                             try {
-                                builtSpec.getDependency(depName);
+                                builtSpec.getFeaturePackDep(depName);
                             } catch(ProvisioningDescriptionException e) {
                                 throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), depName), e);
                             }

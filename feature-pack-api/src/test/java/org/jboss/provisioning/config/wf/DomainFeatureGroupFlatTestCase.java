@@ -22,12 +22,11 @@ import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
-import org.jboss.provisioning.config.FeatureGroupConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeatureGroupSpec;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureReferenceSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -126,7 +125,7 @@ public class DomainFeatureGroupFlatTestCase extends PmInstallFeaturePackTestBase
                     .addParam(FeatureParameterSpec.create("default-interface", false))
                     .addFeatureRef(FeatureReferenceSpec.builder("interface").mapParam("default-interface", "name").build())
                     .build())
-            .addFeatureGroup(FeatureGroupSpec.builder("domain")
+            .addFeatureGroup(FeatureGroup.builder("domain")
                     .addFeature(
                             new FeatureConfig("extension")
                             .setParam("module", "org.jboss.as.logging"))
@@ -224,10 +223,10 @@ public class DomainFeatureGroupFlatTestCase extends PmInstallFeaturePackTestBase
                             .setParam("socket-binding-group", "ha-sockets")
                             .setParam("profile", "ha"))
                     .build())
-            .addConfig(ConfigSpec.builder()
+            .addConfig(ConfigModel.builder()
                     .setProperty("prop1", "value1")
                     .setProperty("prop2", "value2")
-                    .addFeatureGroup(FeatureGroupConfig.forGroup("domain"))
+                    .addFeatureGroup(FeatureGroup.forGroup("domain"))
                     .build())
             .newPackage("p1", true)
                 .getFeaturePack()

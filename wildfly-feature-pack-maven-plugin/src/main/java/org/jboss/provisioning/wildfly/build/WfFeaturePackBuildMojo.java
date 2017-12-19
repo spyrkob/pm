@@ -61,15 +61,14 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.ConfigId;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.IncludedConfig;
 import org.jboss.provisioning.layout.FeaturePackLayout;
 import org.jboss.provisioning.layout.FeaturePackLayoutDescriber;
 import org.jboss.provisioning.plugin.FpMavenErrors;
 import org.jboss.provisioning.plugin.util.MavenPluginUtil;
 import org.jboss.provisioning.plugin.wildfly.WfConstants;
-import org.jboss.provisioning.spec.ConfigSpec;
-import org.jboss.provisioning.spec.FeaturePackDependencySpec;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.IoUtils;
@@ -265,7 +264,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         addConfigPackages(targetResources.resolve(WfConstants.CONFIG).resolve(Constants.PACKAGES), fpDir.resolve(Constants.PACKAGES), fpBuilder);
 
         if(wfFpConfig.hasConfigs()) {
-            for(ConfigSpec config : wfFpConfig.getConfigs()) {
+            for(ConfigModel config : wfFpConfig.getConfigs()) {
                 try {
                     fpBuilder.getSpecBuilder().addConfig(config);
                 } catch (ProvisioningDescriptionException e) {
@@ -452,7 +451,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
                 depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
                 if(depConfig.hasDefinedConfigs()) {
-                    for (ConfigSpec config : depConfig.getDefinedConfigs()) {
+                    for (ConfigModel config : depConfig.getDefinedConfigs()) {
                         depBuilder.addConfig(config);
                     }
                 }
@@ -475,11 +474,16 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                     }
                 }
                 if(depConfig.hasIncludedConfigs()) {
-                    for(IncludedConfig includedConfig : depConfig.getIncludedConfigs()) {
+                    for(ConfigId includedConfig : depConfig.getIncludedConfigs()) {
                         depBuilder.includeDefaultConfig(includedConfig);
                     }
                 }
-                fpBuilder.addDependency(depSpec.getName(), depBuilder.build());
+                if(depConfig.hasDefinedConfigs()) {
+                    for(ConfigModel config : depConfig.getDefinedConfigs()) {
+                        depBuilder.addConfig(config);
+                    }
+                }
+                fpBuilder.addFeaturePackDep(depSpec.getName(), depBuilder.build());
                 final Path depZip = resolveArtifact(depGav.toArtifactCoords());
                 fpDependencies.put(depSpec.getName(), FeaturePackLayoutDescriber.describeFeaturePackZip(depZip));
             }

@@ -29,8 +29,8 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
-import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.spec.ConfigSpec;
+import org.jboss.provisioning.config.FeaturePackDepsConfigBuilder;
+import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeaturePackSpec.Builder;
 import org.jboss.provisioning.util.ParsingUtils;
@@ -63,20 +63,14 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         // default unknown element
         UNKNOWN(null);
 
-        private static final Map<QName, Element> elements;
+        private static final Map<String, Element> elements;
 
         static {
             elements = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+                    .collect(Collectors.toMap(val -> val.name, val -> val));
         }
 
-        static Element of(QName qName) {
-            QName name;
-            if (qName.getNamespaceURI().equals("")) {
-                name = new QName(NAMESPACE_1_0, qName.getLocalPart());
-            } else {
-                name = qName;
-            }
+        static Element of(String name) {
             final Element element = elements.get(name);
             return element == null ? UNKNOWN : element;
         }
@@ -119,15 +113,15 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         // default unknown attribute
         UNKNOWN(null);
 
-        private static final Map<QName, Attribute> attributes;
+        private static final Map<String, Attribute> attributes;
 
         static {
             attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+                    .collect(Collectors.toMap(val -> val.name, val -> val));
         }
 
-        static Attribute of(QName qName) {
-            final Attribute attribute = attributes.get(qName);
+        static Attribute of(String name) {
+            final Attribute attribute = attributes.get(name);
             return attribute == null ? UNKNOWN : attribute;
         }
 
@@ -167,17 +161,16 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCIES:
-                            try {
-                                readDependencies(reader, fpBuilder);
-                            } catch (ProvisioningDescriptionException e) {
-                                throw new XMLStreamException("Failed to parse dependencies", e);
-                            }
+                            readFeaturePackDeps(reader, fpBuilder);
+                            break;
+                        case DEFAULT_CONFIGS:
+                            ProvisioningXmlParser10.parseDefaultConfigs(reader, fpBuilder);
                             break;
                         case CONFIG:
-                            final ConfigSpec.Builder config = ConfigSpec.builder();
+                            final ConfigModel.Builder config = ConfigModel.builder();
                             ConfigXml.readConfig(reader, config);
                             try {
                                 fpBuilder.addConfig(config.build());
@@ -208,7 +201,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         final int count = reader.getAttributeCount();
         final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
         for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i).getLocalPart());
             required.remove(attribute);
             switch (attribute) {
                 case GROUP_ID:
@@ -230,7 +223,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         return new ArtifactCoords(groupId, artifactId, version, "", extension);
     }
 
-    private void readDependencies(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException, ProvisioningDescriptionException {
+    private static void readFeaturePackDeps(XMLExtendedStreamReader reader, FeaturePackDepsConfigBuilder<?> fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasChildren = false;
         while (reader.hasNext()) {
@@ -242,10 +235,10 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDENCY:
-                            readDependency(reader, fpBuilder);
+                            ProvisioningXmlParser10.readFeaturePackDep(reader, fpBuilder);
                             hasChildren = true;
                             break;
                         default:
@@ -261,64 +254,6 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private void readDependency(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException, ProvisioningDescriptionException {
-        String groupId = null;
-        String artifactId = null;
-        String version = null;
-        final int count = reader.getAttributeCount();
-        final Set<Attribute> required = EnumSet.of(Attribute.GROUP_ID, Attribute.ARTIFACT_ID);
-        for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
-            required.remove(attribute);
-            switch (attribute) {
-                case GROUP_ID:
-                    groupId = reader.getAttributeValue(i);
-                    break;
-                case ARTIFACT_ID:
-                    artifactId = reader.getAttributeValue(i);
-                    break;
-                case VERSION:
-                    version = reader.getAttributeValue(i);
-                    break;
-                default:
-                    throw ParsingUtils.unexpectedContent(reader);
-            }
-        }
-        if (!required.isEmpty()) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), required);
-        }
-        String name = null;
-        final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
-        while (reader.hasNext()) {
-            switch (reader.nextTag()) {
-                case XMLStreamConstants.END_ELEMENT: {
-                    fpBuilder.addDependency(name, depBuilder.build());
-                    return;
-                }
-                case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
-                    switch (element) {
-                        case PACKAGES:
-                            FeaturePackPackagesConfigParser10.readPackages(reader, depBuilder);
-                            break;
-                        case NAME:
-                            name = reader.getElementText();
-                            break;
-                        case DEFAULT_CONFIGS:
-                            ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);
-                            break;
-                        default:
-                            throw ParsingUtils.unexpectedContent(reader);
-                    }
-                    break;
-                }
-                default: {
-                    throw ParsingUtils.unexpectedContent(reader);
-                }
-            }
-        }
-    }
-
     private void readDefaultPackages(XMLExtendedStreamReader reader, Builder fpBuilder) throws XMLStreamException {
         ParsingUtils.parseNoAttributes(reader);
         boolean hasChildren = false;
@@ -331,7 +266,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
                     return;
                 }
                 case XMLStreamConstants.START_ELEMENT: {
-                    final Element element = Element.of(reader.getName());
+                    final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case PACKAGE:
                             fpBuilder.addDefaultPackage(parseName(reader));
@@ -355,7 +290,7 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         String path = null;
         boolean parsedTarget = false;
         for (int i = 0; i < count; i++) {
-            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i).getLocalPart());
             switch (attribute) {
                 case NAME:
                     path = reader.getAttributeValue(i);
