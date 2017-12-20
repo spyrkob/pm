@@ -35,7 +35,7 @@ import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
  *
  * @author Alexey Loubyansky
  */
-public class MissingCapProviderTypeTestCase extends PmInstallFeaturePackTestBase {
+public class MissingCapProviderTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
