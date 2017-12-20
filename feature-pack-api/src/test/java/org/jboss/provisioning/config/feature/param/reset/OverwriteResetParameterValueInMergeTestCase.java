@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.basic;
+package org.jboss.provisioning.config.feature.param.reset;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -27,7 +27,6 @@ import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
-import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -40,7 +39,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class ResetParameterTestCase extends PmInstallFeaturePackTestBase {
+public class OverwriteResetParameterValueInMergeTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -51,33 +50,30 @@ public class ResetParameterTestCase extends PmInstallFeaturePackTestBase {
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
                     .addParam(FeatureParameterSpec.create("p1", "def1"))
-                    .addParam(FeatureParameterSpec.create("p2", "def2"))
-                    .addParam(FeatureParameterSpec.create("p3", "def3"))
-                    .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
             .addFeatureGroup(FeatureGroup.builder("group1")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")
-                            .setParam("p1", "group1")
-                            .setParam("p2", "group2")
-                            .setParam("p3", "group3"))
+                            .setParam("p1", "group1"))
                     .build())
-            .addConfig(ConfigModel.builder()
-                    .addFeatureGroup(FeatureGroup.builder("group1")
-                            .includeFeature(FeatureId.create("specA", "name", "a1"),
-                                    new FeatureConfig("specA")
-                                    .setParam("name", "a1")
-                                    .setParam("p1", "groupConfig1")
-                                    .resetParam("p2"))
-                            .build())
+            .addFeatureGroup(FeatureGroup.builder("group2")
                     .addFeature(
                             new FeatureConfig("specA")
                             .setParam("name", "a1")
                             .resetParam("p1"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
+            .addFeatureGroup(FeatureGroup.builder("group3")
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p1", "group3"))
+                    .build())
+            .addConfig(ConfigModel.builder()
+                    .addFeatureGroup(FeatureGroup.forGroup("group1"))
+                    .addFeatureGroup(FeatureGroup.forGroup("group2"))
+                    .addFeatureGroup(FeatureGroup.forGroup("group3"))
+                    .build())
             .getInstaller()
         .install();
     }
@@ -90,15 +86,10 @@ public class ResetParameterTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setConfigParam("p1", "def1")
-                                .setConfigParam("p2", "def2")
-                                .setConfigParam("p3", "group3")
-                                .setConfigParam("p4", "def4")
+                                .setConfigParam("p1", "group3")
                                 .build())
                         .build())
                 .build();

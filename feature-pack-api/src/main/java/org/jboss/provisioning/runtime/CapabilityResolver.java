@@ -38,6 +38,7 @@ public class CapabilityResolver {
 
     private ResolvedFeature feature;
     private CapabilitySpec capSpec;
+    private String currentElem;
 
     List<String> resolve(CapabilitySpec capSpec, ResolvedFeature feature) throws ProvisioningException {
         if(capSpec.isStatic()) {
@@ -71,10 +72,15 @@ public class CapabilityResolver {
         feature = null;
         capList = null;
         capBuf.setLength(0);
+        currentElem = null;
     }
 
     public CapabilitySpec getSpec() {
         return capSpec;
+    }
+
+    public String getElem() {
+        return currentElem;
     }
 
     public boolean resolveElement(String elem, boolean isStatic) throws ProvisioningException {
@@ -82,6 +88,7 @@ public class CapabilityResolver {
             add(elem);
             return true;
         }
+        this.currentElem = elem;
         return feature.spec.resolveCapabilityElement(feature, elem, this);
     }
 
@@ -102,7 +109,7 @@ public class CapabilityResolver {
 
     public CapabilityResolver multiply(Collection<?> elems) throws ProvisioningException {
         if(elems.isEmpty()) {
-            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, elems.toString()));
+            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, elems.toString(), capBuf.toString()));
         }
         if(elems.size() == 1) {
             add(elems.iterator().next());
@@ -135,11 +142,11 @@ public class CapabilityResolver {
 
     private String toStringElem(Object elem) throws ProvisioningException {
         if(elem == null) {
-            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, null));
+            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, null, capBuf.toString()));
         }
         final String str = elem.toString().trim();
         if(str.isEmpty()) {
-            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, str));
+            throw new ProvisioningException(Errors.illegalCapabilityElement(capSpec, str, capBuf.toString()));
         }
         return str;
     }

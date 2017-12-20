@@ -15,27 +15,32 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.capability.dynamic.collection;
+package org.jboss.provisioning.config.feature.param.unset;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
+import org.jboss.provisioning.runtime.ResolvedFeatureId;
+import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
+import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
+import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class MissingCapProviderTypeTestCase extends PmInstallFeaturePackTestBase {
+public class UnsetNillableParameterTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -44,24 +49,20 @@ public class MissingCapProviderTypeTestCase extends PmInstallFeaturePackTestBase
         repoManager.installer()
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
-                    .providesCapability("cap.$a")
-                    .addParam(FeatureParameterSpec.createId("a"))
+                    .addParam(FeatureParameterSpec.createId("name"))
+                    .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
-            .addSpec(FeatureSpec.builder("specB")
-                    .requiresCapability("cap.$col")
-                    .addParam(FeatureParameterSpec.createId("b"))
-                    .addParam(FeatureParameterSpec.builder("col").setType("[String]").setDefaultValue("[1,2 , 3 ]").build())
+            .addFeatureGroup(FeatureGroup.builder("group1")
+                    .addFeature(
+                            new FeatureConfig("specA")
+                            .setParam("name", "a1")
+                            .setParam("p1", "group1"))
                     .build())
             .addConfig(ConfigModel.builder()
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "3"))
-                    .addFeature(
-                            new FeatureConfig("specB")
-                            .setParam("b", "b1"))
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("a", "1"))
+                    .addFeatureGroup(FeatureGroup.builder("group1")
+                            .includeFeature(FeatureId.create("specA", "name", "a1"),
+                                    new FeatureConfig().unsetParam("p1"))
+                            .build())
                     .build())
             .getInstaller()
         .install();
@@ -73,15 +74,12 @@ public class MissingCapProviderTypeTestCase extends PmInstallFeaturePackTestBase
     }
 
     @Override
-    protected String[] pmErrors() {
-        return new String[] {
-                Errors.failedToBuildConfigSpec(null, null),
-                "No provider found for capability cap.2 required by org.jboss.pm.test:fp1:1.0.0.Final#specB:b=b1 as cap.$col"
-        };
-    }
-
-    @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
+        return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1")).build())
+                        .build())
+                .build();
     }
 }

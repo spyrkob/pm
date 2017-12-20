@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.config.feature.param.basic;
+package org.jboss.provisioning.config.feature.param.unset;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -40,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class UnsetParameterTestCase extends PmInstallFeaturePackTestBase {
+public class UnsetFeatureIdParameterTestCase extends PmInstallFeaturePackTestBase {
 
     private static final Gav FP_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
 
@@ -50,34 +50,19 @@ public class UnsetParameterTestCase extends PmInstallFeaturePackTestBase {
         .newFeaturePack(FP_GAV)
             .addSpec(FeatureSpec.builder("specA")
                     .addParam(FeatureParameterSpec.createId("name"))
-                    .addParam(FeatureParameterSpec.builder("p1").setDefaultValue("def1").setNillable().build())
-                    .addParam(FeatureParameterSpec.builder("p2").setDefaultValue("def2").setNillable().build())
-                    .addParam(FeatureParameterSpec.create("p3", "def3"))
-                    .addParam(FeatureParameterSpec.create("p4", "def4"))
                     .build())
             .addFeatureGroup(FeatureGroup.builder("group1")
                     .addFeature(
                             new FeatureConfig("specA")
-                            .setParam("name", "a1")
-                            .setParam("p1", "group1")
-                            .setParam("p2", "group2")
-                            .setParam("p3", "group3"))
+                            .setParam("name", "a1"))
                     .build())
             .addConfig(ConfigModel.builder()
                     .addFeatureGroup(FeatureGroup.builder("group1")
+                            // id parameter overwrites the config
                             .includeFeature(FeatureId.create("specA", "name", "a1"),
-                                    new FeatureConfig("specA")
-                                    .setParam("name", "a1")
-                                    .setParam("p1", "groupConfig1")
-                                    .unsetParam("p2"))
+                                    new FeatureConfig().unsetParam("name"))
                             .build())
-                    .addFeature(
-                            new FeatureConfig("specA")
-                            .setParam("name", "a1")
-                            .unsetParam("p1"))
                     .build())
-            .newPackage("p1", true)
-                .getFeaturePack()
             .getInstaller()
         .install();
     }
@@ -90,14 +75,9 @@ public class UnsetParameterTestCase extends PmInstallFeaturePackTestBase {
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP_GAV)
-                        .addPackage("p1")
-                        .build())
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1"))
-                                .setConfigParam("p3", "group3")
-                                .setConfigParam("p4", "def4")
-                                .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP_GAV, "specA", "name", "a1")).build())
                         .build())
                 .build();
     }

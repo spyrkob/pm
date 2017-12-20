@@ -19,6 +19,7 @@ package org.jboss.provisioning.type.builtin;
 
 import java.util.Collection;
 
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.runtime.CapabilityResolver;
 import org.jboss.provisioning.type.FeatureParameterType;
@@ -93,7 +94,14 @@ public class FormattedParameterType implements FeatureParameterType {
             capResolver.add(o);
             return true;
         }
-        capResolver.multiply((Collection<?>)o);
+        final Collection<?> col = (Collection<?>)o;
+        if(col.isEmpty()) {
+            if (capResolver.getSpec().isOptional()) {
+                return false;
+            }
+            throw new ProvisioningException(Errors.capabilityMissingParameter(capResolver.getSpec(), capResolver.getElem()));
+        }
+        capResolver.multiply(col);
         return true;
     }
 }

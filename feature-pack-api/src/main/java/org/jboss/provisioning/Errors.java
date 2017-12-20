@@ -186,8 +186,8 @@ public interface Errors {
         return "Parameter " + param + " is missing value to resolve capability " + cap;
     }
 
-    static String illegalCapabilityElement(CapabilitySpec cap, String elem) {
-        return "Failed to resolve capability " + cap + " with illegal element value of '" + elem + "'";
+    static String illegalCapabilityElement(CapabilitySpec cap, String resolvedPart, String elem) {
+        return "Failed to resolve capability " + cap + " with illegal element value of '" + elem + "' at " + resolvedPart;
     }
 
     static String failedToResolveCapability(ResolvedFeature feature, CapabilitySpec cap) {
