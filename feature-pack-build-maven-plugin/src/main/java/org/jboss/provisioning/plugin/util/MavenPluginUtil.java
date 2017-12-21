@@ -16,6 +16,7 @@
  */
 package org.jboss.provisioning.plugin.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -28,6 +29,7 @@ import org.codehaus.plexus.logging.Logger;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
+import org.eclipse.aether.util.artifact.SubArtifact;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.ZipUtils;
 
@@ -38,7 +40,7 @@ import org.jboss.provisioning.util.ZipUtils;
 @Singleton
 public class MavenPluginUtil extends AbstractLogEnabled {
 
-    public InstallRequest getInstallLayoutRequest(final Path layoutDir) throws IOException {
+    public InstallRequest getInstallLayoutRequest(final Path layoutDir, final File pomFile) throws IOException {
         final Logger logger = getLogger();
         final InstallRequest installReq = new InstallRequest();
         try (DirectoryStream<Path> wdStream = Files.newDirectoryStream(layoutDir, entry -> Files.isDirectory(entry))) {
@@ -61,6 +63,11 @@ public class MavenPluginUtil extends AbstractLogEnabled {
                                         artifactDir.getFileName().toString(), null,
                                         "zip", versionDir.getFileName().toString(), null, zippedFP.toFile());
                                 installReq.addArtifact(artifact);
+                                if (pomFile != null && Files.exists(pomFile.toPath())) {
+                                    Artifact pomArtifact = new SubArtifact(artifact, "", "pom");
+                                    pomArtifact = pomArtifact.setFile(pomFile);
+                                    installReq.addArtifact(pomArtifact);
+                                }
                             }
                         }
                     }
