@@ -156,8 +156,8 @@ public class ProvisioningRuntimeBuilder {
     }
 
     public ProvisioningRuntime build() throws ProvisioningException {
-
-/*        List<ConfigModelResolver> fpConfigResolvers = Collections.emptyList();
+/*
+        List<ConfigModelResolver> fpConfigResolvers = Collections.emptyList();
         List<ConfigModel> fpConfigConfigs = Collections.emptyList();
         List<List<ResolvedFeatureGroupConfig>> fpConfigPushedConfigs = Collections.emptyList();
         for(ConfigModel configModel : config.getDefinedConfigs()) {
@@ -185,8 +185,8 @@ public class ProvisioningRuntimeBuilder {
         // can be called but not meaningful
         //popFpConfigs(fpConfigs);
         //fpConfigStack.remove(0);
-
-/*        if(!fpConfigPushedConfigs.isEmpty()) {
+/*
+        if(!fpConfigPushedConfigs.isEmpty()) {
             for(List<ResolvedFeatureGroupConfig> pushedConfigs : fpConfigPushedConfigs) {
                 popResolvedFgConfigs(pushedConfigs);
             }
@@ -194,10 +194,10 @@ public class ProvisioningRuntimeBuilder {
         for(int i = 0; i < fpConfigConfigs.size(); ++i) {
             final ConfigModel config = fpConfigConfigs.get(i);
             if(config.getId().isModelOnly()) {
-                recordModelOnlyConfig(this.config, config);
+                recordModelOnlyConfig(null, config);
                 continue;
             }
-            processConfig(fpConfigResolvers.get(i), fp, config);
+            processConfig(fpConfigResolvers.get(i), null, config);
         }
 */
         resolveConfigs();
@@ -247,7 +247,8 @@ public class ProvisioningRuntimeBuilder {
                 for(Map.Entry<ArtifactCoords.Ga, FeaturePackRuntime.Builder> entry : fpRtBuilders.entrySet()) {
                     entry.getValue().activateConfigStack(i);
                 }
-                final FeaturePackRuntime.Builder fp = loadFpBuilder(modelOnlyGavs.get(i));
+                final ArtifactCoords.Gav fpGav = modelOnlyGavs.get(i);
+                final FeaturePackRuntime.Builder fp = fpGav == null ? null : loadFpBuilder(modelOnlyGavs.get(i));
                 if(processConfig(getConfigResolver(modelOnlySpec.getId()), fp, modelOnlySpec) && !fp.ordered) {
                     orderFpRtBuilder(fp);
                 }
@@ -543,6 +544,9 @@ public class ProvisioningRuntimeBuilder {
         List<ResolvedFeatureGroupConfig> pushedConfigs = Collections.emptyList();
         if(config.hasExternalFeatureGroups()) {
             for(Map.Entry<String, FeatureGroup> entry : config.getExternalFeatureGroups().entrySet()) {
+//                if(!entry.getValue().hasLocalIncludeExclude()) {
+//                    continue;
+//                }
                 final FeaturePackRuntime.Builder depFpRt = getFpDependency(fp.spec, entry.getKey());
                 final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(configResolver, depFpRt, entry.getValue());
                 if (configResolver.pushConfig(resolvedFgConfig)) {
@@ -550,6 +554,9 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
+//        if(!config.hasLocalIncludeExclude()) {
+//            return pushedConfigs;
+//        }
         final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(configResolver, fp, config);
         if(configResolver.pushConfig(resolvedFgConfig)) {
             pushedConfigs = PmCollections.add(pushedConfigs, resolvedFgConfig);
@@ -561,7 +568,8 @@ public class ProvisioningRuntimeBuilder {
             throws ProvisioningException {
         boolean resolvedFeatures = false;
         for(ResolvedFeatureGroupConfig pushedFgConfig : pushedConfigs) {
-            pushedFgConfig.configResolver.popConfig(pushedFgConfig.fp.gav);
+            final FeaturePackRuntime.Builder fp = this.loadFpBuilder(pushedFgConfig.gav);
+            pushedFgConfig.configResolver.popConfig(fp.gav);
             if (pushedFgConfig.includedFeatures.isEmpty()) {
                 continue;
             }
@@ -574,9 +582,9 @@ public class ProvisioningRuntimeBuilder {
                     }
                     // make sure the included ID is in fact present on the feature group branch
                     if (!pushedFgConfig.configResolver.includes(includedId)) {
-                        throw new ProvisioningException(Errors.featureNotInScope(includedId, pushedFgConfig.fg.getId().toString(), pushedFgConfig.fp.gav));
+                        throw new ProvisioningException(Errors.featureNotInScope(includedId, pushedFgConfig.fg.getId().toString(), fp.gav));
                     }
-                    resolvedFeatures |= resolveFeature(pushedFgConfig.configResolver, pushedFgConfig.fp, includedFc);
+                    resolvedFeatures |= resolveFeature(pushedFgConfig.configResolver, fp, includedFc);
                 }
             }
         }
@@ -585,7 +593,7 @@ public class ProvisioningRuntimeBuilder {
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(ConfigModelResolver configResolver, FeaturePackRuntime.Builder fp, FeatureGroupSupport fg)
             throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(fp, configResolver, fg);
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(configResolver, fg, fp.gav);
         resolvedFgc.inheritFeatures = fg.isInheritFeatures();
         if(fg.hasExcludedSpecs()) {
             resolvedFgc.excludedSpecs = resolveSpecIds(fp, fg.getExcludedSpecs());
@@ -912,17 +920,12 @@ public class ProvisioningRuntimeBuilder {
             return;
         }
         for (String depName : pkgDeps.getExternalPackageSources()) {
-            final FeaturePackConfig depSpec = fp.spec.getFeaturePackDep(depName);
-            final FeaturePackRuntime.Builder targetFp = loadFpBuilder(depSpec.getGav());
-            if (targetFp == null) {
-                throw new IllegalStateException(depName + " " + depSpec.getGav() + " has not been layed out yet");
-            }
+            final FeaturePackRuntime.Builder targetFp = this.getFpDependency(fp.spec, depName);
             boolean resolvedPackages = false;
             for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
                 if (targetFp.isPackageExcluded(pkgDep.getName())) {
                     if (!pkgDep.isOptional()) {
-                        throw new ProvisioningDescriptionException(
-                                Errors.unsatisfiedPackageDependency(targetFp.gav, pkgDep.getName()));
+                        throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(targetFp.gav, pkgDep.getName()));
                     }
                     continue;
                 }

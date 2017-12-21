@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupSupport;
 
@@ -31,7 +32,7 @@ import org.jboss.provisioning.config.FeatureGroupSupport;
 public class ResolvedFeatureGroupConfig {
 
     final ConfigModelResolver configResolver;
-    final FeaturePackRuntime.Builder fp;
+    final ArtifactCoords.Gav gav;
     final FeatureGroupSupport fg;
 
     boolean inheritFeatures = true;
@@ -40,9 +41,9 @@ public class ResolvedFeatureGroupConfig {
     Set<ResolvedSpecId> excludedSpecs = Collections.emptySet();
     Set<ResolvedFeatureId> excludedFeatures = Collections.emptySet();
 
-    ResolvedFeatureGroupConfig(FeaturePackRuntime.Builder fp, ConfigModelResolver configResolver, FeatureGroupSupport fg) {
+    ResolvedFeatureGroupConfig(ConfigModelResolver configResolver, FeatureGroupSupport fg, ArtifactCoords.Gav gav) {
         this.configResolver = configResolver;
-        this.fp = fp;
+        this.gav = gav;
         this.fg = fg;
     }
 

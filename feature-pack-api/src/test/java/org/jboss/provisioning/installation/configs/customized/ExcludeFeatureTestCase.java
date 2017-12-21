@@ -83,10 +83,10 @@ public class ExcludeFeatureTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePackDep(FeaturePackConfig.forGav(FP1_GAV))
-                .addFeaturePackDep(FeaturePackConfig.forGav(FP2_GAV))
+                .addFeaturePackDep("fp1", FeaturePackConfig.forGav(FP1_GAV))
+                .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .excludeFeature(FeatureId.create("specA", "id", "1"))
+                        .excludeFeature("fp1", FeatureId.create("specA", "id", "1"))
                         .build())
                 .build();
     }

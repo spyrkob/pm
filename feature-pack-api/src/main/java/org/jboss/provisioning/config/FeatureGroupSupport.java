@@ -150,6 +150,10 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         return includedFeatures;
     }
 
+    public boolean hasLocalIncludeExclude() {
+        return !excludedFeatures.isEmpty() || !includedFeatures.isEmpty() || !inheritFeatures || !excludedSpecs.isEmpty() || !includedSpecs.isEmpty();
+    }
+
     public boolean hasExternalFeatureGroups() {
         return !externalFgConfigs.isEmpty();
     }
