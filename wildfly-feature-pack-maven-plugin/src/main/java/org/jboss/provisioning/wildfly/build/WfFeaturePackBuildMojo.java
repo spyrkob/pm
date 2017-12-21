@@ -315,7 +315,7 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
 
         try {
-            repoSystem.install(repoSession, mavenPluginUtil.getInstallLayoutRequest(workDir));
+            repoSystem.install(repoSession, mavenPluginUtil.getInstallLayoutRequest(workDir, project.getFile()));
         } catch (InstallationException | IOException e) {
             throw new MojoExecutionException(FpMavenErrors.featurePackInstallation(), e);
         }
