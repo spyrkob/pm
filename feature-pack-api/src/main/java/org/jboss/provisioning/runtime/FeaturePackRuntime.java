@@ -35,7 +35,6 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeaturePackSpec;
@@ -193,68 +192,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
             while(i >= 0) {
                 if(fpConfigStack.get(i--).isPackageExcluded(packageName)) {
                     return true;
-                }
-            }
-            return false;
-        }
-
-        boolean isModelOnlyConfigExcluded(ConfigId configId) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if(fpConfig.isConfigModelExcluded(configId)) {
-                    return true;
-                }
-                if (!fpConfig.isInheritModelOnlyConfigs()) {
-                    return !fpConfig.isConfigModelIncluded(configId);
-                }
-            }
-            return false;
-        }
-
-        boolean isConfigExcluded(ConfigId configId) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if (fpConfig.isConfigExcluded(configId)) {
-                    return true;
-                }
-                if(fpConfig.isConfigModelExcluded(configId)) {
-                    return !fpConfig.isConfigIncluded(configId);
-                }
-                if (!fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isConfigModelIncluded(configId) && !fpConfig.isConfigIncluded(configId);
-                }
-            }
-            return false;
-        }
-
-        boolean isModelOnlyConfigIncluded(ConfigId config) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if(fpConfig.isConfigModelIncluded(config)) {
-                    return true;
-                }
-                if(fpConfig.isInheritModelOnlyConfigs()) {
-                    return !fpConfig.isConfigModelExcluded(config);
-                }
-            }
-            return false;
-        }
-
-        boolean isConfigIncluded(ConfigId config) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if(fpConfig.isConfigIncluded(config)) {
-                    return true;
-                }
-                if(fpConfig.isConfigModelIncluded(config)) {
-                    return !fpConfig.isConfigExcluded(config);
-                }
-                if(fpConfig.isInheritConfigs()) {
-                    return !fpConfig.isConfigModelExcluded(config) && !fpConfig.isConfigExcluded(config);
                 }
             }
             return false;
