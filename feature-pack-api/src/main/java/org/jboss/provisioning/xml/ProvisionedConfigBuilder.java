@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,9 @@ import java.util.Map.Entry;
 
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
+import org.jboss.provisioning.runtime.ResolvedFeatureSpec;
+import org.jboss.provisioning.runtime.ResolvedSpecId;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.state.ProvisionedFeature;
 
@@ -125,8 +128,24 @@ public class ProvisionedConfigBuilder implements ProvisionedConfig {
 
     @Override
     public void handle(ProvisionedConfigHandler handler) throws ProvisioningException {
-        // TODO Auto-generated method stub
+        if (!hasFeatures()) {
+            return;
+        }
 
+        handler.prepare(this);
+        ResolvedSpecId lastHandledSpecId = null;
+        for(ProvisionedFeature feature : features) {
+            if(!feature.getSpecId().equals(lastHandledSpecId)) {
+                if (lastHandledSpecId == null || !feature.getSpecId().getGav().equals(lastHandledSpecId.getGav())) {
+                    handler.nextFeaturePack(feature.getSpecId().getGav());
+                }
+                // TODO: complete spec isn't available here, but specId is enough for marshalling
+                handler.nextSpec(new ResolvedFeatureSpec(feature.getSpecId(), null, FeatureSpec.builder().build()));
+                lastHandledSpecId = feature.getSpecId();
+            }
+            handler.nextFeature(feature);
+        }
+        handler.done();
     }
 
     @Override
