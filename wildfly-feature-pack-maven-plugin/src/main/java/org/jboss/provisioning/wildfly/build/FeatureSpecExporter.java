@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.xml.stream.XMLStreamException;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
@@ -38,7 +39,7 @@ import org.jboss.provisioning.xml.FeatureSpecXmlWriter;
  */
 public class FeatureSpecExporter {
 
-    public static void export(ModelNode node, Path directory) throws IOException, ProvisioningDescriptionException, XMLStreamException {
+    public static void export(ModelNode node, Path directory, Map<String, String> inheritedFeatures) throws IOException, ProvisioningDescriptionException, XMLStreamException {
             List<FeatureSpec> specs = new ArrayList<>();
             ModelNode rootNode = node.require("result").require("feature");
             List<Property> rootFeatures;
@@ -48,7 +49,7 @@ public class FeatureSpecExporter {
                 rootFeatures = rootNode.get("children").asPropertyList();
             }
             for (Property childFeature : rootFeatures) {
-                toFeatureSpec(childFeature, specs);
+                toFeatureSpec(childFeature, specs, inheritedFeatures);
             }
             if(Files.notExists(directory)) {
                 Files.createDirectory(directory);
@@ -62,7 +63,7 @@ public class FeatureSpecExporter {
         }
     }
 
-    private static void toFeatureSpec(Property featureProperty, List<FeatureSpec> specs) throws ProvisioningDescriptionException {
+    private static void toFeatureSpec(Property featureProperty, List<FeatureSpec> specs, Map<String, String> inheritedFeatures) throws ProvisioningDescriptionException {
         ModelNode feature = featureProperty.getValue();
         FeatureSpec.Builder builder = FeatureSpec.builder(featureProperty.getName());
         FeatureAnnotation annotation = toFeatureAnnotation(feature);
@@ -99,7 +100,11 @@ public class FeatureSpecExporter {
         if(feature.hasDefined("refs")) {
             for(ModelNode ref : feature.get("refs").asList()) {
                 boolean isInclude = ref.hasDefined("include") && ref.get("include").asBoolean();
-                FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(ref.get("feature").asString()).setInclude(isInclude);
+                String featureName = ref.get("feature").asString();
+                FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(featureName).setInclude(isInclude);
+                if(inheritedFeatures.containsKey(featureName)) {
+                    refBuilder.setFpDep(inheritedFeatures.get(featureName));
+                }
                 if(ref.hasDefined("mappings")) {
                     for(Property mapping : ref.require("mappings").asPropertyList()) {
                         refBuilder.mapParam(mapping.getName(), mapping.getValue().asString());
@@ -118,7 +123,7 @@ public class FeatureSpecExporter {
         specs.add(builder.build());
         if (feature.hasDefined("children")) {
             for (Property childFeature : feature.get("children").asPropertyList()) {
-                toFeatureSpec(childFeature, specs);
+                toFeatureSpec(childFeature, specs, inheritedFeatures);
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,12 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.xml.stream.XMLStreamException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -126,12 +130,13 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
         modulesResources.add(srcModuleResource);
         Path tmpModules = Files.createTempDirectory("modules");
         List<Artifact> featurePackArtifacts = new ArrayList<>();
+        Map<String, String> inheritedFeatures = new HashMap<>();
         if (featurePacks != null && !featurePacks.isEmpty()) {
             IncludeExcludeFileSelector selector = new IncludeExcludeFileSelector();
-            selector.setIncludes(new String[]{"**/**/module/modules/**/*"});
+            selector.setIncludes(new String[]{"**/**/module/modules/**/*", "features/**"});
             IncludeExcludeFileSelector[] selectors = new IncludeExcludeFileSelector[]{selector};
             for (ArtifactItem fp : featurePacks) {
-                Artifact fpArtifact = findArtifact(fp);
+                final Artifact fpArtifact = findArtifact(fp);
                 if (fpArtifact != null) {
                     featurePackArtifacts.add(fpArtifact);
                     File archive = fpArtifact.getFile();
@@ -149,6 +154,13 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                         unArchiver.setSourceFile(archive);
                         unArchiver.setDestDirectory(tmpArchive.toFile());
                         unArchiver.extract();
+                        final String featurePackName = fpArtifact.getGroupId() + ':' + fpArtifact.getArtifactId();
+                        try(Stream<Path> children = Files.list(tmpArchive.resolve("features"))) {
+                            List<String> features = children.map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
+                            for(String feature : features) {
+                                inheritedFeatures.put(feature, featurePackName);
+                            }
+                        }
                         setModules(tmpArchive, tmpModules.resolve("modules"));
                     } catch (NoSuchArchiverException ex) {
                         getLog().warn(ex);
@@ -200,7 +212,7 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                 op.get("recursive").set(true);
                 ModelNode result = client.execute(op);
                 Files.write(wildfly.resolve("standalone_features.dmr"), Collections.singletonList(result.toString()));
-                FeatureSpecExporter.export(result, outputDirectory.toPath());
+                FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
             } catch (XMLStreamException | ProvisioningDescriptionException ex) {
                 throw new MojoExecutionException(ex.getMessage(), ex);
             }
@@ -244,7 +256,7 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                 op.get("recursive").set(true);
                 ModelNode result = client.execute(op);
                 Files.write(wildfly.resolve("domain_features.dmr"), Collections.singletonList(result.toString()));
-                FeatureSpecExporter.export(result, outputDirectory.toPath());
+                FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
             } catch (XMLStreamException | ProvisioningDescriptionException ex) {
                 throw new MojoExecutionException(ex.getMessage(), ex);
             }
@@ -253,6 +265,9 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
         } finally {
             host.stop();
             clearXMLConfiguration(props);
+        }
+        for(String inheritedFeature : inheritedFeatures.keySet()) {
+            IoUtils.recursiveDelete(outputDirectory.toPath().resolve(inheritedFeature));
         }
     }
 
