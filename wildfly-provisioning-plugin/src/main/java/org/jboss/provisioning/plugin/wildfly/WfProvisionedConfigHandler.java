@@ -111,7 +111,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             j += 2;
                         }
                         if (!inAddr) {
-                            if (paramFilter.accepts(paramName)) {
+                            if (paramFilter.accepts(paramName, j)) {
                                 final ManagedOp mop = new ManagedOp();
                                 mop.name = annotation.getName();
                                 mop.op = WRITE_ATTR;
@@ -207,7 +207,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                             j += 2;
                         }
                         if (!inAddr) {
-                            if (paramFilter.accepts(paramName)) {
+                            if (paramFilter.accepts(paramName, j)) {
                                 mop.opParams.add(paramName);
                                 mop.opParams.add(paramName);
                             } else if (skipIfFiltered.contains(paramName)) {
@@ -231,7 +231,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     }
 
     private interface NameFilter {
-        boolean accepts(String name);
+        boolean accepts(String name, int position);
     }
 
     private class ManagedOp {
@@ -400,8 +400,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
             paramFilter = new NameFilter() {
                 @Override
-                public boolean accepts(String name) {
-                    return !("profile".equals(name) || HOST.equals(name));
+                public boolean accepts(String name, int position) {
+                    return position > 0 || !("profile".equals(name) || HOST.equals(name));
                 }
             };
         } else if(DOMAIN.equals(config.getModel())) {
@@ -424,8 +424,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
             paramFilter = new NameFilter() {
                 @Override
-                public boolean accepts(String name) {
-                    return !HOST.equals(name);
+                public boolean accepts(String name, int position) {
+                    return position > 0 || !HOST.equals(name);
                 }
             };
         } else if (HOST.equals(config.getModel())) {
@@ -450,8 +450,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
             paramFilter = new NameFilter() {
                 @Override
-                public boolean accepts(String name) {
-                    return !"profile".equals(name);
+                public boolean accepts(String name, int position) {
+                    return position > 0 || !"profile".equals(name);
                 }
             };
         } else {
@@ -610,7 +610,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             } else {
                 mappedName = mappings.get(i);
             }
-            if (filter.accepts(paramName)) {
+            if (filter.accepts(paramName, i)) {
                 list.add(paramName);
                 list.add(mappedName);
             } else if(skipIfFiltered.contains(paramName)) {
