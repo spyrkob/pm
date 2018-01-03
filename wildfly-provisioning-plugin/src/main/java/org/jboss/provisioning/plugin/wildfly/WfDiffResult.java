@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.plugin.wildfly;
 
 import static org.jboss.provisioning.plugin.wildfly.config.WildFlyPackageTasksParser.NAMESPACE_2_0;
