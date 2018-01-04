@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,6 +40,7 @@ public abstract class ConfigCustomizationsBuilder<B extends ConfigCustomizations
     protected Map<String, Boolean> excludedModels = Collections.emptyMap();
     protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
     protected List<ConfigModel> definedConfigs = Collections.emptyList();
+    protected boolean hasModelOnlyConfigs = false;
 
     @SuppressWarnings("unchecked")
     public B setInheritConfigs(boolean inherit) {
@@ -56,6 +57,7 @@ public abstract class ConfigCustomizationsBuilder<B extends ConfigCustomizations
     @SuppressWarnings("unchecked")
     public B addConfig(ConfigModel config) throws ProvisioningDescriptionException {
         definedConfigs = PmCollections.add(definedConfigs, config);
+        this.hasModelOnlyConfigs |= config.id.isModelOnly();
         return (B) this;
     }
 

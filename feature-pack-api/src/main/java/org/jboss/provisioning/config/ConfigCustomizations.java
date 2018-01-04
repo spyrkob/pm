@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ public class ConfigCustomizations {
     protected final Set<ConfigId> includedConfigs;
     protected final Map<String, Set<String>> excludedConfigs;
     protected final List<ConfigModel> definedConfigs;
+    protected final boolean hasModelOnlyConfigs;
 
     protected ConfigCustomizations(ConfigCustomizationsBuilder<?> builder) {
         this.inheritConfigs = builder.inheritConfigs;
@@ -47,6 +48,7 @@ public class ConfigCustomizations {
         this.includedConfigs = PmCollections.unmodifiable(builder.includedConfigs);
         this.excludedConfigs = PmCollections.unmodifiable(builder.excludedConfigs);
         this.definedConfigs = PmCollections.unmodifiable(builder.definedConfigs);
+        this.hasModelOnlyConfigs = builder.hasModelOnlyConfigs;
     }
 
     public boolean isInheritConfigs() {
@@ -120,6 +122,10 @@ public class ConfigCustomizations {
 
     public Collection<ConfigModel> getDefinedConfigs() {
         return definedConfigs;
+    }
+
+    public boolean hasModelOnlyConfigs() {
+        return hasModelOnlyConfigs;
     }
 
     @Override

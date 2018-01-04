@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,6 @@ import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
@@ -62,11 +61,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
         Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
         private List<String> pkgOrder = new ArrayList<>();
-
-        private List<FeaturePackConfig> fpConfigStack = Collections.emptyList();
-        private List<List<FeaturePackConfig>> recordedStacks = Collections.emptyList();
-        private FeaturePackConfig blockedPackageInheritance;
-        private FeaturePackConfig blockedConfigInheritance;
 
         ParameterTypeProvider featureParamTypeProvider = BuiltInParameterTypeProvider.getInstance();
 
@@ -131,97 +125,6 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
                 featureSpecs.put(name, resolvedSpec);
             }
             return resolvedSpec;
-        }
-
-        boolean isInheritPackages() {
-            return blockedPackageInheritance == null;
-        }
-
-        boolean isInheritConfigs() {
-            return blockedConfigInheritance == null;
-        }
-
-        boolean isStackEmpty() {
-            return fpConfigStack.isEmpty();
-        }
-
-        void push(FeaturePackConfig fpConfig) {
-            fpConfigStack = PmCollections.add(fpConfigStack, fpConfig);
-            if(blockedPackageInheritance == null && !fpConfig.isInheritPackages()) {
-                blockedPackageInheritance = fpConfig;
-            }
-            if(blockedConfigInheritance == null && !fpConfig.isInheritConfigs()) {
-                blockedConfigInheritance = fpConfig;
-            }
-        }
-
-        FeaturePackConfig pop() {
-            final FeaturePackConfig popped;
-            if (fpConfigStack.size() == 1) {
-                popped = fpConfigStack.get(0);
-                fpConfigStack = Collections.emptyList();
-            } else {
-                popped = fpConfigStack.remove(fpConfigStack.size() - 1);
-                if (fpConfigStack.size() == 1) {
-                    fpConfigStack = Collections.singletonList(fpConfigStack.get(0));
-                }
-            }
-            if(popped == blockedPackageInheritance) {
-                blockedPackageInheritance = null;
-            }
-            if(popped == blockedConfigInheritance) {
-                blockedConfigInheritance = null;
-            }
-            return popped;
-        }
-
-
-        boolean isPackageIncluded(String packageName) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                final FeaturePackConfig fpConfig = fpConfigStack.get(i--);
-                if(fpConfig.isPackageIncluded(packageName)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        boolean isPackageExcluded(String packageName) {
-            int i = fpConfigStack.size() - 1;
-            while(i >= 0) {
-                if(fpConfigStack.get(i--).isPackageExcluded(packageName)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        void recordConfigStack() {
-            final List<FeaturePackConfig> copy;
-            if(fpConfigStack.isEmpty()) {
-                copy = Collections.emptyList();
-            } else if(fpConfigStack.size() == 1) {
-                copy = Collections.singletonList(fpConfigStack.get(0));
-            } else {
-                copy = new ArrayList<>(fpConfigStack.size());
-                for(int i = 0; i < copy.size(); ++i) {
-                    copy.add(fpConfigStack.get(i));
-                }
-            }
-            recordedStacks = PmCollections.add(recordedStacks, copy);
-        }
-
-        void activateConfigStack(int i) throws ProvisioningException {
-            if(recordedStacks.size() <= i) {
-                throw new ProvisioningException("Stack index " + i + " is exceeding the current stack size " + recordedStacks.size());
-            }
-            blockedPackageInheritance = null;
-            blockedConfigInheritance = null;
-            final List<FeaturePackConfig> stack = recordedStacks.get(i);
-            for(int j = 0; j < stack.size(); ++j) {
-                push(stack.get(j));
-            }
         }
 
         FeaturePackRuntime build() throws ProvisioningException {

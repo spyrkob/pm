@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,10 +38,7 @@ public class PmCollections {
     }
 
     public static <K,V> Map<K,V> clone(Map<K,V> m) {
-        if(m.size() > 1) {
-            return new HashMap<>(m);
-        }
-        return m;
+        return m.size() > 1 ? new HashMap<>(m) : m;
     }
 
     public static <K,V> Map<K,V> put(Map<K,V> m, K k, V v) {
@@ -127,6 +124,10 @@ public class PmCollections {
         }
         dest.addAll(src);
         return dest;
+    }
+
+    public static <T> List<T> clone(List<T> s) {
+        return s.size() > 1 ? new ArrayList<>(s) : s;
     }
 
     public static <T> Set<T> unmodifiable(Set<T> s) {
