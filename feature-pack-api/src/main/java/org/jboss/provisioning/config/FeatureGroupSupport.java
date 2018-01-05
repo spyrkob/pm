@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -148,10 +148,6 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
 
     public Map<FeatureId, FeatureConfig> getIncludedFeatures() {
         return includedFeatures;
-    }
-
-    public boolean hasLocalIncludeExclude() {
-        return !excludedFeatures.isEmpty() || !includedFeatures.isEmpty() || !inheritFeatures || !excludedSpecs.isEmpty() || !includedSpecs.isEmpty();
     }
 
     public boolean hasExternalFeatureGroups() {
