@@ -61,16 +61,16 @@ public class ProvisionedConfigXmlWriter extends BaseXmlWriter<ProvisionedConfig>
         }
 
         @Override
-        public void nextFeature(ProvisionedFeature feature) {
+        public void nextFeature(ProvisionedFeature feature) throws ProvisioningException {
             final ElementNode featureE = addElement(specElement, Element.FEATURE);
             if(feature.hasId()) {
                 addAttribute(featureE, Attribute.ID, feature.getId().toString());
             }
             if(feature.hasParams()) {
-                for(Map.Entry<String, Object> entry : feature.getResolvedParams().entrySet()) {
+                for(String param : feature.getParamNames()) {
                     final ElementNode paramE = addElement(featureE, Element.PARAM);
-                    addAttribute(paramE, Attribute.NAME, entry.getKey());
-                    addAttribute(paramE, Attribute.VALUE, entry.getValue().toString());
+                    addAttribute(paramE, Attribute.NAME, param);
+                    addAttribute(paramE, Attribute.VALUE, feature.getConfigParam(param));
                 }
             }
         }

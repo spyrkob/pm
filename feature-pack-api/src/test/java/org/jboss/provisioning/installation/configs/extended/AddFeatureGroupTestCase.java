@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,19 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.installation.configs.customized;
+package org.jboss.provisioning.installation.configs.extended;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
-import org.jboss.provisioning.spec.FeatureId;
 import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
@@ -35,14 +35,12 @@ import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
-import org.junit.Ignore;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@Ignore
-public class ExcludeFeatureTestCase extends PmProvisionConfigTestBase {
+public class AddFeatureGroupTestCase extends PmProvisionConfigTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final");
@@ -54,26 +52,34 @@ public class ExcludeFeatureTestCase extends PmProvisionConfigTestBase {
                 .addSpec(FeatureSpec.builder("specA")
                         .addParam(FeatureParameterSpec.createId("id"))
                         .build())
+                .addFeatureGroup(FeatureGroup.builder("group1")
+                        .addFeature(new FeatureConfig("specA")
+                                .setParam("id", "3"))
+                        .addFeature(new FeatureConfig("specA")
+                                .setParam("id", "4"))
+                        .build())
                 .addConfig(ConfigModel.builder("model1", "config1")
                         .addFeature(new FeatureConfig("specA").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specA").setParam("id", "2"))
                         .build())
                 .addConfig(ConfigModel.builder("model2", "config1")
                         .addFeature(new FeatureConfig("specA").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specA").setParam("id", "2"))
                         .build())
                 .getInstaller()
             .newFeaturePack(FP2_GAV)
                 .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("id"))
                     .build())
+                .addFeatureGroup(FeatureGroup.builder("group1")
+                        .addFeature(new FeatureConfig("specB")
+                                .setParam("id", "3"))
+                        .addFeature(new FeatureConfig("specB")
+                                .setParam("id", "4"))
+                        .build())
                 .addConfig(ConfigModel.builder("model1", "config1")
                         .addFeature(new FeatureConfig("specB").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specB").setParam("id", "2"))
                         .build())
                 .addConfig(ConfigModel.builder("model2", "config1")
                         .addFeature(new FeatureConfig("specB").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specB").setParam("id", "2"))
                         .build())
                 .getInstaller()
             .install();
@@ -83,10 +89,11 @@ public class ExcludeFeatureTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePackDep(FeaturePackConfig.forGav(FP1_GAV))
-                .addFeaturePackDep(FeaturePackConfig.forGav(FP2_GAV))
+                .addFeaturePackDep("fp1", FeaturePackConfig.forGav(FP1_GAV))
+                .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .excludeFeature(FeatureId.create("specA", "id", "1"))
+                        .addFeatureGroup(FeatureGroup.forGroup("fp1", "group1"))
+                        .addFeatureGroup(FeatureGroup.forGroup("fp2", "group1"))
                         .build())
                 .build();
     }
@@ -99,16 +106,16 @@ public class ExcludeFeatureTestCase extends PmProvisionConfigTestBase {
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1").setName("config1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "1")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "2")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "3")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "4")))
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "1")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "2")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "3")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "4")))
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model2").setName("config1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "1")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "2")))
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "1")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "2")))
                         .build())
                 .build();
     }

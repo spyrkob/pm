@@ -195,10 +195,10 @@ public class ConfigModelResolver implements ProvisionedConfig {
     }
 
     boolean pushConfig(ResolvedFeatureGroupConfig fgConfig) {
-        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(fgConfig.fp.gav);
+        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(fgConfig.gav);
         if(fgConfigStack == null) {
             fgConfigStack = new ArrayList<>();
-            fgConfigStacks.put(fgConfig.fp.gav, fgConfigStack);
+            fgConfigStacks.put(fgConfig.gav, fgConfigStack);
             fgConfigStack.add(fgConfig);
             return true;
         }

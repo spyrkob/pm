@@ -112,7 +112,7 @@ public interface Errors {
     }
 
     static String unknownFeaturePackDependency(ArtifactCoords.Ga ga) {
-        return ga + " is not found amonth the feature-pack dependencies";
+        return ga + " is not found among the feature-pack dependencies";
     }
 
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
