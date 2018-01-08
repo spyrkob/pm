@@ -426,13 +426,13 @@ public class ProvisioningRuntimeBuilder {
     private ConfigModelResolver getConfigResolver(ConfigId config) {
         if(config.getModel() == null) {
             if(config.getName() == null) {
-                final ConfigModelResolver modelBuilder = ConfigModelResolver.anonymous();
+                final ConfigModelResolver modelBuilder = ConfigModelResolver.anonymous(this);
                 anonymousConfigs = PmCollections.add(anonymousConfigs, modelBuilder);
                 return modelBuilder;
             }
             ConfigModelResolver modelBuilder = nameOnlyConfigs.get(config.getName());
             if(modelBuilder == null) {
-                modelBuilder = ConfigModelResolver.forName(config.getName());
+                modelBuilder = ConfigModelResolver.forName(this, config.getName());
                 nameOnlyConfigs = PmCollections.putLinked(nameOnlyConfigs, config.getName(), modelBuilder);
             }
             return modelBuilder;
@@ -440,7 +440,7 @@ public class ProvisioningRuntimeBuilder {
         if(config.getName() == null) {
             ConfigModelResolver modelBuilder = modelOnlyConfigs.get(config.getModel());
             if(modelBuilder == null) {
-                modelBuilder = ConfigModelResolver.forModel(config.getModel());
+                modelBuilder = ConfigModelResolver.forModel(this, config.getModel());
                 modelOnlyConfigs = PmCollections.putLinked(modelOnlyConfigs, config.getModel(), modelBuilder);
             }
             return modelBuilder;
@@ -448,7 +448,7 @@ public class ProvisioningRuntimeBuilder {
 
         Map<String, ConfigModelResolver> namedConfigs = namedModelConfigs.get(config.getModel());
         if(namedConfigs == null) {
-            final ConfigModelResolver modelBuilder = ConfigModelResolver.forConfig(config.getModel(), config.getName());
+            final ConfigModelResolver modelBuilder = ConfigModelResolver.forConfig(this, config.getModel(), config.getName());
             namedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
             namedModelConfigs = PmCollections.putLinked(namedModelConfigs, config.getModel(), namedConfigs);
             return modelBuilder;
@@ -463,7 +463,7 @@ public class ProvisioningRuntimeBuilder {
                 }
                 namedModelConfigs.put(config.getModel(), namedConfigs);
             }
-            modelBuilder = ConfigModelResolver.forConfig(config.getModel(), config.getName());
+            modelBuilder = ConfigModelResolver.forConfig(this, config.getModel(), config.getName());
             namedConfigs.put(config.getName(), modelBuilder);
         }
         return modelBuilder;
@@ -499,24 +499,33 @@ public class ProvisioningRuntimeBuilder {
         List<ResolvedFeatureGroupConfig> pushedConfigs = Collections.emptyList();
         if(config.hasExternalFeatureGroups()) {
             for(Map.Entry<String, FeatureGroup> entry : config.getExternalFeatureGroups().entrySet()) {
-                final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = getFpDep(entry.getKey());
-                final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(entry.getValue());
+                final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFg(entry.getKey(), entry.getValue());
                 if (configResolver.pushConfig(resolvedFgConfig)) {
                     pushedConfigs = PmCollections.add(pushedConfigs, resolvedFgConfig);
                 }
-                currentFp = originalFp;
             }
         }
         if(currentFp == null) {
             // if it's the provisioning config which is being processed it doesn't make sense to push it into the config resolver
             return pushedConfigs;
         }
-        final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(config);
+        final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFg(null, config);
         if(configResolver.pushConfig(resolvedFgConfig)) {
             pushedConfigs = PmCollections.add(pushedConfigs, resolvedFgConfig);
         }
         return pushedConfigs;
+    }
+
+    ResolvedFeatureGroupConfig resolveFg(String origin, FeatureGroupSupport fg) throws ProvisioningException {
+        final FeaturePackRuntime.Builder originalFp = currentFp;
+        if(origin != null) {
+            currentFp = getFpDep(origin);
+        } else if(currentFp == null) {
+            return null;
+        }
+        final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(fg);
+        currentFp = originalFp;
+        return resolvedFgConfig;
     }
 
     private boolean popResolvedFgConfigs(final List<ResolvedFeatureGroupConfig> pushedConfigs)

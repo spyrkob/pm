@@ -137,20 +137,20 @@ public class ConfigModelResolver implements ProvisionedConfig {
         }
     }
 
-    public static ConfigModelResolver anonymous() {
-        return new ConfigModelResolver(null, null);
+    static ConfigModelResolver anonymous(ProvisioningRuntimeBuilder rt) {
+        return new ConfigModelResolver(rt, null, null);
     }
 
-    public static ConfigModelResolver forName(String name) {
-        return new ConfigModelResolver(null, name);
+    static ConfigModelResolver forName(ProvisioningRuntimeBuilder rt, String name) {
+        return new ConfigModelResolver(rt, null, name);
     }
 
-    public static ConfigModelResolver forModel(String model) {
-        return new ConfigModelResolver(model, null);
+    static ConfigModelResolver forModel(ProvisioningRuntimeBuilder rt, String model) {
+        return new ConfigModelResolver(rt, model, null);
     }
 
-    public static ConfigModelResolver forConfig(String model, String name) {
-        return new ConfigModelResolver(model, name);
+    static ConfigModelResolver forConfig(ProvisioningRuntimeBuilder rt, String model, String name) {
+        return new ConfigModelResolver(rt, model, name);
     }
 
     final String model;
@@ -170,10 +170,12 @@ public class ConfigModelResolver implements ProvisionedConfig {
     private boolean inBatch;
 
     private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
+    private final ConfigModelStack fgStack;
 
-    private ConfigModelResolver(String model, String name) {
+    private ConfigModelResolver(ProvisioningRuntimeBuilder rt, String model, String name) {
         this.model = model;
         this.name = name;
+        this.fgStack = new ConfigModelStack(rt);
     }
 
     public void overwriteProps(Map<String, String> props) {
