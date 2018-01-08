@@ -469,11 +469,12 @@ public class ProvisioningRuntimeBuilder {
         return modelBuilder;
     }
 
-    private boolean processFeatureGroup(FeatureGroupSupport includedFg, final FeatureGroupSupport originalFg)
+    private boolean processFeatureGroup(FeatureGroupSupport includedFg)
             throws ProvisioningException {
 
         final List<ResolvedFeatureGroupConfig> pushedConfigs = pushResolvedFgConfigs(includedFg);
 
+        final FeatureGroupSupport originalFg = currentFp.getFeatureGroupSpec(includedFg.getName());
         if(originalFg.hasPackageDeps()) {
             processPackageDeps(originalFg);
         }
@@ -483,10 +484,13 @@ public class ProvisioningRuntimeBuilder {
         }
 
         configResolver.startGroup();
-
         boolean resolvedFeatures = processConfigItemContainer(originalFg);
         resolvedFeatures |= popResolvedFgConfigs(pushedConfigs);
         configResolver.endGroup();
+
+        if(includedFg.hasItems()) {
+            resolvedFeatures |= processConfigItemContainer(includedFg);
+        }
         return resolvedFeatures;
     }
 
@@ -634,10 +638,7 @@ public class ProvisioningRuntimeBuilder {
                 try {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
-                        resolvedFeatures |= processFeatureGroup(nestedFg, currentFp.getFeatureGroupSpec(nestedFg.getName()));
-                        if(nestedFg.hasItems()) {
-                            resolvedFeatures |= processConfigItemContainer(nestedFg);
-                        }
+                        resolvedFeatures |= processFeatureGroup(nestedFg);
                     } else {
                         resolvedFeatures |= resolveFeature(configResolver, (FeatureConfig) item);
                     }
