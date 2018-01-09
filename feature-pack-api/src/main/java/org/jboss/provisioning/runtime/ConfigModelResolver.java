@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.config.FeatureGroupSupport;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.spec.CapabilitySpec;
 import org.jboss.provisioning.spec.FeatureDependencySpec;
@@ -137,19 +138,19 @@ public class ConfigModelResolver implements ProvisionedConfig {
         }
     }
 
-    static ConfigModelResolver anonymous(ProvisioningRuntimeBuilder rt) {
+    static ConfigModelResolver anonymous(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         return new ConfigModelResolver(rt, null, null);
     }
 
-    static ConfigModelResolver forName(ProvisioningRuntimeBuilder rt, String name) {
+    static ConfigModelResolver forName(ProvisioningRuntimeBuilder rt, String name) throws ProvisioningException {
         return new ConfigModelResolver(rt, null, name);
     }
 
-    static ConfigModelResolver forModel(ProvisioningRuntimeBuilder rt, String model) {
+    static ConfigModelResolver forModel(ProvisioningRuntimeBuilder rt, String model) throws ProvisioningException {
         return new ConfigModelResolver(rt, model, null);
     }
 
-    static ConfigModelResolver forConfig(ProvisioningRuntimeBuilder rt, String model, String name) {
+    static ConfigModelResolver forConfig(ProvisioningRuntimeBuilder rt, String model, String name) throws ProvisioningException {
         return new ConfigModelResolver(rt, model, name);
     }
 
@@ -169,16 +170,15 @@ public class ConfigModelResolver implements ProvisionedConfig {
     private int featureIncludeCount = 0;
     private boolean inBatch;
 
-    private Map<ArtifactCoords.Gav, List<ResolvedFeatureGroupConfig>> fgConfigStacks = new HashMap<>();
-    private final ConfigModelStack fgStack;
+    private final ConfigModelStack configStack;
 
-    private ConfigModelResolver(ProvisioningRuntimeBuilder rt, String model, String name) {
+    private ConfigModelResolver(ProvisioningRuntimeBuilder rt, String model, String name) throws ProvisioningException {
         this.model = model;
         this.name = name;
-        this.fgStack = new ConfigModelStack(rt);
+        this.configStack = new ConfigModelStack(rt);
     }
 
-    public void overwriteProps(Map<String, String> props) {
+    void overwriteProps(Map<String, String> props) {
         if(props.isEmpty()) {
             return;
         }
@@ -188,53 +188,28 @@ public class ConfigModelResolver implements ProvisionedConfig {
         this.props.putAll(props);
     }
 
+    void pushConfig(ConfigModel config) throws ProvisioningException {
+        configStack.pushConfig(config);
+    }
+
+    ConfigModel popConfig() throws ProvisioningException {
+        return configStack.popConfig();
+    }
+
+    boolean pushGroup(FeatureGroupSupport group) throws ProvisioningException {
+        return configStack.pushGroup(group);
+    }
+
+    boolean popGroup() throws ProvisioningException {
+        return configStack.popGroup();
+    }
+
     void startGroup() {
         featuresById = featureGroupStack.startGroup();
     }
 
     void endGroup() throws ProvisioningException {
         featuresById = featureGroupStack.endGroup();
-    }
-
-    boolean pushConfig(ResolvedFeatureGroupConfig fgConfig) {
-        List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(fgConfig.gav);
-        if(fgConfigStack == null) {
-            fgConfigStack = new ArrayList<>();
-            fgConfigStacks.put(fgConfig.gav, fgConfigStack);
-            fgConfigStack.add(fgConfig);
-            return true;
-        }
-        if(fgConfig.fg.getId() == null) {
-            fgConfigStack.add(fgConfig);
-            return true;
-        }
-        int i = fgConfigStack.size() - 1;
-        while(i >= 0) {
-            final ResolvedFeatureGroupConfig pushedFgConfig = fgConfigStack.get(i--);
-            if(pushedFgConfig.fg.getId() == null) {
-                continue;
-            }
-            if(pushedFgConfig.fg.getId().equals(fgConfig.fg.getId())) {
-                if(fgConfig.isSubsetOf(pushedFgConfig)) {
-                    return false;
-                } else {
-                    break;
-                }
-            }
-        }
-        fgConfigStack.add(fgConfig);
-        return true;
-    }
-
-    ResolvedFeatureGroupConfig popConfig(ArtifactCoords.Gav gav) {
-        final List<ResolvedFeatureGroupConfig> stack = fgConfigStacks.get(gav);
-        if(stack == null) {
-            throw new IllegalStateException("Feature group stack is null for " + gav);
-        }
-        if(stack.isEmpty()) {
-            throw new IllegalStateException("Feature group stack is empty for " + gav);
-        }
-        return stack.remove(stack.size() - 1);
     }
 
     ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, Object> resolvedParams, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps) throws ProvisioningException {
@@ -285,35 +260,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
-        final List<ResolvedFeatureGroupConfig> fgConfigStack = fgConfigStacks.get(specId.gav);
-        if (fgConfigStack == null) {
-            return false;
-        }
-        int i = fgConfigStack.size() - 1;
-        while (i >= 0) {
-            final ResolvedFeatureGroupConfig fgConfig = fgConfigStack.get(i--);
-            if (fgConfig.inheritFeatures) {
-                if (id != null && fgConfig.excludedFeatures.contains(id)) {
-                    return true;
-                }
-                if (fgConfig.excludedSpecs.contains(specId)) {
-                    if (id != null && fgConfig.includedFeatures.containsKey(id)) {
-                        continue;
-                    }
-                    return true;
-                }
-            } else {
-                if (id != null && fgConfig.includedFeatures.containsKey(id)) {
-                    continue;
-                }
-                if (!fgConfig.includedSpecs.contains(specId)) {
-                    return true;
-                } else if (id != null && fgConfig.excludedFeatures.contains(id)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return configStack.isFilteredOut(specId, id);
     }
 
     @Override

@@ -17,7 +17,6 @@
 
 package org.jboss.provisioning.config;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -120,7 +119,7 @@ public class ConfigCustomizations {
         return !definedConfigs.isEmpty();
     }
 
-    public Collection<ConfigModel> getDefinedConfigs() {
+    public List<ConfigModel> getDefinedConfigs() {
         return definedConfigs;
     }
 

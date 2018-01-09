@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,8 +39,11 @@ class ConfigModelStack {
         final ConfigModel config;
         List<List<ResolvedFeatureGroupConfig>> groupStack = new ArrayList<>();
 
-        Level(ConfigModel config) {
+        Level(ConfigModel config) throws ProvisioningException {
             this.config = config;
+            if(config != null) {
+                push(config);
+            }
         }
 
         boolean push(FeatureGroupSupport fg) throws ProvisioningException {
@@ -64,10 +67,6 @@ class ConfigModelStack {
             return true;
         }
 
-        List<ResolvedFeatureGroupConfig> peek() {
-            return groupStack.get(groupStack.size() - 1);
-        }
-
         List<ResolvedFeatureGroupConfig> pop() {
             if(groupStack.isEmpty()) {
                 throw new IllegalStateException("Feature group stack is empty");
@@ -76,6 +75,7 @@ class ConfigModelStack {
         }
 
         boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
+            boolean included = false;
             for(int i = groupStack.size() - 1; i >= 0; --i) {
                 final List<ResolvedFeatureGroupConfig> groups = groupStack.get(i);
                 for(int j = groups.size() - 1; j >= 0; --j) {
@@ -89,23 +89,30 @@ class ConfigModelStack {
                         }
                         if (stacked.excludedSpecs.contains(specId)) {
                             if (id != null && stacked.includedFeatures.containsKey(id)) {
+                                included = true;
                                 continue;
                             }
                             return true;
                         }
                     } else {
                         if (id != null && stacked.includedFeatures.containsKey(id)) {
+                            included = true;
                             continue;
                         }
                         if (!stacked.includedSpecs.contains(specId)) {
                             return true;
-                        } else if (id != null && stacked.excludedFeatures.contains(id)) {
+                        }
+                        if (id != null && stacked.excludedFeatures.contains(id)) {
                             return true;
                         }
+                        included = true;
                     }
                 }
             }
-            return false;
+            if(included) {
+                return false;
+            }
+            return config == null ? false : !config.isInheritFeatures();
         }
 
         private boolean isRelevant(ResolvedFeatureGroupConfig resolvedFg) {
@@ -133,39 +140,70 @@ class ConfigModelStack {
     }
 
     private final ProvisioningRuntimeBuilder rt;
-    private List<Level> levels = Collections.emptyList();
+    private List<Level> levels = new ArrayList<>();
     private Level top;
 
-    ConfigModelStack(ProvisioningRuntimeBuilder rt) {
+    ConfigModelStack(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         this.rt = rt;
+        top = new Level(null);
+        levels.add(top);
     }
 
-    void push(ConfigModel model) {
+    ConfigModel getCurrentConfig() {
+        return top.config;
+    }
+
+    void pushConfig(ConfigModel model) throws ProvisioningException {
         top = new Level(model);
-        levels = PmCollections.add(levels, top);
+        levels.add(top);
     }
 
-    List<ResolvedFeatureGroupConfig> popConfig() {
-        throw new UnsupportedOperationException();
+    ConfigModel popConfig() throws ProvisioningException {
+        final Level result = top;
+        levels.remove(levels.size() - 1);
+        top = levels.get(levels.size() - 1);
+        for(int i = result.groupStack.size() - 1; i >= 0; --i) {
+            rt.processIncludedFeatures(result.groupStack.get(i));
+        }
+        return result.config;
     }
 
-    boolean push(FeatureGroupSupport fg) throws ProvisioningException {
-        throw new UnsupportedOperationException();
+    boolean pushGroup(FeatureGroupSupport fg) throws ProvisioningException {
+        return top.push(fg);
     }
 
-    List<ResolvedFeatureGroupConfig> peek() {
-        throw new UnsupportedOperationException();
-    }
-
-    List<ResolvedFeatureGroupConfig> pop() {
-        throw new UnsupportedOperationException();
+    boolean popGroup() throws ProvisioningException {
+        return rt.processIncludedFeatures(top.pop());
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
-        throw new UnsupportedOperationException();
+        if(top.isFilteredOut(specId, id)) {
+            return true;
+        }
+        if(levels.size() > 1) {
+            for (int i = levels.size() - 2; i >= 0; --i) {
+                if (levels.get(i).isFilteredOut(specId, id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean isRelevant(ResolvedFeatureGroupConfig resolvedFg) {
-        throw new UnsupportedOperationException();
+        if(resolvedFg.fg.getId() == null || top == null) {
+            return true;
+        }
+        if(!top.isRelevant(resolvedFg)) {
+            return false;
+        }
+        if(levels.size() > 1) {
+            for (int i = levels.size() - 2; i >= 0; --i) {
+                if (!levels.get(i).isRelevant(resolvedFg)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
