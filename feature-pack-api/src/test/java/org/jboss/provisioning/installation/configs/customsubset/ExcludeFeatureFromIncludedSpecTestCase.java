@@ -40,7 +40,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class IncludeFeatureTestCase extends PmProvisionConfigTestBase {
+public class ExcludeFeatureFromIncludedSpecTestCase extends PmProvisionConfigTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final");
@@ -77,7 +77,8 @@ public class IncludeFeatureTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
                         .setInheritFeatures(false)
-                        .includeFeature("fp2", FeatureId.create("specB", "id", "2"))
+                        .includeSpec("fp1", "specA")
+                        .excludeFeature("fp1", FeatureId.create("specA", "id", "2"))
                         .build())
                 .build();
     }
@@ -89,7 +90,7 @@ public class IncludeFeatureTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP2_GAV).build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1").setName("config1")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "2")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "1")))
                         .build())
                 .build();
     }
