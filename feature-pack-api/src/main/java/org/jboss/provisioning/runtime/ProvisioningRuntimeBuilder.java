@@ -159,6 +159,8 @@ public class ProvisioningRuntimeBuilder {
 
         fpConfigStack = new FpStack(config);
 
+        // the configs are processed in the reverse order to correctly implement config overwrites
+
         List<ConfigModelResolver> fpConfigResolvers = Collections.emptyList();
         for(int i = config.getDefinedConfigs().size() - 1; i >= 0; --i) {
             final ConfigModel config = this.config.getDefinedConfigs().get(i);
@@ -222,12 +224,12 @@ public class ProvisioningRuntimeBuilder {
     private void resolveConfigs() throws ProvisioningException {
         if(!anonymousConfigs.isEmpty()) {
             for(ConfigModelResolver config : anonymousConfigs) {
-                config.resolve(this);
+                config.resolve();
             }
         }
         if(!nameOnlyConfigs.isEmpty()) {
             for(Map.Entry<String, ConfigModelResolver> entry : nameOnlyConfigs.entrySet()) {
-                entry.getValue().resolve(this);
+                entry.getValue().resolve();
             }
         }
 
@@ -272,7 +274,7 @@ public class ProvisioningRuntimeBuilder {
 
         for(Map<String, ConfigModelResolver> configMap : namedModelConfigs.values()) {
             for(Map.Entry<String, ConfigModelResolver> configEntry : configMap.entrySet()) {
-                configEntry.getValue().resolve(this);
+                configEntry.getValue().resolve();
             }
         }
     }
@@ -484,8 +486,7 @@ public class ProvisioningRuntimeBuilder {
         boolean resolvedFeatures = false;
         final FeaturePackRuntime.Builder originalFp = currentFp;
         for(ResolvedFeatureGroupConfig pushedFgConfig : pushedConfigs) {
-            currentFp = this.loadFpBuilder(pushedFgConfig.gav);
-            //pushedFgConfig.configResolver.popConfig(currentFp.gav);
+            currentFp = loadFpBuilder(pushedFgConfig.gav);
             if (pushedFgConfig.includedFeatures.isEmpty()) {
                 continue;
             }
@@ -498,7 +499,8 @@ public class ProvisioningRuntimeBuilder {
                     }
                     // make sure the included ID is in fact present on the feature group branch
                     if (!pushedFgConfig.configResolver.includes(includedId)) {
-                        throw new ProvisioningException(Errors.featureNotInScope(includedId, pushedFgConfig.fg.getId().toString(), currentFp.gav));
+                        throw new ProvisioningException(Errors.featureNotInScope(includedId,
+                                pushedFgConfig.fg.getId() == null ? "'anonymous'" : pushedFgConfig.fg.getId().toString(), currentFp.gav));
                     }
                     resolvedFeatures |= resolveFeature(pushedFgConfig.configResolver, includedFc);
                 }

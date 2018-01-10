@@ -315,12 +315,12 @@ public class ConfigModelResolver implements ProvisionedConfig {
         handler.done();
     }
 
-    public ProvisionedConfig resolve(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
+    public ProvisionedConfig resolve() throws ProvisioningException {
         if(featuresById.isEmpty()) {
             return this;
         }
         try {
-            return doBuild(rt);
+            return doBuild(this.configStack.rt);
         } catch(ProvisioningException e) {
             throw new ProvisioningException(Errors.failedToBuildConfigSpec(model, name), e);
         }

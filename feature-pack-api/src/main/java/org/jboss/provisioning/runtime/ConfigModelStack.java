@@ -139,7 +139,7 @@ class ConfigModelStack {
 
     }
 
-    private final ProvisioningRuntimeBuilder rt;
+    final ProvisioningRuntimeBuilder rt;
     private List<Level> levels = new ArrayList<>();
     private Level top;
 

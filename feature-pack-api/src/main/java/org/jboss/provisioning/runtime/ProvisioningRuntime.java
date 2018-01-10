@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -176,26 +176,13 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.operation = builder.operation;
 
         if(!builder.anonymousConfigs.isEmpty()) {
-            for(ProvisionedConfig config : builder.anonymousConfigs) {
-                addConfig(config);
-            }
+            addConfig(builder.anonymousConfigs.iterator());
         }
         if(!builder.nameOnlyConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelResolver> config : builder.nameOnlyConfigs.entrySet()) {
-                addConfig(config.getValue());
-            }
-        }
-        if(!builder.modelOnlyConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelResolver> config : builder.modelOnlyConfigs.entrySet()) {
-                addConfig(config.getValue());
-            }
+            addConfig(builder.nameOnlyConfigs.values().iterator());
         }
         if(!builder.namedModelConfigs.isEmpty()) {
-            for(Map.Entry<String, Map<String, ConfigModelResolver>> namedConfigs : builder.namedModelConfigs.entrySet()) {
-                for(Map.Entry<String, ConfigModelResolver> config : namedConfigs.getValue().entrySet()) {
-                    addConfig(config.getValue());
-                }
-            }
+            addNamedConfigs(builder.namedModelConfigs.values().iterator());
         }
         parameters = builder.rtParams;
 
@@ -214,6 +201,23 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
 
         this.tmpDir = workDir.resolve("tmp");
         this.messageWriter = messageWriter;
+    }
+
+    // these methods are here to preserve the ordering of the configs as they appear in the provisioning (xml) configs
+    private void addNamedConfigs(Iterator<Map<String, ConfigModelResolver>> i) {
+        final Map<String, ConfigModelResolver> configs = i.next();
+        if(i.hasNext()) {
+            addNamedConfigs(i);
+        }
+        addConfig(configs.values().iterator());
+    }
+
+    private void addConfig(Iterator<ConfigModelResolver> i) {
+        final ConfigModelResolver config = i.next();
+        if(i.hasNext()) {
+            addConfig(i);
+        }
+        addConfig(config);
     }
 
     private ClassLoader getPluginClassloader() throws ProvisioningException {
