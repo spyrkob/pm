@@ -56,7 +56,6 @@ import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
-import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
 
@@ -174,16 +173,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
         this.operation = builder.operation;
-
-        if(!builder.anonymousConfigs.isEmpty()) {
-            addConfig(builder.anonymousConfigs.iterator());
-        }
-        if(!builder.nameOnlyConfigs.isEmpty()) {
-            addConfig(builder.nameOnlyConfigs.values().iterator());
-        }
-        if(!builder.namedModelConfigs.isEmpty()) {
-            addNamedConfigs(builder.namedModelConfigs.values().iterator());
-        }
+        this.configs = builder.getConfigList();
         parameters = builder.rtParams;
 
         if(configs.size() > 1) {
@@ -201,23 +191,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
 
         this.tmpDir = workDir.resolve("tmp");
         this.messageWriter = messageWriter;
-    }
-
-    // these methods are here to preserve the ordering of the configs as they appear in the provisioning (xml) configs
-    private void addNamedConfigs(Iterator<Map<String, ConfigModelResolver>> i) {
-        final Map<String, ConfigModelResolver> configs = i.next();
-        if(i.hasNext()) {
-            addNamedConfigs(i);
-        }
-        addConfig(configs.values().iterator());
-    }
-
-    private void addConfig(Iterator<ConfigModelResolver> i) {
-        final ConfigModelResolver config = i.next();
-        if(i.hasNext()) {
-            addConfig(i);
-        }
-        addConfig(config);
     }
 
     private ClassLoader getPluginClassloader() throws ProvisioningException {
@@ -253,10 +226,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             pluginsClassLoader = Thread.currentThread().getContextClassLoader();
         }
         return pluginsClassLoader;
-    }
-
-    private void addConfig(ProvisionedConfig config) {
-        configs = PmCollections.add(configs, config);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,12 +44,6 @@ public class ConfigXml {
     public enum Element implements XmlNameProvider {
 
         CONFIG("config"),
-        FEATURE("feature"),
-        FEATURE_GROUP("feature-group"),
-        FEATURE_PACK("feature-pack"),
-        PACKAGES("packages"),
-        PROP("prop"),
-        PROPS("props"),
 
         // default unknown element
         UNKNOWN(null);
@@ -91,11 +85,9 @@ public class ConfigXml {
 
     protected enum Attribute implements XmlNameProvider {
 
-        DEPENDENCY("dependency"),
         INHERIT_FEATURES("inherit-features"),
         NAME("name"),
         MODEL("model"),
-        VALUE("value"),
 
         // default unknown attribute
         UNKNOWN(null);

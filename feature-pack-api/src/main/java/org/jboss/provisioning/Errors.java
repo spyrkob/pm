@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.runtime.ResolvedFeature;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
@@ -314,6 +315,10 @@ public interface Errors {
         final StringBuilder buf = new StringBuilder();
         buf.append("Failed to process feature-pack ").append(fpGav).append(" group ").append(groupName);
         return buf.toString();
+    }
+
+    static String featureOriginNotSpecified(ConfigId configId, FeatureConfig fc) {
+        return "The origin of feature " + fc + " is missing from " + (configId.isAnonymous() ? "anonymous config" : "config " + configId);
     }
 
     static void appendConfig(final StringBuilder buf, String model, String name) {

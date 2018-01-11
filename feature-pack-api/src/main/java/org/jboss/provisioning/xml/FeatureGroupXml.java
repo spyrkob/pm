@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigItemContainerBuilder;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroup;
@@ -53,6 +54,8 @@ public class FeatureGroupXml {
 
     public enum Element implements XmlNameProvider {
 
+        CONFIG_DEPS("config-deps"),
+        CONFIG_DEP("config-dep"),
         DEPENDS("depends"),
         EXCLUDE("exclude"),
         FEATURE("feature"),
@@ -107,11 +110,13 @@ public class FeatureGroupXml {
 
     protected enum Attribute implements XmlNameProvider {
 
+        ID("id"),
         DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
         INCLUDE("include"),
         INHERIT_FEATURES("inherit-features"),
+        MODEL("model"),
         NAME("name"),
         OPTIONAL("optional"),
         PARAM("param"),
@@ -321,6 +326,9 @@ public class FeatureGroupXml {
                         case PACKAGES:
                             PackageDepsSpecXmlParser.parsePackageDeps(Element.PACKAGES, reader, builder);
                             break;
+                        case CONFIG_DEPS:
+                            readConfigDeps(reader, builder);
+                            break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
                     }
@@ -387,6 +395,63 @@ public class FeatureGroupXml {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.VALUE));
         }
         builder.setProperty(name, value);
+        ParsingUtils.parseNoContent(reader);
+    }
+
+    private static void readConfigDeps(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> builder) throws XMLStreamException {
+        ParsingUtils.parseNoAttributes(reader);
+        while (reader.hasNext()) {
+            switch (reader.nextTag()) {
+                case XMLStreamConstants.END_ELEMENT: {
+                    return;
+                }
+                case XMLStreamConstants.START_ELEMENT: {
+                    final Element element = Element.of(reader.getName().getLocalPart());
+                    switch (element) {
+                        case CONFIG_DEP:
+                            readConfigDep(reader, builder);
+                            break;
+                        default:
+                            throw ParsingUtils.unexpectedContent(reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParsingUtils.unexpectedContent(reader);
+                }
+            }
+        }
+        throw ParsingUtils.endOfDocument(reader.getLocation());
+    }
+
+    private static void readConfigDep(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> builder) throws XMLStreamException {
+        String id = null;
+        String name = null;
+        String model = null;
+        final int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            final Attribute attribute = Attribute.of(reader.getAttributeName(i));
+            switch (attribute) {
+                case ID:
+                    id = reader.getAttributeValue(i);
+                    break;
+                case NAME:
+                    name = reader.getAttributeValue(i);
+                    break;
+                case MODEL:
+                    model = reader.getAttributeValue(i);
+                    break;
+                default:
+                    throw ParsingUtils.unexpectedContent(reader);
+            }
+        }
+        if(id == null || name == null && model == null) {
+            if(id == null) {
+                throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.ID));
+            }
+            throw ParsingUtils.missingOneOfAttributes(reader.getLocation(), Attribute.NAME, Attribute.MODEL);
+        }
+        builder.setConfigDep(id, new ConfigId(model, name));
         ParsingUtils.parseNoContent(reader);
     }
 

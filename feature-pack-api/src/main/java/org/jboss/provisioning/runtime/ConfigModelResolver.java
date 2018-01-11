@@ -30,6 +30,7 @@ import java.util.Map;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureGroupSupport;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
@@ -138,25 +139,13 @@ public class ConfigModelResolver implements ProvisionedConfig {
         }
     }
 
-    static ConfigModelResolver anonymous(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
-        return new ConfigModelResolver(rt, null, null);
+    static ConfigModelResolver forId(ProvisioningRuntimeBuilder rt, ConfigId id) throws ProvisioningException {
+        return new ConfigModelResolver(rt, id);
     }
 
-    static ConfigModelResolver forName(ProvisioningRuntimeBuilder rt, String name) throws ProvisioningException {
-        return new ConfigModelResolver(rt, null, name);
-    }
-
-    static ConfigModelResolver forModel(ProvisioningRuntimeBuilder rt, String model) throws ProvisioningException {
-        return new ConfigModelResolver(rt, model, null);
-    }
-
-    static ConfigModelResolver forConfig(ProvisioningRuntimeBuilder rt, String model, String name) throws ProvisioningException {
-        return new ConfigModelResolver(rt, model, name);
-    }
-
-    final String model;
-    final String name;
+    final ConfigId id;
     private Map<String, String> props = Collections.emptyMap();
+    Map<String, ConfigId> configDeps = Collections.emptyMap();
     private FeatureGroupScopeStack featureGroupStack = new FeatureGroupScopeStack();
     private Map<ResolvedFeatureId, ResolvedFeature> featuresById = featureGroupStack.peek();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
@@ -165,16 +154,15 @@ public class ConfigModelResolver implements ProvisionedConfig {
     private Map<String, CapabilityProviders> capProviders = Collections.emptyMap();
 
     // features in the order they should be processed by the provisioning handlers
-    private List<ResolvedFeature> orderedFeatures;
+    private List<ResolvedFeature> orderedFeatures = Collections.emptyList();
     private boolean orderReferencedSpec = true;
     private int featureIncludeCount = 0;
     private boolean inBatch;
 
     private final ConfigModelStack configStack;
 
-    private ConfigModelResolver(ProvisioningRuntimeBuilder rt, String model, String name) throws ProvisioningException {
-        this.model = model;
-        this.name = name;
+    private ConfigModelResolver(ProvisioningRuntimeBuilder rt, ConfigId id) throws ProvisioningException {
+        this.id = id;
         this.configStack = new ConfigModelStack(rt);
     }
 
@@ -183,9 +171,19 @@ public class ConfigModelResolver implements ProvisionedConfig {
             return;
         }
         if(this.props.isEmpty()) {
-            this.props = new HashMap<>();
+            this.props = new HashMap<>(props.size());
         }
         this.props.putAll(props);
+    }
+
+    void overwriteConfigDeps(Map<String, ConfigId> configDeps) {
+        if(configDeps.isEmpty()) {
+            return;
+        }
+        if(this.configDeps.isEmpty()) {
+            this.configDeps = new HashMap<>(configDeps.size());
+        }
+        this.configDeps.putAll(configDeps);
     }
 
     void pushConfig(ConfigModel config) throws ProvisioningException {
@@ -250,6 +248,17 @@ public class ConfigModelResolver implements ProvisionedConfig {
                 }
             }
         }
+        if(!other.configDeps.isEmpty()) {
+            if(configDeps.isEmpty()) {
+                configDeps = other.configDeps;
+            } else {
+                for(Map.Entry<String, ConfigId> configDep : other.configDeps.entrySet()) {
+                    if(!configDeps.containsKey(configDep.getKey())) {
+                        configDeps.put(configDep.getKey(), configDep.getValue());
+                    }
+                }
+            }
+        }
         if(!other.featuresBySpec.isEmpty()) {
             for(Map.Entry<ResolvedSpecId, SpecFeatures> entry : other.featuresBySpec.entrySet()) {
                 for(ResolvedFeature feature : entry.getValue().list) {
@@ -265,17 +274,22 @@ public class ConfigModelResolver implements ProvisionedConfig {
 
     @Override
     public String getModel() {
-        return model;
+        return id.getModel();
     }
 
     @Override
     public String getName() {
-        return name;
+        return id.getName();
     }
 
     @Override
     public boolean hasProperties() {
         return !props.isEmpty();
+    }
+
+    @Override
+    public String getProperty(String name) {
+        return props.get(name);
     }
 
     @Override
@@ -322,7 +336,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
         try {
             return doBuild(this.configStack.rt);
         } catch(ProvisioningException e) {
-            throw new ProvisioningException(Errors.failedToBuildConfigSpec(model, name), e);
+            throw new ProvisioningException(Errors.failedToBuildConfigSpec(id.getModel(), id.getName()), e);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,7 @@ public class ConfigModel extends FeatureGroupSupport {
 
         private String model;
         private Map<String, String> props = Collections.emptyMap();
+        private Map<String, ConfigId> configDeps = Collections.emptyMap();
 
         protected Builder() {
             super();
@@ -57,6 +58,11 @@ public class ConfigModel extends FeatureGroupSupport {
             return this;
         }
 
+        public Builder setConfigDep(String depName, ConfigId configId) {
+            configDeps = PmCollections.put(configDeps, depName, configId);
+            return this;
+        }
+
         public ConfigModel build() throws ProvisioningDescriptionException {
             return new ConfigModel(this);
         }
@@ -72,11 +78,13 @@ public class ConfigModel extends FeatureGroupSupport {
 
     final ConfigId id;
     final Map<String, String> props;
+    final Map<String, ConfigId> configDeps;
 
     protected ConfigModel(Builder builder) throws ProvisioningDescriptionException {
         super(builder);
         this.id = new ConfigId(builder.model, builder.name);
         this.props = PmCollections.unmodifiable(builder.props);
+        this.configDeps = PmCollections.unmodifiable(builder.configDeps);
     }
 
     public ConfigId getId() {
@@ -97,10 +105,19 @@ public class ConfigModel extends FeatureGroupSupport {
         return props;
     }
 
+    public boolean hasConfigDeps() {
+        return !configDeps.isEmpty();
+    }
+
+    public Map<String, ConfigId> getConfigDeps() {
+        return configDeps;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
+        result = prime * result + ((configDeps == null) ? 0 : configDeps.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((props == null) ? 0 : props.hashCode());
         return result;
@@ -115,6 +132,11 @@ public class ConfigModel extends FeatureGroupSupport {
         if (getClass() != obj.getClass())
             return false;
         ConfigModel other = (ConfigModel) obj;
+        if (configDeps == null) {
+            if (other.configDeps != null)
+                return false;
+        } else if (!configDeps.equals(other.configDeps))
+            return false;
         if (id == null) {
             if (other.id != null)
                 return false;
@@ -139,6 +161,10 @@ public class ConfigModel extends FeatureGroupSupport {
         if(!props.isEmpty()) {
             buf.append(" props=");
             StringUtils.append(buf, props.entrySet());
+        }
+        if(!configDeps.isEmpty()) {
+            buf.append(" config-deps=");
+            StringUtils.append(buf, configDeps.entrySet());
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");
