@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.installation.configs.customsubset;
+package org.jboss.provisioning.installation.configs.order;
 
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
@@ -31,7 +31,6 @@ import org.jboss.provisioning.spec.FeatureParameterSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
-import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
@@ -39,7 +38,7 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class InheritFeaturesFalseTestCase extends PmProvisionConfigTestBase {
+public class NaturalOrderingTestCase extends ConfigOrderTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final");
@@ -52,25 +51,34 @@ public class InheritFeaturesFalseTestCase extends PmProvisionConfigTestBase {
                         .addParam(FeatureParameterSpec.createId("id"))
                         .build())
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .addFeature(new FeatureConfig("specA").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specA").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specA").setParam("id", "11"))
+                        .build())
+                .addConfig(ConfigModel.builder("model1", "config2")
+                        .addFeature(new FeatureConfig("specA").setParam("id", "12"))
                         .build())
                 .addConfig(ConfigModel.builder("model2", "config1")
-                        .addFeature(new FeatureConfig("specA").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specA").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specA").setParam("id", "21"))
                         .build())
+                .addConfig(ConfigModel.builder("model2", "config2")
+                        .addFeature(new FeatureConfig("specA").setParam("id", "22"))
+                        .build())
+                        .addPlugin(ConfigListPlugin.class)
                 .getInstaller()
             .newFeaturePack(FP2_GAV)
                 .addSpec(FeatureSpec.builder("specB")
                     .addParam(FeatureParameterSpec.createId("id"))
                     .build())
+                .addConfig(ConfigModel.builder("model2", "config2")
+                        .addFeature(new FeatureConfig("specB").setParam("id", "22"))
+                        .build())
+                .addConfig(ConfigModel.builder("model1", "config2")
+                        .addFeature(new FeatureConfig("specB").setParam("id", "12"))
+                        .build())
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specB").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specB").setParam("id", "11"))
                         .build())
                 .addConfig(ConfigModel.builder("model2", "config1")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "1"))
-                        .addFeature(new FeatureConfig("specB").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specB").setParam("id", "21"))
                         .build())
                 .getInstaller()
             .install();
@@ -80,14 +88,8 @@ public class InheritFeaturesFalseTestCase extends PmProvisionConfigTestBase {
     protected ProvisioningConfig provisioningConfig()
             throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
-                .addFeaturePackDep("fp1", FeaturePackConfig.forGav(FP1_GAV))
-                .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
-                .addConfig(ConfigModel.builder("model1", "config1")
-                        .setInheritFeatures(false)
-                        .build())
-                .addConfig(ConfigModel.builder("model2", "config1")
-                        .excludeSpec("fp1", "specA")
-                        .build())
+                .addFeaturePackDep(FeaturePackConfig.forGav(FP1_GAV))
+                .addFeaturePackDep(FeaturePackConfig.forGav(FP2_GAV))
                 .build();
     }
 
@@ -98,12 +100,34 @@ public class InheritFeaturesFalseTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP2_GAV).build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1").setName("config1")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "11")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "11")))
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setModel("model1").setName("config2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "12")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "12")))
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model2").setName("config1")
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "1")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "2")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "21")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "21")))
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setModel("model2").setName("config2")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "22")))
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "22")))
                         .build())
                 .build();
+    }
+
+    @Override
+    protected String[] configList() {
+        return new String[] {
+                "model1 config1",
+                "model1 config2",
+                "model2 config1",
+                "model2 config2"
+        };
     }
 }
