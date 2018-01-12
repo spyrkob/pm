@@ -67,7 +67,7 @@ abstract class ConfigOrderTestBase extends PmProvisionConfigTestBase {
             if(config.getName() != null) {
                 buf.append(config.getName());
             } else if(config.getModel() == null) {
-                buf.append("anonymous");
+                buf.append("anonymous " + config.getProperty("id"));
             }
 
             try {

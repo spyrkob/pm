@@ -117,6 +117,11 @@ public class ProvisionedConfigBuilder implements ProvisionedConfig {
     }
 
     @Override
+    public String getProperty(String name) {
+        return props.get(name);
+    }
+
+    @Override
     public Map<String, String> getProperties() {
         return props;
     }

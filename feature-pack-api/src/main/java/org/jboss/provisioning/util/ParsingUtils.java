@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -146,11 +146,19 @@ public class ParsingUtils {
     }
 
     public static XMLStreamException missingAttributes(final Location location, final Set<? extends XmlNameProvider> requiredAttributes) {
-        final StringBuilder b = new StringBuilder();
+        final StringBuilder b = new StringBuilder("Missing required attributes");
         for (XmlNameProvider attribute : requiredAttributes) {
             b.append(' ').append(attribute.getLocalName());
         }
-        return new XMLStreamException("Missing required attributes " + b.toString(), location);
+        return new XMLStreamException(b.toString(), location);
+    }
+
+    public static XMLStreamException missingOneOfAttributes(final Location location, XmlNameProvider... attrs) {
+        final StringBuilder b = new StringBuilder("Missing one of required attributes");
+        for (XmlNameProvider attribute : attrs) {
+            b.append(' ').append(attribute.getLocalName());
+        }
+        return new XMLStreamException(b.toString(), location);
     }
 
     public static String wildcardToJavaRegexp(String expr) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,9 @@
  */
 package org.jboss.provisioning.xml;
 
+import java.util.Map;
+
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.xml.ConfigXml.Attribute;
 import org.jboss.provisioning.xml.ConfigXml.Element;
@@ -44,6 +47,21 @@ public class ConfigXmlWriter extends BaseXmlWriter<ConfigModel> {
         final ElementNode configE = addElement(null, Element.CONFIG.getLocalName(), ns);
         if(config.getModel() != null) {
             addAttribute(configE, Attribute.MODEL, config.getModel());
+        }
+
+        if(config.hasConfigDeps()) {
+            final ElementNode configDeps = addElement(configE, FeatureGroupXml.Element.CONFIG_DEPS.getLocalName(), ns);
+            for(Map.Entry<String, ConfigId> dep : config.getConfigDeps().entrySet()) {
+                final ElementNode configDep = addElement(configDeps, FeatureGroupXml.Element.CONFIG_DEP.getLocalName(), ns);
+                addAttribute(configDep, FeatureGroupXml.Attribute.ID.getLocalName(), dep.getKey());
+                final ConfigId configId = dep.getValue();
+                if(configId.getModel() != null) {
+                    addAttribute(configDep, FeatureGroupXml.Attribute.MODEL.getLocalName(), configId.getModel());
+                }
+                if(configId.getName() != null) {
+                    addAttribute(configDep, FeatureGroupXml.Attribute.NAME.getLocalName(), configId.getName());
+                }
+            }
         }
 
         FeatureGroupXmlWriter.addFeatureGroupDepBody(config, configE, ns);

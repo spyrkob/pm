@@ -20,6 +20,7 @@ package org.jboss.provisioning.installation.configs.order;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
@@ -38,10 +39,9 @@ import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
  *
  * @author Alexey Loubyansky
  */
-public class NaturalOrderingTestCase extends ConfigOrderTestBase {
+public class ModelDepOverwritesTestCase extends ConfigOrderTestBase {
 
     private static final Gav FP1_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
-    private static final Gav FP2_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "2.0.0.Final");
 
     @Override
     protected void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException {
@@ -50,46 +50,46 @@ public class NaturalOrderingTestCase extends ConfigOrderTestBase {
                 .addSpec(FeatureSpec.builder("specA")
                         .addParam(FeatureParameterSpec.createId("id"))
                         .build())
+                .addConfig(ConfigModel.builder("model2", null)
+                        .setConfigDep("modeldep1", new ConfigId("model1", null))
+                        .build())
                 .addConfig(ConfigModel.builder("model1", "config1")
                         .addFeature(new FeatureConfig("specA").setParam("id", "11"))
-                        .build())
-                .addConfig(ConfigModel.builder("model1", "config2")
-                        .addFeature(new FeatureConfig("specA").setParam("id", "12"))
                         .build())
                 .addConfig(ConfigModel.builder("model2", "config1")
                         .addFeature(new FeatureConfig("specA").setParam("id", "21"))
                         .build())
-                .addConfig(ConfigModel.builder("model2", "config2")
-                        .addFeature(new FeatureConfig("specA").setParam("id", "22"))
-                        .build())
-                        .addPlugin(ConfigListPlugin.class)
-                .getInstaller()
-            .newFeaturePack(FP2_GAV)
-                .addSpec(FeatureSpec.builder("specB")
-                    .addParam(FeatureParameterSpec.createId("id"))
-                    .build())
-                .addConfig(ConfigModel.builder("model2", "config2")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "22"))
+                .addConfig(ConfigModel.builder("model3", "config1")
+                        .addFeature(new FeatureConfig("specA").setParam("id", "31"))
                         .build())
                 .addConfig(ConfigModel.builder("model1", "config2")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "12"))
+                        .setConfigDep("dep1", new ConfigId("model1", "config1"))
+                        .addFeature(new FeatureConfig("specA").setParam("id", "12"))
                         .build())
-                .addConfig(ConfigModel.builder("model1", "config1")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "11"))
+                .addConfig(ConfigModel.builder("model2", "config2")
+                        .setConfigDep("dep1", new ConfigId("model2", "config1"))
+                        .addFeature(new FeatureConfig("specA").setParam("id", "22"))
                         .build())
-                .addConfig(ConfigModel.builder("model2", "config1")
-                        .addFeature(new FeatureConfig("specB").setParam("id", "21"))
+                .addConfig(ConfigModel.builder("model3", null)
+                        .setConfigDep("modeldep1", new ConfigId("model2", null))
                         .build())
+                .addPlugin(ConfigListPlugin.class)
                 .getInstaller()
             .install();
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig()
-            throws ProvisioningDescriptionException {
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder()
                 .addFeaturePackDep(FeaturePackConfig.forGav(FP1_GAV))
-                .addFeaturePackDep(FeaturePackConfig.forGav(FP2_GAV))
+                .addConfig(ConfigModel.builder()
+                        .setModel("model3")
+                        .setConfigDep("modeldep1", new ConfigId("model1", null))
+                        .build())
+                .addConfig(ConfigModel.builder()
+                        .setModel("model2")
+                        .setConfigDep("modeldep1", new ConfigId("model3", null))
+                        .build())
                 .build();
     }
 
@@ -97,26 +97,25 @@ public class NaturalOrderingTestCase extends ConfigOrderTestBase {
     protected ProvisionedState provisionedState() {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP1_GAV).build())
-                .addFeaturePack(ProvisionedFeaturePack.builder(FP2_GAV).build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1").setName("config1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "11")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "11")))
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model1").setName("config2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "12")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "12")))
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model2").setName("config1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "21")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "21")))
                         .build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setModel("model2").setName("config2")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "22")))
-                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP2_GAV,  "specB"), "id", "22")))
+                        .build())
+                .addConfig(ProvisionedConfigBuilder.builder()
+                        .setModel("model3").setName("config1")
+                        .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(new ResolvedSpecId(FP1_GAV,  "specA"), "id", "31")))
                         .build())
                 .build();
     }
@@ -126,6 +125,7 @@ public class NaturalOrderingTestCase extends ConfigOrderTestBase {
         return new String[] {
                 "model1 config1",
                 "model1 config2",
+                "model3 config1",
                 "model2 config1",
                 "model2 config2"
         };
