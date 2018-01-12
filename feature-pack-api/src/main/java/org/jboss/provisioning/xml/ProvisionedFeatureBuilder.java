@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,22 +50,20 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
     private ResolvedFeatureId.Builder idBuilder;
 
     private Map<String, String> configParams = Collections.emptyMap();
-    private Map<String, Object> resolvedParams = Collections.emptyMap();
 
     private ProvisionedFeatureBuilder(ResolvedFeatureId id, ResolvedSpecId specId) {
         this.id = id;
         this.specId = specId;
         if(id != null) {
-            resolvedParams = id.getParams();
-            if(resolvedParams.size() > 1) {
-                resolvedParams = new HashMap<>(resolvedParams);
-                configParams = new HashMap<>(resolvedParams.size());
-                for(Map.Entry<String, Object> entry : resolvedParams.entrySet()) {
-                    configParams.put(entry.getKey(), entry.getValue().toString());
+            Map<String, Object> idParams = id.getParams();
+            if(idParams.size() > 1) {
+                configParams = new HashMap<>(idParams.size());
+                for(Map.Entry<String, Object> entry : idParams.entrySet()) {
+                    configParams.put(entry.getKey(), (String) entry.getValue());
                 }
             } else {
-                final Map.Entry<String, Object> entry = resolvedParams.entrySet().iterator().next();
-                configParams = Collections.singletonMap(entry.getKey(), entry.getValue().toString());
+                final Map.Entry<String, Object> entry = idParams.entrySet().iterator().next();
+                configParams = Collections.singletonMap(entry.getKey(), (String) entry.getValue());
             }
             idBuilder = null;
         } else {
@@ -82,64 +80,21 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
     }
 
     /**
-     * Sets the parameter's resolved value.
-     */
-    public ProvisionedFeatureBuilder setResolvedParam(String name, Object value) {
-        resolvedParams = PmCollections.put(resolvedParams, name, value);
-        return this;
-    }
-
-    /**
-     * Sets the parameter's configuration and resolved values.
-     */
-    public ProvisionedFeatureBuilder setParam(String name, String config, Object resolved) {
-        setConfigParam(name, config);
-        setResolvedParam(name, resolved);
-        return this;
-    }
-
-    /**
-     * Sets the parameter's configuration and resolved values to the value passed in.
-     */
-    public ProvisionedFeatureBuilder setParam(String name, String value) {
-        return setParam(name, value, value);
-    }
-
-    /**
      * Sets the ID parameter's resolved value.
      */
-    public ProvisionedFeatureBuilder setIdParam(String name, Object value) {
+    public ProvisionedFeatureBuilder setIdParam(String name, String value) {
         if(idBuilder == null) {
             throw new IllegalStateException("The ID builder has not been initialized");
         }
         idBuilder.setParam(name, value);
-        resolvedParams = PmCollections.put(resolvedParams, name, value);
+        setConfigParam(name, value);
         return this;
-    }
-
-    /**
-     * Sets the ID parameter's configuration and resolved values.
-     */
-    public ProvisionedFeatureBuilder setIdParam(String name, String config, Object resolved) {
-        setIdParam(name, resolved);
-        setConfigParam(name, config);
-        return this;
-    }
-
-    /**
-     * Sets ID parameter's configuration and resolved values to the value passed in.
-     */
-    public ProvisionedFeatureBuilder setIdParam(String name, String value) {
-        return setIdParam(name, value, value);
     }
 
     public ProvisionedFeature build() throws ProvisioningDescriptionException {
         if(idBuilder != null) {
             id = idBuilder.build();
             idBuilder = null;
-        }
-        if(resolvedParams.size() > 1) {
-            resolvedParams = Collections.unmodifiableMap(resolvedParams);
         }
         if(configParams.size() > 1) {
             configParams = Collections.unmodifiableMap(configParams);
@@ -164,12 +119,12 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
 
     @Override
     public boolean hasParams() {
-        return !resolvedParams.isEmpty();
+        return !configParams.isEmpty();
     }
 
     @Override
     public Collection<String> getParamNames() {
-        return resolvedParams.keySet();
+        return configParams.keySet();
     }
 
     @Override
@@ -184,7 +139,7 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
 
     @Override
     public Map<String, Object> getResolvedParams() {
-        return resolvedParams;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -193,7 +148,6 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         int result = 1;
         result = prime * result + ((configParams == null) ? 0 : configParams.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((resolvedParams == null) ? 0 : resolvedParams.hashCode());
         result = prime * result + ((specId == null) ? 0 : specId.hashCode());
         return result;
     }
@@ -217,11 +171,6 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
                 return false;
         } else if (!id.equals(other.id))
             return false;
-        if (resolvedParams == null) {
-            if (other.resolvedParams != null)
-                return false;
-        } else if (!resolvedParams.equals(other.resolvedParams))
-            return false;
         if (specId == null) {
             if (other.specId != null)
                 return false;
@@ -242,11 +191,6 @@ public class ProvisionedFeatureBuilder implements ProvisionedFeature {
         if(!configParams.isEmpty()) {
             buf.append(" config-params:{");
             StringUtils.append(buf, configParams.entrySet());
-            buf.append('}');
-        }
-        if(!resolvedParams.isEmpty()) {
-            buf.append(" resolved-params:{");
-            StringUtils.append(buf, resolvedParams.entrySet());
             buf.append('}');
         }
         return buf.append(']').toString();

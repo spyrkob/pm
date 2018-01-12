@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
 import org.jboss.provisioning.runtime.ResolvedSpecId;
@@ -77,7 +76,7 @@ public class ProvisionedStateXmlWriterTestCase {
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 ResolvedFeatureId.create(ArtifactCoords.newGav("org.jboss.group", "fp1", "1.0"),
                                         "spec1", "create-param", "a"))
-                                .setParam("param", "config", "resolved")
+                                .setConfigParam("param", "config")
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 ResolvedFeatureId.create(ArtifactCoords.newGav("org.jboss.group", "fp1", "1.0"),
@@ -89,7 +88,7 @@ public class ProvisionedStateXmlWriterTestCase {
                                 .build())
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 new ResolvedSpecId(ArtifactCoords.newGav("org.jboss.group", "fp2", "1.0"), "spec3"))
-                                .setIdParam("id-param", "config", "resolved")
+                                .setIdParam("id-param", "config")
                                 .build())
                         .setModel("model")
                         .setName("name")
@@ -105,18 +104,7 @@ public class ProvisionedStateXmlWriterTestCase {
         ProvisionedState newState = validator.validateAndParse(path);
 
         // compare parsed state with the original
-        // feature packs
-        Assert.assertEquals(originalState.getFeaturePacks().size(), newState.getFeaturePacks().size());
-        Iterator<ProvisionedFeaturePack> origFeaturePackIterator = originalState.getFeaturePacks().iterator();
-        Iterator<ProvisionedFeaturePack> parsedFeaturePackIterator = newState.getFeaturePacks().iterator();
-        while(origFeaturePackIterator.hasNext()) {
-            Assert.assertEquals(origFeaturePackIterator.next(), parsedFeaturePackIterator.next());
-        }
-        // configs
-        Assert.assertEquals(originalState.getConfigs().size(), newState.getConfigs().size());
-        for(int i = 0; i < originalState.getConfigs().size(); i++) {
-            assertConfigsEqual(originalState.getConfigs().get(i), newState.getConfigs().get(i));
-        }
+        Assert.assertEquals(originalState, newState);
     }
 
     @Test
@@ -169,16 +157,21 @@ public class ProvisionedStateXmlWriterTestCase {
     }
 
     @Test
-    public void testParams() throws Exception {
+    public void testFeatureParams() throws Exception {
         ProvisionedState originalState = ProvisionedState.builder()
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(
                                 new ResolvedSpecId(ArtifactCoords.newGav("org.jboss.group", "fp", "1.0"), "spec"))
-                                .setIdParam("id-param", "config", "resolved")
-                                .setIdParam("id-param2", "config", new Object())
-                                .setParam("param", "config", "resolved")
+                                .setIdParam("id-param", "config")
+                                .setIdParam("id-param2", "config")
+                                .setConfigParam("param", "config")
                                 .build())
-                        .build())
+                        .addFeature(ProvisionedFeatureBuilder.builder(
+                                ResolvedFeatureId.builder(ArtifactCoords.newGav("org.jboss.group", "fp", "1.0"), "spec2")
+                                        .setParam("id-param", "resolved") // TODO: this resolved value will not have config representation
+                                        .build())
+                                .setConfigParam("param", "config")
+                                .build()))
                 .build();
 
         // marshall and unmarshall
@@ -188,11 +181,14 @@ public class ProvisionedStateXmlWriterTestCase {
         // retrieve the parsedFeature
         ReadFeaturesHandler readFeaturesHandler = new ReadFeaturesHandler();
         newState.getConfigs().get(0).handle(readFeaturesHandler);
-        ProvisionedFeature parsedFeature = readFeaturesHandler.features.get(0);
 
-        // only checking config params here
+        ProvisionedFeature parsedFeature = readFeaturesHandler.features.get(0);
         Assert.assertEquals("config", parsedFeature.getConfigParam("id-param"));
         Assert.assertEquals("config", parsedFeature.getConfigParam("id-param2"));
+        Assert.assertEquals("config", parsedFeature.getConfigParam("param"));
+
+        parsedFeature = readFeaturesHandler.features.get(1);
+        Assert.assertEquals("resolved", parsedFeature.getConfigParam("id-param"));
         Assert.assertEquals("config", parsedFeature.getConfigParam("param"));
     }
 
@@ -208,38 +204,10 @@ public class ProvisionedStateXmlWriterTestCase {
 
     private Path marshallToTempFile(ProvisionedState state) throws Exception {
         final Path path = Files.createTempFile("provisioned-state-", ".xml").toAbsolutePath();
-        log.fine("Config written to " + path.toString());
+        log.info("Config written to " + path.toString());
         ProvisionedStateXmlWriter.getInstance().write(state, path);
         return path;
     }
-
-    private void assertConfigsEqual(ProvisionedConfig origConfig, ProvisionedConfig newConfig) throws ProvisioningException {
-        Assert.assertEquals(origConfig.getModel(), newConfig.getModel());
-        Assert.assertEquals(origConfig.getName(), newConfig.getName());
-        Assert.assertEquals(origConfig.getProperties(), newConfig.getProperties());
-
-        final ReadFeaturesHandler origFeaturesHandler = new ReadFeaturesHandler();
-        origConfig.handle(origFeaturesHandler);
-
-        final ReadFeaturesHandler parsedFeaturesHandler = new ReadFeaturesHandler();
-        newConfig.handle(parsedFeaturesHandler);
-
-        Assert.assertEquals(origFeaturesHandler.features.size(), parsedFeaturesHandler.features.size());
-        for(int i = 0; i < origFeaturesHandler.features.size(); i++) {
-            assertFeaturesEqual(origFeaturesHandler.features.get(i), parsedFeaturesHandler.features.get(i));
-        }
-    }
-
-    private void assertFeaturesEqual(ProvisionedFeature origFeature, ProvisionedFeature newFeature) throws ProvisioningException {
-        Assert.assertEquals(origFeature.getId(), newFeature.getId());
-        Assert.assertEquals(origFeature.getSpecId(), newFeature.getSpecId());
-
-        // compare config values only
-        for(String param : origFeature.getParamNames()) {
-            Assert.assertEquals(origFeature.getConfigParam(param), newFeature.getConfigParam(param));
-        }
-    }
-
 
     /**
      * Simple handler that extracts list of {@link ProvisionedFeature}s from a {@link ProvisionedConfig}.
