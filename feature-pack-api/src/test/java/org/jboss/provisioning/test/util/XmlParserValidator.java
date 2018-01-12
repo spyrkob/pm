@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,11 +64,19 @@ public class XmlParserValidator<T> {
         return validateAndParse(resourcePath, null, null);
     }
 
+    public T validateAndParse(Path p) throws Exception {
+        return validateAndParse(p, null, null);
+    }
+
     public T validateAndParse(String resourcePath, String xsdValidationExceptionMessage,
             String parseExceptionMessage) throws Exception {
 
         final Path p = getResource(resourcePath);
+        return validateAndParse(p, xsdValidationExceptionMessage, parseExceptionMessage);
+    }
 
+    public T validateAndParse(Path p, String xsdValidationExceptionMessage,
+                              String parseExceptionMessage) throws Exception {
         try {
             validate(p);
             if(xsdValidationExceptionMessage != null) {
@@ -81,6 +89,14 @@ public class XmlParserValidator<T> {
             Assert.assertEquals(xsdValidationExceptionMessage, e.getMessage());
         }
 
+        return parse(p, parseExceptionMessage);
+    }
+
+    public T parse(Path p) throws Exception {
+        return parse(p, null);
+    }
+
+    public T parse(Path p, String parseExceptionMessage) throws Exception {
         T result = null;
         try {
             result = parser.parse(Files.newBufferedReader(p, Charset.forName("utf-8")));
