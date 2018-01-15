@@ -65,80 +65,6 @@ public class ConfigModelResolver implements ProvisionedConfig {
         }
     }
 
-    private final class FeatureGroupScopeStack {
-        private List<Map<ResolvedFeatureId, ResolvedFeature>> list;
-        private int last;
-
-        FeatureGroupScopeStack() {
-            list = Collections.singletonList(new HashMap<>());
-        }
-
-        Map<ResolvedFeatureId, ResolvedFeature> peek() {
-            return list.get(last);
-        }
-
-        Map<ResolvedFeatureId, ResolvedFeature> startGroup() {
-            final Map<ResolvedFeatureId, ResolvedFeature> group;
-            if (list.size() == last + 1) {
-                group = new LinkedHashMap<>();
-                list = PmCollections.add(list, group);
-                ++last;
-            } else {
-                group = list.get(++last);
-            }
-            return group;
-        }
-
-        Map<ResolvedFeatureId, ResolvedFeature> endGroup() throws ProvisioningException {
-            if (last != 0) {
-                final Map<ResolvedFeatureId, ResolvedFeature> endedGroup = list.get(last--);
-                final Map<ResolvedFeatureId, ResolvedFeature> parentGroup = list.get(last);
-                for (Map.Entry<ResolvedFeatureId, ResolvedFeature> entry : endedGroup.entrySet()) {
-                    final ResolvedFeature parentFeature = parentGroup.get(entry.getKey());
-                    if (parentFeature == null) {
-                        parentGroup.put(entry.getKey(), entry.getValue());
-                        if(last == 0) {
-                            addToSpecFeatures(entry.getValue());
-                        }
-                    } else {
-                        parentFeature.merge(entry.getValue(), true);
-                    }
-                }
-                endedGroup.clear();
-            }
-            return list.get(last);
-        }
-
-        void addFeature(ResolvedFeature feature) throws ProvisioningDescriptionException {
-            if(feature.id == null) {
-                addToSpecFeatures(feature);
-                return;
-            }
-            list.get(last).put(feature.id, feature);
-            if (last == 0) {
-                addToSpecFeatures(feature);
-            }
-        }
-
-        void merge(ResolvedFeature feature) throws ProvisioningException {
-            if(feature.id == null) {
-                addToSpecFeatures(feature);
-                return;
-            }
-            final ResolvedFeature localFeature = list.get(last).get(feature.id);
-            if(localFeature == null) {
-                list.get(last).put(feature.id, feature);
-                addToSpecFeatures(feature);
-                return;
-            }
-            localFeature.merge(feature, false);
-        }
-
-        void reset() {
-            list = Collections.emptyList();
-        }
-    }
-
     static ConfigModelResolver forId(ProvisioningRuntimeBuilder rt, ConfigId id) throws ProvisioningException {
         return new ConfigModelResolver(rt, id);
     }
@@ -146,8 +72,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
     final ConfigId id;
     private Map<String, String> props = Collections.emptyMap();
     Map<String, ConfigId> configDeps = Collections.emptyMap();
-    private FeatureGroupScopeStack featureGroupStack = new FeatureGroupScopeStack();
-    private Map<ResolvedFeatureId, ResolvedFeature> featuresById = featureGroupStack.peek();
+    private Map<ResolvedFeatureId, ResolvedFeature> featuresById = Collections.emptyMap();
     private Map<ResolvedSpecId, SpecFeatures> featuresBySpec = new LinkedHashMap<>();
 
     private CapabilityResolver capResolver = new CapabilityResolver();
@@ -163,7 +88,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
 
     private ConfigModelResolver(ProvisioningRuntimeBuilder rt, ConfigId id) throws ProvisioningException {
         this.id = id;
-        this.configStack = new ConfigModelStack(rt);
+        this.configStack = new ConfigModelStack(rt, this);
     }
 
     void overwriteProps(Map<String, String> props) {
@@ -194,16 +119,15 @@ public class ConfigModelResolver implements ProvisionedConfig {
         return configStack.popConfig();
     }
 
+    void setFgScope(Map<ResolvedFeatureId, ResolvedFeature> scope) {
+        this.featuresById = scope;
+    }
+
     boolean pushGroup(FeatureGroupSupport group) throws ProvisioningException {
-        if(configStack.pushGroup(group)) {
-            featuresById = featureGroupStack.startGroup();
-            return true;
-        }
-        return false;
+        return configStack.pushGroup(group);
     }
 
     boolean popGroup() throws ProvisioningException {
-        featuresById = featureGroupStack.endGroup();
         return configStack.popGroup();
     }
 
@@ -216,7 +140,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
             }
         }
         final ResolvedFeature feature = new ResolvedFeature(id, spec, resolvedParams, resolvedDeps, ++featureIncludeCount);
-        featureGroupStack.addFeature(feature);
+        configStack.addFeature(feature);
         return feature;
     }
 
@@ -224,7 +148,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
         return featuresById.containsKey(id);
     }
 
-    private void addToSpecFeatures(final ResolvedFeature feature) {
+    void addToSpecFeatures(final ResolvedFeature feature) {
         SpecFeatures features = featuresBySpec.get(feature.spec.id);
         if(features == null) {
             features = new SpecFeatures(feature.spec);
@@ -259,7 +183,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
         if(!other.featuresBySpec.isEmpty()) {
             for(Map.Entry<ResolvedSpecId, SpecFeatures> entry : other.featuresBySpec.entrySet()) {
                 for(ResolvedFeature feature : entry.getValue().list) {
-                    featureGroupStack.merge(feature.copy(++featureIncludeCount));
+                    configStack.merge(feature.copy(++featureIncludeCount));
                 }
             }
         }
@@ -366,7 +290,7 @@ public class ConfigModelResolver implements ProvisionedConfig {
         }
 
         featuresById = Collections.emptyMap();
-        featureGroupStack.reset();
+        //featureGroupStack.reset();
         featuresBySpec = Collections.emptyMap();
         return this;
     }

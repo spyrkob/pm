@@ -18,9 +18,11 @@
 package org.jboss.provisioning.runtime;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureGroup;
@@ -35,13 +37,28 @@ class ConfigModelStack {
     private class ConfigScope {
 
         final ConfigModel config;
-        List<List<ResolvedFeatureGroupConfig>> groupStack = new ArrayList<>();
-        int lastOnStack = -1;
+        private final boolean pushedFgScope;
+        private List<List<ResolvedFeatureGroupConfig>> groupStack = new ArrayList<>();
+        private int lastOnStack = -1;
 
         ConfigScope(ConfigModel config) throws ProvisioningException {
             this.config = config;
             if(config != null) {
-                push(config);
+                pushedFgScope = push(config);
+                if(pushedFgScope) {
+                    newFgScope();
+                }
+            } else {
+                pushedFgScope = false;
+            }
+        }
+
+        void complete() throws ProvisioningException {
+            if(pushedFgScope) {
+                mergeFgScope();
+            }
+            for (int i = lastOnStack; i >= 0; --i) {
+                rt.processIncludedFeatures(groupStack.get(i));
             }
         }
 
@@ -79,12 +96,6 @@ class ConfigModelStack {
             final boolean processed = rt.processIncludedFeatures(last);
             last.clear();
             return processed;
-        }
-
-        void processIncludedFeatures() throws ProvisioningException {
-            for (int i = lastOnStack; i >= 0; --i) {
-                rt.processIncludedFeatures(groupStack.get(i));
-            }
         }
 
         boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
@@ -150,13 +161,19 @@ class ConfigModelStack {
     }
 
     final ProvisioningRuntimeBuilder rt;
+    final ConfigModelResolver configResolver;
     private List<ConfigScope> configs = new ArrayList<>();
     private ConfigScope lastConfig;
 
-    ConfigModelStack(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
+    private List<Map<ResolvedFeatureId, ResolvedFeature>> fgFeatures = new ArrayList<>();
+    private int lastFg = -1;
+
+    ConfigModelStack(ProvisioningRuntimeBuilder rt, ConfigModelResolver configResolver) throws ProvisioningException {
         this.rt = rt;
+        this.configResolver = configResolver;
         lastConfig = new ConfigScope(null);
         configs.add(lastConfig);
+        newFgScope();
     }
 
     void pushConfig(ConfigModel model) throws ProvisioningException {
@@ -168,16 +185,78 @@ class ConfigModelStack {
         final ConfigScope result = lastConfig;
         configs.remove(configs.size() - 1);
         lastConfig = configs.get(configs.size() - 1);
-        result.processIncludedFeatures();
+        result.complete();
         return result.config;
     }
 
     boolean pushGroup(FeatureGroupSupport fg) throws ProvisioningException {
-        return lastConfig.push(fg);
+        if(!lastConfig.push(fg)) {
+            return false;
+        }
+        newFgScope();
+        return true;
     }
 
     boolean popGroup() throws ProvisioningException {
+        mergeFgScope();
         return lastConfig.pop();
+    }
+
+    private void newFgScope() {
+        final Map<ResolvedFeatureId, ResolvedFeature> fgScope;
+        ++lastFg;
+        if (fgFeatures.size() == lastFg) {
+            fgScope = new LinkedHashMap<>();
+            fgFeatures.add(fgScope);
+        } else {
+            fgScope = fgFeatures.get(lastFg);
+        }
+        configResolver.setFgScope(fgScope);
+    }
+
+    private void mergeFgScope() throws ProvisioningException {
+        if(lastFg != 0) {
+            final Map<ResolvedFeatureId, ResolvedFeature> endedGroup = fgFeatures.get(lastFg--);
+            final Map<ResolvedFeatureId, ResolvedFeature> parentGroup = fgFeatures.get(lastFg);
+            for (Map.Entry<ResolvedFeatureId, ResolvedFeature> entry : endedGroup.entrySet()) {
+                final ResolvedFeature parentFeature = parentGroup.get(entry.getKey());
+                if (parentFeature == null) {
+                    parentGroup.put(entry.getKey(), entry.getValue());
+                    if(lastFg == 0) {
+                        configResolver.addToSpecFeatures(entry.getValue());
+                    }
+                } else {
+                    parentFeature.merge(entry.getValue(), true);
+                }
+            }
+            endedGroup.clear();
+            configResolver.setFgScope(parentGroup);
+        }
+    }
+
+    void addFeature(ResolvedFeature feature) throws ProvisioningDescriptionException {
+        if(feature.id == null) {
+            configResolver.addToSpecFeatures(feature);
+            return;
+        }
+        fgFeatures.get(lastFg).put(feature.id, feature);
+        if (lastFg == 0) {
+            configResolver.addToSpecFeatures(feature);
+        }
+    }
+
+    void merge(ResolvedFeature feature) throws ProvisioningException {
+        if(feature.id == null) {
+            configResolver.addToSpecFeatures(feature);
+            return;
+        }
+        final ResolvedFeature localFeature = fgFeatures.get(lastFg).get(feature.id);
+        if(localFeature == null) {
+            fgFeatures.get(lastFg).put(feature.id, feature);
+            configResolver.addToSpecFeatures(feature);
+            return;
+        }
+        localFeature.merge(feature, false);
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
@@ -195,7 +274,7 @@ class ConfigModelStack {
     }
 
     private boolean isRelevant(ResolvedFeatureGroupConfig resolvedFg) {
-        if(resolvedFg.fg.getId() == null || lastConfig == null) {
+        if(resolvedFg.fg.getId() == null) {
             return true;
         }
         if(!lastConfig.isRelevant(resolvedFg)) {
