@@ -18,7 +18,6 @@
 package org.jboss.provisioning.runtime;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +25,6 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.config.FeatureGroupSupport;
-import org.jboss.provisioning.util.PmCollections;
 
 /**
  * @author Alexey Loubyansky
@@ -34,12 +32,13 @@ import org.jboss.provisioning.util.PmCollections;
  */
 class ConfigModelStack {
 
-    private class Level {
+    private class ConfigScope {
 
         final ConfigModel config;
         List<List<ResolvedFeatureGroupConfig>> groupStack = new ArrayList<>();
+        int lastOnStack = -1;
 
-        Level(ConfigModel config) throws ProvisioningException {
+        ConfigScope(ConfigModel config) throws ProvisioningException {
             this.config = config;
             if(config != null) {
                 push(config);
@@ -47,36 +46,50 @@ class ConfigModelStack {
         }
 
         boolean push(FeatureGroupSupport fg) throws ProvisioningException {
-            List<ResolvedFeatureGroupConfig> relevantFgs = Collections.emptyList();
+            final List<ResolvedFeatureGroupConfig> relevantFgs = lastOnStack == groupStack.size() - 1 ?
+                    new ArrayList<>(fg.getExternalFeatureGroups().size() + 1) : groupStack.get(lastOnStack + 1);
             if(fg.hasExternalFeatureGroups()) {
                 for(Map.Entry<String, FeatureGroup> entry : fg.getExternalFeatureGroups().entrySet()) {
                     final ResolvedFeatureGroupConfig resolvedFg = rt.resolveFg(entry.getKey(), entry.getValue());
                     if(ConfigModelStack.this.isRelevant(resolvedFg)) {
-                        relevantFgs = PmCollections.add(relevantFgs, resolvedFg);
+                        relevantFgs.add(resolvedFg);
                     }
                 }
             }
             final ResolvedFeatureGroupConfig resolvedFg = rt.resolveFg(null, fg);
             if(resolvedFg != null && ConfigModelStack.this.isRelevant(resolvedFg)) {
-                relevantFgs = PmCollections.add(relevantFgs, resolvedFg);
+                relevantFgs.add(resolvedFg);
             }
             if(relevantFgs.isEmpty()) {
                 return false;
             }
-            groupStack.add(relevantFgs);
+
+            ++lastOnStack;
+            if(lastOnStack == groupStack.size()) {
+                groupStack.add(relevantFgs);
+            }
             return true;
         }
 
-        List<ResolvedFeatureGroupConfig> pop() {
-            if(groupStack.isEmpty()) {
+        boolean pop() throws ProvisioningException {
+            if(lastOnStack < 0) {
                 throw new IllegalStateException("Feature group stack is empty");
             }
-            return groupStack.remove(groupStack.size() - 1);
+            final List<ResolvedFeatureGroupConfig> last = groupStack.get(lastOnStack--);
+            final boolean processed = rt.processIncludedFeatures(last);
+            last.clear();
+            return processed;
+        }
+
+        void processIncludedFeatures() throws ProvisioningException {
+            for (int i = lastOnStack; i >= 0; --i) {
+                rt.processIncludedFeatures(groupStack.get(i));
+            }
         }
 
         boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
             boolean included = false;
-            for(int i = groupStack.size() - 1; i >= 0; --i) {
+            for(int i = lastOnStack; i >= 0; --i) {
                 final List<ResolvedFeatureGroupConfig> groups = groupStack.get(i);
                 for(int j = groups.size() - 1; j >= 0; --j) {
                     final ResolvedFeatureGroupConfig stacked = groups.get(j);
@@ -116,13 +129,10 @@ class ConfigModelStack {
         }
 
         private boolean isRelevant(ResolvedFeatureGroupConfig resolvedFg) {
-            if(groupStack.isEmpty()) {
-                return true;
-            }
             if(resolvedFg.fg.getId() == null) {
                 return true;
             }
-            for(int i = groupStack.size() - 1; i >= 0; --i) {
+            for(int i = lastOnStack; i >= 0; --i) {
                 final List<ResolvedFeatureGroupConfig> groups = groupStack.get(i);
                 for(int j = groups.size() - 1; j >= 0; --j) {
                     final ResolvedFeatureGroupConfig stacked = groups.get(j);
@@ -140,49 +150,43 @@ class ConfigModelStack {
     }
 
     final ProvisioningRuntimeBuilder rt;
-    private List<Level> levels = new ArrayList<>();
-    private Level top;
+    private List<ConfigScope> configs = new ArrayList<>();
+    private ConfigScope lastConfig;
 
     ConfigModelStack(ProvisioningRuntimeBuilder rt) throws ProvisioningException {
         this.rt = rt;
-        top = new Level(null);
-        levels.add(top);
-    }
-
-    ConfigModel getCurrentConfig() {
-        return top.config;
+        lastConfig = new ConfigScope(null);
+        configs.add(lastConfig);
     }
 
     void pushConfig(ConfigModel model) throws ProvisioningException {
-        top = new Level(model);
-        levels.add(top);
+        lastConfig = new ConfigScope(model);
+        configs.add(lastConfig);
     }
 
     ConfigModel popConfig() throws ProvisioningException {
-        final Level result = top;
-        levels.remove(levels.size() - 1);
-        top = levels.get(levels.size() - 1);
-        for(int i = result.groupStack.size() - 1; i >= 0; --i) {
-            rt.processIncludedFeatures(result.groupStack.get(i));
-        }
+        final ConfigScope result = lastConfig;
+        configs.remove(configs.size() - 1);
+        lastConfig = configs.get(configs.size() - 1);
+        result.processIncludedFeatures();
         return result.config;
     }
 
     boolean pushGroup(FeatureGroupSupport fg) throws ProvisioningException {
-        return top.push(fg);
+        return lastConfig.push(fg);
     }
 
     boolean popGroup() throws ProvisioningException {
-        return rt.processIncludedFeatures(top.pop());
+        return lastConfig.pop();
     }
 
     boolean isFilteredOut(ResolvedSpecId specId, final ResolvedFeatureId id) {
-        if(top.isFilteredOut(specId, id)) {
+        if(lastConfig.isFilteredOut(specId, id)) {
             return true;
         }
-        if(levels.size() > 1) {
-            for (int i = levels.size() - 2; i >= 0; --i) {
-                if (levels.get(i).isFilteredOut(specId, id)) {
+        if(configs.size() > 1) {
+            for (int i = configs.size() - 2; i >= 0; --i) {
+                if (configs.get(i).isFilteredOut(specId, id)) {
                     return true;
                 }
             }
@@ -191,15 +195,15 @@ class ConfigModelStack {
     }
 
     private boolean isRelevant(ResolvedFeatureGroupConfig resolvedFg) {
-        if(resolvedFg.fg.getId() == null || top == null) {
+        if(resolvedFg.fg.getId() == null || lastConfig == null) {
             return true;
         }
-        if(!top.isRelevant(resolvedFg)) {
+        if(!lastConfig.isRelevant(resolvedFg)) {
             return false;
         }
-        if(levels.size() > 1) {
-            for (int i = levels.size() - 2; i >= 0; --i) {
-                if (!levels.get(i).isRelevant(resolvedFg)) {
+        if(configs.size() > 1) {
+            for (int i = configs.size() - 2; i >= 0; --i) {
+                if (!configs.get(i).isRelevant(resolvedFg)) {
                     return false;
                 }
             }

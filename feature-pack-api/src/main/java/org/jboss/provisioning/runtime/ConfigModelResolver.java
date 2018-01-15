@@ -195,19 +195,16 @@ public class ConfigModelResolver implements ProvisionedConfig {
     }
 
     boolean pushGroup(FeatureGroupSupport group) throws ProvisioningException {
-        return configStack.pushGroup(group);
+        if(configStack.pushGroup(group)) {
+            featuresById = featureGroupStack.startGroup();
+            return true;
+        }
+        return false;
     }
 
     boolean popGroup() throws ProvisioningException {
-        return configStack.popGroup();
-    }
-
-    void startGroup() {
-        featuresById = featureGroupStack.startGroup();
-    }
-
-    void endGroup() throws ProvisioningException {
         featuresById = featureGroupStack.endGroup();
+        return configStack.popGroup();
     }
 
     ResolvedFeature includeFeature(ResolvedFeatureId id, ResolvedFeatureSpec spec, Map<String, Object> resolvedParams, Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps) throws ProvisioningException {

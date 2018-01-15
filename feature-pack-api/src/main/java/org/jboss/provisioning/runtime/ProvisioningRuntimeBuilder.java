@@ -551,10 +551,8 @@ public class ProvisioningRuntimeBuilder {
             return false;
         }
 
-        configResolver.startGroup();
         boolean resolvedFeatures = processConfigItemContainer(originalFg);
         resolvedFeatures |= configResolver.popGroup();
-        configResolver.endGroup();
 
         if(includedFg.hasItems()) {
             resolvedFeatures |= processConfigItemContainer(includedFg);
