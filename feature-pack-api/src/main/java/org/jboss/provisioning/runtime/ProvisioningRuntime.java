@@ -173,7 +173,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         this.pluginsDir = builder.pluginsDir;
         this.fpRuntimes = builder.fpRuntimes;
         this.operation = builder.operation;
-        this.configs = builder.getConfigList();
+        this.configs = builder.getResolvedConfigs();
         parameters = builder.rtParams;
 
         if(configs.size() > 1) {

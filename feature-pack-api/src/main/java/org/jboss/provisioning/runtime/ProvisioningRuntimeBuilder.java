@@ -102,10 +102,10 @@ public class ProvisioningRuntimeBuilder {
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
     private final MessageWriter messageWriter;
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
-    List<ConfigModelResolver> anonymousConfigs = Collections.emptyList();
-    Map<String, ConfigModelResolver> nameOnlyConfigs = Collections.emptyMap();
-    Map<String, ConfigModelResolver> modelOnlyConfigs = Collections.emptyMap();
-    Map<String, Map<String, ConfigModelResolver>> namedModelConfigs = Collections.emptyMap();
+    List<ConfigModelStack> anonymousConfigs = Collections.emptyList();
+    Map<String, ConfigModelStack> nameOnlyConfigs = Collections.emptyMap();
+    Map<String, ConfigModelStack> modelOnlyConfigs = Collections.emptyMap();
+    Map<String, Map<String, ConfigModelStack>> namedModelConfigs = Collections.emptyMap();
     Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
     Map<String, String> rtParams = Collections.emptyMap();
 
@@ -120,7 +120,7 @@ public class ProvisioningRuntimeBuilder {
 
     private FeaturePackRuntime.Builder thisFpOrigin;
     private FeaturePackRuntime.Builder currentFp;
-    private ConfigModelResolver configResolver;
+    private ConfigModelStack configStack;
 
     private FpStack fpConfigStack;
 
@@ -156,112 +156,21 @@ public class ProvisioningRuntimeBuilder {
         return this;
     }
 
-    List<ProvisionedConfig> getConfigList() throws ProvisioningDescriptionException {
-        final int configsTotal = anonymousConfigs.size() + nameOnlyConfigs.size() + namedModelConfigs.size();
-        if(configsTotal == 0) {
-            return Collections.emptyList();
-        }
-
-        List<ProvisionedConfig> configList = new ArrayList<>(configsTotal);
-        if(!anonymousConfigs.isEmpty()) {
-            for (ConfigModelResolver config : anonymousConfigs) {
-                orderConfig(config, configList, Collections.emptySet());
-            }
-        }
-        if(!nameOnlyConfigs.isEmpty()) {
-            for(ConfigModelResolver config : nameOnlyConfigs.values()) {
-                if(contains(configList, config.id)) {
-                    continue;
-                }
-                orderConfig(config, configList, Collections.emptySet());
-            }
-        }
-        if(!namedModelConfigs.isEmpty()) {
-            for(Map.Entry<String, Map<String, ConfigModelResolver>> entry : namedModelConfigs.entrySet()) {
-                for(ConfigModelResolver config : entry.getValue().values()) {
-                    if(contains(configList, config.id)) {
-                        continue;
-                    }
-                    orderConfig(config, configList, Collections.emptySet());
-                }
-            }
-        }
-        return configList;
-    }
-
-    private void orderConfig(ConfigModelResolver config, List<ProvisionedConfig> configList, Set<ConfigId> scheduledIds) throws ProvisioningDescriptionException {
-        if(config.configDeps.isEmpty()) {
-            configList.add(config);
-            return;
-        }
-        if(!config.id.isAnonymous()) {
-            scheduledIds = PmCollections.add(scheduledIds, config.id);
-        }
-        for(ConfigId depId : config.configDeps.values()) {
-            if(scheduledIds.contains(depId) || contains(configList, depId)) {
-                continue;
-            }
-
-            if(depId.isModelOnly()) {
-                final Map<String, ConfigModelResolver> configs = namedModelConfigs.get(depId.getModel());
-                if(configs == null) {
-                    throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
-                }
-                for(ConfigModelResolver dep : configs.values()) {
-                    if(contains(configList, dep.id)) {
-                        continue;
-                    }
-                    orderConfig(dep, configList, scheduledIds);
-                }
-            } else {
-                final ConfigModelResolver configMr;
-                if (depId.getModel() == null) {
-                    configMr = nameOnlyConfigs.get(depId.getName());
-                } else {
-                    final Map<String, ConfigModelResolver> configs = namedModelConfigs.get(depId.getModel());
-                    if(configs == null) {
-                        throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
-                    }
-                    configMr = configs.get(depId.getName());
-                }
-                if(configMr == null) {
-                    throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
-                }
-                if(contains(configList, configMr.id)) {
-                    continue;
-                }
-                orderConfig(configMr, configList, scheduledIds);
-            }
-        }
-        scheduledIds = PmCollections.remove(scheduledIds, config.id);
-        configList.add(config);
-    }
-
-    private boolean contains(List<ProvisionedConfig> configList, ConfigId depId) {
-        int i = 0;
-        while(i < configList.size()) {
-            if(((ConfigModelResolver)configList.get(i++)).id.equals(depId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public ProvisioningRuntime build() throws ProvisioningException {
 
         fpConfigStack = new FpStack(config);
 
         // the configs are processed in the reverse order to correctly implement config overwrites
 
-        List<ConfigModelResolver> fpConfigResolvers = Collections.emptyList();
+        List<ConfigModelStack> fpConfigResolvers = Collections.emptyList();
         for(int i = config.getDefinedConfigs().size() - 1; i >= 0; --i) {
             final ConfigModel config = this.config.getDefinedConfigs().get(i);
             if(fpConfigStack.isFilteredOut(config.getId(), true)) {
                 continue;
             }
-            configResolver = getConfigResolver(config.getId());
-            configResolver.pushConfig(config);
-            fpConfigResolvers = PmCollections.add(fpConfigResolvers, configResolver);
+            configStack = getConfigStack(config.getId());
+            configStack.pushConfig(config);
+            fpConfigResolvers = PmCollections.add(fpConfigResolvers, configStack);
         }
 
         final Collection<FeaturePackConfig> fpConfigs = config.getFeaturePackDeps();
@@ -278,7 +187,7 @@ public class ProvisioningRuntimeBuilder {
         }
 
         for(int i = fpConfigResolvers.size() - 1; i>= 0; --i) {
-            final ConfigModelResolver configResolver = fpConfigResolvers.get(i);
+            final ConfigModelStack configResolver = fpConfigResolvers.get(i);
             final ConfigModel config = configResolver.popConfig();
             if(config.getId().isModelOnly()) {
                 recordModelOnlyConfig(null, config);
@@ -287,7 +196,7 @@ public class ProvisioningRuntimeBuilder {
             processConfig(configResolver, config);
         }
 
-        resolveConfigs();
+        mergeModelOnlyConfigs();
 
         switch(fpRtBuildersOrdered.size()) {
             case 0: {
@@ -313,18 +222,7 @@ public class ProvisioningRuntimeBuilder {
         return new ProvisioningRuntime(this, messageWriter);
     }
 
-    private void resolveConfigs() throws ProvisioningException {
-        if(!anonymousConfigs.isEmpty()) {
-            for(ConfigModelResolver config : anonymousConfigs) {
-                config.resolve();
-            }
-        }
-        if(!nameOnlyConfigs.isEmpty()) {
-            for(Map.Entry<String, ConfigModelResolver> entry : nameOnlyConfigs.entrySet()) {
-                entry.getValue().resolve();
-            }
-        }
-
+    private void mergeModelOnlyConfigs() throws ProvisioningException {
         if(!modelOnlyConfigSpecs.isEmpty()) {
             for(int i = 0; i < modelOnlyConfigSpecs.size(); ++i) {
                 final ConfigModel modelOnlySpec = modelOnlyConfigSpecs.get(i);
@@ -335,40 +233,35 @@ public class ProvisioningRuntimeBuilder {
                 final ArtifactCoords.Gav fpGav = modelOnlyGavs.get(i);
                 thisFpOrigin = fpGav == null ? null : loadFpBuilder(modelOnlyGavs.get(i));
                 currentFp = thisFpOrigin;
-                if(processConfig(getConfigResolver(modelOnlySpec.getId()), modelOnlySpec) && currentFp != null && !currentFp.ordered) {
+                if(processConfig(getConfigStack(modelOnlySpec.getId()), modelOnlySpec) && currentFp != null && !currentFp.ordered) {
                     orderFpRtBuilder(currentFp);
                 }
             }
         }
-        if(!modelOnlyConfigs.isEmpty()) {
-            final Iterator<Map.Entry<String, ConfigModelResolver>> i = modelOnlyConfigs.entrySet().iterator();
-            if(modelOnlyConfigs.size() == 1) {
-                final Map.Entry<String, ConfigModelResolver> entry = i.next();
-                final Map<String, ConfigModelResolver> targetConfigs = namedModelConfigs.get(entry.getKey());
+        if(modelOnlyConfigs.isEmpty()) {
+            return;
+        }
+        final Iterator<Map.Entry<String, ConfigModelStack>> i = modelOnlyConfigs.entrySet().iterator();
+        if (modelOnlyConfigs.size() == 1) {
+            final Map.Entry<String, ConfigModelStack> entry = i.next();
+            final Map<String, ConfigModelStack> targetConfigs = namedModelConfigs.get(entry.getKey());
+            if (targetConfigs != null) {
+                for (Map.Entry<String, ConfigModelStack> targetConfig : targetConfigs.entrySet()) {
+                    targetConfig.getValue().merge(entry.getValue());
+                }
+            }
+        } else {
+            while (i.hasNext()) {
+                final Map.Entry<String, ConfigModelStack> entry = i.next();
+                final Map<String, ConfigModelStack> targetConfigs = namedModelConfigs.get(entry.getKey());
                 if (targetConfigs != null) {
-                    for (Map.Entry<String, ConfigModelResolver> targetConfig : targetConfigs.entrySet()) {
+                    for (Map.Entry<String, ConfigModelStack> targetConfig : targetConfigs.entrySet()) {
                         targetConfig.getValue().merge(entry.getValue());
                     }
                 }
-            } else {
-                while (i.hasNext()) {
-                    final Map.Entry<String, ConfigModelResolver> entry = i.next();
-                    final Map<String, ConfigModelResolver> targetConfigs = namedModelConfigs.get(entry.getKey());
-                    if (targetConfigs != null) {
-                        for (Map.Entry<String, ConfigModelResolver> targetConfig : targetConfigs.entrySet()) {
-                            targetConfig.getValue().merge(entry.getValue());
-                        }
-                    }
-                }
-            }
-            modelOnlyConfigs = Collections.emptyMap();
-        }
-
-        for(Map<String, ConfigModelResolver> configMap : namedModelConfigs.values()) {
-            for(Map.Entry<String, ConfigModelResolver> configEntry : configMap.entrySet()) {
-                configEntry.getValue().resolve();
             }
         }
+        modelOnlyConfigs = Collections.emptyMap();
     }
 
     private void processFpConfig(FeaturePackConfig fpConfig) throws ProvisioningException {
@@ -376,29 +269,29 @@ public class ProvisioningRuntimeBuilder {
         thisFpOrigin = loadFpBuilder(fpConfig.getGav());
         currentFp = thisFpOrigin;
 
-        List<ConfigModelResolver> fpConfigResolvers = Collections.emptyList();
+        List<ConfigModelStack> fpConfigStacks = Collections.emptyList();
         for(int i = fpConfig.getDefinedConfigs().size() - 1; i >= 0; --i) {
             final ConfigModel config = fpConfig.getDefinedConfigs().get(i);
             if(fpConfigStack.isFilteredOut(config.getId(), true)) {
                 continue;
             }
-            configResolver = getConfigResolver(config.getId());
-            configResolver.pushConfig(config);
-            fpConfigResolvers = PmCollections.add(fpConfigResolvers, configResolver);
+            configStack = getConfigStack(config.getId());
+            configStack.pushConfig(config);
+            fpConfigStacks = PmCollections.add(fpConfigStacks, configStack);
         }
 
-        List<ConfigModelResolver> specResolvers = Collections.emptyList();
+        List<ConfigModelStack> specConfigStacks = Collections.emptyList();
         for(int i = currentFp.spec.getDefinedConfigs().size() - 1; i >= 0; --i) {
             final ConfigModel config = currentFp.spec.getDefinedConfigs().get(i);
             if(fpConfigStack.isFilteredOut(config.getId(), false)) {
                 continue;
             }
-            configResolver = getConfigResolver(config.getId());
-            configResolver.pushConfig(config);
-            specResolvers = PmCollections.add(specResolvers, configResolver);
+            configStack = getConfigStack(config.getId());
+            configStack.pushConfig(config);
+            specConfigStacks = PmCollections.add(specConfigStacks, configStack);
         }
 
-        configResolver = null;
+        configStack = null;
 
         boolean extendedStackLevel = false;
         if(currentFp.spec.hasFeaturePackDeps()) {
@@ -415,14 +308,14 @@ public class ProvisioningRuntimeBuilder {
 
         boolean contributed = false;
 
-        for(int i = specResolvers.size() - 1; i >= 0; --i) {
-            final ConfigModelResolver configResolver = specResolvers.get(i);
-            final ConfigModel config = configResolver.popConfig();
+        for(int i = specConfigStacks.size() - 1; i >= 0; --i) {
+            final ConfigModelStack configStack = specConfigStacks.get(i);
+            final ConfigModel config = configStack.popConfig();
             if(config.getId().isModelOnly()) {
                 recordModelOnlyConfig(fpConfig.getGav(), config);
                 continue;
             }
-            contributed |= processConfig(configResolver, config);
+            contributed |= processConfig(configStack, config);
         }
 
         if(fpConfig.isInheritPackages()) {
@@ -444,14 +337,14 @@ public class ProvisioningRuntimeBuilder {
             }
         }
 
-        for(int i = fpConfigResolvers.size() - 1; i>= 0; --i) {
-            final ConfigModelResolver configResolver = fpConfigResolvers.get(i);
-            final ConfigModel config = configResolver.popConfig();
+        for(int i = fpConfigStacks.size() - 1; i>= 0; --i) {
+            final ConfigModelStack configStack = fpConfigStacks.get(i);
+            final ConfigModel config = configStack.popConfig();
             if(config.getId().isModelOnly()) {
                 recordModelOnlyConfig(fpConfig.getGav(), config);
                 continue;
             }
-            contributed |= processConfig(configResolver, config);
+            contributed |= processConfig(configStack, config);
         }
 
         if (extendedStackLevel) {
@@ -472,75 +365,74 @@ public class ProvisioningRuntimeBuilder {
         fpConfigStack.recordStack();
     }
 
-    private boolean processConfig(ConfigModelResolver configResolver, ConfigModel config) throws ProvisioningException {
-        if(this.configResolver != null) {
-            throw new IllegalStateException();
-        }
-        this.configResolver = configResolver;
-        configResolver.overwriteProps(config.getProperties());
-        configResolver.overwriteConfigDeps(config.getConfigDeps());
+    private boolean processConfig(ConfigModelStack configStack, ConfigModel config) throws ProvisioningException {
+        this.configStack = configStack;
+        configStack.overwriteProps(config.getProperties());
+        configStack.overwriteConfigDeps(config.getConfigDeps());
         try {
             if(config.hasPackageDeps()) {
                 processPackageDeps(config);
             }
             processConfigItemContainer(config);
-            this.configResolver = null;
+            this.configStack = null;
             return true; // the config may be empty but it may tigger model-only merge into it
         } catch (ProvisioningException e) {
             throw new ProvisioningException(Errors.failedToResolveConfigSpec(config.getModel(), config.getName()), e);
         }
     }
 
-    private ConfigModelResolver getConfigResolver(ConfigId config) throws ProvisioningException {
-        if(config.getModel() == null) {
-            if(config.getName() == null) {
-                final ConfigModelResolver modelBuilder = ConfigModelResolver.forId(this, config);
-                anonymousConfigs = PmCollections.add(anonymousConfigs, modelBuilder);
-                return modelBuilder;
+    private ConfigModelStack getConfigStack(ConfigId id) throws ProvisioningException {
+        ConfigModelStack configStack;
+        if(id.getModel() == null) {
+            if(id.getName() == null) {
+                configStack = new ConfigModelStack(id, this);
+                anonymousConfigs = PmCollections.add(anonymousConfigs, configStack);
+                return configStack;
             }
-            ConfigModelResolver modelBuilder = nameOnlyConfigs.get(config.getName());
-            if(modelBuilder == null) {
-                modelBuilder = ConfigModelResolver.forId(this, config);
-                nameOnlyConfigs = PmCollections.putLinked(nameOnlyConfigs, config.getName(), modelBuilder);
+            configStack = nameOnlyConfigs.get(id.getName());
+            if(configStack == null) {
+                configStack = new ConfigModelStack(id, this);
+                nameOnlyConfigs = PmCollections.putLinked(nameOnlyConfigs, id.getName(), configStack);
             }
-            return modelBuilder;
+            return configStack;
         }
-        if(config.getName() == null) {
-            ConfigModelResolver modelBuilder = modelOnlyConfigs.get(config.getModel());
-            if(modelBuilder == null) {
-                modelBuilder = ConfigModelResolver.forId(this, config);
-                modelOnlyConfigs = PmCollections.putLinked(modelOnlyConfigs, config.getModel(), modelBuilder);
+        if(id.getName() == null) {
+            configStack = modelOnlyConfigs.get(id.getModel());
+            if(configStack == null) {
+                configStack = new ConfigModelStack(id, this);
+                modelOnlyConfigs = PmCollections.putLinked(modelOnlyConfigs, id.getModel(), configStack);
             }
-            return modelBuilder;
+            return configStack;
         }
 
-        Map<String, ConfigModelResolver> namedConfigs = namedModelConfigs.get(config.getModel());
+        Map<String, ConfigModelStack> namedConfigs = namedModelConfigs.get(id.getModel());
         if(namedConfigs == null) {
-            final ConfigModelResolver modelBuilder = ConfigModelResolver.forId(this, config);
-            namedConfigs = Collections.singletonMap(config.getName(), modelBuilder);
-            namedModelConfigs = PmCollections.putLinked(namedModelConfigs, config.getModel(), namedConfigs);
-            return modelBuilder;
+            configStack = new ConfigModelStack(id, this);
+            namedConfigs = Collections.singletonMap(id.getName(), configStack);
+            namedModelConfigs = PmCollections.putLinked(namedModelConfigs, id.getModel(), namedConfigs);
+            return configStack;
         }
 
-        ConfigModelResolver modelBuilder = namedConfigs.get(config.getName());
-        if (modelBuilder == null) {
-            if (namedConfigs.size() == 1) {
-                namedConfigs = new LinkedHashMap<>(namedConfigs);
-                if (namedModelConfigs.size() == 1) {
-                    namedModelConfigs = new LinkedHashMap<>(namedModelConfigs);
-                }
-                namedModelConfigs.put(config.getModel(), namedConfigs);
-            }
-            modelBuilder = ConfigModelResolver.forId(this, config);
-            namedConfigs.put(config.getName(), modelBuilder);
+        configStack = namedConfigs.get(id.getName());
+        if(configStack != null) {
+            return configStack;
         }
-        return modelBuilder;
+        if (namedConfigs.size() == 1) {
+            namedConfigs = new LinkedHashMap<>(namedConfigs);
+            if (namedModelConfigs.size() == 1) {
+                namedModelConfigs = new LinkedHashMap<>(namedModelConfigs);
+            }
+            namedModelConfigs.put(id.getModel(), namedConfigs);
+        }
+        configStack = new ConfigModelStack(id, this);
+        namedConfigs.put(id.getName(), configStack);
+        return configStack;
     }
 
     private boolean processFeatureGroup(FeatureGroupSupport includedFg)
             throws ProvisioningException {
 
-        final boolean pushed = configResolver.pushGroup(includedFg);
+        final boolean pushed = configStack.pushGroup(includedFg);
 
         final FeatureGroupSupport originalFg = currentFp.getFeatureGroupSpec(includedFg.getName());
         if(originalFg.hasPackageDeps()) {
@@ -552,7 +444,7 @@ public class ProvisioningRuntimeBuilder {
         }
 
         boolean resolvedFeatures = processConfigItemContainer(originalFg);
-        resolvedFeatures |= configResolver.popGroup();
+        resolvedFeatures |= configStack.popGroup();
 
         if(includedFg.hasItems()) {
             resolvedFeatures |= processConfigItemContainer(includedFg);
@@ -585,15 +477,15 @@ public class ProvisioningRuntimeBuilder {
                 final FeatureConfig includedFc = feature.getValue();
                 if (includedFc != null && includedFc.hasParams()) {
                     final ResolvedFeatureId includedId = feature.getKey();
-                    if (pushedFgConfig.configResolver.isFilteredOut(includedId.specId, includedId)) {
+                    if (pushedFgConfig.configStack.isFilteredOut(includedId.specId, includedId)) {
                         continue;
                     }
                     // make sure the included ID is in fact present on the feature group branch
-                    if (!pushedFgConfig.configResolver.includes(includedId)) {
+                    if (!pushedFgConfig.configStack.includes(includedId)) {
                         throw new ProvisioningException(Errors.featureNotInScope(includedId,
                                 pushedFgConfig.fg.getId() == null ? "'anonymous'" : pushedFgConfig.fg.getId().toString(), currentFp.gav));
                     }
-                    resolvedFeatures |= resolveFeature(pushedFgConfig.configResolver, includedFc);
+                    resolvedFeatures |= resolveFeature(pushedFgConfig.configStack, includedFc);
                 }
             }
         }
@@ -603,7 +495,7 @@ public class ProvisioningRuntimeBuilder {
 
     private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeatureGroupSupport fg)
             throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(configResolver, fg, currentFp.gav);
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(configStack, fg, currentFp.gav);
         resolvedFgc.inheritFeatures = fg.isInheritFeatures();
         if(fg.hasExcludedSpecs()) {
             resolvedFgc.excludedSpecs = resolveSpecIds(currentFp.gav, fg.getExcludedSpecs());
@@ -693,9 +585,9 @@ public class ProvisioningRuntimeBuilder {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
                         resolvedFeatures |= processFeatureGroup(nestedFg);
                     } else if(currentFp != null) {
-                        resolvedFeatures |= resolveFeature(configResolver, (FeatureConfig) item);
+                        resolvedFeatures |= resolveFeature(configStack, (FeatureConfig) item);
                     } else {
-                        throw new ProvisioningDescriptionException(Errors.featureOriginNotSpecified(configResolver.id, (FeatureConfig) item));
+                        throw new ProvisioningDescriptionException(Errors.featureOriginNotSpecified(configStack.id, (FeatureConfig) item));
                     }
                 } catch (ProvisioningException e) {
                     if(currentFp == null) {
@@ -723,15 +615,15 @@ public class ProvisioningRuntimeBuilder {
         return loadFpBuilder(depGav);
     }
 
-    private boolean resolveFeature(ConfigModelResolver modelBuilder, FeatureConfig fc) throws ProvisioningException {
+    private boolean resolveFeature(ConfigModelStack configStack, FeatureConfig fc) throws ProvisioningException {
         final ResolvedFeatureSpec spec = currentFp.getFeatureSpec(fc.getSpecId().getName());
         final ResolvedFeatureId resolvedId = parentFeature == null ? spec.resolveFeatureId(fc.getParams()) : spec.resolveIdFromForeignKey(parentFeature.id, fc.getParentRef(), fc.getParams());
-        if(modelBuilder.isFilteredOut(spec.id, resolvedId)) {
+        if(configStack.isFilteredOut(spec.id, resolvedId)) {
             return false;
         }
 
         final ResolvedFeature myParent = parentFeature;
-        parentFeature = resolveFeatureDepsAndRefs(modelBuilder, spec, resolvedId,
+        parentFeature = resolveFeatureDepsAndRefs(configStack, spec, resolvedId,
                 spec.resolveNonIdParams(parentFeature == null ? null : parentFeature.id, fc.getParentRef(), fc.getParams()), fc.getFeatureDeps());
         if(fc.hasUnsetParams()) {
             parentFeature.unsetAllParams(fc.getUnsetParams(), true);
@@ -744,7 +636,7 @@ public class ProvisioningRuntimeBuilder {
         return true;
     }
 
-    private ResolvedFeature resolveFeatureDepsAndRefs(ConfigModelResolver modelBuilder,
+    private ResolvedFeature resolveFeatureDepsAndRefs(ConfigModelStack configStack,
             final ResolvedFeatureSpec spec, final ResolvedFeatureId resolvedId, Map<String, Object> resolvedParams,
             Collection<FeatureDependencySpec> featureDeps)
             throws ProvisioningException {
@@ -753,7 +645,7 @@ public class ProvisioningRuntimeBuilder {
             processPackageDeps(spec.xmlSpec);
         }
 
-        final ResolvedFeature resolvedFeature = modelBuilder.includeFeature(resolvedId, spec, resolvedParams, resolveFeatureDeps(modelBuilder, featureDeps, spec));
+        final ResolvedFeature resolvedFeature = configStack.includeFeature(resolvedId, spec, resolvedParams, resolveFeatureDeps(configStack, featureDeps, spec));
 
         if(spec.xmlSpec.hasFeatureRefs()) {
             final ResolvedFeature myParent = parentFeature;
@@ -768,10 +660,10 @@ public class ProvisioningRuntimeBuilder {
                 final List<ResolvedFeatureId> refIds = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
                 if(!refIds.isEmpty()) {
                     for (ResolvedFeatureId refId : refIds) {
-                        if (modelBuilder.includes(refId) || modelBuilder.isFilteredOut(refId.specId, refId)) {
+                        if (configStack.includes(refId) || configStack.isFilteredOut(refId.specId, refId)) {
                             continue;
                         }
-                        resolveFeatureDepsAndRefs(modelBuilder, refResolvedSpec, refId, Collections.emptyMap(), Collections.emptyList());
+                        resolveFeatureDepsAndRefs(configStack, refResolvedSpec, refId, Collections.emptyMap(), Collections.emptyList());
                     }
                 }
                 currentFp = originalFp;
@@ -781,7 +673,7 @@ public class ProvisioningRuntimeBuilder {
         return resolvedFeature;
     }
 
-    private Map<ResolvedFeatureId, FeatureDependencySpec> resolveFeatureDeps(ConfigModelResolver modelBuilder,
+    private Map<ResolvedFeatureId, FeatureDependencySpec> resolveFeatureDeps(ConfigModelStack configStack,
             Collection<FeatureDependencySpec> featureDeps, final ResolvedFeatureSpec spec)
             throws ProvisioningException {
         Map<ResolvedFeatureId, FeatureDependencySpec> resolvedDeps = spec.resolveFeatureDeps(this, featureDeps);
@@ -791,13 +683,13 @@ public class ProvisioningRuntimeBuilder {
                     continue;
                 }
                 final ResolvedFeatureId depId = dep.getKey();
-                if(modelBuilder.includes(depId) || modelBuilder.isFilteredOut(depId.specId, depId)) {
+                if(configStack.includes(depId) || configStack.isFilteredOut(depId.specId, depId)) {
                     continue;
                 }
                 final FeatureDependencySpec depSpec = dep.getValue();
                 final FeaturePackRuntime.Builder originalFp = currentFp;
                 currentFp = depSpec.getDependency() == null ? currentFp : getFpDep(depSpec.getDependency());
-                resolveFeatureDepsAndRefs(modelBuilder, currentFp.getFeatureSpec(depId.getSpecId().getName()), depId, Collections.emptyMap(), Collections.emptyList());
+                resolveFeatureDepsAndRefs(configStack, currentFp.getFeatureSpec(depId.getSpecId().getName()), depId, Collections.emptyMap(), Collections.emptyList());
                 currentFp = originalFp;
             }
         }
@@ -932,6 +824,98 @@ public class ProvisioningRuntimeBuilder {
     private void orderFpRtBuilder(final FeaturePackRuntime.Builder fpRtBuilder) {
         this.fpRtBuildersOrdered.add(fpRtBuilder);
         fpRtBuilder.ordered = true;
+    }
+
+    List<ProvisionedConfig> getResolvedConfigs() throws ProvisioningException {
+
+        final int configsTotal = anonymousConfigs.size() + nameOnlyConfigs.size() + namedModelConfigs.size();
+        if(configsTotal == 0) {
+            return Collections.emptyList();
+        }
+
+        List<ProvisionedConfig> configList = new ArrayList<>(configsTotal);
+        if(!anonymousConfigs.isEmpty()) {
+            for (ConfigModelStack config : anonymousConfigs) {
+                orderConfig(config, configList, Collections.emptySet());
+            }
+        }
+        if(!nameOnlyConfigs.isEmpty()) {
+            for(ConfigModelStack config : nameOnlyConfigs.values()) {
+                if(contains(configList, config.id)) {
+                    continue;
+                }
+                orderConfig(config, configList, Collections.emptySet());
+            }
+        }
+        if(!namedModelConfigs.isEmpty()) {
+            for(Map.Entry<String, Map<String, ConfigModelStack>> entry : namedModelConfigs.entrySet()) {
+                for(ConfigModelStack config : entry.getValue().values()) {
+                    if(contains(configList, config.id)) {
+                        continue;
+                    }
+                    orderConfig(config, configList, Collections.emptySet());
+                }
+            }
+        }
+        return configList;
+    }
+
+    private void orderConfig(ConfigModelStack config, List<ProvisionedConfig> configList, Set<ConfigId> scheduledIds) throws ProvisioningException {
+        if(!config.hasConfigDeps()) {
+            configList.add(ResolvedConfig.build(config));
+            return;
+        }
+        if(!config.id.isAnonymous()) {
+            scheduledIds = PmCollections.add(scheduledIds, config.id);
+        }
+        for(ConfigId depId : config.getConfigDeps().values()) {
+            if(scheduledIds.contains(depId) || contains(configList, depId)) {
+                continue;
+            }
+
+            if(depId.isModelOnly()) {
+                final Map<String, ConfigModelStack> configs = namedModelConfigs.get(depId.getModel());
+                if(configs == null) {
+                    throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
+                }
+                for(ConfigModelStack dep : configs.values()) {
+                    if(contains(configList, dep.id)) {
+                        continue;
+                    }
+                    orderConfig(dep, configList, scheduledIds);
+                }
+            } else {
+                final ConfigModelStack configStack;
+                if (depId.getModel() == null) {
+                    configStack = nameOnlyConfigs.get(depId.getName());
+                } else {
+                    final Map<String, ConfigModelStack> configs = namedModelConfigs.get(depId.getModel());
+                    if(configs == null) {
+                        throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
+                    }
+                    configStack = configs.get(depId.getName());
+                }
+                if(configStack == null) {
+                    throw new ProvisioningDescriptionException("Config " + config.id + " has unsatisfied dependency on config " + depId);
+                }
+                if(contains(configList, configStack.id)) {
+                    continue;
+                }
+                orderConfig(configStack, configList, scheduledIds);
+            }
+        }
+        scheduledIds = PmCollections.remove(scheduledIds, config.id);
+        configList.add(ResolvedConfig.build(config));
+    }
+
+    private boolean contains(List<ProvisionedConfig> configList, ConfigId depId) {
+        int i = 0;
+        while(i < configList.size()) {
+            if(((ResolvedConfig)configList.get(i++)).id.equals(depId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void copyResources(FeaturePackRuntime.Builder fpRtBuilder) throws ProvisioningException {
