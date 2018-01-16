@@ -98,18 +98,16 @@ public class ProvisioningRuntimeBuilder {
     final Path workDir;
     final Path layoutDir;
     Path pluginsDir = null;
+    Map<String, String> rtParams = Collections.emptyMap();
+    private final MessageWriter messageWriter;
 
     private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
-    private final MessageWriter messageWriter;
     private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
+
     List<ConfigModelStack> anonymousConfigs = Collections.emptyList();
     Map<String, ConfigModelStack> nameOnlyConfigs = Collections.emptyMap();
     Map<String, ConfigModelStack> modelOnlyConfigs = Collections.emptyMap();
     Map<String, Map<String, ConfigModelStack>> namedModelConfigs = Collections.emptyMap();
-    Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
-    Map<String, String> rtParams = Collections.emptyMap();
-
-    private ResolvedFeature parentFeature;
 
     // this is a stack of model only configs that are resolved and merged after all
     // the named model configs have been resolved. This is done to:
@@ -123,6 +121,8 @@ public class ProvisioningRuntimeBuilder {
     private ConfigModelStack configStack;
 
     private FpStack fpConfigStack;
+
+    private ResolvedFeature parentFeature;
 
     private ProvisioningRuntimeBuilder(final MessageWriter messageWriter) {
         startTime = System.currentTimeMillis();
@@ -198,28 +198,24 @@ public class ProvisioningRuntimeBuilder {
 
         mergeModelOnlyConfigs();
 
-        switch(fpRtBuildersOrdered.size()) {
-            case 0: {
-                fpRuntimes = Collections.emptyMap();
-                break;
-            }
-            case 1: {
-                final FeaturePackRuntime.Builder builder = fpRtBuildersOrdered.get(0);
-                copyResources(builder);
-                fpRuntimes = Collections.singletonMap(builder.gav, builder.build());
-                break;
-            }
-            default: {
-                fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
-                for(FeaturePackRuntime.Builder builder : fpRtBuildersOrdered) {
-                    copyResources(builder);
-                    fpRuntimes.put(builder.gav, builder.build());
-                }
-                fpRuntimes = Collections.unmodifiableMap(fpRuntimes);
-            }
-        }
-
         return new ProvisioningRuntime(this, messageWriter);
+    }
+
+    Map<ArtifactCoords.Gav, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
+        if(fpRtBuildersOrdered.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        if(fpRtBuildersOrdered.size() == 1) {
+            final FeaturePackRuntime.Builder builder = fpRtBuildersOrdered.get(0);
+            copyResources(builder);
+            return Collections.singletonMap(builder.gav, builder.build());
+        }
+        final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
+        for (FeaturePackRuntime.Builder builder : fpRtBuildersOrdered) {
+            copyResources(builder);
+            fpRuntimes.put(builder.gav, builder.build());
+        }
+        return Collections.unmodifiableMap(fpRuntimes);
     }
 
     private void mergeModelOnlyConfigs() throws ProvisioningException {
@@ -857,7 +853,7 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
-        return configList;
+        return configList.size() > 0 ? Collections.unmodifiableList(configList) : configList;
     }
 
     private void orderConfig(ConfigModelStack config, List<ProvisionedConfig> configList, Set<ConfigId> scheduledIds) throws ProvisioningException {
