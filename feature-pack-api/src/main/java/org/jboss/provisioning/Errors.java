@@ -96,6 +96,12 @@ public interface Errors {
 
     // FEATURE PACK INSTALL MESSAGES
 
+    static String failedToResolveReleaseVersions(Collection<ArtifactCoords.Ga> gas) {
+        final StringBuilder buf = new StringBuilder("Failed to resolve release versions for ");
+        StringUtils.append(buf, gas);
+        return buf.toString();
+    }
+
     static String packageContentCopyFailed(String packageName) {
         return "Failed to copy package " + packageName + " content";
     }

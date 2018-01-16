@@ -35,6 +35,7 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.DefaultMessageWriter;
@@ -47,6 +48,7 @@ import org.jboss.provisioning.config.ConfigItem;
 import org.jboss.provisioning.config.ConfigItemContainer;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.FeaturePackDepsConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.config.ConfigModel;
@@ -158,6 +160,8 @@ public class ProvisioningRuntimeBuilder {
 
     public ProvisioningRuntime build() throws ProvisioningException {
 
+        assertReleaseVersions();
+
         fpConfigStack = new FpStack(config);
 
         // the configs are processed in the reverse order to correctly implement config overwrites
@@ -201,6 +205,40 @@ public class ProvisioningRuntimeBuilder {
         return new ProvisioningRuntime(this, messageWriter);
     }
 
+    private void assertReleaseVersions() throws ProvisioningException {
+        final Set<ArtifactCoords.Ga> missingVersions = setFpVersions(config, Collections.emptySet());
+        if(!missingVersions.isEmpty()) {
+            throw new ProvisioningException(Errors.failedToResolveReleaseVersions(missingVersions));
+        }
+    }
+
+    private Set<ArtifactCoords.Ga> setFpVersions(FeaturePackDepsConfig fpDeps, Set<ArtifactCoords.Ga> missingVersions) throws ProvisioningException {
+        if(!fpDeps.hasFeaturePackDeps()) {
+            return missingVersions;
+        }
+        for(FeaturePackConfig fpConfig : fpDeps.getFeaturePackDeps()) {
+            Gav gav = fpConfig.getGav();
+            if(gav.getVersion() == null) {
+                missingVersions = PmCollections.add(missingVersions, gav.toGa());
+                continue;
+            }
+            FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
+            if(fp != null) {
+                if(!fp.gav.equals(gav)) {
+                    throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, gav));
+                }
+                continue;
+            }
+            fp = loadFpBuilder(gav);
+            fpRtBuilders.put(gav.toGa(), fp);
+            if(!missingVersions.isEmpty()) {
+                missingVersions = PmCollections.remove(missingVersions, gav.toGa());
+            }
+            missingVersions = setFpVersions(fp.spec, missingVersions);
+        }
+        return missingVersions;
+    }
+
     Map<ArtifactCoords.Gav, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
         if(fpRtBuildersOrdered.isEmpty()) {
             return Collections.emptyMap();
@@ -227,7 +265,7 @@ public class ProvisioningRuntimeBuilder {
                 }
                 fpConfigStack.activateConfigStack(i);
                 final ArtifactCoords.Gav fpGav = modelOnlyGavs.get(i);
-                thisFpOrigin = fpGav == null ? null : loadFpBuilder(modelOnlyGavs.get(i));
+                thisFpOrigin = fpGav == null ? null : getFpBuilder(modelOnlyGavs.get(i));
                 currentFp = thisFpOrigin;
                 if(processConfig(getConfigStack(modelOnlySpec.getId()), modelOnlySpec) && currentFp != null && !currentFp.ordered) {
                     orderFpRtBuilder(currentFp);
@@ -262,7 +300,7 @@ public class ProvisioningRuntimeBuilder {
 
     private void processFpConfig(FeaturePackConfig fpConfig) throws ProvisioningException {
         final FeaturePackRuntime.Builder parentFp = currentFp;
-        thisFpOrigin = loadFpBuilder(fpConfig.getGav());
+        thisFpOrigin = getFpBuilder(fpConfig.getGav());
         currentFp = thisFpOrigin;
 
         List<ConfigModelStack> fpConfigStacks = Collections.emptyList();
@@ -465,7 +503,7 @@ public class ProvisioningRuntimeBuilder {
         boolean resolvedFeatures = false;
         final FeaturePackRuntime.Builder originalFp = currentFp;
         for(ResolvedFeatureGroupConfig pushedFgConfig : pushedConfigs) {
-            currentFp = loadFpBuilder(pushedFgConfig.gav);
+            currentFp = getFpBuilder(pushedFgConfig.gav);
             if (pushedFgConfig.includedFeatures.isEmpty()) {
                 continue;
             }
@@ -608,7 +646,7 @@ public class ProvisioningRuntimeBuilder {
             return thisFpOrigin;
         }
         final ArtifactCoords.Gav depGav = currentFp == null ? config.getFeaturePackDep(depName).getGav() : currentFp.spec.getFeaturePackDep(depName).getGav();
-        return loadFpBuilder(depGav);
+        return getFpBuilder(depGav);
     }
 
     private boolean resolveFeature(ConfigModelStack configStack, FeatureConfig fc) throws ProvisioningException {
@@ -693,39 +731,34 @@ public class ProvisioningRuntimeBuilder {
     }
 
     FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
-        final FeaturePackRuntime.Builder fpRtBuilder = fpRtBuilders.get(gav.toGa());
-        if(fpRtBuilder == null) {
+        final FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
+        if(fp == null) {
             throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(gav));
         }
-        return fpRtBuilder;
+        return fp;
     }
 
     private FeaturePackRuntime.Builder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
-        FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
-        if(fp == null) {
-            final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
-            mkdirs(fpDir);
+        final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
+        mkdirs(fpDir);
 
-            final Path artifactPath = artifactResolver.resolve(gav.toArtifactCoords());
-            try {
-                ZipUtils.unzip(artifactPath, fpDir);
-            } catch (IOException e) {
-                throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
-            }
+        final Path artifactPath = artifactResolver.resolve(gav.toArtifactCoords());
+        try {
+            ZipUtils.unzip(artifactPath, fpDir);
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to unzip " + artifactPath + " to " + layoutDir, e);
+        }
 
-            final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
-            if(!Files.exists(fpXml)) {
-                throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
-            }
+        final Path fpXml = fpDir.resolve(Constants.FEATURE_PACK_XML);
+        if (!Files.exists(fpXml)) {
+            throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
+        }
 
-            try(BufferedReader reader = Files.newBufferedReader(fpXml)) {
-                fp = FeaturePackRuntime.builder(gav, FeaturePackXmlParser.getInstance().parse(reader), fpDir);
-            } catch (IOException | XMLStreamException e) {
-                throw new ProvisioningException(Errors.parseXml(fpXml), e);
-            }
-            fpRtBuilders.put(gav.toGa(), fp);
-        } else if(!fp.gav.equals(gav)) {
-            throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, gav));
+        final FeaturePackRuntime.Builder fp;
+        try (BufferedReader reader = Files.newBufferedReader(fpXml)) {
+            fp = FeaturePackRuntime.builder(gav, FeaturePackXmlParser.getInstance().parse(reader), fpDir);
+        } catch (IOException | XMLStreamException e) {
+            throw new ProvisioningException(Errors.parseXml(fpXml), e);
         }
         return fp;
     }
