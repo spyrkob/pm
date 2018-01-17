@@ -35,7 +35,6 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.DefaultMessageWriter;
@@ -48,7 +47,6 @@ import org.jboss.provisioning.config.ConfigItem;
 import org.jboss.provisioning.config.ConfigItemContainer;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
-import org.jboss.provisioning.config.FeaturePackDepsConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.config.ConfigModel;
@@ -160,7 +158,7 @@ public class ProvisioningRuntimeBuilder {
 
     public ProvisioningRuntime build() throws ProvisioningException {
 
-        assertReleaseVersions();
+        FpVersionsResolver.resolveFpVersions(this);
 
         fpConfigStack = new FpStack(config);
 
@@ -203,40 +201,6 @@ public class ProvisioningRuntimeBuilder {
         mergeModelOnlyConfigs();
 
         return new ProvisioningRuntime(this, messageWriter);
-    }
-
-    private void assertReleaseVersions() throws ProvisioningException {
-        final Set<ArtifactCoords.Ga> missingVersions = setFpVersions(config, Collections.emptySet());
-        if(!missingVersions.isEmpty()) {
-            throw new ProvisioningException(Errors.failedToResolveReleaseVersions(missingVersions));
-        }
-    }
-
-    private Set<ArtifactCoords.Ga> setFpVersions(FeaturePackDepsConfig fpDeps, Set<ArtifactCoords.Ga> missingVersions) throws ProvisioningException {
-        if(!fpDeps.hasFeaturePackDeps()) {
-            return missingVersions;
-        }
-        for(FeaturePackConfig fpConfig : fpDeps.getFeaturePackDeps()) {
-            Gav gav = fpConfig.getGav();
-            if(gav.getVersion() == null) {
-                missingVersions = PmCollections.add(missingVersions, gav.toGa());
-                continue;
-            }
-            FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
-            if(fp != null) {
-                if(!fp.gav.equals(gav)) {
-                    throw new ProvisioningException(Errors.featurePackVersionConflict(fp.gav, gav));
-                }
-                continue;
-            }
-            fp = loadFpBuilder(gav);
-            fpRtBuilders.put(gav.toGa(), fp);
-            if(!missingVersions.isEmpty()) {
-                missingVersions = PmCollections.remove(missingVersions, gav.toGa());
-            }
-            missingVersions = setFpVersions(fp.spec, missingVersions);
-        }
-        return missingVersions;
     }
 
     Map<ArtifactCoords.Gav, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
@@ -354,7 +318,7 @@ public class ProvisioningRuntimeBuilder {
 
         if(fpConfig.isInheritPackages()) {
             for(String packageName : currentFp.spec.getDefaultPackageNames()) {
-                if(!fpConfigStack.isPackageExcluded(currentFp.gav, packageName)) {
+                if(!fpConfigStack.isPackageExcluded(currentFp.gav.toGa(), packageName)) {
                     resolvePackage(packageName);
                     contributed = true;
                 }
@@ -362,7 +326,7 @@ public class ProvisioningRuntimeBuilder {
         }
         if (fpConfig.hasIncludedPackages()) {
             for (PackageConfig pkgConfig : fpConfig.getIncludedPackages()) {
-                if (!fpConfigStack.isPackageExcluded(currentFp.gav, pkgConfig.getName())) {
+                if (!fpConfigStack.isPackageExcluded(currentFp.gav.toGa(), pkgConfig.getName())) {
                     resolvePackage(pkgConfig.getName());
                     contributed = true;
                 } else {
@@ -731,14 +695,18 @@ public class ProvisioningRuntimeBuilder {
     }
 
     FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
+        return getFpBuilder(gav, true);
+    }
+
+    FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav, boolean failIfNotFound) throws ProvisioningDescriptionException {
         final FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
-        if(fp == null) {
+        if(fp == null && failIfNotFound) {
             throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(gav));
         }
         return fp;
     }
 
-    private FeaturePackRuntime.Builder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
+    FeaturePackRuntime.Builder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
         mkdirs(fpDir);
 
@@ -760,6 +728,7 @@ public class ProvisioningRuntimeBuilder {
         } catch (IOException | XMLStreamException e) {
             throw new ProvisioningException(Errors.parseXml(fpXml), e);
         }
+        fpRtBuilders.put(gav.toGa(), fp);
         return fp;
     }
 
@@ -798,7 +767,7 @@ public class ProvisioningRuntimeBuilder {
             throws ProvisioningException {
         if (pkgDeps.hasLocalPackageDeps()) {
             for (PackageDependencySpec dep : pkgDeps.getLocalPackageDeps()) {
-                if(fpConfigStack.isPackageExcluded(currentFp.gav, dep.getName())) {
+                if(fpConfigStack.isPackageExcluded(currentFp.gav.toGa(), dep.getName())) {
                     if(!dep.isOptional()) {
                         throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependency(currentFp.gav, dep.getName()));
                     }
@@ -823,7 +792,7 @@ public class ProvisioningRuntimeBuilder {
             currentFp = this.getFpDep(depName);
             boolean resolvedPackages = false;
             for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
-                if (fpConfigStack.isPackageExcluded(currentFp.gav, pkgDep.getName())) {
+                if (fpConfigStack.isPackageExcluded(currentFp.gav.toGa(), pkgDep.getName())) {
                     if (!pkgDep.isOptional()) {
                         final ArtifactCoords.Gav originGav = currentFp.gav;
                         currentFp = originalFp;

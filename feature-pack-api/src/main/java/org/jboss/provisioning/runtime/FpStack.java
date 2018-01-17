@@ -77,25 +77,25 @@ class FpStack {
             return fpConfigs.get(currentFp).isInheritModelOnlyConfigs();
         }
 
-        Boolean isInheritPackages(ArtifactCoords.Gav gav) {
-            final FeaturePackConfig fpConfig = getFpConfig(gav);
+        Boolean isInheritPackages(ArtifactCoords.Ga ga) {
+            final FeaturePackConfig fpConfig = getFpConfig(ga);
             return fpConfig == null ? null : fpConfig.isInheritPackages();
         }
 
-        boolean isPackageExcluded(ArtifactCoords.Gav gav, String packageName) {
-            final FeaturePackConfig fpConfig = getFpConfig(gav);
+        boolean isPackageExcluded(ArtifactCoords.Ga ga, String packageName) {
+            final FeaturePackConfig fpConfig = getFpConfig(ga);
             return fpConfig == null ? false : fpConfig.isPackageExcluded(packageName);
         }
 
-        boolean isPackageIncluded(ArtifactCoords.Gav gav, String packageName) {
-            final FeaturePackConfig fpConfig = getFpConfig(gav);
+        boolean isPackageIncluded(ArtifactCoords.Ga ga, String packageName) {
+            final FeaturePackConfig fpConfig = getFpConfig(ga);
             return fpConfig == null ? false : fpConfig.isPackageIncluded(packageName);
         }
 
-        private FeaturePackConfig getFpConfig(ArtifactCoords.Gav gav) {
+        private FeaturePackConfig getFpConfig(ArtifactCoords.Ga ga) {
             for(int i = fpConfigs.size() - 1; i >= 0; --i) {
                 final FeaturePackConfig fpConfig = fpConfigs.get(i);
-                if(fpConfig.getGav().equals(gav)) {
+                if(fpConfig.getGav().toGa().equals(ga)) {
                     return fpConfig;
                 }
             }
@@ -203,22 +203,22 @@ class FpStack {
         if(isEmpty()) {
             return true;
         }
-        final ArtifactCoords.Gav fpGav = fpConfig.getGav();
-        final Boolean pkgRelevancy = isInheritPackages(fpGav);
+        final ArtifactCoords.Ga fpGa = fpConfig.getGav().toGa();
+        final Boolean pkgRelevancy = isInheritPackages(fpGa);
         if(pkgRelevancy == null) {
             return true;
         }
         if(pkgRelevancy) {
             if(fpConfig.hasExcludedPackages()) {
                 for(String excluded : fpConfig.getExcludedPackages()) {
-                    if(!isPackageExcluded(fpGav, excluded) && !isPackageIncluded(fpGav, excluded)) {
+                    if(!isPackageExcluded(fpGa, excluded) && !isPackageIncluded(fpGa, excluded)) {
                         return true;
                     }
                 }
             }
             if(fpConfig.hasIncludedPackages()) {
                 for(PackageConfig included : fpConfig.getIncludedPackages()) {
-                    if(!isPackageIncluded(fpGav, included.getName()) && !isPackageExcluded(fpGav, included.getName())) {
+                    if(!isPackageIncluded(fpGa, included.getName()) && !isPackageExcluded(fpGa, included.getName())) {
                         return true;
                     }
                 }
@@ -253,10 +253,10 @@ class FpStack {
         return false;
     }
 
-    private Boolean isInheritPackages(ArtifactCoords.Gav gav) {
+    private Boolean isInheritPackages(ArtifactCoords.Ga ga) {
         Boolean result = null;
         for(int i = levels.size() - 1; i >= 0; --i) {
-            final Boolean levelResult = levels.get(i).isInheritPackages(gav);
+            final Boolean levelResult = levels.get(i).isInheritPackages(ga);
             if(levelResult == null) {
                  continue;
             }
@@ -268,18 +268,18 @@ class FpStack {
         return result;
     }
 
-    boolean isPackageExcluded(ArtifactCoords.Gav gav, String packageName) {
+    boolean isPackageExcluded(ArtifactCoords.Ga ga, String packageName) {
         for(int i = levels.size() - 1; i >= 0; --i) {
-            if(levels.get(i).isPackageExcluded(gav, packageName)) {
+            if(levels.get(i).isPackageExcluded(ga, packageName)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean isPackageIncluded(ArtifactCoords.Gav gav, String packageName) {
+    private boolean isPackageIncluded(ArtifactCoords.Ga ga, String packageName) {
         for(int i = levels.size() - 1; i >= 0; --i) {
-            if(levels.get(i).isPackageIncluded(gav, packageName)) {
+            if(levels.get(i).isPackageIncluded(ga, packageName)) {
                 return true;
             }
         }

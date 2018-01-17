@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,6 +91,10 @@ public class FeaturePackConfig extends ConfigCustomizations {
         public FeaturePackConfig build() {
             return new FeaturePackConfig(this);
         }
+    }
+
+    public static Builder builder(ArtifactCoords.Ga ga) {
+        return new Builder(ga.toGav());
     }
 
     public static Builder builder(ArtifactCoords.Gav gav) {
