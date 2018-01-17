@@ -105,8 +105,8 @@ public class FeaturePackXmlParserTestCase  {
     }
 
     @Test
-    public void readNamedDependency() throws Exception {
-        FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-named-dependency.xml", null, null);
+    public void readDependencyWithOrigin() throws Exception {
+        FeaturePackSpec found = validator.validateAndParse("xml/feature-pack/feature-pack-deps-with-origin.xml", null, null);
         FeaturePackSpec expected = FeaturePackSpec.builder()
                 .setGav(ArtifactCoords.newGav("org.jboss.fp.group1", "fp1", "1.0.0"))
                 .addFeaturePackDep("dep1", FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.dep.group1", "dep1", "0.0.1")))

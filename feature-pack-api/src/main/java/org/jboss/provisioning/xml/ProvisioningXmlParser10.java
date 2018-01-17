@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +54,7 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
         INSTALLATION("installation"),
-        NAME("name"),
+        ORIGIN("origin"),
         PACKAGES("packages"),
 
         // default unknown element
@@ -229,13 +229,13 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         if (!required.isEmpty()) {
             throw ParsingUtils.missingAttributes(reader.getLocation(), required);
         }
-        String name = null;
+        String origin = null;
         final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(ArtifactCoords.newGav(groupId, artifactId, version));
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     try {
-                        fpBuilder.addFeaturePackDep(name, depBuilder.build());
+                        fpBuilder.addFeaturePackDep(origin, depBuilder.build());
                     } catch (ProvisioningDescriptionException e) {
                         throw new XMLStreamException("Failed to add feature-pack configuration dependency", e);
                     }
@@ -251,8 +251,8 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
                                 throw new XMLStreamException("Failed to parse " + Element.PACKAGES.getLocalName() + ": " + e.getLocalizedMessage(), reader.getLocation(), e);
                             }
                             break;
-                        case NAME:
-                            name = reader.getElementText();
+                        case ORIGIN:
+                            origin = reader.getElementText();
                             break;
                         case DEFAULT_CONFIGS:
                             ProvisioningXmlParser10.parseDefaultConfigs(reader, depBuilder);

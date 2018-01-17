@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="name" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="origin" minOccurs="0" maxOccurs="1"/>
       <xs:element name="packages" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attributeGroup ref="gavAttributes"/>

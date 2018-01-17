@@ -65,7 +65,7 @@ public class FeaturePackDepsConfig extends ConfigCustomizations {
         return fpDep;
     }
 
-    public String getFeaturePackDepOrigin(ArtifactCoords.Ga fpGa) {
+    public String originOf(ArtifactCoords.Ga fpGa) {
         return fpGaToOrigin.get(fpGa);
     }
 

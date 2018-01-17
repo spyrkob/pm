@@ -56,7 +56,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         if (provisioningConfig.hasFeaturePackDeps()) {
             for(FeaturePackConfig fp : provisioningConfig.getFeaturePackDeps()) {
                 final ElementNode fpElement = addElement(install, Element.FEATURE_PACK);
-                writeFeaturePackConfig(fpElement, fpElement.getNamespace(), fp, provisioningConfig.getFeaturePackDepOrigin(fp.getGav().toGa()));
+                writeFeaturePackConfig(fpElement, fpElement.getNamespace(), fp, provisioningConfig.originOf(fp.getGav().toGa()));
             }
         }
 
@@ -65,10 +65,10 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
         return install;
     }
 
-    static void writeFeaturePackConfig(ElementNode fp, String ns, FeaturePackConfig featurePack, String name) {
+    static void writeFeaturePackConfig(ElementNode fp, String ns, FeaturePackConfig featurePack, String origin) {
         addGav(fp, featurePack.getGav());
-        if(name != null) {
-            addElement(fp, Element.NAME).addChild(new TextNode(name));
+        if(origin != null) {
+            addElement(fp, Element.ORIGIN).addChild(new TextNode(origin));
         }
 
         writeConfigCustomizations(fp, ns, featurePack);
