@@ -72,9 +72,9 @@
   <packages>
     <package name="p1"/>
     <package name="p2" optional="true"/>
-    <feature-pack dependency="fp1">
+    <origin name="fp1">
       <package name="p2"/>
       <package name="p3" optional="true"/>
-    </feature-pack>
+    </origin>
   </packages>
 </feature-group-spec>

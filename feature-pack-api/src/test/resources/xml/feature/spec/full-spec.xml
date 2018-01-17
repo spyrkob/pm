@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,10 +52,10 @@
   </params>
   <packages>
     <package name="pkg1" />
-    <feature-pack dependency="fp-dep">
+    <origin name="fp-dep">
       <package name="pkg2"/>
       <package name="pkg3"/>
-    </feature-pack>
+    </origin>
     <package name="pkg4" />
   </packages>
 </feature-spec>

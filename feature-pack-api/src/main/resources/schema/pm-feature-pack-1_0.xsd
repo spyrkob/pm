@@ -392,7 +392,7 @@
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="package" type="localPackageDepType" />
-      <xs:element name="feature-pack" type="externalPackageDepsType"/>
+      <xs:element name="origin" type="packageOriginType"/>
     </xs:choice>
   </xs:complexType>
 
@@ -426,7 +426,7 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="externalPackageDepsType">
+  <xs:complexType name="packageOriginType">
     <xs:annotation>
       <xs:documentation>
         Describes an external package dependency.
@@ -437,7 +437,7 @@
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="package" type="localPackageDepType" />
     </xs:choice>
-    <xs:attribute name="dependency" type="xs:string" use="required">
+    <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
           Name assigned to a dependency on the feature-pack (in

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,8 +42,6 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
     public enum Element implements XmlNameProvider {
 
         DEPENDENCIES("dependencies"),
-        FEATURE_PACK("feature-pack"),
-        PACKAGE("package"),
         PACKAGE_SPEC("package-spec"),
 
         // default unknown element
@@ -92,9 +90,7 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
 
     enum Attribute implements XmlNameProvider {
 
-        DEPENDENCY("dependency"),
         NAME("name"),
-        OPTIONAL("optional"),
         // default unknown attribute
         UNKNOWN(null);
 

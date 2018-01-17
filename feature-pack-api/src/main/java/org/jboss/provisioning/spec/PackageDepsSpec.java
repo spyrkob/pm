@@ -62,7 +62,7 @@ public abstract class PackageDepsSpec {
         return !externalPkgDeps.isEmpty();
     }
 
-    public Collection<String> getExternalPackageSources() {
+    public Collection<String> getPackageOrigins() {
         return externalPkgDeps.keySet();
     }
 

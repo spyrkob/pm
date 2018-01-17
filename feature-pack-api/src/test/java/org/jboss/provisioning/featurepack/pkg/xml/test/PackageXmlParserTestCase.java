@@ -73,8 +73,8 @@ public class PackageXmlParserTestCase {
     @Test
     public void readEmptyDependencies() throws Exception {
         validator.validateAndParse("xml/package/package-1.0-empty-dependencies.xml",
-                "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":package, \"urn:wildfly:pm-package:1.0\":feature-pack}' is expected.",
-                "The content of element 'dependencies' is not complete. One of 'package', 'feature-pack' is expected.");
+                "cvc-complex-type.2.4.b: The content of element 'dependencies' is not complete. One of '{\"urn:wildfly:pm-package:1.0\":package, \"urn:wildfly:pm-package:1.0\":origin}' is expected.",
+                "The content of element 'dependencies' is not complete. One of 'package', 'origin' is expected.");
     }
 
     @Test
