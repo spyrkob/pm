@@ -61,8 +61,8 @@ public class FeatureGroupXml {
         FEATURE("feature"),
         FEATURE_GROUP("feature-group"),
         FEATURE_GROUP_SPEC("feature-group-spec"),
-        FEATURE_PACK("feature-pack"),
         INCLUDE("include"),
+        ORIGIN("origin"),
         PACKAGES("packages"),
         PARAM("param"),
         PROP("prop"),
@@ -111,7 +111,6 @@ public class FeatureGroupXml {
     protected enum Attribute implements XmlNameProvider {
 
         ID("id"),
-        DEPENDENCY("dependency"),
         FEATURE("feature"),
         FEATURE_ID("feature-id"),
         INCLUDE("include"),
@@ -119,6 +118,7 @@ public class FeatureGroupXml {
         MODEL("model"),
         NAME("name"),
         OPTIONAL("optional"),
+        ORIGIN("origin"),
         PARAM("param"),
         PARENT_REF("parent-ref"),
         SPEC("spec"),
@@ -193,8 +193,8 @@ public class FeatureGroupXml {
                         case FEATURE_GROUP:
                             groupBuilder.addFeatureGroup(readFeatureGroupDependency(null, reader));
                             break;
-                        case FEATURE_PACK:
-                            readFeaturePackDependency(reader, groupBuilder);
+                        case ORIGIN:
+                            readOrigin(reader, groupBuilder);
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
@@ -217,13 +217,13 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    public static void readFeaturePackDependency(XMLExtendedStreamReader reader, ConfigItemContainerBuilder<?> groupBuilder) throws XMLStreamException {
+    public static void readOrigin(XMLExtendedStreamReader reader, ConfigItemContainerBuilder<?> groupBuilder) throws XMLStreamException {
         String origin = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case DEPENDENCY:
+                case NAME:
                     origin = reader.getAttributeValue(i);
                     break;
                 default:
@@ -231,7 +231,7 @@ public class FeatureGroupXml {
             }
         }
         if (origin == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
 
         while (reader.hasNext()) {
@@ -309,8 +309,8 @@ public class FeatureGroupXml {
                         case EXCLUDE:
                             readExclude(reader, null, builder);
                             break;
-                        case FEATURE_PACK:
-                            readFeaturePackIncludeExclude(reader, builder);
+                        case ORIGIN:
+                            readOriginIncludeExclude(reader, builder);
                             break;
                         case FEATURE_GROUP:
                             builder.addFeatureGroup(readFeatureGroupDependency(null, reader));
@@ -455,21 +455,21 @@ public class FeatureGroupXml {
         ParsingUtils.parseNoContent(reader);
     }
 
-    private static void readFeaturePackIncludeExclude(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> builder) throws XMLStreamException {
-        String dependency = null;
+    private static void readOriginIncludeExclude(XMLExtendedStreamReader reader, FeatureGroupBuilderSupport<?> builder) throws XMLStreamException {
+        String origin = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case DEPENDENCY:
-                    dependency = reader.getAttributeValue(i);
+                case NAME:
+                    origin = reader.getAttributeValue(i);
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
-        if (dependency == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+        if (origin == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
@@ -479,17 +479,17 @@ public class FeatureGroupXml {
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case INCLUDE:
-                            readInclude(reader, dependency, builder);
+                            readInclude(reader, origin, builder);
                             break;
                         case EXCLUDE:
-                            readExclude(reader, dependency, builder);
+                            readExclude(reader, origin, builder);
                             break;
                         case FEATURE_GROUP:
-                            builder.addFeatureGroup(readFeatureGroupDependency(dependency, reader));
+                            builder.addFeatureGroup(readFeatureGroupDependency(origin, reader));
                             break;
                         case FEATURE:
                             final FeatureConfig nested = new FeatureConfig();
-                            nested.setOrigin(dependency);
+                            nested.setOrigin(origin);
                             readFeatureConfig(reader, nested);
                             builder.addFeature(nested);
                             break;
@@ -689,8 +689,8 @@ public class FeatureGroupXml {
                         case FEATURE_GROUP:
                             config.addFeatureGroup(readFeatureGroupDependency(null, reader));
                             break;
-                        case FEATURE_PACK:
-                            readFeaturePackDependency(reader, config);
+                        case ORIGIN:
+                            readOrigin(reader, config);
                             break;
                         case RESET_PARAM:
                             config.resetParam(readParamAttr(reader));
@@ -720,7 +720,7 @@ public class FeatureGroupXml {
                 case FEATURE_ID:
                     id = reader.getAttributeValue(i);
                     break;
-                case DEPENDENCY:
+                case ORIGIN:
                     origin = reader.getAttributeValue(i);
                     break;
                 case INCLUDE:

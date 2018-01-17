@@ -93,7 +93,7 @@
     <xs:sequence>
       <xs:element name="props" type="propsType" minOccurs="0" maxOccurs="1"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="feature-pack" type="featurePackDependencyType" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="origin" type="originType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature-group" type="featureGroupType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
@@ -148,20 +148,20 @@
     </xs:attribute>    
   </xs:complexType>
 
-  <xs:complexType name="featurePackDependencyType">
+  <xs:complexType name="originType">
     <xs:annotation>
       <xs:documentation>
-        Describes dependencies on feature groups and feature from another feature-pack
+        Describes dependencies on feature groups and features from another feature-pack
       </xs:documentation>
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element name="feature-group" type="featureGroupType" minOccurs="0" maxOccurs="1"/>
         <xs:element name="feature" type="featureType" minOccurs="0" maxOccurs="1"/>
     </xs:choice>
-    <xs:attribute name="dependency" type="xs:string" use="required">
+    <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          Feature-pack dependency
+          Feature-pack origin name
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -289,7 +289,7 @@
       <xs:element name="param" type="paramType" />
       <xs:element name="feature" type="featureType" />
       <xs:element name="feature-group" type="featureGroupType" />
-      <xs:element name="feature-pack" type="featurePackDependencyType"/>
+      <xs:element name="origin" type="originType"/>
     </xs:choice>
     <xs:attribute name="spec" type="xs:string" use="required">
       <xs:annotation>
