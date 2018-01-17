@@ -16,9 +16,15 @@
  */
 package org.jboss.provisioning;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.config.ConfigId;
@@ -96,6 +102,43 @@ public interface Errors {
 
     // FEATURE PACK INSTALL MESSAGES
 
+    static String fpVersionCheckFailed(Collection<ArtifactCoords.Ga> missingVersions, Collection<Set<ArtifactCoords.Gav>> versionConflicts) throws ProvisioningException {
+        final StringWriter strWriter = new StringWriter();
+        try(BufferedWriter writer = new BufferedWriter(strWriter)) {
+            writer.write("Feature-pack versions check failed with the following errors:");
+            writer.newLine();
+
+            if (!missingVersions.isEmpty()) {
+                writer.write(" * ");
+                writer.write(Errors.failedToResolveReleaseVersions(missingVersions));
+                writer.write(';');
+                writer.newLine();
+            }
+
+            if(!versionConflicts.isEmpty()) {
+                for (Collection<ArtifactCoords.Gav> entry : versionConflicts) {
+                    writer.write(" * ");
+                    writer.write(Errors.featurePackVersionConflict(entry));
+                    writer.write(';');
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            throw new ProvisioningException("Failed to report version check errors", e);
+        }
+        return strWriter.toString();
+    }
+
+    static String failedToResolveReleaseVersions(Collection<ArtifactCoords.Ga> gas) {
+        final StringBuilder buf = new StringBuilder("Missing release version");
+        if(gas.size() > 1) {
+            buf.append('s');
+        }
+        buf.append(" of ");
+        StringUtils.append(buf, gas);
+        return buf.toString();
+    }
+
     static String packageContentCopyFailed(String packageName) {
         return "Failed to copy package " + packageName + " content";
     }
@@ -117,7 +160,24 @@ public interface Errors {
     }
 
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
-        return "Feature-pack " + gav.toGa() + " was specified with version " + gav.getVersion() + " and " + gav2.getVersion();
+        final Set<Gav> gavs = new HashSet<>(2);
+        gavs.add(gav);
+        gavs.add(gav2);
+        return featurePackVersionConflict(gavs);
+    }
+
+    static String featurePackVersionConflict(Collection<ArtifactCoords.Gav> gavs) {
+        final Iterator<Gav> i = gavs.iterator();
+        Gav gav = i.next();
+        final StringBuilder buf = new StringBuilder("Please pick the desired version of ")
+                .append(gav.toGa())
+                .append(" explicitly in the provisioning config. Current configuration references the following versions ")
+                .append(gav.getVersion());
+        while(i.hasNext()) {
+            gav = i.next();
+            buf.append(", ").append(gav.getVersion());
+        }
+        return buf.toString();
     }
 
     static String unsatisfiedPackageDependencies(ArtifactCoords.Gav fpGav, String packageName, Collection<String> unsatisfiedDeps) {
