@@ -577,7 +577,7 @@ public class ProvisioningRuntimeBuilder {
         if(ciContainer.hasItems()) {
             for(ConfigItem item : ciContainer.getItems()) {
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = item.getFpDep() == null ? currentFp : getFpDep(item.getFpDep());
+                currentFp = item.getOrigin() == null ? currentFp : getFpDep(item.getOrigin());
                 try {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
@@ -653,7 +653,7 @@ public class ProvisioningRuntimeBuilder {
                     continue;
                 }
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = refSpec.getDependency() == null ? currentFp : getFpDep(refSpec.getDependency());
+                currentFp = refSpec.getOrigin() == null ? currentFp : getFpDep(refSpec.getOrigin());
                 final ResolvedFeatureSpec refResolvedSpec = currentFp.getFeatureSpec(refSpec.getFeature().getName());
                 final List<ResolvedFeatureId> refIds = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
                 if(!refIds.isEmpty()) {
@@ -686,7 +686,7 @@ public class ProvisioningRuntimeBuilder {
                 }
                 final FeatureDependencySpec depSpec = dep.getValue();
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = depSpec.getDependency() == null ? currentFp : getFpDep(depSpec.getDependency());
+                currentFp = depSpec.getOrigin() == null ? currentFp : getFpDep(depSpec.getOrigin());
                 resolveFeatureDepsAndRefs(configStack, currentFp.getFeatureSpec(depId.getSpecId().getName()), depId, Collections.emptyMap(), Collections.emptyList());
                 currentFp = originalFp;
             }

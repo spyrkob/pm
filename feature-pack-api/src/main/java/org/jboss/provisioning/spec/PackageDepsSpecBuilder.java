@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,27 +47,27 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
         return (T) this;
     }
 
-    public T addPackageDep(String fpDep, String packageName) {
-        return addPackageDep(fpDep, packageName, false);
+    public T addPackageDep(String origin, String packageName) {
+        return addPackageDep(origin, packageName, false);
     }
 
-    public T addPackageDep(String fpDep, String packageName, boolean optional) {
-        return addPackageDep(fpDep, PackageDependencySpec.forPackage(packageName, optional));
+    public T addPackageDep(String origin, String packageName, boolean optional) {
+        return addPackageDep(origin, PackageDependencySpec.forPackage(packageName, optional));
     }
 
     @SuppressWarnings("unchecked")
-    public T addPackageDep(String fpDep, PackageDependencySpec dep) {
-        if(fpDep == null) {
+    public T addPackageDep(String origin, PackageDependencySpec dep) {
+        if(origin == null) {
             return addPackageDep(dep);
         }
-        Map<String, PackageDependencySpec> deps = externalPkgDeps.get(fpDep);
+        Map<String, PackageDependencySpec> deps = externalPkgDeps.get(origin);
         if(deps == null) {
-            externalPkgDeps = PmCollections.put(externalPkgDeps, fpDep, Collections.singletonMap(dep.getName(), dep));
+            externalPkgDeps = PmCollections.put(externalPkgDeps, origin, Collections.singletonMap(dep.getName(), dep));
             return (T) this;
         }
         if(deps.size() == 1) {
             if(deps.containsKey(dep.getName())) {
-                deps = externalPkgDeps.put(fpDep, Collections.singletonMap(dep.getName(), dep));
+                deps = externalPkgDeps.put(origin, Collections.singletonMap(dep.getName(), dep));
             } else {
                 final Map.Entry<String, PackageDependencySpec> first = deps.entrySet().iterator().next();
                 deps = new HashMap<>(2);
@@ -75,9 +75,9 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
                 deps.put(dep.getName(), dep);
             }
             if(externalPkgDeps.size() == 1) {
-                externalPkgDeps = Collections.singletonMap(fpDep, deps);
+                externalPkgDeps = Collections.singletonMap(origin, deps);
             } else {
-                externalPkgDeps.put(fpDep, deps);
+                externalPkgDeps.put(origin, deps);
             }
             return (T) this;
         }

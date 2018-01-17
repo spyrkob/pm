@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,7 +74,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         String currentFpDep = null;
         ElementNode parent = configE;
         for(ConfigItem item : featureGroup.getItems()) {
-            final String itemFpDep = item.getFpDep();
+            final String itemFpDep = item.getOrigin();
             if(itemFpDep != null) {
                 if (!itemFpDep.equals(currentFpDep)) {
                     parent = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
@@ -168,8 +168,8 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         if(fc.hasFeatureDeps()) {
             for(FeatureDependencySpec depSpec : fc.getFeatureDeps()) {
                 final ElementNode depE = addElement(fcE, Element.DEPENDS.getLocalName(), ns);
-                if(depSpec.getDependency() != null) {
-                    addAttribute(depE, Attribute.DEPENDENCY, depSpec.getDependency());
+                if(depSpec.getOrigin() != null) {
+                    addAttribute(depE, Attribute.DEPENDENCY, depSpec.getOrigin());
                 }
                 addAttribute(depE, Attribute.FEATURE_ID, depSpec.getFeatureId().toString());
                 if(depSpec.isInclude()) {

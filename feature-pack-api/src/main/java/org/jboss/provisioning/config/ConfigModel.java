@@ -155,8 +155,8 @@ public class ConfigModel extends FeatureGroupSupport {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append("[model=").append(id.getModel()).append(" name=").append(id.getName());
-        if(fpDep != null) {
-            buf.append(" fp=").append(fpDep);
+        if(origin != null) {
+            buf.append(" fp=").append(origin);
         }
         if(!props.isEmpty()) {
             buf.append(" props=");

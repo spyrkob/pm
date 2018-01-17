@@ -222,7 +222,7 @@ public class FeaturePackXmlParserTestCase  {
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                 .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                 .build())
-                        .addFeatureGroup(FeatureGroup.builder("dep4").setFpDep("source4").build())
+                        .addFeatureGroup(FeatureGroup.builder("dep4").setOrigin("source4").build())
                         .addFeature(new FeatureConfig("spec1")
                                 .addFeatureDep(FeatureId.fromString("spec2:p1=v1,p2=v2"))
                                 .addFeatureDep(FeatureId.fromString("spec3:p3=v3"))

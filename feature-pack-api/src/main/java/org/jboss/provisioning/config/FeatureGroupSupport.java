@@ -35,7 +35,7 @@ import org.jboss.provisioning.util.PmCollections;
  */
 public abstract class FeatureGroupSupport extends PackageDepsSpec implements ConfigItem, ConfigItemContainer {
 
-    final String fpDep;
+    final String origin;
     final String name;
 
     // customizations of the dependencies
@@ -49,9 +49,9 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
     // added items
     protected final List<ConfigItem> items;
 
-    protected FeatureGroupSupport(String fpDep, String name) {
+    protected FeatureGroupSupport(String origin, String name) {
         super();
-        this.fpDep = fpDep;
+        this.origin = origin;
         this.name = name;
         this.inheritFeatures = true;
         this.includedSpecs = Collections.emptySet();
@@ -64,7 +64,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
 
     protected FeatureGroupSupport(FeatureGroupBuilderSupport<?> builder) throws ProvisioningDescriptionException {
         super(builder);
-        this.fpDep = builder.fpDep;
+        this.origin = builder.origin;
         this.name = builder.name;
         this.inheritFeatures = builder.inheritFeatures;
         this.includedSpecs = PmCollections.unmodifiable(builder.includedSpecs);
@@ -93,8 +93,8 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
     }
 
     @Override
-    public String getFpDep() {
-        return fpDep;
+    public String getOrigin() {
+        return origin;
     }
 
     @Override
@@ -180,7 +180,7 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         result = prime * result + ((excludedFeatures == null) ? 0 : excludedFeatures.hashCode());
         result = prime * result + ((excludedSpecs == null) ? 0 : excludedSpecs.hashCode());
         result = prime * result + ((externalFgConfigs == null) ? 0 : externalFgConfigs.hashCode());
-        result = prime * result + ((fpDep == null) ? 0 : fpDep.hashCode());
+        result = prime * result + ((origin == null) ? 0 : origin.hashCode());
         result = prime * result + ((includedFeatures == null) ? 0 : includedFeatures.hashCode());
         result = prime * result + ((includedSpecs == null) ? 0 : includedSpecs.hashCode());
         result = prime * result + (inheritFeatures ? 1231 : 1237);
@@ -213,10 +213,10 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
                 return false;
         } else if (!externalFgConfigs.equals(other.externalFgConfigs))
             return false;
-        if (fpDep == null) {
-            if (other.fpDep != null)
+        if (origin == null) {
+            if (other.origin != null)
                 return false;
-        } else if (!fpDep.equals(other.fpDep))
+        } else if (!origin.equals(other.origin))
             return false;
         if (includedFeatures == null) {
             if (other.includedFeatures != null)

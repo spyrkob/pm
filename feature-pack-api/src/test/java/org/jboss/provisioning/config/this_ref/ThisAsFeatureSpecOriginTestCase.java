@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,23 +55,23 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addSpec(FeatureSpec.builder("specB")
-                    .addFeatureRef(FeatureReferenceSpec.builder("specD").setFpDep("fp2").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specD").setOrigin("fp2").build())
                     .addParam(FeatureParameterSpec.createId("b"))
                     .addParam(FeatureParameterSpec.createId("d"))
                     .addParam(FeatureParameterSpec.create("p1", true))
                     .build())
             .addFeatureGroup(FeatureGroup.builder("fg1")
                     .addFeature(new FeatureConfig("specD")
-                            .setFpDep("fp2")
+                            .setOrigin("fp2")
                             .setParam("d", "dOne")
                             .addFeature(new FeatureConfig("specB")
-                                    .setFpDep("this")
+                                    .setOrigin("this")
                                     .setParam("b", "bOne")))
                     .build()).getInstaller()
         .newFeaturePack(FP2_GAV)
             .addDependency("fp1", FP1_GAV)
             .addSpec(FeatureSpec.builder("specC")
-                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setFpDep("fp1").build())
+                    .addFeatureRef(FeatureReferenceSpec.builder("specA").setOrigin("fp1").build())
                     .addParam(FeatureParameterSpec.createId("a"))
                     .addParam(FeatureParameterSpec.createId("c"))
                     .addParam(FeatureParameterSpec.create("p1", true))
@@ -82,10 +82,10 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
                     .build())
             .addFeatureGroup(FeatureGroup.builder("fg2")
                     .addFeature(new FeatureConfig("specA")
-                            .setFpDep("fp1")
+                            .setOrigin("fp1")
                             .setParam("a", "aOne")
                             .addFeature(new FeatureConfig("specC")
-                                    .setFpDep("this")
+                                    .setOrigin("this")
                                     .setParam("c", "cOne")))
                     .build())
             .addConfig(ConfigModel.builder()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,11 +69,11 @@ public class ExtendConfigModelWithDefinedConfigTestCase extends PmProvisionConfi
                     .setProperty("prop2", "fp2")
                     .setProperty("prop3", "fp2")
                     .addFeature(new FeatureConfig("specA")
-                            .setFpDep("fp1")
+                            .setOrigin("fp1")
                             .setParam("name", "a2")
                             .setParam("p1", "fp2"))
                     .addFeature(new FeatureConfig("specA")
-                            .setFpDep("fp1")
+                            .setOrigin("fp1")
                             .setParam("name", "a3")
                             .setParam("p1", "fp2"))
                     .build())

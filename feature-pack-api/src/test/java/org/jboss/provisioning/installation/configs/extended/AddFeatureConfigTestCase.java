@@ -79,8 +79,8 @@ public class AddFeatureConfigTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePackDep("fp1", FeaturePackConfig.forGav(FP1_GAV))
                 .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .addFeature(new FeatureConfig("specA").setFpDep("fp1").setParam("id", "2"))
-                        .addFeature(new FeatureConfig("specB").setFpDep("fp2").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specA").setOrigin("fp1").setParam("id", "2"))
+                        .addFeature(new FeatureConfig("specB").setOrigin("fp2").setParam("id", "2"))
                         .build())
                 .build();
     }

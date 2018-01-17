@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,11 +57,11 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     Map<FeatureId, FeatureDependencySpec> deps = Collections.emptyMap();
     protected List<ConfigItem> items = Collections.emptyList();
     String parentRef;
-    String fpDep;
+    String origin;
 
     public FeatureConfig(FeatureConfig copy) {
         specId = copy.specId;
-        fpDep = copy.fpDep;
+        origin = copy.origin;
         deps = copy.deps;
         parentRef = copy.parentRef;
         if(copy.params.size() > 1) {
@@ -105,8 +105,8 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     }
 
     @Override
-    public String getFpDep() {
-        return fpDep;
+    public String getOrigin() {
+        return origin;
     }
 
     @Override
@@ -114,8 +114,8 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
         return false;
     }
 
-    public FeatureConfig setFpDep(String fpDep) {
-        this.fpDep = fpDep;
+    public FeatureConfig setOrigin(String origin) {
+        this.origin = origin;
         return this;
     }
 
@@ -250,7 +250,7 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
         final int prime = 31;
         int result = 1;
         result = prime * result + ((deps == null) ? 0 : deps.hashCode());
-        result = prime * result + ((fpDep == null) ? 0 : fpDep.hashCode());
+        result = prime * result + ((origin == null) ? 0 : origin.hashCode());
         result = prime * result + ((items == null) ? 0 : items.hashCode());
         result = prime * result + ((params == null) ? 0 : params.hashCode());
         result = prime * result + ((parentRef == null) ? 0 : parentRef.hashCode());
@@ -274,10 +274,10 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
                 return false;
         } else if (!deps.equals(other.deps))
             return false;
-        if (fpDep == null) {
-            if (other.fpDep != null)
+        if (origin == null) {
+            if (other.origin != null)
                 return false;
-        } else if (!fpDep.equals(other.fpDep))
+        } else if (!origin.equals(other.origin))
             return false;
         if (items == null) {
             if (other.items != null)
@@ -316,8 +316,8 @@ public class FeatureConfig implements ConfigItem, ConfigItemContainer, ConfigIte
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(specId);
-        if(fpDep != null) {
-            buf.append(" fp=").append(fpDep);
+        if(origin != null) {
+            buf.append(" origin=").append(origin);
         }
         if (!params.isEmpty()) {
             buf.append(' ');

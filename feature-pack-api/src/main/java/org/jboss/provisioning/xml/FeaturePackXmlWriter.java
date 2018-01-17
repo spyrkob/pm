@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@ public class FeaturePackXmlWriter extends BaseXmlWriter<FeaturePackSpec> {
             final ElementNode deps = addElement(fp, Element.DEPENDENCIES);
             for (FeaturePackConfig dep : fpSpec.getFeaturePackDeps()) {
                 final ElementNode depElement = addElement(deps, Element.DEPENDENCY);
-                ProvisioningXmlWriter.writeFeaturePackConfig(depElement, depElement.getNamespace(), dep, fpSpec.getFeaturePackDepName(dep.getGav().toGa()));
+                ProvisioningXmlWriter.writeFeaturePackConfig(depElement, depElement.getNamespace(), dep, fpSpec.getFeaturePackDepOrigin(dep.getGav().toGa()));
             }
         }
 

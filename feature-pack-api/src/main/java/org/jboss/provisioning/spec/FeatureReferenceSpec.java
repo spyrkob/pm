@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ public class FeatureReferenceSpec {
 
     public static class Builder {
 
-        private String dependency;
+        private String origin;
         private final String featureSpec;
         private String name;
         private boolean nillable;
@@ -44,8 +44,8 @@ public class FeatureReferenceSpec {
             this.name = featureSpec.toString();
         }
 
-        public Builder setFpDep(String fpDep) {
-            this.dependency = fpDep;
+        public Builder setOrigin(String origin) {
+            this.origin = origin;
             return this;
         }
 
@@ -70,7 +70,7 @@ public class FeatureReferenceSpec {
         }
 
         public FeatureReferenceSpec build() throws ProvisioningDescriptionException {
-            return new FeatureReferenceSpec(dependency, name, featureSpec, nillable, include, mappedParams);
+            return new FeatureReferenceSpec(origin, name, featureSpec, nillable, include, mappedParams);
         }
     }
 
@@ -90,15 +90,15 @@ public class FeatureReferenceSpec {
         return new FeatureReferenceSpec(null, name, feature, nillable, false, Collections.emptyMap());
     }
 
-    final String dependency;
+    final String origin;
     final String name;
     final SpecId feature;
     final boolean nillable;
     final boolean include;
     final Map<String, String> mappedParams;
 
-    private FeatureReferenceSpec(String dependency, String name, String featureSpec, boolean nillable, boolean include, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
-        this.dependency = dependency;
+    private FeatureReferenceSpec(String origin, String name, String featureSpec, boolean nillable, boolean include, Map<String, String> paramMapping) throws ProvisioningDescriptionException {
+        this.origin = origin;
         this.name = name;
         this.feature = SpecId.fromString(featureSpec);
         this.nillable = nillable;
@@ -106,8 +106,8 @@ public class FeatureReferenceSpec {
         this.mappedParams = PmCollections.unmodifiable(paramMapping);
     }
 
-    public String getDependency() {
-        return dependency;
+    public String getOrigin() {
+        return origin;
     }
 
     public String getName() {
@@ -142,7 +142,7 @@ public class FeatureReferenceSpec {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((dependency == null) ? 0 : dependency.hashCode());
+        result = prime * result + ((origin == null) ? 0 : origin.hashCode());
         result = prime * result + ((feature == null) ? 0 : feature.hashCode());
         result = prime * result + (include ? 1231 : 1237);
         result = prime * result + ((mappedParams == null) ? 0 : mappedParams.hashCode());
@@ -160,10 +160,10 @@ public class FeatureReferenceSpec {
         if (getClass() != obj.getClass())
             return false;
         FeatureReferenceSpec other = (FeatureReferenceSpec) obj;
-        if (dependency == null) {
-            if (other.dependency != null)
+        if (origin == null) {
+            if (other.origin != null)
                 return false;
-        } else if (!dependency.equals(other.dependency))
+        } else if (!origin.equals(other.origin))
             return false;
         if (feature == null) {
             if (other.feature != null)
@@ -191,8 +191,8 @@ public class FeatureReferenceSpec {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[').append(name);
-        if(dependency != null) {
-            buf.append(" fpDep=").append(dependency);
+        if(origin != null) {
+            buf.append(" origin=").append(origin);
         }
         buf.append(" feature=").append(feature);
         if(nillable) {

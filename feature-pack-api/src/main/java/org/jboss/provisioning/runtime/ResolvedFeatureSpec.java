@@ -323,7 +323,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         if(resolvedSpecDeps.isEmpty()) {
             if(depSpecs.size() == 1) {
                 final FeatureDependencySpec depSpec = depSpecs.iterator().next();
-                final FeaturePackRuntime.Builder depFp = depSpec.getDependency() == null ? ownFp : rt.getFpDep(depSpec.getDependency());
+                final FeaturePackRuntime.Builder depFp = depSpec.getOrigin() == null ? ownFp : rt.getFpDep(depSpec.getOrigin());
                 final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(depSpec.getFeatureId().getSpec().getName());
                 return Collections.singletonMap(depResolvedSpec.resolveFeatureId(depSpec.getFeatureId().getParams()), depSpec);
             }
@@ -333,7 +333,7 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             result.putAll(resolvedSpecDeps);
         }
         for (FeatureDependencySpec userDep : depSpecs) {
-            final FeaturePackRuntime.Builder depFp = userDep.getDependency() == null ? ownFp : rt.getFpDep(userDep.getDependency());
+            final FeaturePackRuntime.Builder depFp = userDep.getOrigin() == null ? ownFp : rt.getFpDep(userDep.getOrigin());
             final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(userDep.getFeatureId().getSpec().getName());
             final ResolvedFeatureId depId = depResolvedSpec.resolveFeatureId(userDep.getFeatureId().getParams());
             final FeatureDependencySpec specDep = result.put(depId, userDep);
@@ -370,11 +370,11 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             FeatureReferenceSpec refSpec) throws ProvisioningException {
         try {
             final ResolvedFeatureSpec resolvedRefSpec;
-            if (refSpec.getDependency() == null) {
+            if (refSpec.getOrigin() == null) {
                 resolvedRefSpec = ownFp.getFeatureSpec(refSpec.getFeature().getName());
             } else {
                 final FeaturePackRuntime.Builder refFp = rt
-                        .getFpBuilder(ownFp.spec.getFeaturePackDep(refSpec.getDependency()).getGav());
+                        .getFpBuilder(ownFp.spec.getFeaturePackDep(refSpec.getOrigin()).getGav());
                 resolvedRefSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
             }
             assertRefParamMapping(refSpec, resolvedRefSpec);

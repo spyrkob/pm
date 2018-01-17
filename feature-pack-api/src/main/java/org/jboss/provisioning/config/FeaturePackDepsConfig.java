@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,14 +31,14 @@ import org.jboss.provisioning.util.PmCollections;
 public class FeaturePackDepsConfig extends ConfigCustomizations {
 
     protected final Map<ArtifactCoords.Ga, FeaturePackConfig> fpDeps;
-    protected final Map<String, FeaturePackConfig> fpDepsByName;
-    private final Map<ArtifactCoords.Ga, String> fpGaToName;
+    protected final Map<String, FeaturePackConfig> fpDepsByOrigin;
+    private final Map<ArtifactCoords.Ga, String> fpGaToOrigin;
 
     protected FeaturePackDepsConfig(FeaturePackDepsConfigBuilder<?> builder) {
         super(builder);
         this.fpDeps = PmCollections.unmodifiable(builder.fpDeps);
-        this.fpDepsByName = PmCollections.unmodifiable(builder.fpDepsByName);
-        this.fpGaToName = builder.fpGaToName;
+        this.fpDepsByOrigin = PmCollections.unmodifiable(builder.fpDepsByOrigin);
+        this.fpGaToOrigin = builder.fpGaToOrigin;
     }
 
     public boolean hasFeaturePackDeps() {
@@ -57,16 +57,16 @@ public class FeaturePackDepsConfig extends ConfigCustomizations {
         return fpDeps.values();
     }
 
-    public FeaturePackConfig getFeaturePackDep(String name) throws ProvisioningDescriptionException {
-        final FeaturePackConfig fpDep = fpDepsByName.get(name);
+    public FeaturePackConfig getFeaturePackDep(String origin) throws ProvisioningDescriptionException {
+        final FeaturePackConfig fpDep = fpDepsByOrigin.get(origin);
         if(fpDep == null) {
-            throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(name));
+            throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(origin));
         }
         return fpDep;
     }
 
-    public String getFeaturePackDepName(ArtifactCoords.Ga fpGa) {
-        return fpGaToName.get(fpGa);
+    public String getFeaturePackDepOrigin(ArtifactCoords.Ga fpGa) {
+        return fpGaToOrigin.get(fpGa);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class FeaturePackDepsConfig extends ConfigCustomizations {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ((fpDeps == null) ? 0 : fpDeps.hashCode());
-        result = prime * result + ((fpDepsByName == null) ? 0 : fpDepsByName.hashCode());
+        result = prime * result + ((fpDepsByOrigin == null) ? 0 : fpDepsByOrigin.hashCode());
         return result;
     }
 
@@ -92,10 +92,10 @@ public class FeaturePackDepsConfig extends ConfigCustomizations {
                 return false;
         } else if (!fpDeps.equals(other.fpDeps))
             return false;
-        if (fpDepsByName == null) {
-            if (other.fpDepsByName != null)
+        if (fpDepsByOrigin == null) {
+            if (other.fpDepsByOrigin != null)
                 return false;
-        } else if (!fpDepsByName.equals(other.fpDepsByName))
+        } else if (!fpDepsByOrigin.equals(other.fpDepsByOrigin))
             return false;
         return true;
     }
