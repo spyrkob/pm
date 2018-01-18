@@ -68,7 +68,7 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
     static void writeFeaturePackConfig(ElementNode fp, String ns, FeaturePackConfig featurePack, String origin) {
         addGav(fp, featurePack.getGav());
         if(origin != null) {
-            addElement(fp, Element.ORIGIN).addChild(new TextNode(origin));
+            addElement(fp, Element.ORIGIN.getLocalName(), ns).addChild(new TextNode(origin));
         }
 
         writeConfigCustomizations(fp, ns, featurePack);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -325,16 +325,16 @@ public class ProvisioningManager {
                         }
                     }));
             reference.provision(configuration);
-            ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+            try (ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())
                     .setInstallDir(tempInstallationDir)
                     .addAllParameters(parameters)
-                    .setOperation(toFeaturePack ? "diff-to-feature-pack" : "diff");
-            try (ProvisioningRuntime runtime = builder.build()) {
+                    .setOperation(toFeaturePack ? "diff-to-feature-pack" : "diff")
+                    .build()) {
                 if(toFeaturePack) {
-                    runtime.exportToFeaturePack(runtime, location, installationHome);
+                    ProvisioningRuntime.exportToFeaturePack(runtime, location, installationHome);
                 } else {
                     ProvisioningRuntime.diff(runtime, location, installationHome);
                     runtime.getDiff().toXML(location, installationHome);
@@ -415,14 +415,14 @@ public class ProvisioningManager {
                         }
                     }));
             reference.provision(ProvisioningConfig.builder().addFeaturePackDep(FeaturePackConfig.forGav(fpGav)).build());
-            final ProvisioningRuntimeBuilder diffBuilder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+            try (ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
                     .setArtifactResolver(this.getArtifactResolver())
                     .setConfig(configuration)
                     .setEncoding(this.getEncoding())
                     .setInstallDir(tempInstallationDir)
                     .addAllParameters(parameters)
-                    .setOperation("upgrade");
-            try (ProvisioningRuntime runtime = diffBuilder.build()) {
+                    .setOperation("upgrade")
+                    .build()) {
                 // install the software
                 Files.createDirectories(tempInstallationDir.resolve("model_diff"));
                 ProvisioningRuntime.diff(runtime, tempInstallationDir.resolve("model_diff"), installationHome);
