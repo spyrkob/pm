@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@
     <exclude feature-id="spec8:p1=v1"/>
     <exclude feature-id="spec8:p1=v2"/>
   </feature-group>
-  <feature-pack dependency="source4">
+  <origin name="source4">
     <feature-group name="dep4"/>
     <feature spec="spec1">
       <depends feature-id="spec2:p1=v1,p2=v2"/>
@@ -52,7 +52,7 @@
       <param name="p1" value="v1"/>
       <param name="p2" value="v2"/>
     </feature>
-  </feature-pack>
+  </origin>
 
   <feature spec="spec1">
     <depends feature-id="spec2:p1=v1,p2=v2"/>
@@ -72,9 +72,9 @@
   <packages>
     <package name="p1"/>
     <package name="p2" optional="true"/>
-    <feature-pack dependency="fp1">
+    <origin name="fp1">
       <package name="p2"/>
       <package name="p3" optional="true"/>
-    </feature-pack>
+    </origin>
   </packages>
 </feature-group-spec>

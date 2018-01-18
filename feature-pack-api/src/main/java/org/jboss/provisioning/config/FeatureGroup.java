@@ -75,12 +75,12 @@ public class FeatureGroup extends FeatureGroupSupport {
         return new FeatureGroup(null, featureGroupName);
     }
 
-    public static FeatureGroup forGroup(String fpDep, String featureGroupName) {
-        return new FeatureGroup(fpDep, featureGroupName);
+    public static FeatureGroup forGroup(String origin, String featureGroupName) {
+        return new FeatureGroup(origin, featureGroupName);
     }
 
-    public FeatureGroup(String fpDep, String name) {
-        super(fpDep, name);
+    public FeatureGroup(String origin, String name) {
+        super(origin, name);
     }
 
     protected FeatureGroup(FeatureGroupBuilderSupport<?> builder) throws ProvisioningDescriptionException {
@@ -94,8 +94,8 @@ public class FeatureGroup extends FeatureGroupSupport {
         if(name != null) {
             buf.append(name);
         }
-        if(fpDep != null) {
-            buf.append(" fp=").append(fpDep);
+        if(origin != null) {
+            buf.append(" fp=").append(origin);
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");

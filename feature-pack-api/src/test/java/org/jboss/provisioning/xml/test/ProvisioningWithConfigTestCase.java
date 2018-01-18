@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ public class ProvisioningWithConfigTestCase {
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v1"))
                                         .excludeFeature(FeatureId.fromString("spec8:p1=v2"))
                                         .build())
-                                .addFeatureGroup(FeatureGroup.builder("dep4").setFpDep("source4").build())
+                                .addFeatureGroup(FeatureGroup.builder("dep4").setOrigin("source4").build())
                                 .addFeature(new FeatureConfig("spec1")
                                         .setParam("p1", "v1")
                                         .setParam("p2", "v2"))

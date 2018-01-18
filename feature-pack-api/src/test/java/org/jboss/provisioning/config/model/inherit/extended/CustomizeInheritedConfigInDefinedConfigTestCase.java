@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,7 +78,7 @@ public class CustomizeInheritedConfigInDefinedConfigTestCase extends PmProvision
                     .excludeFeature("fp1", FeatureId.fromString("specA:name=a3"))
                     .includeFeature("fp1", FeatureId.fromString("specA:name=a2"), new FeatureConfig().setParam("p1", "custom1"))
                     .addFeature(new FeatureConfig("specA")
-                            .setFpDep("fp1")
+                            .setOrigin("fp1")
                             .setParam("name", "a5")
                             .setParam("p1", "fp2"))
                     .build())

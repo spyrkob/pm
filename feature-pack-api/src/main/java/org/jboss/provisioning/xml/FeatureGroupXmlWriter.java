@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,18 +71,18 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         if(!featureGroup.hasItems()) {
             return;
         }
-        String currentFpDep = null;
+        String currentOrigin = null;
         ElementNode parent = configE;
         for(ConfigItem item : featureGroup.getItems()) {
-            final String itemFpDep = item.getFpDep();
-            if(itemFpDep != null) {
-                if (!itemFpDep.equals(currentFpDep)) {
-                    parent = addElement(configE, Element.FEATURE_PACK.getLocalName(), ns);
-                    addAttribute(parent, Attribute.DEPENDENCY, itemFpDep);
-                    currentFpDep = itemFpDep;
+            final String itemOrigin = item.getOrigin();
+            if(itemOrigin != null) {
+                if (!itemOrigin.equals(currentOrigin)) {
+                    parent = addElement(configE, Element.ORIGIN.getLocalName(), ns);
+                    addAttribute(parent, Attribute.NAME, itemOrigin);
+                    currentOrigin = itemOrigin;
                 }
-            } else if(currentFpDep != null) {
-                currentFpDep = null;
+            } else if(currentOrigin != null) {
+                currentOrigin = null;
                 parent = configE;
             }
             if(item.isGroup()) {
@@ -117,8 +117,8 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         writeFeatureGroupSpecBody(depE, dep, ns);
         if(dep.hasExternalFeatureGroups()) {
             for(Map.Entry<String, FeatureGroup> entry : dep.getExternalFeatureGroups().entrySet()) {
-                final ElementNode fpE = addElement(depE, Element.FEATURE_PACK.getLocalName(), ns);
-                addAttribute(fpE, Attribute.DEPENDENCY, entry.getKey());
+                final ElementNode fpE = addElement(depE, Element.ORIGIN.getLocalName(), ns);
+                addAttribute(fpE, Attribute.NAME, entry.getKey());
                 addFeatureGroupIncludeExclude(entry.getValue(), ns, fpE);
             }
         }
@@ -168,8 +168,8 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         if(fc.hasFeatureDeps()) {
             for(FeatureDependencySpec depSpec : fc.getFeatureDeps()) {
                 final ElementNode depE = addElement(fcE, Element.DEPENDS.getLocalName(), ns);
-                if(depSpec.getDependency() != null) {
-                    addAttribute(depE, Attribute.DEPENDENCY, depSpec.getDependency());
+                if(depSpec.getOrigin() != null) {
+                    addAttribute(depE, Attribute.ORIGIN, depSpec.getOrigin());
                 }
                 addAttribute(depE, Attribute.FEATURE_ID, depSpec.getFeatureId().toString());
                 if(depSpec.isInclude()) {

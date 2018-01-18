@@ -70,7 +70,7 @@ public class UpdatedConfigDepTestCase extends ConfigOrderTestBase {
                 .addConfig(ConfigModel.builder()
                         .setModel("model1")
                         .setName("config3")
-                        .addFeature(new FeatureConfig("specA").setFpDep("fp1").setParam("id", "13"))
+                        .addFeature(new FeatureConfig("specA").setOrigin("fp1").setParam("id", "13"))
                         .build())
                 .addConfig(ConfigModel.builder()
                         .setModel("model1")

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@
     </xs:annotation>
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="package" type="packageDependencyType" />
-      <xs:element name="feature-pack" type="featurePackDependencyType"/>
+      <xs:element name="origin" type="originType"/>
     </xs:choice>
   </xs:complexType>
 
@@ -83,7 +83,7 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="featurePackDependencyType">
+  <xs:complexType name="originType">
     <xs:annotation>
       <xs:documentation>
         Describes an external package dependency.
@@ -94,7 +94,7 @@
     <xs:choice maxOccurs="unbounded" minOccurs="1">
       <xs:element name="package" type="packageDependencyType" />
     </xs:choice>
-    <xs:attribute name="dependency" type="xs:string" use="required">
+    <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
           Name assigned to a dependency on the feature-pack (in

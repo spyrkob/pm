@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ public class PackageDepsSpecXmlParser {
 
     public enum Element implements XmlNameProvider {
 
-        FEATURE_PACK("feature-pack"),
+        ORIGIN("origin"),
         PACKAGE("package"),
 
         // default unknown element
@@ -89,7 +89,6 @@ public class PackageDepsSpecXmlParser {
 
     protected enum Attribute implements XmlNameProvider {
 
-        DEPENDENCY("dependency"),
         NAME("name"),
         OPTIONAL("optional"),
 
@@ -141,7 +140,7 @@ public class PackageDepsSpecXmlParser {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT: {
                     if(empty) {
-                        throw ParsingUtils.expectedAtLeastOneChild(reader, parent, Element.PACKAGE, Element.FEATURE_PACK);
+                        throw ParsingUtils.expectedAtLeastOneChild(reader, parent, Element.PACKAGE, Element.ORIGIN);
                     }
                     return;
                 }
@@ -152,8 +151,8 @@ public class PackageDepsSpecXmlParser {
                         case PACKAGE:
                             pkgDeps.addPackageDep(parsePackageDependency(reader));
                             break;
-                        case FEATURE_PACK:
-                            parseFeaturePackDependency(reader, pkgDeps);
+                        case ORIGIN:
+                            parseOrigin(reader, pkgDeps);
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);
@@ -192,21 +191,21 @@ public class PackageDepsSpecXmlParser {
         return PackageDependencySpec.forPackage(name, optional);
     }
 
-    private static void parseFeaturePackDependency(XMLExtendedStreamReader reader, PackageDepsSpecBuilder<?> pkgDeps) throws XMLStreamException {
-        String name = null;
+    private static void parseOrigin(XMLExtendedStreamReader reader, PackageDepsSpecBuilder<?> pkgDeps) throws XMLStreamException {
+        String origin = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
             switch (attribute) {
-                case DEPENDENCY:
-                    name = reader.getAttributeValue(i);
+                case NAME:
+                    origin = reader.getAttributeValue(i);
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
             }
         }
-        if (name == null) {
-            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.DEPENDENCY));
+        if (origin == null) {
+            throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
 
         while (reader.hasNext()) {
@@ -218,7 +217,7 @@ public class PackageDepsSpecXmlParser {
                     final Element element = Element.of(reader.getLocalName());
                     switch (element) {
                         case PACKAGE:
-                            pkgDeps.addPackageDep(name, parsePackageDependency(reader));
+                            pkgDeps.addPackageDep(origin, parsePackageDependency(reader));
                             break;
                         default:
                             throw ParsingUtils.unexpectedContent(reader);

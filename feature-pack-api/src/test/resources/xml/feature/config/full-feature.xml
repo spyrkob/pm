@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@
   <feature spec="child-spec" parent-ref="feature-spec-ref">
     <param name="param5" value="value5"/>
   </feature>
-  <feature-pack dependency="fp2">
+  <origin name="fp2">
     <feature-group name="group2">
       <include feature-id="spec1:p1=v1" parent-ref="parent1">
         <depends feature-id="spec4:p1=v1,p2=v2"/>
@@ -63,7 +63,7 @@
       <param name="p1" value="v1"/>
       <param name="p2" value="v2"/>
     </feature>      
-  </feature-pack>
+  </origin>
   <feature spec="another-spec">
     <param name="param6" value="value6"/>
   </feature>

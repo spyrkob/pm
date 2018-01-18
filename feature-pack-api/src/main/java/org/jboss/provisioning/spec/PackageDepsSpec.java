@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,12 +62,12 @@ public abstract class PackageDepsSpec {
         return !externalPkgDeps.isEmpty();
     }
 
-    public Collection<String> getExternalPackageSources() {
+    public Collection<String> getPackageOrigins() {
         return externalPkgDeps.keySet();
     }
 
-    public Collection<PackageDependencySpec> getExternalPackageDeps(String fpDep) {
-        final List<PackageDependencySpec> fpDeps = externalPkgDeps.get(fpDep);
+    public Collection<PackageDependencySpec> getExternalPackageDeps(String origin) {
+        final List<PackageDependencySpec> fpDeps = externalPkgDeps.get(origin);
         return fpDeps == null ? Collections.emptyList() : fpDeps;
     }
 

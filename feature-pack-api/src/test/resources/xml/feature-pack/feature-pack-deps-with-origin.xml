@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,10 +21,10 @@
 
   <dependencies>
     <dependency groupId="org.jboss.dep.group1" artifactId="dep1" version="0.0.1">
-      <name>dep1</name>
+      <origin>dep1</origin>
     </dependency>
     <dependency groupId="org.jboss.dep.group2" artifactId="dep2" version="0.0.2">
-      <name>deptwo</name>
+      <origin>deptwo</origin>
       <packages>
         <exclude name="excluded-package1"/>
         <exclude name="excluded-package2"/>

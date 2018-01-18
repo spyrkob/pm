@@ -36,7 +36,7 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
     extends PackageDepsSpecBuilder<B>
     implements ConfigItemContainerBuilder<B> {
 
-    protected String fpDep;
+    protected String origin;
     protected String name;
 
     // dependency customizations
@@ -58,8 +58,8 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
     }
 
     @SuppressWarnings("unchecked")
-    public B setFpDep(String fpDep) {
-        this.fpDep = fpDep;
+    public B setOrigin(String origin) {
+        this.origin = origin;
         return (B) this;
     }
 
@@ -82,11 +82,11 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
     }
 
     @SuppressWarnings("unchecked")
-    public B includeSpec(String fpDep, String spec) throws ProvisioningDescriptionException {
-        if(fpDep == null) {
+    public B includeSpec(String origin, String spec) throws ProvisioningDescriptionException {
+        if(origin == null) {
             return includeSpec(spec);
         }
-        getExternalFgConfig(fpDep).includeSpec(spec);
+        getExternalFgConfig(origin).includeSpec(spec);
         return (B) this;
     }
 
@@ -104,16 +104,16 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
         return includeFeature(featureId, null);
     }
 
-    public B includeFeature(String fpDep, FeatureId featureId) throws ProvisioningDescriptionException {
-        return includeFeature(fpDep, featureId, null);
+    public B includeFeature(String origin, FeatureId featureId) throws ProvisioningDescriptionException {
+        return includeFeature(origin, featureId, null);
     }
 
     @SuppressWarnings("unchecked")
-    public B includeFeature(String fpDep, FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
-        if(fpDep == null) {
+    public B includeFeature(String origin, FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+        if(origin == null) {
             return includeFeature(featureId, feature);
         }
-        getExternalFgConfig(fpDep).includeFeature(featureId, feature);
+        getExternalFgConfig(origin).includeFeature(featureId, feature);
         return (B) this;
     }
 
@@ -140,11 +140,11 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
     }
 
     @SuppressWarnings("unchecked")
-    public B excludeSpec(String fpDep, String spec) throws ProvisioningDescriptionException {
-        if(fpDep == null) {
+    public B excludeSpec(String origin, String spec) throws ProvisioningDescriptionException {
+        if(origin == null) {
             return excludeSpec(spec);
         }
-        getExternalFgConfig(fpDep).excludeSpec(spec);
+        getExternalFgConfig(origin).excludeSpec(spec);
         return (B) this;
     }
 
@@ -158,16 +158,16 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
         return (B) this;
     }
 
-    public B excludeFeature(String fpDep, FeatureId featureId) throws ProvisioningDescriptionException {
-        return excludeFeature(fpDep, featureId, null);
+    public B excludeFeature(String origin, FeatureId featureId) throws ProvisioningDescriptionException {
+        return excludeFeature(origin, featureId, null);
     }
 
     @SuppressWarnings("unchecked")
-    public B excludeFeature(String fpDep, FeatureId featureId, String parentRef) throws ProvisioningDescriptionException {
-        if(fpDep == null) {
+    public B excludeFeature(String origin, FeatureId featureId, String parentRef) throws ProvisioningDescriptionException {
+        if(origin == null) {
             return excludeFeature(featureId, parentRef);
         }
-        getExternalFgConfig(fpDep).excludeFeature(featureId, parentRef);
+        getExternalFgConfig(origin).excludeFeature(featureId, parentRef);
         return (B) this;
     }
 
@@ -191,16 +191,13 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
         return (B) this;
     }
 
-    private FeatureGroup.Builder getExternalFgConfig(String fpDep) {
-        if(fpDep == null) {
-            throw new IllegalArgumentException();
-        }
-        FeatureGroup.Builder fgBuilder = externalFgConfigs.get(fpDep);
+    private FeatureGroup.Builder getExternalFgConfig(String origin) {
+        FeatureGroup.Builder fgBuilder = externalFgConfigs.get(origin);
         if(fgBuilder != null) {
             return fgBuilder;
         }
         fgBuilder = FeatureGroup.builder(inheritFeatures);
-        externalFgConfigs = PmCollections.putLinked(externalFgConfigs, fpDep, fgBuilder);
+        externalFgConfigs = PmCollections.putLinked(externalFgConfigs, origin, fgBuilder);
         return fgBuilder;
     }
 }

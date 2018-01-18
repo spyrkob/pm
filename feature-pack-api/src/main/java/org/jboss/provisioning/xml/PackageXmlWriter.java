@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,25 +60,25 @@ public class PackageXmlWriter extends BaseXmlWriter<PackageSpec> {
             }
         }
         if(pkgDeps.hasExternalPackageDeps()) {
-            for(String fpDep : pkgDeps.getExternalPackageSources()) {
-                writeFeaturePackDependency(deps, fpDep, pkgDeps.getExternalPackageDeps(fpDep), deps.getNamespace());
+            for(String origin : pkgDeps.getPackageOrigins()) {
+                writeOrigin(deps, origin, pkgDeps.getExternalPackageDeps(origin), deps.getNamespace());
             }
         }
     }
 
-    private static void writeFeaturePackDependency(ElementNode deps, String fpDep, Collection<PackageDependencySpec> depGroup, String ns) {
-        final ElementNode fpElement = addElement(deps, Element.FEATURE_PACK.getLocalName(), ns);
-        addAttribute(fpElement, Attribute.DEPENDENCY, fpDep);
+    private static void writeOrigin(ElementNode deps, String origin, Collection<PackageDependencySpec> depGroup, String ns) {
+        final ElementNode fpElement = addElement(deps, PackageDepsSpecXmlParser.Element.ORIGIN.getLocalName(), ns);
+        addAttribute(fpElement, Attribute.NAME, origin);
         for(PackageDependencySpec depSpec : depGroup) {
             writePackageDependency(fpElement, depSpec, ns);
         }
     }
 
     private static void writePackageDependency(ElementNode deps, PackageDependencySpec depSpec, String ns) {
-        final ElementNode depElement = addElement(deps, Element.PACKAGE.getLocalName(), ns);
+        final ElementNode depElement = addElement(deps, PackageDepsSpecXmlParser.Element.PACKAGE.getLocalName(), ns);
         addAttribute(depElement, Attribute.NAME, depSpec.getName());
         if(depSpec.isOptional()) {
-            addAttribute(depElement, Attribute.OPTIONAL, TRUE);
+            addAttribute(depElement, PackageDepsSpecXmlParser.Attribute.OPTIONAL, TRUE);
         }
     }
 }

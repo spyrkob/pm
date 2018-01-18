@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,30 +29,30 @@ public class FeatureDependencySpec {
         return create(featureId, null, false);
     }
 
-    public static FeatureDependencySpec create(FeatureId featureId, String fpDep) throws ProvisioningDescriptionException {
-        return create(featureId, fpDep, false);
+    public static FeatureDependencySpec create(FeatureId featureId, String origin) throws ProvisioningDescriptionException {
+        return create(featureId, origin, false);
     }
 
     public static FeatureDependencySpec create(FeatureId featureId, boolean include) throws ProvisioningDescriptionException {
         return create(featureId, null, include);
     }
 
-    public static FeatureDependencySpec create(FeatureId featureId, String fpDep, boolean include) throws ProvisioningDescriptionException {
-        return new FeatureDependencySpec(featureId, fpDep, include);
+    public static FeatureDependencySpec create(FeatureId featureId, String origin, boolean include) throws ProvisioningDescriptionException {
+        return new FeatureDependencySpec(featureId, origin, include);
     }
 
-    final String dependency;
+    final String origin;
     final FeatureId featureId;
     final boolean include;
 
-    private FeatureDependencySpec(FeatureId featureId, String fpDep, boolean include) throws ProvisioningDescriptionException {
+    private FeatureDependencySpec(FeatureId featureId, String origin, boolean include) throws ProvisioningDescriptionException {
         this.featureId = featureId;
-        this.dependency = fpDep;
+        this.origin = origin;
         this.include = include;
     }
 
-    public String getDependency() {
-        return dependency;
+    public String getOrigin() {
+        return origin;
     }
 
     public FeatureId getFeatureId() {
@@ -67,7 +67,7 @@ public class FeatureDependencySpec {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((dependency == null) ? 0 : dependency.hashCode());
+        result = prime * result + ((origin == null) ? 0 : origin.hashCode());
         result = prime * result + ((featureId == null) ? 0 : featureId.hashCode());
         result = prime * result + (include ? 1231 : 1237);
         return result;
@@ -82,10 +82,10 @@ public class FeatureDependencySpec {
         if (getClass() != obj.getClass())
             return false;
         FeatureDependencySpec other = (FeatureDependencySpec) obj;
-        if (dependency == null) {
-            if (other.dependency != null)
+        if (origin == null) {
+            if (other.origin != null)
                 return false;
-        } else if (!dependency.equals(other.dependency))
+        } else if (!origin.equals(other.origin))
             return false;
         if (featureId == null) {
             if (other.featureId != null)
@@ -101,8 +101,8 @@ public class FeatureDependencySpec {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('[');
-        if(dependency != null) {
-            buf.append(" fpDep=").append(dependency);
+        if(origin != null) {
+            buf.append(" origin=").append(origin);
         }
         buf.append(" feature=").append(featureId);
         if(include) {

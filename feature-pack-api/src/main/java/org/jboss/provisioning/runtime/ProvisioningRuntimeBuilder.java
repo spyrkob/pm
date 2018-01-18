@@ -453,7 +453,7 @@ public class ProvisioningRuntimeBuilder {
     ResolvedFeatureGroupConfig resolveFg(String origin, FeatureGroupSupport fg) throws ProvisioningException {
         final FeaturePackRuntime.Builder originalFp = currentFp;
         if(origin != null) {
-            currentFp = getFpDep(origin);
+            currentFp = getOrigin(origin);
         } else if(currentFp == null) {
             return null;
         }
@@ -577,7 +577,7 @@ public class ProvisioningRuntimeBuilder {
         if(ciContainer.hasItems()) {
             for(ConfigItem item : ciContainer.getItems()) {
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = item.getFpDep() == null ? currentFp : getFpDep(item.getFpDep());
+                currentFp = item.getOrigin() == null ? currentFp : getOrigin(item.getOrigin());
                 try {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
@@ -602,7 +602,7 @@ public class ProvisioningRuntimeBuilder {
         return resolvedFeatures;
     }
 
-    FeaturePackRuntime.Builder getFpDep(final String depName) throws ProvisioningException {
+    FeaturePackRuntime.Builder getOrigin(final String depName) throws ProvisioningException {
         if(Constants.THIS.equals(depName)) {
             if(thisFpOrigin == null) {
                 throw new ProvisioningException("Feature-pack reference 'this' cannot be used in the current context.");
@@ -653,7 +653,7 @@ public class ProvisioningRuntimeBuilder {
                     continue;
                 }
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = refSpec.getDependency() == null ? currentFp : getFpDep(refSpec.getDependency());
+                currentFp = refSpec.getOrigin() == null ? currentFp : getOrigin(refSpec.getOrigin());
                 final ResolvedFeatureSpec refResolvedSpec = currentFp.getFeatureSpec(refSpec.getFeature().getName());
                 final List<ResolvedFeatureId> refIds = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
                 if(!refIds.isEmpty()) {
@@ -686,7 +686,7 @@ public class ProvisioningRuntimeBuilder {
                 }
                 final FeatureDependencySpec depSpec = dep.getValue();
                 final FeaturePackRuntime.Builder originalFp = currentFp;
-                currentFp = depSpec.getDependency() == null ? currentFp : getFpDep(depSpec.getDependency());
+                currentFp = depSpec.getOrigin() == null ? currentFp : getOrigin(depSpec.getOrigin());
                 resolveFeatureDepsAndRefs(configStack, currentFp.getFeatureSpec(depId.getSpecId().getName()), depId, Collections.emptyMap(), Collections.emptyList());
                 currentFp = originalFp;
             }
@@ -787,11 +787,11 @@ public class ProvisioningRuntimeBuilder {
         if(!pkgDeps.hasExternalPackageDeps()) {
             return;
         }
-        for (String depName : pkgDeps.getExternalPackageSources()) {
+        for (String origin : pkgDeps.getPackageOrigins()) {
             final FeaturePackRuntime.Builder originalFp = currentFp;
-            currentFp = this.getFpDep(depName);
+            currentFp = getOrigin(origin);
             boolean resolvedPackages = false;
-            for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(depName)) {
+            for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(origin)) {
                 if (fpConfigStack.isPackageExcluded(currentFp.gav.toGa(), pkgDep.getName())) {
                     if (!pkgDep.isOptional()) {
                         final ArtifactCoords.Gav originGav = currentFp.gav;
