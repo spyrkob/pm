@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -420,73 +420,74 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
         }
     }
 
-    private void processFeaturePackDependencies(final FeaturePackSpec.Builder fpBuilder)
-            throws Exception {
-        if (!wfFpConfig.getDependencies().isEmpty()) {
-            fpDependencies = new HashMap<>(wfFpConfig.getDependencies().size());
-            for (FeaturePackDependencySpec depSpec : wfFpConfig.getDependencies()) {
-                final FeaturePackConfig depConfig = depSpec.getTarget();
-                final String depStr = depConfig.getGav().toString();
-                String gavStr = artifactVersions.getVersion(depStr);
-                if(gavStr == null) {
-                    throw new MojoExecutionException("Failed resolve artifact version for " + depStr);
-                }
-                gavStr = gavStr.replace(depStr, depStr + "-new");
-                final ArtifactCoords.Gav depGav = ArtifactCoords.newGav(gavStr);
-                final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(depGav);
-                depBuilder.setInheritPackages(depConfig.isInheritPackages());
-                if (depConfig.hasExcludedPackages()) {
-                    try {
-                        depBuilder.excludeAllPackages(depConfig.getExcludedPackages()).build();
-                    } catch (ProvisioningException e) {
-                        throw new MojoExecutionException("Failed to process dependencies", e);
-                    }
-                }
-                if (depConfig.hasIncludedPackages()) {
-                    try {
-                        depBuilder.includeAllPackages(depConfig.getIncludedPackages()).build();
-                    } catch (ProvisioningException e) {
-                        throw new MojoExecutionException("Failed to process dependencies", e);
-                    }
-                }
-                depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
-                if(depConfig.hasDefinedConfigs()) {
-                    for (ConfigModel config : depConfig.getDefinedConfigs()) {
-                        depBuilder.addConfig(config);
-                    }
-                }
-                if(depConfig.hasExcludedConfigs()) {
-                    for(String model : depConfig.getExcludedModels()) {
-                        final Set<String> excludedConfigs = depConfig.getExcludedConfigs(model);
-                        for(String name : excludedConfigs) {
-                            depBuilder.excludeDefaultConfig(model, name);
-                        }
-                    }
-                }
-                if(depConfig.hasFullModelsExcluded()) {
-                    for(Map.Entry<String, Boolean> entry : depConfig.getFullModelsExcluded().entrySet()) {
-                        depBuilder.excludeConfigModel(entry.getKey(), entry.getValue());
-                    }
-                }
-                if(depConfig.hasFullModelsIncluded()) {
-                    for(String model : depConfig.getFullModelsIncluded()) {
-                        depBuilder.includeConfigModel(model);
-                    }
-                }
-                if(depConfig.hasIncludedConfigs()) {
-                    for(ConfigId includedConfig : depConfig.getIncludedConfigs()) {
-                        depBuilder.includeDefaultConfig(includedConfig);
-                    }
-                }
-                if(depConfig.hasDefinedConfigs()) {
-                    for(ConfigModel config : depConfig.getDefinedConfigs()) {
-                        depBuilder.addConfig(config);
-                    }
-                }
-                fpBuilder.addFeaturePackDep(depSpec.getName(), depBuilder.build());
-                final Path depZip = resolveArtifact(depGav.toArtifactCoords());
-                fpDependencies.put(depSpec.getName(), FeaturePackLayoutDescriber.describeFeaturePackZip(depZip));
+    private void processFeaturePackDependencies(final FeaturePackSpec.Builder fpBuilder) throws Exception {
+        if(wfFpConfig.getDependencies().isEmpty()) {
+            return;
+        }
+
+        fpDependencies = new HashMap<>(wfFpConfig.getDependencies().size());
+        for (FeaturePackDependencySpec depSpec : wfFpConfig.getDependencies()) {
+            final FeaturePackConfig depConfig = depSpec.getTarget();
+            final String depStr = depConfig.getGav().toString();
+            String gavStr = artifactVersions.getVersion(depStr);
+            if (gavStr == null) {
+                throw new MojoExecutionException("Failed resolve artifact version for " + depStr);
             }
+            gavStr = gavStr.replace(depStr, depStr + "-new");
+            final ArtifactCoords.Gav depGav = ArtifactCoords.newGav(gavStr);
+            final FeaturePackConfig.Builder depBuilder = FeaturePackConfig.builder(depGav);
+            depBuilder.setInheritPackages(depConfig.isInheritPackages());
+            if (depConfig.hasExcludedPackages()) {
+                try {
+                    depBuilder.excludeAllPackages(depConfig.getExcludedPackages()).build();
+                } catch (ProvisioningException e) {
+                    throw new MojoExecutionException("Failed to process dependencies", e);
+                }
+            }
+            if (depConfig.hasIncludedPackages()) {
+                try {
+                    depBuilder.includeAllPackages(depConfig.getIncludedPackages()).build();
+                } catch (ProvisioningException e) {
+                    throw new MojoExecutionException("Failed to process dependencies", e);
+                }
+            }
+            depBuilder.setInheritConfigs(depConfig.isInheritConfigs());
+            if (depConfig.hasDefinedConfigs()) {
+                for (ConfigModel config : depConfig.getDefinedConfigs()) {
+                    depBuilder.addConfig(config);
+                }
+            }
+            if (depConfig.hasExcludedConfigs()) {
+                for (String model : depConfig.getExcludedModels()) {
+                    final Set<String> excludedConfigs = depConfig.getExcludedConfigs(model);
+                    for (String name : excludedConfigs) {
+                        depBuilder.excludeDefaultConfig(model, name);
+                    }
+                }
+            }
+            if (depConfig.hasFullModelsExcluded()) {
+                for (Map.Entry<String, Boolean> entry : depConfig.getFullModelsExcluded().entrySet()) {
+                    depBuilder.excludeConfigModel(entry.getKey(), entry.getValue());
+                }
+            }
+            if (depConfig.hasFullModelsIncluded()) {
+                for (String model : depConfig.getFullModelsIncluded()) {
+                    depBuilder.includeConfigModel(model);
+                }
+            }
+            if (depConfig.hasIncludedConfigs()) {
+                for (ConfigId includedConfig : depConfig.getIncludedConfigs()) {
+                    depBuilder.includeDefaultConfig(includedConfig);
+                }
+            }
+            if (depConfig.hasDefinedConfigs()) {
+                for (ConfigModel config : depConfig.getDefinedConfigs()) {
+                    depBuilder.addConfig(config);
+                }
+            }
+            fpBuilder.addFeaturePackDep(depSpec.getName(), depBuilder.build());
+            final Path depZip = resolveArtifact(depGav.toArtifactCoords());
+            fpDependencies.put(depSpec.getName(), FeaturePackLayoutDescriber.describeFeaturePackZip(depZip));
         }
     }
 

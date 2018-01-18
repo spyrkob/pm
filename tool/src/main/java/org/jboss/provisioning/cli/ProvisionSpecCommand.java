@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ import org.jboss.provisioning.ProvisioningException;
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="provision-spec", description="(Re)Provisions the installation according to the specification provided in an XML file")
+@CommandDefinition(name="provision", description="(Re)Provisions the installation according to the specification provided in an XML file")
 public class ProvisionSpecCommand extends ProvisioningCommand {
 
     @Arguments(completer=FileOptionCompleter.class, description="File describing the desired provisioned state.")
