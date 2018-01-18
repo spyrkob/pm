@@ -93,7 +93,8 @@ public class OverwriteFeatureConfigTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
                         .addFeature(new FeatureConfig("specA").setOrigin("fp1").setParam("id", "1").setParam("p3", "custom"))
-                        .includeFeature("fp2", FeatureId.create("specB", "id", "1"), new FeatureConfig().setParam("p3", "custom"))
+                        .includeFeature(FeatureId.create("specB", "id", "1"),
+                                new FeatureConfig().setOrigin("fp2").setParam("p3", "custom"))
                         .build())
                 .build();
     }

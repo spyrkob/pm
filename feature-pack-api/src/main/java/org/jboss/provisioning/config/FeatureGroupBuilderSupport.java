@@ -109,7 +109,7 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
     }
 
     @SuppressWarnings("unchecked")
-    public B includeFeature(String origin, FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+    private B includeFeature(String origin, FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
         if(origin == null) {
             return includeFeature(featureId, feature);
         }
@@ -119,15 +119,21 @@ public abstract class FeatureGroupBuilderSupport<B extends FeatureGroupBuilderSu
 
     @SuppressWarnings("unchecked")
     public B includeFeature(FeatureId featureId, FeatureConfig feature) throws ProvisioningDescriptionException {
+        if(feature != null && feature.getOrigin() != null) {
+            final String origin = feature.getOrigin();
+            feature.setOrigin(null);
+            getExternalFgConfig(origin).includeFeature(featureId, feature);
+            return (B) this;
+        }
         if(excludedFeatures.containsKey(featureId)) {
             throw new ProvisioningDescriptionException(featureId + " has been explicitly excluded");
         }
         if(feature == null) {
             feature = new FeatureConfig(featureId.getSpec());
-        }
-        if(feature.specId == null) {
+        } else if(feature.specId == null) {
             feature.specId = featureId.getSpec();
         }
+
         for (Map.Entry<String, String> idEntry : featureId.getParams().entrySet()) {
             final String prevValue = feature.putParam(idEntry.getKey(), idEntry.getValue());
             if (prevValue != null && !prevValue.equals(idEntry.getValue())) {

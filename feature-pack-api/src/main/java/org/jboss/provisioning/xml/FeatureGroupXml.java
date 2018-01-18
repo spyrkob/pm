@@ -507,11 +507,10 @@ public class FeatureGroupXml {
         throw ParsingUtils.endOfDocument(reader.getLocation());
     }
 
-    private static void readInclude(XMLExtendedStreamReader reader, String dependency, FeatureGroupBuilderSupport<?> depBuilder) throws XMLStreamException {
+    private static void readInclude(XMLExtendedStreamReader reader, String origin, FeatureGroupBuilderSupport<?> depBuilder) throws XMLStreamException {
         String spec = null;
         String featureIdStr = null;
         String parentRef = null;
-        FeatureConfig fc = null;
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
             final Attribute attribute = Attribute.of(reader.getAttributeName(i));
@@ -524,7 +523,6 @@ public class FeatureGroupXml {
                     break;
                 case PARENT_REF:
                     parentRef = reader.getAttributeValue(i);
-                    fc = new FeatureConfig().setParentRef(parentRef);
                     break;
                 default:
                     throw ParsingUtils.unexpectedAttribute(reader, i);
@@ -539,34 +537,33 @@ public class FeatureGroupXml {
                 attributesCantBeCombined(Attribute.SPEC, Attribute.PARENT_REF, reader);
             }
             try {
-                depBuilder.includeSpec(dependency, spec);
+                depBuilder.includeSpec(origin, spec);
             } catch (ProvisioningDescriptionException e) {
                 throw new XMLStreamException("Failed to parse config", e);
             }
             ParsingUtils.parseNoContent(reader);
             return;
         }
+
         if(featureIdStr == null) {
             throw new XMLStreamException("Either " + Attribute.SPEC + " or " + Attribute.FEATURE_ID + " has to be present", reader.getLocation());
         }
         final FeatureId featureId = parseFeatureId(featureIdStr);
+
+        final FeatureConfig fc = new FeatureConfig();
+        fc.setOrigin(origin);
+        fc.setParentRef(parentRef);
+
         while (reader.hasNext()) {
             switch (reader.nextTag()) {
                 case XMLStreamConstants.END_ELEMENT:
                     try {
-                        depBuilder.includeFeature(dependency, featureId, fc);
+                        depBuilder.includeFeature(featureId, fc);
                     } catch (ProvisioningDescriptionException e) {
                         throw new XMLStreamException("Failed to parse config", e);
                     }
                     return;
                 case XMLStreamConstants.START_ELEMENT:
-                    if(fc == null) {
-                        try {
-                            fc = new FeatureConfig(featureId.getSpec());
-                        } catch (ProvisioningDescriptionException e) {
-                            throw new XMLStreamException("Failed to parse config", e);
-                        }
-                    }
                     final Element element = Element.of(reader.getName().getLocalPart());
                     switch (element) {
                         case DEPENDS:

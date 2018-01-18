@@ -95,7 +95,7 @@ public class FeatureGroup extends FeatureGroupSupport {
             buf.append(name);
         }
         if(origin != null) {
-            buf.append(" fp=").append(origin);
+            buf.append(" origin=").append(origin);
         }
         if(!inheritFeatures) {
             buf.append(" inherit-features=false");
