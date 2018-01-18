@@ -62,7 +62,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
         writeFeatureGroupSpecBody(fgE, featureGroup, ns);
 
         if(featureGroup.hasPackageDeps()) {
-            PackageXmlWriter.writePackageDeps(featureGroup, addElement(fgE, Element.PACKAGES));
+            PackageXmlWriter.writePackageDeps(featureGroup, addElement(fgE, Element.PACKAGES.getLocalName(), ns));
         }
         return fgE;
     }
@@ -123,7 +123,7 @@ public class FeatureGroupXmlWriter extends BaseXmlWriter<FeatureGroup> {
             }
         }
         if(dep.hasPackageDeps()) {
-            PackageXmlWriter.writePackageDeps(dep, addElement(depE, Element.PACKAGES));
+            PackageXmlWriter.writePackageDeps(dep, addElement(depE, Element.PACKAGES.getLocalName(), ns));
         }
     }
 
