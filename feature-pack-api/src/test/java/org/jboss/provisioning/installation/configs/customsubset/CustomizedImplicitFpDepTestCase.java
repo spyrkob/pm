@@ -80,7 +80,8 @@ public class CustomizedImplicitFpDepTestCase extends PmProvisionConfigTestBase {
                 .addFeaturePackDep("fp1", FeaturePackConfig.forGav(FP1_GA.toGav()))
                 .addFeaturePackDep("fp2", FeaturePackConfig.forGav(FP2_GAV))
                 .addConfig(ConfigModel.builder("model1", "config1")
-                        .includeFeature("fp1", FeatureId.create("specA", "id", "2"), new FeatureConfig().setParam("p1", "custom"))
+                        .includeFeature(FeatureId.create("specA", "id", "2"),
+                                new FeatureConfig().setOrigin("fp1").setParam("p1", "custom"))
                         .build())
                 .build();
     }
