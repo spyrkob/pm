@@ -16,12 +16,10 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -64,8 +62,16 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
+            elementsByLocal = new HashMap<>(9);
+            elementsByLocal.put(CONFIG.name, CONFIG);
+            elementsByLocal.put(DEFAULT_CONFIGS.name, DEFAULT_CONFIGS);
+            elementsByLocal.put(EXCLUDE.name, EXCLUDE);
+            elementsByLocal.put(FEATURE_PACK.name, FEATURE_PACK);
+            elementsByLocal.put(INCLUDE.name, INCLUDE);
+            elementsByLocal.put(INSTALLATION.name, INSTALLATION);
+            elementsByLocal.put(ORIGIN.name, ORIGIN);
+            elementsByLocal.put(PACKAGES.name, PACKAGES);
+            elementsByLocal.put(null, UNKNOWN);
         }
 
         static Element of(String localName) {
@@ -118,7 +124,16 @@ public class ProvisioningXmlParser10 implements PlugableXmlParser<ProvisioningCo
         private static final Map<String, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> val.name, val -> val));
+            attributes = new HashMap<>(9);
+            attributes.put(ARTIFACT_ID.name, ARTIFACT_ID);
+            attributes.put(GROUP_ID.name, GROUP_ID);
+            attributes.put(INHERIT.name, INHERIT);
+            attributes.put(INHERIT_UNNAMED_MODELS.name, INHERIT_UNNAMED_MODELS);
+            attributes.put(MODEL.name, MODEL);
+            attributes.put(NAME.name, NAME);
+            attributes.put(NAMED_MODELS_ONLY.name, NAMED_MODELS_ONLY);
+            attributes.put(VERSION.name, VERSION);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(String name) {

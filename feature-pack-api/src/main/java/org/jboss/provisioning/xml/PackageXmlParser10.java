@@ -16,11 +16,9 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -50,8 +48,10 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
         private static final Map<QName, Element> elements;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elements = new HashMap<>(3);
+            elements.put(new QName(NAMESPACE_1_0, DEPENDENCIES.name), DEPENDENCIES);
+            elements.put(new QName(NAMESPACE_1_0, PACKAGE_SPEC.name), PACKAGE_SPEC);
+            elements.put(null, UNKNOWN);
         }
 
         static Element of(QName qName) {
@@ -97,8 +97,9 @@ public class PackageXmlParser10 implements PlugableXmlParser<PackageSpec.Builder
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<>(2);
+            attributes.put(new QName(NAME.name), NAME);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {

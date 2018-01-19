@@ -16,13 +16,11 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -76,8 +74,23 @@ public class FeatureGroupXml {
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.name, val -> val));
+            elementsByLocal = new HashMap<String, Element>(16);
+            elementsByLocal.put(CONFIG_DEPS.name, CONFIG_DEPS);
+            elementsByLocal.put(CONFIG_DEP.name, CONFIG_DEP);
+            elementsByLocal.put(DEPENDS.name, DEPENDS);
+            elementsByLocal.put(EXCLUDE.name, EXCLUDE);
+            elementsByLocal.put(FEATURE.name, FEATURE);
+            elementsByLocal.put(FEATURE_GROUP.name, FEATURE_GROUP);
+            elementsByLocal.put(FEATURE_GROUP_SPEC.name, FEATURE_GROUP_SPEC);
+            elementsByLocal.put(INCLUDE.name, INCLUDE);
+            elementsByLocal.put(ORIGIN.name, ORIGIN);
+            elementsByLocal.put(PACKAGES.name, PACKAGES);
+            elementsByLocal.put(PARAM.name, PARAM);
+            elementsByLocal.put(PROP.name, PROP);
+            elementsByLocal.put(PROPS.name, PROPS);
+            elementsByLocal.put(RESET_PARAM.name, RESET_PARAM);
+            elementsByLocal.put(UNSET_PARAM.name, UNSET_PARAM);
+            elementsByLocal.put(null, UNKNOWN);
         }
 
         static Element of(String localName) {
@@ -130,8 +143,21 @@ public class FeatureGroupXml {
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<QName, Attribute>(14);
+            attributes.put(new QName(ID.name), ID);
+            attributes.put(new QName(FEATURE.name), FEATURE);
+            attributes.put(new QName(FEATURE_ID.name), FEATURE_ID);
+            attributes.put(new QName(INCLUDE.name), INCLUDE);
+            attributes.put(new QName(INHERIT_FEATURES.name), INHERIT_FEATURES);
+            attributes.put(new QName(MODEL.name), MODEL);
+            attributes.put(new QName(NAME.name), NAME);
+            attributes.put(new QName(OPTIONAL.name), OPTIONAL);
+            attributes.put(new QName(ORIGIN.name), ORIGIN);
+            attributes.put(new QName(PARAM.name), PARAM);
+            attributes.put(new QName(PARENT_REF.name), PARENT_REF);
+            attributes.put(new QName(SPEC.name), SPEC);
+            attributes.put(new QName(VALUE.name), VALUE);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {

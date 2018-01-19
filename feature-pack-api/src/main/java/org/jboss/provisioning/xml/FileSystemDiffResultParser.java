@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,8 @@ package org.jboss.provisioning.xml;
 
 
 import java.io.Reader;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
@@ -49,7 +47,15 @@ public class FileSystemDiffResultParser implements XmlParser<FileSystemDiffResul
         private static final Map<QName, Element> elements;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elements = new HashMap<>(8);
+            elements.put(new QName(NAMESPACE_1_0, ADDED.name), ADDED);
+            elements.put(new QName(NAMESPACE_1_0, CHANGE.name), CHANGE);
+            elements.put(new QName(NAMESPACE_1_0, CHANGES.name), CHANGES);
+            elements.put(new QName(NAMESPACE_1_0, DELETED.name), DELETED);
+            elements.put(new QName(NAMESPACE_1_0, DIFF_RESULT.name), DIFF_RESULT);
+            elements.put(new QName(NAMESPACE_1_0, MODIFIED.name), MODIFIED);
+            elements.put(new QName(NAMESPACE_1_0, PATH.name), PATH);
+            elements.put(null, UNKNOWN);
         }
 
         static Element of(QName qName) {

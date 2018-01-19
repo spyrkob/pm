@@ -170,6 +170,16 @@ public class ProvisioningManager {
         }
     }
 
+    public void install(ArtifactCoords.Gav fpGav, boolean replaceInstalledVersion) throws ProvisioningException {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public void install(FeaturePackConfig fpConfig, boolean replaceInstalledVersion) throws ProvisioningException {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Uninstalls the specified feature-pack.
      *
@@ -185,6 +195,11 @@ public class ProvisioningManager {
         } else {
             provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePackDep(gav).build());
         }
+    }
+
+    public void uninstall(ArtifactCoords.Gav gav, boolean explicitVersionOnly) throws ProvisioningException {
+        //TODO
+        throw new UnsupportedOperationException();
     }
 
     /**

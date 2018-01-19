@@ -16,10 +16,8 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
@@ -51,8 +49,9 @@ public class ConfigXml {
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
+            elementsByLocal = new HashMap<String, Element>(2);
+            elementsByLocal.put(CONFIG.name, CONFIG);
+            elementsByLocal.put(null, UNKNOWN);
         }
 
         static Element of(String localName) {
@@ -95,8 +94,11 @@ public class ConfigXml {
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<>(4);
+            attributes.put(new QName(INHERIT_FEATURES.getLocalName()), INHERIT_FEATURES);
+            attributes.put(new QName(NAME.getLocalName()), NAME);
+            attributes.put(new QName(MODEL.getLocalName()), MODEL);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {

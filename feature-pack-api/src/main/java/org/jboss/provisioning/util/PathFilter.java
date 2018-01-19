@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -39,9 +40,14 @@ public interface PathFilter {
      */
     boolean accept(Path path);
 
-    PathFilter DEFAULT = (Path path) -> true;
+    PathFilter DEFAULT = new PathFilter() {
+        @Override
+        public boolean accept(Path path) {
+            return true;
+        }};
 
     class PathFilterImpl implements PathFilter {
+
         private final List<Pattern> directories;
         private final List<Pattern> files;
 
@@ -53,12 +59,22 @@ public interface PathFilter {
         @Override
         public boolean accept(Path path) {
             final String current = path.toString();
-            boolean acceptDirectory = !this.directories.stream().anyMatch(pattern -> pattern.matcher(current).matches());
+            boolean acceptDirectory = !this.directories.stream().anyMatch(new Predicate<Pattern>() {
+                @Override
+                public boolean test(Pattern pattern) {
+                    return pattern.matcher(current).matches();
+                }
+            });
             if(Files.isDirectory(path)) {
                 return acceptDirectory;
             }
             final String fileName = path.getFileName().toString();
-            return acceptDirectory && !this.files.stream().anyMatch(pattern -> pattern.matcher(fileName).matches());
+            return acceptDirectory && !this.files.stream().anyMatch(new Predicate<Pattern>() {
+                @Override
+                public boolean test(Pattern pattern) {
+                    return pattern.matcher(fileName).matches();
+                }
+            });
         }
     }
 
