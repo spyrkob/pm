@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Ga;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
@@ -58,7 +59,8 @@ public abstract class FeaturePackDepsConfigBuilder<B extends FeaturePackDepsConf
 
     @SuppressWarnings("unchecked")
     public B removeFeaturePackDep(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final FeaturePackConfig fpDep = fpDeps.get(gav.toGa());
+        final Ga ga = gav.toGa();
+        final FeaturePackConfig fpDep = fpDeps.get(ga);
         if(fpDep == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         }
@@ -71,16 +73,16 @@ public abstract class FeaturePackDepsConfigBuilder<B extends FeaturePackDepsConf
             fpGaToOrigin = Collections.emptyMap();
             return (B) this;
         }
-        fpDeps.remove(gav.toGa());
+        fpDeps.remove(ga);
         if(!fpGaToOrigin.isEmpty()) {
-            final String origin = fpGaToOrigin.get(gav.toGa());
+            final String origin = fpGaToOrigin.get(ga);
             if(origin != null) {
                 if(fpDepsByOrigin.size() == 1) {
                     fpDepsByOrigin = Collections.emptyMap();
                     fpGaToOrigin = Collections.emptyMap();
                 } else {
                     fpDepsByOrigin.remove(origin);
-                    fpGaToOrigin.remove(gav.toGa());
+                    fpGaToOrigin.remove(ga);
                 }
             }
         }

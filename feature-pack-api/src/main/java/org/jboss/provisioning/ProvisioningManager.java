@@ -206,19 +206,11 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the uninstallation fails
      */
     public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final ProvisioningConfig provisioningConfig = getProvisioningConfig();
-        if(provisioningConfig == null) {
+        final ProvisioningConfig provisionedConfig = getProvisioningConfig();
+        if(provisionedConfig == null || !provisioningConfig.hasFeaturePackDep(gav.toGa())) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!provisioningConfig.hasFeaturePackDep(gav.toGa())) {
-            throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else {
-            provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePackDep(gav).build());
         }
-    }
-
-    public void uninstall(ArtifactCoords.Gav gav, boolean explicitVersionOnly) throws ProvisioningException {
-        //TODO
-        throw new UnsupportedOperationException();
+        provision(ProvisioningConfig.builder(provisionedConfig).removeFeaturePackDep(gav).build());
     }
 
     /**
@@ -262,6 +254,7 @@ public class ProvisioningManager {
                     throw new ProvisioningException(Errors.readDirectory(installationHome));
                 }
             }
+            this.provisioningConfig = null;
             return;
         }
 
