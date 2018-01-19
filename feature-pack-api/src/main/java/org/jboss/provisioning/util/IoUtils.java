@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  *
@@ -120,13 +121,17 @@ public class IoUtils {
     public static String readFile(Path file) throws IOException {
         final StringWriter buf = new StringWriter();
         try (BufferedWriter bw = new BufferedWriter(buf)) {
-        Files.readAllLines(file).forEach(line -> {
-            try {
-             bw.newLine();
-             bw.append(line);
-            }catch(IOException ioex) {
-                throw new RuntimeException(ioex);
-            }});
+            Files.readAllLines(file).forEach(new Consumer<String>() {
+                @Override
+                public void accept(String line) {
+                    try {
+                        bw.newLine();
+                        bw.append(line);
+                    } catch (IOException ioex) {
+                        throw new RuntimeException(ioex);
+                    }
+                }
+            });
         }
         return buf.toString();
     }

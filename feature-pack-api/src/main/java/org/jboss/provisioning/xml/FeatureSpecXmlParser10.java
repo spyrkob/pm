@@ -16,13 +16,11 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -45,7 +43,7 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
 class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:pm-feature-spec:1.0";
-    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.FEATURE_SPEC.getLocalName());
+    public static final QName ROOT_1_0 = new QName(NAMESPACE_1_0, Element.FEATURE_SPEC.name);
 
     enum Element implements XmlNameProvider {
 
@@ -58,11 +56,11 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         FEATURE_SPEC("feature-spec"),
         PACKAGE("package"),
         PACKAGES("packages"),
-        PARAMETERS("params"),
         PARAMETER("param"),
+        PARAMETERS("params"),
         PROVIDES("provides"),
-        REFERENCES("refs"),
         REFERENCE("ref"),
+        REFERENCES("refs"),
         REQUIRES("requires"),
 
         // default unknown element
@@ -72,7 +70,23 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         private static final Map<QName, Element> elements;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elements = new HashMap<>(16);
+            elements.put(new QName(NAMESPACE_1_0, ANNOTATION.name), ANNOTATION);
+            elements.put(new QName(NAMESPACE_1_0, CAPABILITY.name), CAPABILITY);
+            elements.put(new QName(NAMESPACE_1_0, DEPENDENCIES.name), DEPENDENCIES);
+            elements.put(new QName(NAMESPACE_1_0, DEPENDENCY.name), DEPENDENCY);
+            elements.put(new QName(NAMESPACE_1_0, ELEM.name), ELEM);
+            elements.put(new QName(NAMESPACE_1_0, FEATURE_PACK.name), FEATURE_PACK);
+            elements.put(new QName(NAMESPACE_1_0, FEATURE_SPEC.name), FEATURE_SPEC);
+            elements.put(new QName(NAMESPACE_1_0, PACKAGE.name), PACKAGE);
+            elements.put(new QName(NAMESPACE_1_0, PACKAGES.name), PACKAGES);
+            elements.put(new QName(NAMESPACE_1_0, PARAMETER.name), PARAMETER);
+            elements.put(new QName(NAMESPACE_1_0, PARAMETERS.name), PARAMETERS);
+            elements.put(new QName(NAMESPACE_1_0, PROVIDES.name), PROVIDES);
+            elements.put(new QName(NAMESPACE_1_0, REFERENCE.name), REFERENCE);
+            elements.put(new QName(NAMESPACE_1_0, REFERENCES.name), REFERENCES);
+            elements.put(new QName(NAMESPACE_1_0, REQUIRES.name), REQUIRES);
+            elements.put(null, UNKNOWN);
         }
 
         static Element of(QName qName) {
@@ -127,7 +141,6 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         OPTIONAL("optional"),
         TYPE("type"),
         VALUE("value"),
-        UNBOUNDED("unbounded"),
 
         // default unknown attribute
         UNKNOWN(null);
@@ -135,7 +148,19 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<>(12);
+            attributes.put(new QName(DEFAULT.name), DEFAULT);
+            attributes.put(new QName(DEPENDENCY.name), DEPENDENCY);
+            attributes.put(new QName(FEATURE.name), FEATURE);
+            attributes.put(new QName(FEATURE_ID.name), FEATURE_ID);
+            attributes.put(new QName(INCLUDE.name), INCLUDE);
+            attributes.put(new QName(MAPS_TO.name), MAPS_TO);
+            attributes.put(new QName(NAME.name), NAME);
+            attributes.put(new QName(NILLABLE.name), NILLABLE);
+            attributes.put(new QName(OPTIONAL.name), OPTIONAL);
+            attributes.put(new QName(TYPE.name), TYPE);
+            attributes.put(new QName(VALUE.name), VALUE);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,11 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -66,8 +64,20 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         private static final Map<String, Element> elements;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.name, val -> val));
+            elements = new HashMap<>(13);
+            elements.put(ARTIFACT.name, ARTIFACT);
+            elements.put(CONFIG.name, CONFIG);
+            elements.put(DEFAULT_CONFIGS.name, DEFAULT_CONFIGS);
+            elements.put(DEFAULT_PACKAGES.name, DEFAULT_PACKAGES);
+            elements.put(DEPENDENCIES.name, DEPENDENCIES);
+            elements.put(DEPENDENCY.name, DEPENDENCY);
+            elements.put(EXCLUDE.name, EXCLUDE);
+            elements.put(FEATURE_PACK.name, FEATURE_PACK);
+            elements.put(INCLUDE.name, INCLUDE);
+            elements.put(NAME.name, NAME);
+            elements.put(PACKAGES.name, PACKAGES);
+            elements.put(PACKAGE.name, PACKAGE);
+            elements.put(null, UNKNOWN);
         }
 
         static Element of(String name) {
@@ -116,8 +126,18 @@ public class FeaturePackXmlParser10 implements PlugableXmlParser<FeaturePackSpec
         private static final Map<String, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.name, val -> val));
+            attributes = new HashMap<>(11);
+            attributes.put(ARTIFACT_ID.getLocalName(), ARTIFACT_ID);
+            attributes.put(GROUP_ID.getLocalName(), GROUP_ID);
+            attributes.put(CLASSIFIER.getLocalName(), CLASSIFIER);
+            attributes.put(COORDS.getLocalName(), COORDS);
+            attributes.put(EXTENSION.getLocalName(), EXTENSION);
+            attributes.put(INHERIT.getLocalName(), INHERIT);
+            attributes.put(MODEL.getLocalName(), MODEL);
+            attributes.put(NAME.getLocalName(), NAME);
+            attributes.put(NAMED_CONFIGS_ONLY.getLocalName(), NAMED_CONFIGS_ONLY);
+            attributes.put(VERSION.getLocalName(), VERSION);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(String name) {

@@ -552,7 +552,7 @@ class ConfigModelStack {
             final boolean prevOrderRefSpec = orderReferencedSpec;
             orderReferencedSpec = false;
             // sort according to the appearance in the config
-            initiatedCircularRefs.sort((o1, o2) -> o1.firstInConfig.includeNo - o2.firstInConfig.includeNo);
+            initiatedCircularRefs.sort(CircularRefInfo.getFirstInConfigComparator());
             if(initiatedCircularRefs.get(0).firstInConfig.includeNo < feature.includeNo) {
                 feature.free();
                 for(CircularRefInfo ref : initiatedCircularRefs) {
@@ -571,7 +571,7 @@ class ConfigModelStack {
                 }
                 feature.ordered();
                 orderedFeatures.add(feature);
-                initiatedCircularRefs.sort((o1, o2) -> o1.nextOnPath.includeNo - o2.nextOnPath.includeNo);
+                initiatedCircularRefs.sort(CircularRefInfo.getNextOnPathComparator());
                 for(CircularRefInfo ref : initiatedCircularRefs) {
                     if(orderFeature(ref.nextOnPath) != null) {
                         throw new IllegalStateException();

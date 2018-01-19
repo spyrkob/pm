@@ -16,11 +16,9 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -55,8 +53,10 @@ public class PackageDepsSpecXmlParser {
         private static final Map<String, Element> elementsByLocal;
 
         static {
-            elementsByLocal = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> val.getLocalName(), val -> val));
+            elementsByLocal = new HashMap<>(3);
+            elementsByLocal.put(ORIGIN.name, ORIGIN);
+            elementsByLocal.put(PACKAGE.name, PACKAGE);
+            elementsByLocal.put(null, UNKNOWN);
         }
 
         static Element of(String localName) {
@@ -98,8 +98,10 @@ public class PackageDepsSpecXmlParser {
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null)
-                    .collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<>(3);
+            attributes.put(new QName(NAME.name), NAME);
+            attributes.put(new QName(OPTIONAL.name), OPTIONAL);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,9 @@
  */
 package org.jboss.provisioning.xml;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -47,8 +45,8 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
         FEATURE("feature"),
         FEATURE_PACK("feature-pack"),
         INSTALLATION("installation"),
-        PACKAGES("packages"),
         PACKAGE("package"),
+        PACKAGES("packages"),
         PARAM("param"),
         PROP("prop"),
         PROPS("props"),
@@ -61,7 +59,18 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
         private static final Map<QName, Element> elements;
 
         static {
-            elements = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(NAMESPACE_1_0, val.getLocalName()), val -> val));
+            elements = new HashMap<>(11);
+            elements.put(new QName(NAMESPACE_1_0, CONFIG.name), CONFIG);
+            elements.put(new QName(NAMESPACE_1_0, FEATURE.name), FEATURE);
+            elements.put(new QName(NAMESPACE_1_0, FEATURE_PACK.name), FEATURE_PACK);
+            elements.put(new QName(NAMESPACE_1_0, INSTALLATION.name), INSTALLATION);
+            elements.put(new QName(NAMESPACE_1_0, PACKAGE.name), PACKAGE);
+            elements.put(new QName(NAMESPACE_1_0, PACKAGES.name), PACKAGES);
+            elements.put(new QName(NAMESPACE_1_0, PARAM.name), PARAM);
+            elements.put(new QName(NAMESPACE_1_0, PROP.name), PROP);
+            elements.put(new QName(NAMESPACE_1_0, PROPS.name), PROPS);
+            elements.put(new QName(NAMESPACE_1_0, SPEC.name), SPEC);
+            elements.put(null, UNKNOWN);
         }
 
         static Element of(QName qName) {
@@ -119,7 +128,15 @@ class ProvisionedStateXmlParser10 implements PlugableXmlParser<ProvisionedState.
         private static final Map<QName, Attribute> attributes;
 
         static {
-            attributes = Arrays.stream(values()).filter(val -> val.name != null).collect(Collectors.toMap(val -> new QName(val.getLocalName()), val -> val));
+            attributes = new HashMap<>(8);
+            attributes.put(new QName(ARTIFACT_ID.name), ARTIFACT_ID);
+            attributes.put(new QName(GROUP_ID.name), GROUP_ID);
+            attributes.put(new QName(ID.name), ID);
+            attributes.put(new QName(MODEL.name), MODEL);
+            attributes.put(new QName(NAME.name), NAME);
+            attributes.put(new QName(VALUE.name), VALUE);
+            attributes.put(new QName(VERSION.name), VERSION);
+            attributes.put(null, UNKNOWN);
         }
 
         static Attribute of(QName qName) {
