@@ -29,13 +29,12 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmUninstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class DontUninstallExplicitlyInstalledFpDepsTestCase extends PmUninstallFeaturePackTestBase {
+public class KeepExplicitlyInstalledFpDepsOfUninstalledFpTestCase extends PmUninstallFeaturePackTestBase {
 
     private static final Gav FP1_100_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
     private static final Gav FP2_100_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
@@ -147,8 +146,8 @@ public class DontUninstallExplicitlyInstalledFpDepsTestCase extends PmUninstallF
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp3/p1.txt", "fp3 1.0.0.Final p1")
                 .addFile("fp3/p3.txt", "fp3 1.0.0.Final p3")
                 .addFile("fp4/p1.txt", "fp4 1.0.0.Final p1")

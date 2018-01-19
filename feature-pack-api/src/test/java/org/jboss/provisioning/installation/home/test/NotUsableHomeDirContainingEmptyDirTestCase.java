@@ -15,60 +15,54 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.plugin.test;
+package org.jboss.provisioning.installation.home.test;
+
+import java.nio.file.Files;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
-import org.junit.Assert;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestBase {
+public class NotUsableHomeDirContainingEmptyDirTestCase extends PmProvisionConfigTestBase {
 
-    public static class Plugin1 implements ProvisioningPlugin {
-        @Override
-        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
-            throw new ProvisioningException("Plugin1 failure");
-        }
+    private static final Gav FP1_100_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+
+    @Override
+    protected void doBefore() throws Exception {
+        Files.createDirectory(installHome.resolve("dir1"));
+        Files.createDirectories(installHome.resolve("dir2").resolve("dir3"));
+        super.doBefore();
     }
 
     @Override
     protected void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-            .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+            .newFeaturePack(FP1_100_GAV)
                 .newPackage("p1", true)
-                    .writeContent("fp1/p1.txt", "p1")
+                    .writeContent("fp1/p1.txt", "fp1 1.0.0.Final p1")
                     .getFeaturePack()
-                .addPlugin(Plugin1.class)
                 .getInstaller()
             .install();
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig()
-            throws ProvisioningDescriptionException {
-        return ProvisioningConfig.builder()
-                .addFeaturePackDep(
-                        FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final")))
-                .build();
+    protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
+        return ProvisioningConfig.builder().addFeaturePackDep(FP1_100_GAV).build();
     }
 
     @Override
-    protected void pmSuccess() {
-        Assert.fail("Plugin failure was ignored");
-    }
-
-    @Override
-    protected void pmFailure(Throwable e) {
-        // expected
+    protected String[] pmErrors() {
+        return new String[] {
+                Errors.homeDirNotUsable(installHome)
+        };
     }
 }

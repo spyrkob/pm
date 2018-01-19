@@ -30,7 +30,6 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.spec.PackageDependencySpec;
-import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 
 /**
@@ -82,10 +81,5 @@ public class MissingFpVersionsTestCase extends PmProvisionConfigTestBase {
         return new String[] {
                 Errors.fpVersionCheckFailed(Arrays.asList(FP3_GA, FP1_GA), Collections.emptyList())
         };
-    }
-
-    @Override
-    protected ProvisionedState provisionedState() throws ProvisioningDescriptionException {
-        return null;
     }
 }

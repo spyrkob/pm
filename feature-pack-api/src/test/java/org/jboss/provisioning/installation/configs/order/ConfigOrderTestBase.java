@@ -29,7 +29,6 @@ import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -87,10 +86,13 @@ abstract class ConfigOrderTestBase extends PmProvisionConfigTestBase {
     protected abstract String[] configList();
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder dir) {
+    protected DirState provisionedHomeDir() {
         final StringBuilder buf = new StringBuilder();
 
         final String[] provisionedConfigs = configList();
+        if(provisionedConfigs == null) {
+            return DirState.rootBuilder().build();
+        }
         if(provisionedConfigs.length > 0) {
             buf.append(provisionedConfigs[0]);
             for(int i = 1; i < provisionedConfigs.length; ++i){
@@ -98,7 +100,7 @@ abstract class ConfigOrderTestBase extends PmProvisionConfigTestBase {
             }
         }
 
-        return dir
+        return newDirBuilder()
                 .addFile(CONFIG_LIST_NAME, buf.toString())
                 .build();
     }

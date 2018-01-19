@@ -15,60 +15,60 @@
  * limitations under the License.
  */
 
-package org.jboss.provisioning.plugin.test;
+package org.jboss.provisioning.featurepack.uninstall.test;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Gav;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.test.PmProvisionConfigTestBase;
-import org.junit.Assert;
+import org.jboss.provisioning.test.PmUninstallFeaturePackTestBase;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PluginThrowsCheckedExceptionTestCase extends PmProvisionConfigTestBase {
+public class UninstallRequiredFpDepInstalledImplicitlyTestCase extends PmUninstallFeaturePackTestBase {
 
-    public static class Plugin1 implements ProvisioningPlugin {
-        @Override
-        public void postInstall(ProvisioningRuntime ctx) throws ProvisioningException {
-            throw new ProvisioningException("Plugin1 failure");
-        }
-    }
+    private static final Gav FP1_100_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final");
+    private static final Gav FP2_100_GAV = ArtifactCoords.newGav("org.jboss.pm.test", "fp2", "1.0.0.Final");
 
     @Override
     protected void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException {
         repoManager.installer()
-            .newFeaturePack(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final"))
+            .newFeaturePack(FP1_100_GAV)
+                .addDependency(FP2_100_GAV)
                 .newPackage("p1", true)
-                    .writeContent("fp1/p1.txt", "p1")
+                    .writeContent("fp1/p1.txt", "fp1 1.0.0.Final p1")
                     .getFeaturePack()
-                .addPlugin(Plugin1.class)
+                .getInstaller()
+            .newFeaturePack(FP2_100_GAV)
+                .newPackage("p1", true)
+                    .writeContent("fp2/p1.txt", "fp2 1.0.0.Final p1")
+                    .getFeaturePack()
                 .getInstaller()
             .install();
     }
 
     @Override
-    protected ProvisioningConfig provisioningConfig()
-            throws ProvisioningDescriptionException {
+    protected ProvisioningConfig initialState() throws ProvisioningException {
         return ProvisioningConfig.builder()
-                .addFeaturePackDep(
-                        FeaturePackConfig.forGav(ArtifactCoords.newGav("org.jboss.pm.test", "fp1", "1.0.0.Final")))
+                .addFeaturePackDep(FeaturePackConfig.forGav(FP1_100_GAV))
                 .build();
     }
 
     @Override
-    protected void pmSuccess() {
-        Assert.fail("Plugin failure was ignored");
+    protected ArtifactCoords.Gav uninstallGav() throws ProvisioningDescriptionException {
+        return FP2_100_GAV;
     }
 
     @Override
-    protected void pmFailure(Throwable e) {
-        // expected
+    protected String[] pmErrors() {
+        return new String[] {
+                Errors.unsatisfiedFeaturePackDep(FP2_100_GAV)
+        };
     }
 }

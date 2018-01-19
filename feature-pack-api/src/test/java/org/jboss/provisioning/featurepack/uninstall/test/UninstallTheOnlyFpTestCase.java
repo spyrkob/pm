@@ -28,7 +28,6 @@ import org.jboss.provisioning.spec.PackageDependencySpec;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmUninstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -69,17 +68,17 @@ public class UninstallTheOnlyFpTestCase extends PmUninstallFeaturePackTestBase {
     }
 
     @Override
-    protected ProvisioningConfig provisionedConfig() throws ProvisioningException {
+    protected ProvisioningConfig provisionedConfig() {
         return null;
     }
 
     @Override
-    protected ProvisionedState provisionedState() throws ProvisioningDescriptionException {
+    protected ProvisionedState provisionedState() {
         return null;
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db.clear().build();
+    protected DirState provisionedHomeDir() {
+        return DirState.rootBuilder().build();
     }
 }

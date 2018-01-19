@@ -73,7 +73,7 @@ public class ExcludedConfigDepTestCase extends ConfigOrderTestBase {
 
     @Override
     protected String[] configList() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override

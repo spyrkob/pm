@@ -207,7 +207,13 @@ public class ProvisioningManager {
      */
     public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
         final ProvisioningConfig provisionedConfig = getProvisioningConfig();
-        if(provisionedConfig == null || !provisioningConfig.hasFeaturePackDep(gav.toGa())) {
+        if(provisionedConfig == null) {
+            throw new ProvisioningException(Errors.unknownFeaturePack(gav));
+        }
+        if(!provisioningConfig.hasFeaturePackDep(gav.toGa())) {
+            if(getProvisionedState().hasFeaturePack(gav.toGa())) {
+                throw new ProvisioningException(Errors.unsatisfiedFeaturePackDep(gav));
+            }
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         }
         provision(ProvisioningConfig.builder(provisionedConfig).removeFeaturePackDep(gav).build());
@@ -237,7 +243,7 @@ public class ProvisioningManager {
                     }
                 }
                 if(!usableDir) {
-                    throw new ProvisioningException("The installation home directory has to be empty or contain a provisioned installation to be used by the tool.");
+                    throw new ProvisioningException(Errors.homeDirNotUsable(installationHome));
                 }
             } catch (IOException e) {
                 throw new ProvisioningException(Errors.readDirectory(installationHome));

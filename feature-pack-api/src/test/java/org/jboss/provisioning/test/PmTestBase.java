@@ -47,14 +47,16 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
         return null;
     }
 
-    protected abstract ProvisioningConfig provisionedConfig() throws ProvisioningException;
+    protected ProvisioningConfig provisionedConfig() throws ProvisioningException {
+        return initialProvisioningConfig;
+    }
 
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return initialProvisionedState;
     }
 
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.build();
+    protected DirState provisionedHomeDir() {
+        return null;
     }
 
     protected abstract void testPm(ProvisioningManager pm) throws ProvisioningException;
@@ -68,10 +70,12 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
             final ProvisioningManager pm = getPm();
             pm.provision(initialProvisioningConfig);
             initialProvisionedState = pm.getProvisionedState();
-            initialHomeDirState = DirState.rootBuilder().init(installHome).build();
-        } else {
-            initialHomeDirState = DirState.rootBuilder().build();
         }
+        initialHomeDirState = DirState.rootBuilder().init(installHome).build();
+    }
+
+    protected DirBuilder newDirBuilder() {
+        return DirState.rootBuilder().skip(Constants.PROVISIONED_STATE_DIR);
     }
 
     protected String[] pmErrors() throws ProvisioningException {
@@ -102,12 +106,20 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
         if(failed) {
             assertProvisioningConfig(pm, initialProvisioningConfig);
             assertProvisionedState(pm, initialProvisionedState);
-            initialHomeDirState.assertState(installHome);
         } else {
             assertProvisionedConfig(pm);
             assertProvisionedState(pm);
-            assertProvisionedContent();
         }
+
+        DirState expectedHomeDir = provisionedHomeDir();
+        if(expectedHomeDir == null) {
+            if(failed || initialProvisioningConfig != null) {
+                expectedHomeDir = initialHomeDirState;
+            } else {
+                expectedHomeDir = DirState.rootBuilder().skip(Constants.PROVISIONED_STATE_DIR).build();
+            }
+        }
+        expectedHomeDir.assertState(installHome);
     }
 
     protected void pmSuccess() {
@@ -124,10 +136,6 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
     protected void assertProvisionedConfig(final ProvisioningManager pm) throws ProvisioningException {
         assertProvisioningConfig(pm, provisionedConfig());
-    }
-
-    protected void assertProvisionedContent() {
-        provisionedHomeDir(DirState.rootBuilder().skip(Constants.PROVISIONED_STATE_DIR)).assertState(installHome);
     }
 
     protected void assertErrors(Throwable t, String... msgs) {

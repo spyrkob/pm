@@ -30,7 +30,6 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmUninstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -111,8 +110,8 @@ public class UninstallOneOfInstalledFpsTestCase extends PmUninstallFeaturePackTe
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp2/p1.txt", "fp2 1.0.0.Final p1")
                 .addFile("fp2/p3.txt", "fp2 1.0.0.Final p3")
                 .build();

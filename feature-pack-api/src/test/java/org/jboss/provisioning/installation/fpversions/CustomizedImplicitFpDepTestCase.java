@@ -30,7 +30,6 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -92,8 +91,8 @@ public class CustomizedImplicitFpDepTestCase extends PmProvisionConfigTestBase {
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp1/p1.txt", "fp1 p1")
                 .addFile("fp1/p3.txt", "fp1 p3")
                 .addFile("fp2/p1.txt", "fp2 p1")
