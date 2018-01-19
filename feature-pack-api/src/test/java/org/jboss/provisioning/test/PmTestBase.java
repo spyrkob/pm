@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,11 +37,21 @@ import org.junit.Test;
  */
 public abstract class PmTestBase extends FeaturePackRepoTestBase {
 
+    private ProvisioningConfig initialProvisioningConfig;
+    private ProvisionedState initialProvisionedState;
+    private DirState initialHomeDirState;
+
     protected abstract void setupRepo(FeaturePackRepositoryManager repoManager) throws ProvisioningDescriptionException;
+
+    protected ProvisioningConfig initialState() throws ProvisioningException {
+        return null;
+    }
 
     protected abstract ProvisioningConfig provisionedConfig() throws ProvisioningException;
 
-    protected abstract ProvisionedState provisionedState() throws ProvisioningException;
+    protected ProvisionedState provisionedState() throws ProvisioningException {
+        return initialProvisionedState;
+    }
 
     protected DirState provisionedHomeDir(DirBuilder builder) {
         return builder.build();
@@ -53,6 +63,15 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
     protected void doBefore() throws Exception {
         super.doBefore();
         setupRepo(getRepoManager());
+        initialProvisioningConfig = initialState();
+        if(initialProvisioningConfig != null) {
+            final ProvisioningManager pm = getPm();
+            pm.provision(initialProvisioningConfig);
+            initialProvisionedState = pm.getProvisionedState();
+            initialHomeDirState = DirState.rootBuilder().init(installHome).build();
+        } else {
+            initialHomeDirState = DirState.rootBuilder().build();
+        }
     }
 
     protected String[] pmErrors() throws ProvisioningException {
@@ -81,10 +100,9 @@ public abstract class PmTestBase extends FeaturePackRepoTestBase {
             }
         }
         if(failed) {
-            assertProvisioningConfig(pm, null);
-            assertProvisionedState(pm, null);
-            Assert.assertNull(provisionedState());
-            DirState.rootBuilder().build().assertState(installHome);
+            assertProvisioningConfig(pm, initialProvisioningConfig);
+            assertProvisionedState(pm, initialProvisionedState);
+            initialHomeDirState.assertState(installHome);
         } else {
             assertProvisionedConfig(pm);
             assertProvisionedState(pm);

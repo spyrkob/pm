@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.StringUtils;
@@ -35,14 +33,14 @@ import org.jboss.provisioning.util.StringUtils;
 public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> {
 
     public static class Builder {
-        private Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
+        private Map<ArtifactCoords.Ga, ProvisionedFeaturePack> featurePacks = Collections.emptyMap();
         private List<ProvisionedConfig> configs = Collections.emptyList();
 
         private Builder() {
         }
 
         public Builder addFeaturePack(ProvisionedFeaturePack fp) {
-            featurePacks = PmCollections.putLinked(featurePacks, fp.getGav(), fp);
+            featurePacks = PmCollections.putLinked(featurePacks, fp.getGav().toGa(), fp);
             return this;
         }
 
@@ -60,7 +58,7 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
         return new Builder();
     }
 
-    private final Map<ArtifactCoords.Gav, ProvisionedFeaturePack> featurePacks;
+    private final Map<ArtifactCoords.Ga, ProvisionedFeaturePack> featurePacks;
     private final List<ProvisionedConfig> configs;
 
     ProvisionedState(Builder builder) {
@@ -74,8 +72,8 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     }
 
     @Override
-    public Set<ArtifactCoords.Gav> getFeaturePackGavs() {
-        return featurePacks.keySet();
+    public boolean hasFeaturePack(ArtifactCoords.Ga ga) {
+        return featurePacks.containsKey(ga);
     }
 
     @Override
@@ -84,8 +82,8 @@ public class ProvisionedState implements FeaturePackSet<ProvisionedFeaturePack> 
     }
 
     @Override
-    public ProvisionedFeaturePack getFeaturePack(ArtifactCoords.Gav gav) {
-        return featurePacks.get(gav);
+    public ProvisionedFeaturePack getFeaturePack(ArtifactCoords.Ga ga) {
+        return featurePacks.get(ga);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,6 @@ package org.jboss.provisioning.state;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-
 import org.jboss.provisioning.ArtifactCoords;
 
 /**
@@ -31,11 +29,11 @@ public interface FeaturePackSet<F extends FeaturePack<?>> {
 
     boolean hasFeaturePacks();
 
-    Set<ArtifactCoords.Gav> getFeaturePackGavs();
-
     Collection<F> getFeaturePacks();
 
-    F getFeaturePack(ArtifactCoords.Gav gav);
+    boolean hasFeaturePack(ArtifactCoords.Ga ga);
+
+    F getFeaturePack(ArtifactCoords.Ga ga);
 
     boolean hasConfigs();
 

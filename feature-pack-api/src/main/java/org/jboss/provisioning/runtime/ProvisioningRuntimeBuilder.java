@@ -203,19 +203,19 @@ public class ProvisioningRuntimeBuilder {
         return new ProvisioningRuntime(this, messageWriter);
     }
 
-    Map<ArtifactCoords.Gav, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
+    Map<ArtifactCoords.Ga, FeaturePackRuntime> getFpRuntimes() throws ProvisioningException {
         if(fpRtBuildersOrdered.isEmpty()) {
             return Collections.emptyMap();
         }
         if(fpRtBuildersOrdered.size() == 1) {
             final FeaturePackRuntime.Builder builder = fpRtBuildersOrdered.get(0);
             copyResources(builder);
-            return Collections.singletonMap(builder.gav, builder.build());
+            return Collections.singletonMap(builder.gav.toGa(), builder.build());
         }
-        final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
+        final Map<ArtifactCoords.Ga, FeaturePackRuntime> fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
         for (FeaturePackRuntime.Builder builder : fpRtBuildersOrdered) {
             copyResources(builder);
-            fpRuntimes.put(builder.gav, builder.build());
+            fpRuntimes.put(builder.gav.toGa(), builder.build());
         }
         return Collections.unmodifiableMap(fpRuntimes);
     }

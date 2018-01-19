@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,12 @@ import org.jboss.provisioning.config.ProvisioningConfig;
  */
 public abstract class PmInstallFeaturePackTestBase extends PmTestBase {
 
+    protected boolean replaceInstalled;
+
+    protected void setReplacedInstalled(boolean replaceInstalled) {
+        this.replaceInstalled = replaceInstalled;
+    }
+
     @Override
     protected ProvisioningConfig provisionedConfig() throws ProvisioningDescriptionException {
         return ProvisioningConfig.builder().addFeaturePackDep(featurePackConfig()).build();
@@ -38,6 +44,6 @@ public abstract class PmInstallFeaturePackTestBase extends PmTestBase {
 
     @Override
     protected void testPm(ProvisioningManager pm) throws ProvisioningException {
-        pm.install(featurePackConfig());
+        pm.install(featurePackConfig(), replaceInstalled);
     }
 }

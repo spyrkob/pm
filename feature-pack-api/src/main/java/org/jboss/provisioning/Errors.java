@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -160,7 +160,7 @@ public interface Errors {
     }
 
     static String featurePackVersionConflict(ArtifactCoords.Gav gav, ArtifactCoords.Gav gav2) {
-        final Set<Gav> gavs = new HashSet<>(2);
+        final Set<Gav> gavs = new LinkedHashSet<>(2);
         gavs.add(gav);
         gavs.add(gav2);
         return featurePackVersionConflict(gavs);
