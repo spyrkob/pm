@@ -206,19 +206,17 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the uninstallation fails
      */
     public void uninstall(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final ProvisioningConfig provisioningConfig = getProvisioningConfig();
-        if(provisioningConfig == null) {
+        final ProvisioningConfig provisionedConfig = getProvisioningConfig();
+        if(provisionedConfig == null) {
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else if(!provisioningConfig.hasFeaturePackDep(gav.toGa())) {
-            throw new ProvisioningException(Errors.unknownFeaturePack(gav));
-        } else {
-            provision(ProvisioningConfig.builder(provisioningConfig).removeFeaturePackDep(gav).build());
         }
-    }
-
-    public void uninstall(ArtifactCoords.Gav gav, boolean explicitVersionOnly) throws ProvisioningException {
-        //TODO
-        throw new UnsupportedOperationException();
+        if(!provisioningConfig.hasFeaturePackDep(gav.toGa())) {
+            if(getProvisionedState().hasFeaturePack(gav.toGa())) {
+                throw new ProvisioningException(Errors.unsatisfiedFeaturePackDep(gav));
+            }
+            throw new ProvisioningException(Errors.unknownFeaturePack(gav));
+        }
+        provision(ProvisioningConfig.builder(provisionedConfig).removeFeaturePackDep(gav).build());
     }
 
     /**
@@ -245,7 +243,7 @@ public class ProvisioningManager {
                     }
                 }
                 if(!usableDir) {
-                    throw new ProvisioningException("The installation home directory has to be empty or contain a provisioned installation to be used by the tool.");
+                    throw new ProvisioningException(Errors.homeDirNotUsable(installationHome));
                 }
             } catch (IOException e) {
                 throw new ProvisioningException(Errors.readDirectory(installationHome));
@@ -262,6 +260,7 @@ public class ProvisioningManager {
                     throw new ProvisioningException(Errors.readDirectory(installationHome));
                 }
             }
+            this.provisioningConfig = null;
             return;
         }
 

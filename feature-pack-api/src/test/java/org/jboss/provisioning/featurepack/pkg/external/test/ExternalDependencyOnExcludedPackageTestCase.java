@@ -25,10 +25,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.junit.Assert;
 
 /**
@@ -74,24 +71,9 @@ public class ExternalDependencyOnExcludedPackageTestCase extends PmProvisionConf
     }
 
     @Override
-    protected ProvisioningConfig provisionedConfig() {
-        return null;
-    }
-
-    @Override
     protected ProvisioningConfig provisioningConfig() throws ProvisioningException {
         return ProvisioningConfig.builder()
                 .addFeaturePackDep(ArtifactCoords.newGav("org.pm.test", "fp1", "1.0.0.Final"))
                 .build();
-    }
-
-    @Override
-    protected ProvisionedState provisionedState() throws ProvisioningException {
-        return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
     }
 }

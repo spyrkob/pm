@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,17 +20,12 @@ package org.jboss.provisioning.plugin.test;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.ProvisioningManager;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
-import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
-import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
-import org.junit.Assert;
 
 /**
  *
@@ -67,27 +62,9 @@ public class PluginThrowsRuntimeExceptionTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected void testPm(ProvisioningManager pm) throws ProvisioningException {
-        try {
-            super.testPm(pm);
-            Assert.fail("Plugin failure was ignored");
-        } catch(IllegalStateException e) {
-            // expected
-        }
-    }
-
-    @Override
-    protected ProvisioningConfig provisionedConfig() {
-        return null;
-    }
-
-    @Override
-    protected ProvisionedState provisionedState() {
-        return null;
-    }
-
-    @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.clear().build();
+    protected String[] pmErrors() {
+        return new String[] {
+                "Plugin1 failure"
+        };
     }
 }

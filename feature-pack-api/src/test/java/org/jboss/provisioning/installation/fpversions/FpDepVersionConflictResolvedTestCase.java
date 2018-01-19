@@ -29,7 +29,6 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -111,8 +110,8 @@ public class FpDepVersionConflictResolvedTestCase extends PmProvisionConfigTestB
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp1/p1.txt", "fp1 1.0.1.Final p1")
                 .addFile("fp1/p2.txt", "fp1 1.0.1.Final p2")
                 .addFile("fp2/p1.txt", "fp2 p1")

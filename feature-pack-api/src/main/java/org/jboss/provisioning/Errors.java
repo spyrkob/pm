@@ -102,6 +102,10 @@ public interface Errors {
 
     // FEATURE PACK INSTALL MESSAGES
 
+    static String homeDirNotUsable(Path p) {
+        return p + " has to be empty or contain a provisioned installation to be used by the tool";
+    }
+
     static String fpVersionCheckFailed(Collection<ArtifactCoords.Ga> missingVersions, Collection<Set<ArtifactCoords.Gav>> versionConflicts) throws ProvisioningException {
         final StringWriter strWriter = new StringWriter();
         try(BufferedWriter writer = new BufferedWriter(strWriter)) {
@@ -153,6 +157,10 @@ public interface Errors {
 
     static String unknownFeaturePack(ArtifactCoords.Gav gav) {
         return "Feature-pack " + gav + " is not found";
+    }
+
+    static String unsatisfiedFeaturePackDep(ArtifactCoords.Gav gav) {
+        return "Feature-pack " + gav + " is required dependency";
     }
 
     static String unknownFeaturePackDependency(ArtifactCoords.Ga ga) {

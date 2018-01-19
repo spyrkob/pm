@@ -32,7 +32,6 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 
@@ -150,7 +149,7 @@ public class ExcludeModelNamedOnlyTrueTestCase extends PmInstallFeaturePackTestB
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder.addFile("model1/p1.txt", "model1 p1").build();
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder().addFile("model1/p1.txt", "model1 p1").build();
     }
 }

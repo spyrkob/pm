@@ -32,7 +32,6 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 
 /**
@@ -138,10 +137,5 @@ public class VariousFpVersionErrorsTestCase extends PmProvisionConfigTestBase {
         return new String[] {
                 Errors.fpVersionCheckFailed(Arrays.asList(FP7_GA, FP8_GA), conflicts)
         };
-    }
-
-    @Override
-    protected ProvisionedState provisionedState() throws ProvisioningDescriptionException {
-        return null;
     }
 }

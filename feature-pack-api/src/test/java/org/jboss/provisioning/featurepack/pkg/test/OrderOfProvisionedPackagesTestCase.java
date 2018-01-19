@@ -29,7 +29,6 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.junit.Assert;
 
 /**
@@ -84,8 +83,8 @@ public class OrderOfProvisionedPackagesTestCase extends PmInstallFeaturePackTest
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("a.txt", "a")
                 .addFile("b.txt", "b")
                 .addFile("c.txt", "c")

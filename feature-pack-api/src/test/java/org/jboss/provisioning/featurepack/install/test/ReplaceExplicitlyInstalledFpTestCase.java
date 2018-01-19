@@ -30,7 +30,6 @@ import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmInstallFeaturePackTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 
 /**
  *
@@ -100,8 +99,8 @@ public class ReplaceExplicitlyInstalledFpTestCase extends PmInstallFeaturePackTe
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder db) {
-        return db
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp1/p1.txt", "fp1 1.0.1.Final p1")
                 .addFile("fp1/p2.txt", "fp1 1.0.1.Final p2")
                 .build();

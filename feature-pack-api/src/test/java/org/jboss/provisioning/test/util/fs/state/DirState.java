@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.provisioning.test.util.TestUtils;
+import org.jboss.provisioning.util.PmCollections;
 import org.junit.Assert;
 
 /**
@@ -50,14 +51,16 @@ public class DirState extends PathState {
         }
 
         private DirBuilder addState(String name, PathState.Builder state) {
-            switch(childStates.size()) {
-                case 0:
-                    childStates = Collections.singletonMap(name, state);
-                    break;
-                case 1:
-                    childStates = new HashMap<>(childStates);
-                default:
-                    childStates.put(name, state);
+            childStates = PmCollections.put(childStates, name, state);
+            return this;
+        }
+
+        public DirBuilder addDir(String relativePath) {
+            DirState.DirBuilder dirBuilder = this;
+            final String[] parts = relativePath.split("/");
+            int i = 0;
+            while (i < parts.length) {
+                dirBuilder = dirBuilder.dirBuilder(parts[i++]);
             }
             return this;
         }
@@ -106,6 +109,13 @@ public class DirState extends PathState {
         public DirBuilder init(Path path) throws Exception {
             Files.walkFileTree(path, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
                     new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                            if(path != dir) {
+                                addDir(path.relativize(dir).toString());
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {

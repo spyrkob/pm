@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,6 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.PmProvisionConfigTestBase;
 import org.jboss.provisioning.test.util.fs.state.DirState;
-import org.jboss.provisioning.test.util.fs.state.DirState.DirBuilder;
 import org.jboss.provisioning.util.IoUtils;
 
 /**
@@ -106,8 +105,8 @@ public class MultiplePluginsTestCase extends PmProvisionConfigTestBase {
     }
 
     @Override
-    protected DirState provisionedHomeDir(DirBuilder builder) {
-        return builder
+    protected DirState provisionedHomeDir() {
+        return newDirBuilder()
                 .addFile("fp1/p1.txt", "p1")
                 .addFile("plugin1.txt", "plugin1")
                 .addFile("plugin2.txt", "plugin2")
