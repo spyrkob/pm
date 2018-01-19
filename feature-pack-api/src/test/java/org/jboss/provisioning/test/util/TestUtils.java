@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 import org.jboss.provisioning.util.IoUtils;
@@ -33,8 +32,6 @@ import org.jboss.provisioning.util.IoUtils;
  * @author Alexey Loubyansky
  */
 public class TestUtils {
-
-    private static final Path TMP_DIR = Paths.get(System.getProperty("java.io.tmpdir"));
 
     private static void mkdirs(final Path dir) {
         try {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,7 +99,7 @@ public class OrderOfProvisionedPackagesTestCase extends PmInstallFeaturePackTest
         super.testPm(pm);
         final ProvisionedState state = pm.getProvisionedState();
         final Iterator<String> packageNames = state.getFeaturePack(
-                ArtifactCoords.newGav("org.pm.test", "fp-install", "1.0.0.Beta1"))
+                ArtifactCoords.newGa("org.pm.test", "fp-install"))
                 .getPackageNames().iterator();
         Assert.assertTrue(packageNames.hasNext());
         Assert.assertEquals("e", packageNames.next());

@@ -31,6 +31,7 @@ import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
 import org.jboss.provisioning.runtime.ProvisioningRuntimeBuilder;
+import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
@@ -155,29 +156,47 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the installation fails
      */
     public void install(FeaturePackConfig fpConfig) throws ProvisioningException {
-        final ProvisioningConfig provisioningConfig = this.getProvisioningConfig();
-        if(provisioningConfig == null) {
-            provision(ProvisioningConfig.builder().addFeaturePackDep(fpConfig).build());
-        } else if(provisioningConfig.hasFeaturePackDep(fpConfig.getGav().toGa())) {
-            final FeaturePackConfig presentConfig = provisioningConfig.getFeaturePackDep(fpConfig.getGav().toGa());
-            if(presentConfig.getGav().equals(fpConfig.getGav())) {
-                throw new ProvisioningException(Errors.featurePackAlreadyInstalled(fpConfig.getGav()));
-            } else {
-                throw new ProvisioningException(Errors.featurePackVersionConflict(fpConfig.getGav(), presentConfig.getGav()));
-            }
-        } else {
-            provision(ProvisioningConfig.builder(provisioningConfig).addFeaturePackDep(fpConfig).build());
-        }
+        install(fpConfig, false);
     }
 
     public void install(ArtifactCoords.Gav fpGav, boolean replaceInstalledVersion) throws ProvisioningException {
-        //TODO
-        throw new UnsupportedOperationException();
+        install(FeaturePackConfig.forGav(fpGav), replaceInstalledVersion);
     }
 
     public void install(FeaturePackConfig fpConfig, boolean replaceInstalledVersion) throws ProvisioningException {
-        //TODO
-        throw new UnsupportedOperationException();
+        final ProvisioningConfig provisionedConfig = this.getProvisioningConfig();
+        if(provisionedConfig == null) {
+            provision(ProvisioningConfig.builder().addFeaturePackDep(fpConfig).build());
+            return;
+        }
+
+        final ProvisionedFeaturePack installedFp = getProvisionedState().getFeaturePack(fpConfig.getGav().toGa());
+        // if it's installed neither explicitly nor implicitly as a dependency
+        if(installedFp == null) {
+            provision(ProvisioningConfig.builder(provisionedConfig).addFeaturePackDep(fpConfig).build());
+            return;
+        }
+
+        if(!replaceInstalledVersion) {
+            if (installedFp.getGav().equals(fpConfig.getGav())) {
+                throw new ProvisioningException(Errors.featurePackAlreadyInstalled(fpConfig.getGav()));
+            } else {
+                throw new ProvisioningException(Errors.featurePackVersionConflict(fpConfig.getGav(), installedFp.getGav()));
+            }
+        }
+
+        // if it's installed explicitly, replace the explicit config
+        if(provisionedConfig.hasFeaturePackDep(fpConfig.getGav().toGa())) {
+            final FeaturePackConfig installedFpConfig = provisionedConfig.getFeaturePackDep(fpConfig.getGav().toGa());
+            final String origin = provisionedConfig.originOf(fpConfig.getGav().toGa());
+            provision(ProvisioningConfig.builder(provisionedConfig)
+                    .removeFeaturePackDep(installedFpConfig.getGav())
+                    .addFeaturePackDep(origin, fpConfig)
+                    .build());
+            return;
+        }
+
+        provision(ProvisioningConfig.builder(provisionedConfig).addFeaturePackDep(fpConfig).build());
     }
 
     /**

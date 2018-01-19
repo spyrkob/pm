@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,20 @@ package org.jboss.provisioning.test.util.fs.state;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.provisioning.test.util.TestUtils;
 import org.junit.Assert;
 
 /**
@@ -94,6 +100,19 @@ public class DirState extends PathState {
 
         public DirBuilder clear() {
             childStates = Collections.emptyMap();
+            return this;
+        }
+
+        public DirBuilder init(Path path) throws Exception {
+            Files.walkFileTree(path, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                            throws IOException {
+                            addFile(path.relativize(file).toString(), TestUtils.read(file));
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
             return this;
         }
 

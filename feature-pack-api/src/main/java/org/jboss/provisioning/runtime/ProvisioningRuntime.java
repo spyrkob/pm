@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
@@ -50,7 +49,6 @@ import org.jboss.provisioning.plugin.ProvisioningPlugin;
 import org.jboss.provisioning.plugin.UpgradePlugin;
 import org.jboss.provisioning.repomanager.FeaturePackBuilder;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
-import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.state.FeaturePackSet;
 import org.jboss.provisioning.state.ProvisionedConfig;
 import org.jboss.provisioning.util.FeaturePackInstallException;
@@ -158,7 +156,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final Path workDir;
     private final Path tmpDir;
     private final Path pluginsDir;
-    private final Map<ArtifactCoords.Gav, FeaturePackRuntime> fpRuntimes;
+    private final Map<ArtifactCoords.Ga, FeaturePackRuntime> fpRuntimes;
     private final Map<String, String> parameters;
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
@@ -261,8 +259,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     }
 
     @Override
-    public Set<Gav> getFeaturePackGavs() {
-        return fpRuntimes.keySet();
+    public boolean hasFeaturePack(ArtifactCoords.Ga ga) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -271,8 +269,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     }
 
     @Override
-    public FeaturePackRuntime getFeaturePack(Gav gav) {
-        return fpRuntimes.get(gav);
+    public FeaturePackRuntime getFeaturePack(ArtifactCoords.Ga ga) {
+        return fpRuntimes.get(ga);
     }
 
     /**
@@ -318,17 +316,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
      */
     public String getOperation() {
         return operation;
-    }
-
-    /**
-     * Returns feature-pack specification for the given GAV.
-     *
-     * @param fpGav the GAV of which the specification is returned.
-     * @return  feature-pack specification
-     */
-    public FeaturePackSpec getFeaturePackSpec(ArtifactCoords.Gav fpGav) {
-        final FeaturePackRuntime fp = fpRuntimes.get(fpGav);
-        return fp == null ? null : fp.getSpec();
     }
 
     /**
