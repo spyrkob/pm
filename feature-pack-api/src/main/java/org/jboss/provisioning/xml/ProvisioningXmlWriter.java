@@ -39,7 +39,6 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
 
     private static final ProvisioningXmlWriter INSTANCE = new ProvisioningXmlWriter();
 
-    private static final String[] EMPTY_ARRAY = new String[0];
     private static final String FALSE = "false";
 
     public static ProvisioningXmlWriter getInstance() {
@@ -139,17 +138,13 @@ public class ProvisioningXmlWriter extends BaseXmlWriter<ProvisioningConfig> {
             if(defConfigsE == null) {
                 defConfigsE = addElement(parent, Element.DEFAULT_CONFIGS.getLocalName(), ns);
             }
-            String[] models = configCustoms.getExcludedModels().toArray(EMPTY_ARRAY);
-            Arrays.sort(models);
-            for(String modelName : models) {
-                String[] configs = configCustoms.getExcludedConfigs(modelName).toArray(EMPTY_ARRAY);
-                Arrays.sort(configs);
-                for(String configName : configs) {
-                    final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE.getLocalName(), ns);
-                    if(modelName != null) {
-                        addAttribute(excluded, Attribute.MODEL, modelName);
-                    }
-                    addAttribute(excluded, Attribute.NAME, configName);
+            for(ConfigId configId : configCustoms.getExcludedConfigs()) {
+                final ElementNode excluded = addElement(defConfigsE, Element.EXCLUDE.getLocalName(), ns);
+                if(configId.getModel() != null) {
+                    addAttribute(excluded, Attribute.MODEL, configId.getModel());
+                }
+                if(configId.getName() != null) {
+                    addAttribute(excluded, Attribute.NAME, configId.getName());
                 }
             }
         }

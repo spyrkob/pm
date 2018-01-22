@@ -33,8 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 
@@ -458,11 +456,8 @@ public class WfFeaturePackBuildMojo extends AbstractMojo {
                 }
             }
             if (depConfig.hasExcludedConfigs()) {
-                for (String model : depConfig.getExcludedModels()) {
-                    final Set<String> excludedConfigs = depConfig.getExcludedConfigs(model);
-                    for (String name : excludedConfigs) {
-                        depBuilder.excludeDefaultConfig(model, name);
-                    }
+                for (ConfigId configId : depConfig.getExcludedConfigs()) {
+                    depBuilder.excludeDefaultConfig(configId);
                 }
             }
             if (depConfig.hasFullModelsExcluded()) {
