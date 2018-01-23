@@ -216,7 +216,7 @@ public class ProvisioningManager {
             }
             throw new ProvisioningException(Errors.unknownFeaturePack(gav));
         }
-        provision(ProvisioningConfig.builder(provisionedConfig).removeFeaturePackDep(gav).build());
+        doProvision(provisionedConfig, gav.toGa());
     }
 
     /**
@@ -226,7 +226,10 @@ public class ProvisioningManager {
      * @throws ProvisioningException  in case the re-provisioning fails
      */
     public void provision(ProvisioningConfig provisioningConfig) throws ProvisioningException {
+        doProvision(provisioningConfig, null);
+    }
 
+    private void doProvision(ProvisioningConfig provisioningConfig, ArtifactCoords.Ga uninstallGa) throws ProvisioningException {
         if(Files.exists(installationHome)) {
             if(!Files.isDirectory(installationHome)) {
                 throw new ProvisioningException(Errors.notADir(installationHome));
@@ -251,15 +254,7 @@ public class ProvisioningManager {
         }
 
         if(!provisioningConfig.hasFeaturePackDeps()) {
-            if(Files.exists(installationHome)) {
-                try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
-                    for(Path p : stream) {
-                        IoUtils.recursiveDelete(p);
-                    }
-                } catch (IOException e) {
-                    throw new ProvisioningException(Errors.readDirectory(installationHome));
-                }
-            }
+            emptyHomeDir();
             this.provisioningConfig = null;
             return;
         }
@@ -268,18 +263,41 @@ public class ProvisioningManager {
             throw new ProvisioningException("Artifact resolver has not been provided.");
         }
 
-        try(ProvisioningRuntime runtime = ProvisioningRuntimeBuilder.newInstance(messageWriter)
-                .setArtifactResolver(artifactResolver)
-                .setConfig(provisioningConfig)
-                .setEncoding(encoding)
-                .setInstallDir(installationHome)
-                .build()) {
+        try(ProvisioningRuntime runtime = getRuntime(provisioningConfig, uninstallGa)) {
+            if(runtime == null) {
+                return;
+            }
             // install the software
             ProvisioningRuntime.install(runtime);
         } catch (IOException e) {
             messageWriter.error(e, e.getMessage());
+        } finally {
+            this.provisioningConfig = null;
         }
-        this.provisioningConfig = null;
+    }
+
+    private void emptyHomeDir() throws ProvisioningException {
+        if(Files.exists(installationHome)) {
+            try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
+                for(Path p : stream) {
+                    IoUtils.recursiveDelete(p);
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(installationHome));
+            }
+        }
+    }
+
+    private ProvisioningRuntime getRuntime(ProvisioningConfig provisioningConfig, ArtifactCoords.Ga uninstallGa) throws ProvisioningException {
+        final ProvisioningRuntimeBuilder builder = ProvisioningRuntimeBuilder.newInstance(messageWriter)
+                .setArtifactResolver(artifactResolver)
+                .setConfig(provisioningConfig)
+                .setEncoding(encoding)
+                .setInstallDir(installationHome);
+        if(uninstallGa != null) {
+            builder.uninstall(uninstallGa);
+        }
+        return builder.build();
     }
 
     /**

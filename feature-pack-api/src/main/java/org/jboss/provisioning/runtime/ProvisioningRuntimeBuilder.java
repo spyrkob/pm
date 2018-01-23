@@ -19,6 +19,7 @@ package org.jboss.provisioning.runtime;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactCoords.Ga;
+import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.DefaultMessageWriter;
@@ -94,6 +97,7 @@ public class ProvisioningRuntimeBuilder {
     String operation;
     ArtifactRepositoryManager artifactResolver;
     ProvisioningConfig config;
+    private Map<ArtifactCoords.Ga, ArtifactCoords.Gav> uninstallFps = Collections.emptyMap();
     Path installDir;
     final Path workDir;
     final Path layoutDir;
@@ -151,12 +155,82 @@ public class ProvisioningRuntimeBuilder {
         return this;
     }
 
+    public ProvisioningRuntimeBuilder uninstall(ArtifactCoords.Ga ga) {
+        uninstallFps = PmCollections.put(uninstallFps, ga, ga.toGav());
+        return this;
+    }
+
     public ProvisioningRuntimeBuilder setOperation(String operation) {
         this.operation = operation;
         return this;
     }
 
     public ProvisioningRuntime build() throws ProvisioningException {
+
+        if(!uninstallFps.isEmpty()) {
+            Map<Ga, Gav> depsOfUninstalled = Collections.emptyMap();
+            for(ArtifactCoords.Ga uninstallGa : uninstallFps.keySet()) {
+                if(!config.hasFeaturePackDep(uninstallGa)) {
+                    throw new ProvisioningException(Errors.unknownFeaturePack(uninstallGa.toGav()));
+                }
+                final FeaturePackRuntime.Builder fp = getOrLoadFpBuilder(uninstallGa.toGav());
+                depsOfUninstalled = FpVersionsResolver.resolveDeps(this, fp.spec, depsOfUninstalled);
+            }
+            if(!depsOfUninstalled.isEmpty()) {
+                Map<Ga, Gav> depsOfRemaining = Collections.emptyMap();
+                for (FeaturePackConfig fpConfig : config.getFeaturePackDeps()) {
+                    if (fpConfig.getGav().getVersion() == null) {
+                        continue;
+                    }
+                    final Gav uninstallGav = uninstallFps.get(fpConfig.getGav().toGa());
+                    if (uninstallGav != null) {
+                        if (!uninstallGav.equals(fpConfig.getGav())) {
+                            throw new ProvisioningException(Errors.unknownFeaturePack(fpConfig.getGav()));
+                        }
+                        continue;
+                    }
+                    if (depsOfRemaining != null) {
+                        depsOfRemaining = FpVersionsResolver.resolveDeps(this, getOrLoadFpBuilder(fpConfig.getGav()).spec, depsOfRemaining);
+                    }
+                }
+                if (!depsOfRemaining.isEmpty()) {
+                    if (depsOfUninstalled.size() == 1) {
+                        final Gav depOfRemaining = depsOfRemaining.get(depsOfUninstalled.keySet().iterator().next());
+                        if (depOfRemaining != null) {
+                            depsOfUninstalled = Collections.emptyMap();
+                        }
+                    } else {
+                        for (ArtifactCoords.Ga depOfRemaining : depsOfRemaining.keySet()) {
+                            if (depsOfUninstalled.remove(depOfRemaining) != null) {
+                                if (depsOfUninstalled.isEmpty()) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // TODO copy the configs
+            final ProvisioningConfig.Builder configBuilder = ProvisioningConfig.builder();
+            for (FeaturePackConfig fpConfig : config.getFeaturePackDeps()) {
+                final Ga fpGa = fpConfig.getGav().toGa();
+                if(uninstallFps.containsKey(fpGa)) {
+                    continue;
+                }
+                if(fpGa.toGav().getVersion() == null && depsOfUninstalled.containsKey(fpGa)) {
+                    continue;
+                }
+                final String origin = config.originOf(fpGa);
+                configBuilder.addFeaturePackDep(origin, fpConfig);
+            }
+            config = configBuilder.build();
+
+            if(!config.hasFeaturePackDeps()) {
+                emptyHomeDir();
+                return null;
+            }
+        }
 
         FpVersionsResolver.resolveFpVersions(this);
 
@@ -694,6 +768,14 @@ public class ProvisioningRuntimeBuilder {
         return resolvedDeps;
     }
 
+    FeaturePackRuntime.Builder getOrLoadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
+        final FeaturePackRuntime.Builder fp = getFpBuilder(gav, false);
+        if(fp != null) {
+            return fp;
+        }
+        return loadFpBuilder(gav);
+    }
+
     FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
         return getFpBuilder(gav, true);
     }
@@ -950,5 +1032,18 @@ public class ProvisioningRuntimeBuilder {
             addParameter(param.getKey(), param.getValue());
         }
         return this;
+    }
+
+    void emptyHomeDir() throws ProvisioningException {
+        if(!Files.exists(installDir)) {
+            return;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(installDir)) {
+            for (Path p : stream) {
+                IoUtils.recursiveDelete(p);
+            }
+        } catch (IOException e) {
+            throw new ProvisioningException(Errors.readDirectory(installDir));
+        }
     }
 }
