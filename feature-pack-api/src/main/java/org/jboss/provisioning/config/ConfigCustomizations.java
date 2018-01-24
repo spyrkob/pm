@@ -35,7 +35,7 @@ public class ConfigCustomizations {
     protected final Set<String> includedModels;
     protected final Map<String, Boolean> excludedModels;
     protected final Set<ConfigId> includedConfigs;
-    protected final Map<String, Set<String>> excludedConfigs;
+    protected final Set<ConfigId> excludedConfigs;
     protected final List<ConfigModel> definedConfigs;
     protected final boolean hasModelOnlyConfigs;
 
@@ -91,16 +91,11 @@ public class ConfigCustomizations {
     }
 
     public boolean isConfigExcluded(ConfigId configId) {
-        final Set<String> names = excludedConfigs.get(configId.getModel());
-        return names == null ? false : names.contains(configId.getName());
+        return excludedConfigs.contains(configId);
     }
 
-    public Set<String> getExcludedModels() {
-        return excludedConfigs.keySet();
-    }
-
-    public Set<String> getExcludedConfigs(String model) {
-        return excludedConfigs.get(model);
+    public Set<ConfigId> getExcludedConfigs() {
+        return excludedConfigs;
     }
 
     public boolean hasIncludedConfigs() {
@@ -195,7 +190,7 @@ public class ConfigCustomizations {
         }
         if(!excludedConfigs.isEmpty()) {
             builder.append(" excluded configs ");
-            StringUtils.append(builder, excludedConfigs.entrySet());
+            StringUtils.append(builder, excludedConfigs);
         }
         if(!includedConfigs.isEmpty()) {
             builder.append(" included configs ");

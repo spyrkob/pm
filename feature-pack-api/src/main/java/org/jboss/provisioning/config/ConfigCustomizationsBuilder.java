@@ -18,8 +18,6 @@
 package org.jboss.provisioning.config;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +36,7 @@ public abstract class ConfigCustomizationsBuilder<B extends ConfigCustomizations
     protected Set<String> includedModels = Collections.emptySet();
     protected Set<ConfigId> includedConfigs = Collections.emptySet();
     protected Map<String, Boolean> excludedModels = Collections.emptyMap();
-    protected Map<String, Set<String>> excludedConfigs = Collections.emptyMap();
+    protected Set<ConfigId> excludedConfigs = Collections.emptySet();
     protected List<ConfigModel> definedConfigs = Collections.emptyList();
     protected boolean hasModelOnlyConfigs = false;
 
@@ -96,29 +94,13 @@ public abstract class ConfigCustomizationsBuilder<B extends ConfigCustomizations
         return (B) this;
     }
 
-    @SuppressWarnings("unchecked")
     public B excludeDefaultConfig(String model, String name) {
-        if(excludedConfigs.isEmpty()) {
-            excludedConfigs = Collections.singletonMap(model, Collections.singleton(name));
-            return (B) this;
-        }
-        Set<String> names = excludedConfigs.get(model);
-        if(names == null) {
-            if(excludedConfigs.size() == 1) {
-                excludedConfigs = new HashMap<>(excludedConfigs);
-            }
-            excludedConfigs.put(model, Collections.singleton(name));
-        } else {
-            if(names.size() == 1) {
-                names = new HashSet<>(names);
-                if(excludedConfigs.size() == 1) {
-                    excludedConfigs = Collections.singletonMap(model, names);
-                } else {
-                    excludedConfigs.put(model, names);
-                }
-            }
-            names.add(name);
-        }
+        return excludeDefaultConfig(new ConfigId(model, name));
+    }
+
+    @SuppressWarnings("unchecked")
+    public B excludeDefaultConfig(ConfigId configId) {
+        excludedConfigs = PmCollections.add(excludedConfigs, configId);
         return (B) this;
     }
 }
