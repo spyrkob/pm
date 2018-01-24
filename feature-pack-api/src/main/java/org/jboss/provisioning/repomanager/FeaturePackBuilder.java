@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +44,7 @@ import org.jboss.provisioning.spec.FeaturePackSpec;
 import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.spec.PackageSpec;
 import org.jboss.provisioning.util.IoUtils;
+import org.jboss.provisioning.util.PmCollections;
 import org.jboss.provisioning.util.ZipUtils;
 import org.jboss.provisioning.xml.FeatureGroupXmlWriter;
 import org.jboss.provisioning.xml.FeaturePackXmlWriter;
@@ -107,15 +107,7 @@ public class FeaturePackBuilder {
     }
 
     public FeaturePackBuilder addPackage(PackageBuilder pkg) {
-        switch (pkgs.size()) {
-            case 0:
-                pkgs = Collections.singletonList(pkg);
-                break;
-            case 1:
-                pkgs = new ArrayList<>(pkgs);
-            default:
-                pkgs.add(pkg);
-        }
+        pkgs = PmCollections.add(pkgs, pkg);
         return this;
     }
 
@@ -192,15 +184,7 @@ public class FeaturePackBuilder {
         if(plugins.contains(file)) {
             return this;
         }
-        switch(plugins.size()) {
-            case 0:
-                plugins = Collections.singletonList(file);
-                break;
-            case 1:
-                plugins = new ArrayList<>(plugins);
-            default:
-                plugins.add(file);
-        }
+        plugins = PmCollections.add(plugins, file);
         return this;
     }
 
