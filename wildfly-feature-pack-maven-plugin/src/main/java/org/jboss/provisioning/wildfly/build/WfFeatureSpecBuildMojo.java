@@ -18,6 +18,7 @@ package org.jboss.provisioning.wildfly.build;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -34,6 +35,7 @@ import java.util.stream.Stream;
 import javax.xml.stream.XMLStreamException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -58,15 +60,13 @@ import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.components.io.fileselectors.IncludeExcludeFileSelector;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.Operations;
+import org.codehaus.plexus.util.StringUtils;
 import org.jboss.dmr.ModelNode;
-import org.jboss.provisioning.ProvisioningDescriptionException;
+import org.jboss.provisioning.MessageWriter;
+import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.plugin.wildfly.CliScriptRunner;
+import org.jboss.provisioning.plugin.wildfly.EmbeddedServer;
 import org.jboss.provisioning.util.IoUtils;
-import org.wildfly.core.embedded.EmbeddedProcessFactory;
-import org.wildfly.core.embedded.EmbeddedProcessStartException;
-import org.wildfly.core.embedded.HostController;
-import org.wildfly.core.embedded.StandaloneServer;
 
 /**
  *
@@ -74,6 +74,7 @@ import org.wildfly.core.embedded.StandaloneServer;
  */
 @Mojo(name = "wf-spec", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class WfFeatureSpecBuildMojo extends AbstractMojo {
+    private static final String MODULES = "modules";
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
@@ -89,6 +90,9 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
 
     @Parameter(required = false)
     private List<ArtifactItem> featurePacks;
+
+    @Parameter(required=false)
+    private List<ExternalArtifact> externalArtifacts;
 
     @Parameter(required = true)
     private List<String> standaloneExtensions;
@@ -128,7 +132,7 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
         srcModuleResource.setDirectory(moduleDirectory);
         srcModuleResource.setFiltering(true);
         modulesResources.add(srcModuleResource);
-        Path tmpModules = Files.createTempDirectory("modules");
+        Path tmpModules = Files.createTempDirectory(MODULES);
         List<Artifact> featurePackArtifacts = new ArrayList<>();
         Map<String, String> inheritedFeatures = new HashMap<>();
         if (featurePacks != null && !featurePacks.isEmpty()) {
@@ -161,7 +165,7 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                                 inheritedFeatures.put(feature, featurePackName);
                             }
                         }
-                        setModules(tmpArchive, tmpModules.resolve("modules"));
+                        setModules(tmpArchive, tmpModules.resolve(MODULES));
                     } catch (NoSuchArchiverException ex) {
                         getLog().warn(ex);
                     }
@@ -170,18 +174,53 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                 }
             }
             org.apache.maven.model.Resource fpModuleResource = new org.apache.maven.model.Resource();
-            fpModuleResource.setDirectory(tmpModules.resolve("modules").toString());
+            fpModuleResource.setDirectory(tmpModules.resolve(MODULES).toString());
             fpModuleResource.setFiltering(true);
             modulesResources.add(fpModuleResource);
+        }
+        if (externalArtifacts != null && !externalArtifacts.isEmpty()) {
+            for (ExternalArtifact fp : externalArtifacts) {
+                IncludeExcludeFileSelector selector = new IncludeExcludeFileSelector();
+                selector.setIncludes(StringUtils.split(fp.getIncludes(), ","));
+                selector.setExcludes(StringUtils.split(fp.getExcludes(), ","));
+                IncludeExcludeFileSelector[] selectors = new IncludeExcludeFileSelector[]{selector};
+                final Artifact fpArtifact = findArtifact(fp.getArtifactItem());
+                if (fpArtifact != null) {
+                    featurePackArtifacts.add(fpArtifact);
+                    File archive = fpArtifact.getFile();
+                    Path target = tmpModules.resolve(MODULES).resolve(fp.getToLocation());
+                    Files.createDirectories(target);
+                    try {
+                        UnArchiver unArchiver;
+                        try {
+                            unArchiver = archiverManager.getUnArchiver(fpArtifact.getType());
+                            getLog().debug("Found unArchiver by type: " + unArchiver);
+                        } catch (NoSuchArchiverException e) {
+                            unArchiver = archiverManager.getUnArchiver(archive);
+                            getLog().debug("Found unArchiver by extension: " + unArchiver);
+                        }
+                        unArchiver.setFileSelectors(selectors);
+                        unArchiver.setSourceFile(archive);
+                        unArchiver.setDestDirectory(target.toFile());
+                        unArchiver.extract();
+                    } catch (NoSuchArchiverException ex) {
+                        getLog().warn(ex);
+                    }
+                } else {
+                    getLog().warn("No artifact was found for " + fp);
+                }
+            }
         }
         setArtifactVersions(featurePackArtifacts);
         Path wildfly = outputDirectory.toPath().resolve("wildfly");
         Files.createDirectories(wildfly.resolve("standalone").resolve("configuration"));
         Files.createDirectories(wildfly.resolve("domain").resolve("configuration"));
+        Files.createDirectories(wildfly.resolve("bin"));
+        Files.createFile(wildfly.resolve("bin").resolve("jboss-cli-logging.properties"));
+        copyJbossModule(wildfly);
         MavenResourcesExecution mavenResourcesExecution
-                = new MavenResourcesExecution(modulesResources, wildfly.resolve("modules").toFile(), project,
-                        "UTF-8", Collections.emptyList(),
-                        Collections.emptyList(), session);
+                = new MavenResourcesExecution(modulesResources, wildfly.resolve(MODULES).toFile(), project,
+                        "UTF-8", Collections.emptyList(), Collections.emptyList(), session);
         mavenResourcesExecution.setOverwrite(true);
         mavenResourcesExecution.setIncludeEmptyDirs(true);
         mavenResourcesExecution.setSupportMultiLineFiltering(false);
@@ -198,30 +237,73 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
         }
         lines.add("</extensions>");
         lines.add("</server>");
+        Path standaloneDmr = wildfly.resolve("standalone_features.dmr").toAbsolutePath();
         Files.write(wildfly.resolve("standalone").resolve("configuration").resolve("standalone.xml"), lines);
-
-        System.setProperty("org.wildfly.logging.skipLogManagerCheck", "true");
-        System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
-        Properties props = (Properties) System.getProperties().clone();
-        StandaloneServer server = EmbeddedProcessFactory.createStandaloneServer(wildfly.toAbsolutePath().toString(), wildfly.resolve("modules").toAbsolutePath().toString(), null, new String[]{"--admin-only"});
         try {
-            server.start();
-            try (ModelControllerClient client = server.getModelControllerClient()) {
-                ModelNode address = new ModelNode().setEmptyList();
-                ModelNode op = Operations.createOperation("read-feature", address);
-                op.get("recursive").set(true);
-                ModelNode result = client.execute(op);
-                Files.write(wildfly.resolve("standalone_features.dmr"), Collections.singletonList(result.toString()));
-                FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
-            } catch (XMLStreamException | ProvisioningDescriptionException ex) {
-                throw new MojoExecutionException(ex.getMessage(), ex);
-            }
-        } catch (EmbeddedProcessStartException ex) {
+            Path script = EmbeddedServer.createEmbeddedStandaloneScript("standalone.xml",
+                    Collections.singletonList(":read-feature(recursive) > " + standaloneDmr.toString()));
+            CliScriptRunner.runCliScript(wildfly, wildfly.resolve("modules"), script, new MessageWriter() {
+                @Override
+                public void verbose(Throwable cause, CharSequence message) {
+                    getLog().debug(message, cause);
+                }
+
+                @Override
+                public void print(Throwable cause, CharSequence message) {
+                    getLog().info(message, cause);
+                }
+
+                @Override
+                public void error(Throwable cause, CharSequence message) {
+                    getLog().error(message, cause);
+                }
+
+                @Override
+                public boolean isVerboseEnabled() {
+                    return getLog().isDebugEnabled();
+                }
+
+                @Override
+                public void close() throws Exception {
+                }
+            });
+        } catch (ProvisioningException ex) {
             throw new MojoExecutionException(ex.getMessage(), ex);
-        } finally {
-            server.stop();
-            clearXMLConfiguration(props);
         }
+        StringBuilder buffer = new StringBuilder();
+        for (String line : Files.readAllLines(standaloneDmr, StandardCharsets.UTF_8)) {
+            buffer.append(line);
+        }
+        try {
+            ModelNode result = ModelNode.fromString(buffer.toString());
+            FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
+        } catch (ProvisioningException | XMLStreamException ex) {
+            throw new MojoExecutionException(ex.getMessage(), ex);
+        }
+//            throw new MojoExecutionException(ex.getMessage(), ex);
+//        }
+//        System.setProperty("org.wildfly.logging.skipLogManagerCheck", "true");
+//        System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
+//        Properties props = (Properties) System.getProperties().clone();
+//        StandaloneServer server = EmbeddedProcessFactory.createStandaloneServer(wildfly.toAbsolutePath().toString(), wildfly.resolve("modules").toAbsolutePath().toString(), null, new String[]{"--admin-only"});
+//        try {
+//            server.start();
+//            try (ModelControllerClient client = server.getModelControllerClient()) {
+//                ModelNode address = new ModelNode().setEmptyList();
+//                ModelNode op = Operations.createOperation("read-feature", address);
+//                op.get("recursive").set(true);
+//                ModelNode result = client.execute(op);
+//                Files.write(wildfly.resolve("standalone_features.dmr"), Collections.singletonList(result.toString()));
+//                FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
+//            } catch (XMLStreamException | ProvisioningDescriptionException ex) {
+//                throw new MojoExecutionException(ex.getMessage(), ex);
+//            }
+//        } catch (EmbeddedProcessStartException ex) {
+//            throw new MojoExecutionException(ex.getMessage(), ex);
+//        } finally {
+//            server.stop();
+//            clearXMLConfiguration(props);
+//        }
         lines = new ArrayList<>(domainExtensions.size() + 8);
         lines.add("<?xml version='1.0' encoding='UTF-8'?>");
         lines.add("<domain xmlns=\"urn:jboss:domain:6.0\">");
@@ -247,27 +329,67 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
         lines.add("</domain-controller>");
         lines.add("</host>");
         Files.write(wildfly.resolve("domain").resolve("configuration").resolve("host.xml"), lines);
-        HostController host = EmbeddedProcessFactory.createHostController(wildfly.toAbsolutePath().toString(), wildfly.resolve("modules").toAbsolutePath().toString(), null, new String[]{"--admin-only"});
+        Path domainDmr = wildfly.resolve("domain_features.dmr").toAbsolutePath();
         try {
-            host.start();
-            try (ModelControllerClient client = host.getModelControllerClient()) {
-                ModelNode address = new ModelNode().setEmptyList();
-                ModelNode op = Operations.createOperation("read-feature", address);
-                op.get("recursive").set(true);
-                ModelNode result = client.execute(op);
-                Files.write(wildfly.resolve("domain_features.dmr"), Collections.singletonList(result.toString()));
-                FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
-            } catch (XMLStreamException | ProvisioningDescriptionException ex) {
-                throw new MojoExecutionException(ex.getMessage(), ex);
-            }
-        } catch (EmbeddedProcessStartException ex) {
+            Path script = EmbeddedServer.createEmbeddedHostControllerScript("domain.xml", "host.xml",
+                    Collections.singletonList(":read-feature(recursive) > " + domainDmr.toString()));
+            CliScriptRunner.runCliScript(wildfly, wildfly.resolve("modules"), script, new MessageWriter() {
+                @Override
+                public void verbose(Throwable cause, CharSequence message) {
+                    getLog().debug(message, cause);
+                }
+
+                @Override
+                public void print(Throwable cause, CharSequence message) {
+                    getLog().info(message, cause);
+                }
+
+                @Override
+                public void error(Throwable cause, CharSequence message) {
+                    getLog().error(message, cause);
+                }
+
+                @Override
+                public boolean isVerboseEnabled() {
+                    return getLog().isDebugEnabled();
+                }
+
+                @Override
+                public void close() throws Exception {
+                }
+            });
+        } catch (ProvisioningException ex) {
             throw new MojoExecutionException(ex.getMessage(), ex);
-        } finally {
-            host.stop();
-            clearXMLConfiguration(props);
+        }
+        buffer = new StringBuilder();
+        for (String line : Files.readAllLines(domainDmr, StandardCharsets.UTF_8)) {
+            buffer.append(line);
+        }
+        try {
+            ModelNode result = ModelNode.fromString(buffer.toString());
+            FeatureSpecExporter.export(result, outputDirectory.toPath(), inheritedFeatures);
+        } catch (ProvisioningException | XMLStreamException ex) {
+            throw new MojoExecutionException(ex.getMessage(), ex);
         }
         for(String inheritedFeature : inheritedFeatures.keySet()) {
             IoUtils.recursiveDelete(outputDirectory.toPath().resolve(inheritedFeature));
+        }
+    }
+
+    private void copyJbossModule(Path wildfly) throws IOException, MojoExecutionException {
+        for(Dependency dep :  project.getDependencyManagement().getDependencies()) {
+            getLog().debug("Dependency found " + dep);
+            if("org.jboss.modules".equals(dep.getGroupId()) && "jboss-modules".equals(dep.getArtifactId())) {
+                ArtifactItem jbossModule = new ArtifactItem();
+                jbossModule.setArtifactId(dep.getArtifactId());
+                jbossModule.setGroupId(dep.getGroupId());
+                jbossModule.setVersion(dep.getVersion());
+                jbossModule.setType(dep.getType());
+                jbossModule.setClassifier(dep.getClassifier());
+                File jbossModuleJar = findArtifact(jbossModule).getFile();
+                getLog().info("Copying " + jbossModuleJar.toPath() + " to " + wildfly.resolve("jboss-modules.jar"));
+                Files.copy(jbossModuleJar.toPath(), wildfly.resolve("jboss-modules.jar"));
+            }
         }
     }
 
@@ -301,7 +423,7 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
     }
 
     private boolean isModule(Path dir) {
-        return "modules".equals(dir.getFileName().toString())
+        return MODULES.equals(dir.getFileName().toString())
                 && "module".equals(dir.getParent().getFileName().toString())
                 && "wildfly".equals(dir.getParent().getParent().getFileName().toString())
                 && "pm".equals(dir.getParent().getParent().getParent().getFileName().toString())

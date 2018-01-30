@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.BufferedReader;
@@ -33,16 +32,20 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 public class CliScriptRunner {
 
-    public static void runCliScript(Path installHome, Path script, MessageWriter messageWriter) throws ProvisioningException {
+    public static void runCliScript(Path installHome, Path modules, Path script, MessageWriter messageWriter) throws ProvisioningException {
         final CliCommandBuilder builder = CliCommandBuilder
                 .of(installHome)
+                .addModuleDir(modules.toString())
                 .addCliArgument("--no-operation-validation")
-                .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
         messageWriter.verbose("Executing jboss console: " + builder.build());
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 
+        execute(processBuilder, messageWriter);
+    }
+
+    private static void execute(final ProcessBuilder processBuilder, MessageWriter messageWriter) throws ProvisioningException {
         final Process cliProcess;
         try {
             cliProcess = processBuilder.start();
@@ -68,7 +71,7 @@ public class CliScriptRunner {
                 messageWriter.error(e, e.getMessage());
             }
 
-            if(cliProcess.isAlive()) {
+            if (cliProcess.isAlive()) {
                 try {
                     cliProcess.waitFor();
                 } catch (InterruptedException e) {
@@ -76,7 +79,7 @@ public class CliScriptRunner {
                 }
             }
 
-            if(cliProcess.exitValue() != 0) {
+            if (cliProcess.exitValue() != 0) {
 //                try {
 //                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
 //                    IoUtils.copy(script, scriptCopy);
@@ -89,5 +92,24 @@ public class CliScriptRunner {
         } catch (IOException e) {
             throw new ProvisioningException("CLI process failed", e);
         }
+    }
+
+    public static void runCliScript(Path installHome, Path script, MessageWriter messageWriter) throws ProvisioningException {
+        final CliCommandBuilder builder = CliCommandBuilder
+                .of(installHome)
+                .addCliArgument("--no-operation-validation")
+                .addCliArgument("--echo-command")
+                .addCliArgument("--file=" + script);
+        messageWriter.verbose("Executing jboss console: " + builder.build());
+        final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
+        processBuilder.environment().put("JBOSS_HOME", installHome.toString());
+
+        execute(processBuilder, messageWriter);//                try {
+//                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
+//                    IoUtils.copy(script, scriptCopy);
+//                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
+//                } catch(IOException e) {
+//                    e.printStackTrace();
+//                }
     }
 }

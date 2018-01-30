@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,7 @@ import org.apache.maven.shared.dependencies.DependableCoordinate;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
- * ArtifactItem represents information specified in the plugin configuration section for each artifact.
- *
- * @since 1.0
- * @author <a href="mailto:brianf@apache.org">Brian Fox</a>
- * @version $Id: ArtifactItem.java 1807877 2017-09-09 10:35:59Z khmarbaise $
+ * ArtifactItem represents information specified for each artifact.
  */
 public class ArtifactItem
         implements DependableCoordinate, ArtifactCoordinate {

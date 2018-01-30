@@ -41,7 +41,12 @@ public class FeatureSpecExporter {
 
     public static void export(ModelNode node, Path directory, Map<String, String> inheritedFeatures) throws IOException, ProvisioningDescriptionException, XMLStreamException {
             List<FeatureSpec> specs = new ArrayList<>();
-            ModelNode rootNode = node.require("result").require("feature");
+            ModelNode rootNode;
+            if(node.hasDefined("result")) {
+                rootNode = node.require("result").require("feature");
+            } else {
+                rootNode = node.require("feature");
+            }
             List<Property> rootFeatures;
             if(rootNode.hasDefined("name")) {
                 rootFeatures = Collections.singletonList(new Property(rootNode.require("name").asString(), rootNode));
