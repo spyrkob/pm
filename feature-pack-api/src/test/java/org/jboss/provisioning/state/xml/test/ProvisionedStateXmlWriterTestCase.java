@@ -19,14 +19,11 @@ package org.jboss.provisioning.state.xml.test;
 
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.plugin.ProvisionedConfigHandler;
 import org.jboss.provisioning.runtime.ResolvedFeatureId;
@@ -37,12 +34,14 @@ import org.jboss.provisioning.state.ProvisionedFeaturePack;
 import org.jboss.provisioning.state.ProvisionedPackage;
 import org.jboss.provisioning.state.ProvisionedState;
 import org.jboss.provisioning.test.util.XmlParserValidator;
+import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.xml.ProvisionedConfigBuilder;
 import org.jboss.provisioning.xml.ProvisionedFeatureBuilder;
 import org.jboss.provisioning.xml.ProvisionedStateXmlParser;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -52,14 +51,20 @@ public class ProvisionedStateXmlWriterTestCase {
 
     private static final String SCHEMA = "schema/pm-provisioned-state-1_0.xsd";
 
-    private Logger log = Logger.getLogger(getClass().getName());
-    private XmlParserValidator<ProvisionedState> validator;
+    private static XmlParserValidator<ProvisionedState> validator;
+    private static Path tmpDir;
 
-    @Before
-    public void before() throws URISyntaxException {
-        URL xsd = getClass().getClassLoader().getResource(SCHEMA);
+    @BeforeClass
+    public static void before() throws Exception {
+        URL xsd = ProvisionedStateXmlWriterTestCase.class.getClassLoader().getResource(SCHEMA);
         Assert.assertNotNull(xsd);
         validator = new XmlParserValidator<>(Paths.get(xsd.toURI()), ProvisionedStateXmlParser.getInstance());
+        tmpDir = IoUtils.createRandomTmpDir();
+    }
+
+    @AfterClass
+    public static void after() throws URISyntaxException {
+        IoUtils.recursiveDelete(tmpDir);
     }
 
     @Test
@@ -203,8 +208,7 @@ public class ProvisionedStateXmlWriterTestCase {
     }
 
     private Path marshallToTempFile(ProvisionedState state) throws Exception {
-        final Path path = Files.createTempFile("provisioned-state-", ".xml").toAbsolutePath();
-        log.info("Config written to " + path.toString());
+        final Path path = tmpDir.resolve("test-provisioned-state.xml");
         ProvisionedStateXmlWriter.getInstance().write(state, path);
         return path;
     }
