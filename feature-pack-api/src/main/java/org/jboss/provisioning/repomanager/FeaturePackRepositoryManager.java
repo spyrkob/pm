@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,7 +87,12 @@ public class FeaturePackRepositoryManager implements ArtifactRepositoryManager {
         p = p.resolve(coords.getArtifactId());
         p = p.resolve(coords.getVersion());
         final StringBuilder fileName = new StringBuilder();
-        fileName.append(coords.getArtifactId()).append('-').append(coords.getVersion()).append('.').append(coords.getExtension());
+        fileName.append(coords.getArtifactId()).append('-').append(coords.getVersion());
+        final String classifier = coords.getClassifier();
+        if(classifier != null && !classifier.isEmpty()) {
+            fileName.append('-').append(classifier);
+        }
+        fileName.append('.').append(coords.getExtension());
         return p.resolve(fileName.toString());
     }
 }

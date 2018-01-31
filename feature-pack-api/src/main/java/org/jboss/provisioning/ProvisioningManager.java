@@ -269,8 +269,6 @@ public class ProvisioningManager {
             }
             // install the software
             ProvisioningRuntime.install(runtime);
-        } catch (IOException e) {
-            messageWriter.error(e, e.getMessage());
         } finally {
             this.provisioningConfig = null;
         }
@@ -479,8 +477,6 @@ public class ProvisioningManager {
                 ProvisioningRuntime.diff(runtime, tempInstallationDir.resolve("model_diff"), installationHome);
                 runtime.setInstallDir(stagedDir);
                 ProvisioningRuntime.upgrade(runtime, installationHome);
-            } catch (IOException e) {
-                messageWriter.error(e, e.getMessage());
             }
         } finally {
             IoUtils.recursiveDelete(tempInstallationDir);
