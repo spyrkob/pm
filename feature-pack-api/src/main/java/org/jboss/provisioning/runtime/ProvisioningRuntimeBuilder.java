@@ -105,8 +105,8 @@ public class ProvisioningRuntimeBuilder {
     Map<String, String> rtParams = Collections.emptyMap();
     private final MessageWriter messageWriter;
 
-    private final Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> fpRtBuilders = new HashMap<>();
-    private List<FeaturePackRuntime.Builder> fpRtBuildersOrdered = new ArrayList<>();
+    private final Map<ArtifactCoords.Ga, FeaturePackRuntimeBuilder> fpRtBuilders = new HashMap<>();
+    private List<FeaturePackRuntimeBuilder> fpRtBuildersOrdered = new ArrayList<>();
 
     List<ConfigModelStack> anonymousConfigs = Collections.emptyList();
     Map<String, ConfigModelStack> nameOnlyConfigs = Collections.emptyMap();
@@ -120,8 +120,8 @@ public class ProvisioningRuntimeBuilder {
     private List<ConfigModel> modelOnlyConfigSpecs = Collections.emptyList();
     private List<ArtifactCoords.Gav> modelOnlyGavs = Collections.emptyList();
 
-    private FeaturePackRuntime.Builder thisFpOrigin;
-    private FeaturePackRuntime.Builder currentFp;
+    private FeaturePackRuntimeBuilder thisFpOrigin;
+    private FeaturePackRuntimeBuilder currentFp;
     private ConfigModelStack configStack;
 
     private FpStack fpConfigStack;
@@ -182,7 +182,7 @@ public class ProvisioningRuntimeBuilder {
                 if(!config.hasFeaturePackDep(uninstallGa)) {
                     throw new ProvisioningException(Errors.unknownFeaturePack(uninstallGa.toGav()));
                 }
-                final FeaturePackRuntime.Builder fp = getOrLoadFpBuilder(uninstallGa.toGav());
+                final FeaturePackRuntimeBuilder fp = getOrLoadFpBuilder(uninstallGa.toGav());
                 depsOfUninstalled = FpVersionsResolver.resolveDeps(this, fp.spec, depsOfUninstalled);
             }
             if(!depsOfUninstalled.isEmpty()) {
@@ -292,12 +292,12 @@ public class ProvisioningRuntimeBuilder {
             return Collections.emptyMap();
         }
         if(fpRtBuildersOrdered.size() == 1) {
-            final FeaturePackRuntime.Builder builder = fpRtBuildersOrdered.get(0);
+            final FeaturePackRuntimeBuilder builder = fpRtBuildersOrdered.get(0);
             copyResources(builder);
             return Collections.singletonMap(builder.gav.toGa(), builder.build());
         }
         final Map<ArtifactCoords.Ga, FeaturePackRuntime> fpRuntimes = new LinkedHashMap<>(fpRtBuildersOrdered.size());
-        for (FeaturePackRuntime.Builder builder : fpRtBuildersOrdered) {
+        for (FeaturePackRuntimeBuilder builder : fpRtBuildersOrdered) {
             copyResources(builder);
             fpRuntimes.put(builder.gav.toGa(), builder.build());
         }
@@ -348,7 +348,7 @@ public class ProvisioningRuntimeBuilder {
 
     private void processFpConfig(FeaturePackConfig fpConfig) throws ProvisioningException {
         thisFpOrigin = getFpBuilder(fpConfig.getGav());
-        final FeaturePackRuntime.Builder parentFp = setOrigin(thisFpOrigin);
+        final FeaturePackRuntimeBuilder parentFp = setOrigin(thisFpOrigin);
 
         try {
             List<ConfigModelStack> fpConfigStacks = Collections.emptyList();
@@ -536,22 +536,39 @@ public class ProvisioningRuntimeBuilder {
         return resolvedFeatures;
     }
 
-    private FeaturePackRuntime.Builder setOrigin(String origin) throws ProvisioningException {
+    private FeaturePackRuntimeBuilder setOrigin(String origin) throws ProvisioningException {
         return origin == null ? currentFp : setOrigin(getOrigin(origin));
     }
 
-    private FeaturePackRuntime.Builder setOrigin(ArtifactCoords.Gav origin) throws ProvisioningException {
+    private FeaturePackRuntimeBuilder setOrigin(ArtifactCoords.Gav origin) throws ProvisioningException {
         return setOrigin(getFpBuilder(origin));
     }
 
-    private FeaturePackRuntime.Builder setOrigin(FeaturePackRuntime.Builder origin) {
-        final FeaturePackRuntime.Builder prevOrigin = this.currentFp;
+    private FeaturePackRuntimeBuilder setOrigin(FeaturePackRuntimeBuilder origin) {
+        final FeaturePackRuntimeBuilder prevOrigin = this.currentFp;
         this.currentFp = origin;
         return prevOrigin;
     }
 
+    FeaturePackRuntimeBuilder getOrigin(final String depName) throws ProvisioningException {
+        if(Constants.THIS.equals(depName)) {
+            if(thisFpOrigin == null) {
+                throw new ProvisioningException("Feature-pack reference 'this' cannot be used in the current context.");
+            }
+            return thisFpOrigin;
+        }
+        final ArtifactCoords.Gav depGav = currentFp == null ? config.getFeaturePackDep(depName).getGav() : currentFp.spec.getFeaturePackDep(depName).getGav();
+        return getFpBuilder(depGav);
+    }
+
+    private FeaturePackRuntimeBuilder setThisOrigin(FeaturePackRuntimeBuilder origin) {
+        final FeaturePackRuntimeBuilder prevOrigin = this.thisFpOrigin;
+        thisFpOrigin = origin;
+        return prevOrigin;
+    }
+
     ResolvedFeatureGroupConfig resolveFg(String origin, FeatureGroupSupport fg) throws ProvisioningException {
-        FeaturePackRuntime.Builder originalFp = currentFp;
+        FeaturePackRuntimeBuilder originalFp = currentFp;
         if(origin != null) {
             originalFp = setOrigin(origin);
         } else if(currentFp == null) {
@@ -568,7 +585,7 @@ public class ProvisioningRuntimeBuilder {
     boolean processIncludedFeatures(final List<ResolvedFeatureGroupConfig> pushedConfigs)
             throws ProvisioningException {
         boolean resolvedFeatures = false;
-        final FeaturePackRuntime.Builder originalFp = currentFp;
+        final FeaturePackRuntimeBuilder originalFp = currentFp;
         try {
             for (ResolvedFeatureGroupConfig pushedFgConfig : pushedConfigs) {
                 setOrigin(pushedFgConfig.gav);
@@ -677,13 +694,10 @@ public class ProvisioningRuntimeBuilder {
 
     private boolean processConfigItemContainer(ConfigItemContainer ciContainer) throws ProvisioningException {
         boolean resolvedFeatures = false;
-        final FeaturePackRuntime.Builder prevFpOrigin = thisFpOrigin;
-        if(ciContainer.isResetFeaturePackOrigin()) {
-            thisFpOrigin = currentFp;
-        }
+        final FeaturePackRuntimeBuilder prevFpOrigin = ciContainer.isResetFeaturePackOrigin() ? setThisOrigin(currentFp) : null;
         if(ciContainer.hasItems()) {
             for(ConfigItem item : ciContainer.getItems()) {
-                final FeaturePackRuntime.Builder originalFp = setOrigin(item.getOrigin());
+                final FeaturePackRuntimeBuilder originalFp = setOrigin(item.getOrigin());
                 try {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
@@ -705,19 +719,10 @@ public class ProvisioningRuntimeBuilder {
                 }
             }
         }
-        thisFpOrigin = prevFpOrigin;
-        return resolvedFeatures;
-    }
-
-    FeaturePackRuntime.Builder getOrigin(final String depName) throws ProvisioningException {
-        if(Constants.THIS.equals(depName)) {
-            if(thisFpOrigin == null) {
-                throw new ProvisioningException("Feature-pack reference 'this' cannot be used in the current context.");
-            }
-            return thisFpOrigin;
+        if(prevFpOrigin != null) {
+            setThisOrigin(prevFpOrigin);
         }
-        final ArtifactCoords.Gav depGav = currentFp == null ? config.getFeaturePackDep(depName).getGav() : currentFp.spec.getFeaturePackDep(depName).getGav();
-        return getFpBuilder(depGav);
+        return resolvedFeatures;
     }
 
     private boolean resolveFeature(ConfigModelStack configStack, FeatureConfig fc) throws ProvisioningException {
@@ -759,7 +764,7 @@ public class ProvisioningRuntimeBuilder {
                 if(!refSpec.isInclude()) {
                     continue;
                 }
-                final FeaturePackRuntime.Builder originalFp = setOrigin(refSpec.getOrigin());
+                final FeaturePackRuntimeBuilder originalFp = setOrigin(refSpec.getOrigin());
                 try {
                     final ResolvedFeatureSpec refResolvedSpec = currentFp.getFeatureSpec(refSpec.getFeature().getName());
                     final List<ResolvedFeatureId> refIds = spec.resolveRefId(parentFeature, refSpec, refResolvedSpec);
@@ -794,7 +799,7 @@ public class ProvisioningRuntimeBuilder {
                     continue;
                 }
                 final FeatureDependencySpec depSpec = dep.getValue();
-                final FeaturePackRuntime.Builder originalFp = setOrigin(depSpec.getOrigin());
+                final FeaturePackRuntimeBuilder originalFp = setOrigin(depSpec.getOrigin());
                 try {
                     resolveFeatureDepsAndRefs(configStack, currentFp.getFeatureSpec(depId.getSpecId().getName()), depId, Collections.emptyMap(), Collections.emptyList());
                 } finally {
@@ -805,27 +810,27 @@ public class ProvisioningRuntimeBuilder {
         return resolvedDeps;
     }
 
-    FeaturePackRuntime.Builder getOrLoadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final FeaturePackRuntime.Builder fp = getFpBuilder(gav, false);
+    FeaturePackRuntimeBuilder getOrLoadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
+        final FeaturePackRuntimeBuilder fp = getFpBuilder(gav, false);
         if(fp != null) {
             return fp;
         }
         return loadFpBuilder(gav);
     }
 
-    FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
+    FeaturePackRuntimeBuilder getFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningDescriptionException {
         return getFpBuilder(gav, true);
     }
 
-    FeaturePackRuntime.Builder getFpBuilder(ArtifactCoords.Gav gav, boolean failIfNotFound) throws ProvisioningDescriptionException {
-        final FeaturePackRuntime.Builder fp = fpRtBuilders.get(gav.toGa());
+    FeaturePackRuntimeBuilder getFpBuilder(ArtifactCoords.Gav gav, boolean failIfNotFound) throws ProvisioningDescriptionException {
+        final FeaturePackRuntimeBuilder fp = fpRtBuilders.get(gav.toGa());
         if(fp == null && failIfNotFound) {
             throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(gav));
         }
         return fp;
     }
 
-    FeaturePackRuntime.Builder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
+    FeaturePackRuntimeBuilder loadFpBuilder(ArtifactCoords.Gav gav) throws ProvisioningException {
         final Path fpDir = LayoutUtils.getFeaturePackDir(layoutDir, gav, false);
         mkdirs(fpDir);
 
@@ -841,7 +846,7 @@ public class ProvisioningRuntimeBuilder {
             throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(fpXml));
         }
 
-        final FeaturePackRuntime.Builder fp;
+        final FeaturePackRuntimeBuilder fp;
         try (BufferedReader reader = Files.newBufferedReader(fpXml)) {
             fp = FeaturePackRuntime.builder(gav, FeaturePackXmlParser.getInstance().parse(reader), fpDir);
         } catch (IOException | XMLStreamException e) {
@@ -907,7 +912,7 @@ public class ProvisioningRuntimeBuilder {
             return;
         }
         for (String origin : pkgDeps.getPackageOrigins()) {
-            final FeaturePackRuntime.Builder originalFp = setOrigin(origin);
+            final FeaturePackRuntimeBuilder originalFp = setOrigin(origin);
             boolean resolvedPackages = false;
             try {
                 for (PackageDependencySpec pkgDep : pkgDeps.getExternalPackageDeps(origin)) {
@@ -938,7 +943,7 @@ public class ProvisioningRuntimeBuilder {
         }
     }
 
-    private void orderFpRtBuilder(final FeaturePackRuntime.Builder fpRtBuilder) {
+    private void orderFpRtBuilder(final FeaturePackRuntimeBuilder fpRtBuilder) {
         this.fpRtBuildersOrdered.add(fpRtBuilder);
         fpRtBuilder.ordered = true;
     }
@@ -1035,7 +1040,7 @@ public class ProvisioningRuntimeBuilder {
         return false;
     }
 
-    private void copyResources(FeaturePackRuntime.Builder fpRtBuilder) throws ProvisioningException {
+    private void copyResources(FeaturePackRuntimeBuilder fpRtBuilder) throws ProvisioningException {
         // resources should be copied last overriding the dependency resources
         final Path fpResources = fpRtBuilder.dir.resolve(Constants.RESOURCES);
         if(Files.exists(fpResources)) {
