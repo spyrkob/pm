@@ -166,6 +166,15 @@ public class ProvisioningRuntimeBuilder {
     }
 
     public ProvisioningRuntime build() throws ProvisioningException {
+        try {
+            return doBuild();
+        } catch(ProvisioningException | RuntimeException | Error e) {
+            IoUtils.recursiveDelete(workDir);
+            throw e;
+        }
+    }
+
+    private ProvisioningRuntime doBuild() throws ProvisioningException {
 
         if(!uninstallFps.isEmpty()) {
             Map<Ga, Gav> depsOfUninstalled = Collections.emptyMap();
@@ -228,6 +237,7 @@ public class ProvisioningRuntimeBuilder {
 
             if(!config.hasFeaturePackDeps()) {
                 emptyHomeDir();
+                IoUtils.recursiveDelete(workDir);
                 return null;
             }
         }

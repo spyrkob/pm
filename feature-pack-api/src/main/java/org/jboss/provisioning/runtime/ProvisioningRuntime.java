@@ -61,7 +61,7 @@ import org.jboss.provisioning.xml.ProvisioningXmlWriter;
  *
  * @author Alexey Loubyansky
  */
-public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, java.io.Closeable {
+public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, AutoCloseable {
 
     public static void install(ProvisioningRuntime runtime) throws ProvisioningException {
         // copy package content
@@ -406,7 +406,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         IoUtils.recursiveDelete(workDir);
         if (messageWriter.isVerboseEnabled()) {
             final long time = System.currentTimeMillis() - startTime;
