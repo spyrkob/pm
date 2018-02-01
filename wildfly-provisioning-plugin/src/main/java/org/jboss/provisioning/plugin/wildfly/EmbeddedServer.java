@@ -104,6 +104,6 @@ public class EmbeddedServer {
          if(hostConfig != null && ! hostConfig.isEmpty()) {
              localHostConfig = hostConfig;
          }
-         return String.format("embed-host-controller --std-out=echo --domain-config=%s --host-config =%s", localDomainConfig, localHostConfig);
+         return String.format("embed-host-controller --std-out=echo --domain-config=%s --host-config=%s", localDomainConfig, localHostConfig);
     }
 }

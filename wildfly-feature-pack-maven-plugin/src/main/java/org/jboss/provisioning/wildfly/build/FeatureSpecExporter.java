@@ -108,7 +108,7 @@ public class FeatureSpecExporter {
                 String featureName = ref.get("feature").asString();
                 FeatureReferenceSpec.Builder refBuilder = FeatureReferenceSpec.builder(featureName).setInclude(isInclude);
                 if(inheritedFeatures.containsKey(featureName)) {
-                    refBuilder.setFpDep(inheritedFeatures.get(featureName));
+                    refBuilder.setOrigin(inheritedFeatures.get(featureName));
                 }
                 if(ref.hasDefined("mappings")) {
                     for(Property mapping : ref.require("mappings").asPropertyList()) {
