@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -37,8 +36,8 @@ import org.jboss.provisioning.state.FeaturePack;
  */
 public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
-    static FeaturePackRuntimeBuilder builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
-        return new FeaturePackRuntimeBuilder(gav, spec, dir);
+    static FeaturePackRuntimeBuilder builder(FeaturePackSpec spec, Path dir) {
+        return new FeaturePackRuntimeBuilder(spec, dir);
     }
 
     private final FeaturePackSpec spec;

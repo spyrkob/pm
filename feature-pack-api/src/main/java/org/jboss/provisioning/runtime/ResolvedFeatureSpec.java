@@ -318,13 +318,12 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             return resolveSpecDeps(rt);
         }
         final Map<ResolvedFeatureId, FeatureDependencySpec> resolvedSpecDeps = resolveSpecDeps(rt);
-        final FeaturePackRuntimeBuilder ownFp = rt.getFpBuilder(id.gav);
         final Map<ResolvedFeatureId, FeatureDependencySpec> result;
         if(resolvedSpecDeps.isEmpty()) {
             if(depSpecs.size() == 1) {
                 final FeatureDependencySpec depSpec = depSpecs.iterator().next();
-                final FeaturePackRuntimeBuilder depFp = depSpec.getOrigin() == null ? ownFp : rt.getOrigin(depSpec.getOrigin());
-                final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(depSpec.getFeatureId().getSpec().getName());
+                final FeaturePackRuntimeBuilder depFp = depSpec.getOrigin() == null ? rt.getFpBuilder(id.gav) : rt.getOrigin(depSpec.getOrigin());
+                final ResolvedFeatureSpec depResolvedSpec = rt.getFeatureSpec(depFp, depSpec.getFeatureId().getSpec().getName());
                 return Collections.singletonMap(depResolvedSpec.resolveFeatureId(depSpec.getFeatureId().getParams()), depSpec);
             }
             result = new LinkedHashMap<>(depSpecs.size());
@@ -332,9 +331,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             result = new LinkedHashMap<>(resolvedSpecDeps.size() + depSpecs.size());
             result.putAll(resolvedSpecDeps);
         }
+        final FeaturePackRuntimeBuilder ownFp = rt.getFpBuilder(id.gav);
         for (FeatureDependencySpec userDep : depSpecs) {
             final FeaturePackRuntimeBuilder depFp = userDep.getOrigin() == null ? ownFp : rt.getOrigin(userDep.getOrigin());
-            final ResolvedFeatureSpec depResolvedSpec = depFp.getFeatureSpec(userDep.getFeatureId().getSpec().getName());
+            final ResolvedFeatureSpec depResolvedSpec = rt.getFeatureSpec(depFp, userDep.getFeatureId().getSpec().getName());
             final ResolvedFeatureId depId = depResolvedSpec.resolveFeatureId(userDep.getFeatureId().getParams());
             final FeatureDependencySpec specDep = result.put(depId, userDep);
             if(specDep != null) {
@@ -366,17 +366,13 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
         this.resolvedRefTargets = Collections.unmodifiableMap(tmp);
     }
 
-    private ResolvedFeatureSpec resolveRefMapping(ProvisioningRuntimeBuilder rt, final FeaturePackRuntimeBuilder ownFp,
+    private ResolvedFeatureSpec resolveRefMapping(ProvisioningRuntimeBuilder rt, FeaturePackRuntimeBuilder origin,
             FeatureReferenceSpec refSpec) throws ProvisioningException {
         try {
-            final ResolvedFeatureSpec resolvedRefSpec;
-            if (refSpec.getOrigin() == null) {
-                resolvedRefSpec = ownFp.getFeatureSpec(refSpec.getFeature().getName());
-            } else {
-                final FeaturePackRuntimeBuilder refFp = rt
-                        .getFpBuilder(ownFp.spec.getFeaturePackDep(refSpec.getOrigin()).getGav());
-                resolvedRefSpec = refFp.getFeatureSpec(refSpec.getFeature().getName());
+            if(refSpec.getOrigin() != null) {
+                origin = rt.getFpBuilder(origin.spec.getFeaturePackDep(refSpec.getOrigin()).getGav());
             }
+            final ResolvedFeatureSpec resolvedRefSpec = rt.getFeatureSpec(origin, refSpec.getFeature().getName());
             assertRefParamMapping(refSpec, resolvedRefSpec);
             return resolvedRefSpec;
         } catch (ProvisioningDescriptionException e) {

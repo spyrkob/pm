@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
@@ -44,6 +43,7 @@ import org.jboss.provisioning.xml.FeatureSpecXmlParser;
  * @author Alexey Loubyansky
  */
 class FeaturePackRuntimeBuilder {
+
     final ArtifactCoords.Gav gav;
     final Path dir;
     final FeaturePackSpec spec;
@@ -56,8 +56,8 @@ class FeaturePackRuntimeBuilder {
 
     private ParameterTypeProvider featureParamTypeProvider = BuiltInParameterTypeProvider.getInstance();
 
-    FeaturePackRuntimeBuilder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
-        this.gav = gav;
+    FeaturePackRuntimeBuilder(FeaturePackSpec spec, Path dir) {
+        this.gav = spec.getGav();
         this.dir = dir;
         this.spec = spec;
     }
@@ -73,53 +73,51 @@ class FeaturePackRuntimeBuilder {
     }
 
     FeatureGroup getFeatureGroupSpec(String name) throws ProvisioningException {
-        FeatureGroup fgSpec = null;
-        if(fgSpecs == null) {
-            fgSpecs = new HashMap<>();
-        } else {
-            fgSpec = fgSpecs.get(name);
-        }
-        if(fgSpec == null) {
-            final Path specXml = dir.resolve(Constants.FEATURE_GROUPS).resolve(name + ".xml");
-            if (Files.exists(specXml)) {
-                try (BufferedReader reader = Files.newBufferedReader(specXml)) {
-                    fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
-                } catch (Exception e) {
-                    throw new ProvisioningException(Errors.parseXml(specXml), e);
-                }
-                fgSpecs.put(name, fgSpec);
-            } else {
-                // TODO look for the group in the fp deps
-                throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
+        if(fgSpecs != null) {
+            final FeatureGroup fgSpec = fgSpecs.get(name);
+            if(fgSpec != null) {
+                return fgSpec;
             }
         }
-        return fgSpec;
+        final Path specXml = dir.resolve(Constants.FEATURE_GROUPS).resolve(name + ".xml");
+        if (Files.exists(specXml)) {
+            try (BufferedReader reader = Files.newBufferedReader(specXml)) {
+                final FeatureGroup fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
+                if (fgSpecs == null) {
+                    fgSpecs = new HashMap<>();
+                }
+                fgSpecs.put(name, fgSpec);
+                return fgSpec;
+            } catch (Exception e) {
+                throw new ProvisioningException(Errors.parseXml(specXml), e);
+            }
+        }
+        return null;
     }
 
     ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
-        ResolvedFeatureSpec resolvedSpec = null;
-        if(featureSpecs == null) {
-            featureSpecs = new HashMap<>();
-        } else {
-            resolvedSpec = featureSpecs.get(name);
-        }
-        if(resolvedSpec == null) {
-            final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
-            if (Files.exists(specXml)) {
-                final FeatureSpec xmlSpec;
-                try (BufferedReader reader = Files.newBufferedReader(specXml)) {
-                    xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
-                } catch (Exception e) {
-                    throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
-                }
-                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), featureParamTypeProvider, xmlSpec);
-                featureSpecs.put(name, resolvedSpec);
-            } else {
-                // TODO look for the spec in the fp deps
-                throw new ProvisioningDescriptionException("Failed to locate feature spec '" + name + "' in " + gav);
+        if(featureSpecs != null) {
+            final ResolvedFeatureSpec resolvedSpec = featureSpecs.get(name);
+            if(resolvedSpec != null) {
+                return resolvedSpec;
             }
         }
-        return resolvedSpec;
+        final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
+        if (Files.exists(specXml)) {
+            try (BufferedReader reader = Files.newBufferedReader(specXml)) {
+                final FeatureSpec xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
+                final ResolvedFeatureSpec resolvedSpec = new ResolvedFeatureSpec(
+                        new ResolvedSpecId(gav, xmlSpec.getName()), featureParamTypeProvider, xmlSpec);
+                if(featureSpecs == null) {
+                    featureSpecs = new HashMap<>();
+                }
+                featureSpecs.put(name, resolvedSpec);
+                return resolvedSpec;
+            } catch (Exception e) {
+                throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
+            }
+        }
+        return null;
     }
 
     FeaturePackRuntime build() throws ProvisioningException {
