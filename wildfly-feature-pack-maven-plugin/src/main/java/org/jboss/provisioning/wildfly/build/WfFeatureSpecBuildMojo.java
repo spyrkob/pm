@@ -117,22 +117,25 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        Path tmpModules = null;
         try {
-            doExecute();
+            tmpModules = Files.createTempDirectory(MODULES);
+            doExecute(tmpModules);
         } catch (RuntimeException | Error | MojoExecutionException | MojoFailureException e) {
             throw e;
         } catch (IOException | MavenFilteringException ex) {
             throw new MojoExecutionException(ex.getMessage(), ex);
+        } finally {
+            IoUtils.recursiveDelete(tmpModules);
         }
     }
 
-    private void doExecute() throws MojoExecutionException, MojoFailureException, MavenFilteringException, IOException {
+    private void doExecute(Path tmpModules) throws MojoExecutionException, MojoFailureException, MavenFilteringException, IOException {
         List<org.apache.maven.model.Resource> modulesResources = new ArrayList<>();
         org.apache.maven.model.Resource srcModuleResource = new org.apache.maven.model.Resource();
         srcModuleResource.setDirectory(moduleDirectory);
         srcModuleResource.setFiltering(true);
         modulesResources.add(srcModuleResource);
-        Path tmpModules = Files.createTempDirectory(MODULES);
         List<Artifact> featurePackArtifacts = new ArrayList<>();
         Map<String, String> inheritedFeatures = new HashMap<>();
         if (featurePacks != null && !featurePacks.isEmpty()) {
@@ -168,6 +171,9 @@ public class WfFeatureSpecBuildMojo extends AbstractMojo {
                         setModules(tmpArchive, tmpModules.resolve(MODULES));
                     } catch (NoSuchArchiverException ex) {
                         getLog().warn(ex);
+                    }
+                    finally {
+                        IoUtils.recursiveDelete(tmpArchive);
                     }
                 } else {
                     getLog().warn("No artifact was found for " + fp);
