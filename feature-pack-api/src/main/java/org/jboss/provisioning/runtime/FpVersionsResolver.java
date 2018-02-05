@@ -68,7 +68,7 @@ public class FpVersionsResolver {
     private Set<ArtifactCoords.Ga> missingVersions = Collections.emptySet();
     private List<ArtifactCoords.Ga> branch = new ArrayList<>();
     private Map<ArtifactCoords.Ga, Set<ArtifactCoords.Gav>> conflicts = Collections.emptyMap();
-    private Map<ArtifactCoords.Ga, FeaturePackRuntime.Builder> loaded = Collections.emptyMap();
+    private Map<ArtifactCoords.Ga, FeaturePackRuntimeBuilder> loaded = Collections.emptyMap();
 
     private FpVersionsResolver(ProvisioningRuntimeBuilder rt) {
         this.rt = rt;
@@ -110,7 +110,7 @@ public class FpVersionsResolver {
                 missingVersions = PmCollections.addLinked(missingVersions, gav.toGa());
                 continue;
             }
-            final FeaturePackRuntime.Builder fp = loaded.get(gav.toGa());
+            final FeaturePackRuntimeBuilder fp = loaded.get(gav.toGa());
             if(fp != null) {
                 if(!fp.gav.equals(gav) && !branch.contains(gav.toGa())) {
                     Set<Gav> versions = conflicts.get(fp.gav.toGa());
@@ -144,8 +144,8 @@ public class FpVersionsResolver {
         }
     }
 
-    private FeaturePackRuntime.Builder load(ArtifactCoords.Gav gav) throws ProvisioningException {
-        final FeaturePackRuntime.Builder fp = rt.getOrLoadFpBuilder(gav);
+    private FeaturePackRuntimeBuilder load(ArtifactCoords.Gav gav) throws ProvisioningException {
+        final FeaturePackRuntimeBuilder fp = rt.getOrLoadFpBuilder(gav);
         loaded = PmCollections.put(loaded, gav.toGa(), fp);
         return fp;
     }

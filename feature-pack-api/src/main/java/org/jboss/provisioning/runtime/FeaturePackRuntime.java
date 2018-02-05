@@ -14,36 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.runtime;
 
-import java.io.BufferedReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
-import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
-import org.jboss.provisioning.config.FeatureGroup;
 import org.jboss.provisioning.spec.FeaturePackSpec;
-import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
-import org.jboss.provisioning.type.ParameterTypeProvider;
-import org.jboss.provisioning.type.builtin.BuiltInParameterTypeProvider;
-import org.jboss.provisioning.util.PmCollections;
-import org.jboss.provisioning.xml.FeatureGroupXmlParser;
-import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
  *
@@ -51,89 +36,8 @@ import org.jboss.provisioning.xml.FeatureSpecXmlParser;
  */
 public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
 
-    static class Builder {
-        final ArtifactCoords.Gav gav;
-        final Path dir;
-        final FeaturePackSpec spec;
-        boolean ordered;
-        private Map<String, ResolvedFeatureSpec> featureSpecs = null;
-        private Map<String, FeatureGroup> fgSpecs = null;
-
-        Map<String, PackageRuntime.Builder> pkgBuilders = Collections.emptyMap();
-        private List<String> pkgOrder = new ArrayList<>();
-
-        ParameterTypeProvider featureParamTypeProvider = BuiltInParameterTypeProvider.getInstance();
-
-        private Builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
-            this.gav = gav;
-            this.dir = dir;
-            this.spec = spec;
-        }
-
-        PackageRuntime.Builder newPackage(String name, Path dir) {
-            final PackageRuntime.Builder pkgBuilder = PackageRuntime.builder(name, dir);
-            pkgBuilders = PmCollections.put(pkgBuilders, name, pkgBuilder);
-            return pkgBuilder;
-        }
-
-        void addPackage(String name) {
-            pkgOrder.add(name);
-        }
-
-        FeatureGroup getFeatureGroupSpec(String name) throws ProvisioningException {
-            FeatureGroup fgSpec = null;
-            if(fgSpecs == null) {
-                fgSpecs = new HashMap<>();
-            } else {
-                fgSpec = fgSpecs.get(name);
-            }
-            if(fgSpec == null) {
-                final Path specXml = dir.resolve(Constants.FEATURE_GROUPS).resolve(name + ".xml");
-                if(!Files.exists(specXml)) {
-                    throw new ProvisioningDescriptionException(Errors.pathDoesNotExist(specXml));
-                }
-                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
-                    fgSpec = FeatureGroupXmlParser.getInstance().parse(reader);
-                } catch (Exception e) {
-                    throw new ProvisioningException(Errors.parseXml(specXml), e);
-                }
-                fgSpecs.put(name, fgSpec);
-            }
-            return fgSpec;
-        }
-
-        ResolvedFeatureSpec getFeatureSpec(String name) throws ProvisioningException {
-            ResolvedFeatureSpec resolvedSpec = null;
-            if(featureSpecs == null) {
-                featureSpecs = new HashMap<>();
-            } else {
-                resolvedSpec = featureSpecs.get(name);
-            }
-            if(resolvedSpec == null) {
-                final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
-                if(!Files.exists(specXml)) {
-                    throw new ProvisioningDescriptionException("Failed to locate feature spec '" + name + "' in " + gav);
-                }
-                final FeatureSpec xmlSpec;
-                try(BufferedReader reader = Files.newBufferedReader(specXml)) {
-                    xmlSpec = FeatureSpecXmlParser.getInstance().parse(reader);
-                } catch (Exception e) {
-                    throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
-                }
-
-                resolvedSpec = new ResolvedFeatureSpec(new ResolvedSpecId(gav, xmlSpec.getName()), featureParamTypeProvider, xmlSpec);
-                featureSpecs.put(name, resolvedSpec);
-            }
-            return resolvedSpec;
-        }
-
-        FeaturePackRuntime build() throws ProvisioningException {
-            return new FeaturePackRuntime(this);
-        }
-    }
-
-    static Builder builder(ArtifactCoords.Gav gav, FeaturePackSpec spec, Path dir) {
-        return new Builder(gav, spec, dir);
+    static FeaturePackRuntimeBuilder builder(FeaturePackSpec spec, Path dir) {
+        return new FeaturePackRuntimeBuilder(spec, dir);
     }
 
     private final FeaturePackSpec spec;
@@ -141,7 +45,7 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
     private final Map<String, PackageRuntime> packages;
     private final Map<String, ResolvedFeatureSpec> featureSpecs;
 
-    private FeaturePackRuntime(Builder builder) throws ProvisioningException {
+    FeaturePackRuntime(FeaturePackRuntimeBuilder builder) throws ProvisioningException {
         this.spec = builder.spec;
         this.dir = builder.dir;
         this.featureSpecs = builder.featureSpecs;

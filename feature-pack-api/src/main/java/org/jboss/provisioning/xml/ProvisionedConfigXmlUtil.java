@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -282,7 +282,7 @@ public class ProvisionedConfigXmlUtil {
                     try {
                         config.addFeature(featureBuilder.build());
                     } catch (ProvisioningDescriptionException e) {
-                        throw new XMLStreamException("Failed to instantiate a provisioned feature", reader.getLocation(), e);
+                        throw new XMLStreamException("Failed to instantiate provisioned feature", reader.getLocation(), e);
                     }
                     return;
                 }
