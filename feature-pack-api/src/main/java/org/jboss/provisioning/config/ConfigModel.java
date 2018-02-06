@@ -105,6 +105,11 @@ public class ConfigModel extends FeatureGroupSupport {
         return props;
     }
 
+    @Override
+    public boolean isConfig() {
+        return true;
+    }
+
     public boolean hasConfigDeps() {
         return !configDeps.isEmpty();
     }

@@ -24,6 +24,7 @@ import java.util.Set;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeatureGroupSupport;
+import org.jboss.provisioning.util.PmCollections;
 
 /**
  *
@@ -50,6 +51,22 @@ public class ResolvedFeatureGroupConfig {
     ResolvedFeatureGroupConfig setInheritFeatures(boolean inheritFeatures) {
         this.inheritFeatures = inheritFeatures;
         return this;
+    }
+
+    void includeSpec(ResolvedSpecId specId) {
+        includedSpecs = PmCollections.add(includedSpecs, specId);
+    }
+
+    void excludeSpec(ResolvedSpecId specId) {
+        excludedSpecs = PmCollections.add(excludedSpecs, specId);
+    }
+
+    void includeFeature(ResolvedFeatureId id, FeatureConfig fc) {
+        includedFeatures = PmCollections.putLinked(includedFeatures, id, fc);
+    }
+
+    void excludeFeature(ResolvedFeatureId id) {
+        excludedFeatures = PmCollections.add(excludedFeatures, id);
     }
 
     public boolean hasExcludedSpecs() {

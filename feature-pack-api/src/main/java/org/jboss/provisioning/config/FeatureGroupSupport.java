@@ -92,6 +92,10 @@ public abstract class FeatureGroupSupport extends PackageDepsSpec implements Con
         return name;
     }
 
+    public boolean isConfig() {
+        return false;
+    }
+
     @Override
     public String getOrigin() {
         return origin;

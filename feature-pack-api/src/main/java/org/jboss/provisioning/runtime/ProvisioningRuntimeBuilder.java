@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +49,7 @@ import org.jboss.provisioning.config.ConfigItem;
 import org.jboss.provisioning.config.ConfigItemContainer;
 import org.jboss.provisioning.config.FeatureConfig;
 import org.jboss.provisioning.config.FeaturePackConfig;
+import org.jboss.provisioning.config.FeaturePackDepsConfig;
 import org.jboss.provisioning.config.PackageConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.config.ConfigModel;
@@ -544,10 +544,6 @@ public class ProvisioningRuntimeBuilder {
         return origin == null ? currentOrigin : setOrigin(getOrigin(origin));
     }
 
-    private FeaturePackRuntimeBuilder setOrigin(ArtifactCoords.Gav origin) throws ProvisioningException {
-        return setOrigin(getFpBuilder(origin));
-    }
-
     private FeaturePackRuntimeBuilder setOrigin(FeaturePackRuntimeBuilder origin) {
         final FeaturePackRuntimeBuilder prevOrigin = this.currentOrigin;
         this.currentOrigin = origin;
@@ -571,129 +567,110 @@ public class ProvisioningRuntimeBuilder {
         return prevOrigin;
     }
 
-    ResolvedFeatureGroupConfig resolveFg(String origin, FeatureGroupSupport fg) throws ProvisioningException {
-        FeaturePackRuntimeBuilder originalFp = currentOrigin;
-        if(origin != null) {
-            originalFp = setOrigin(origin);
-        } else if(currentOrigin == null) {
-            return null;
+    ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeatureGroupSupport fg) throws ProvisioningException {
+        ArtifactCoords.Gav fgOrigin = null;
+        if(!fg.isConfig()) {
+            final FeaturePackRuntimeBuilder originalOrigin = currentOrigin;
+            getFeatureGroupSpec(fg.getName());
+            fgOrigin = currentOrigin.gav;
+            currentOrigin = originalOrigin;
         }
-        try {
-            final ResolvedFeatureGroupConfig resolvedFgConfig = resolveFeatureGroupConfig(fg);
-            return resolvedFgConfig;
-        } finally {
-            setOrigin(originalFp);
-        }
-    }
-
-    boolean processIncludedFeatures(final List<ResolvedFeatureGroupConfig> pushedConfigs)
-            throws ProvisioningException {
-        boolean resolvedFeatures = false;
-        final FeaturePackRuntimeBuilder originalFp = currentOrigin;
-        try {
-            for (ResolvedFeatureGroupConfig pushedFgConfig : pushedConfigs) {
-                setOrigin(pushedFgConfig.gav);
-                if (pushedFgConfig.includedFeatures.isEmpty()) {
-                    continue;
-                }
-                for (Map.Entry<ResolvedFeatureId, FeatureConfig> feature : pushedFgConfig.includedFeatures.entrySet()) {
-                    final FeatureConfig includedFc = feature.getValue();
-                    if (includedFc != null && includedFc.hasParams()) {
-                        final ResolvedFeatureId includedId = feature.getKey();
-                        if (pushedFgConfig.configStack.isFilteredOut(includedId.specId, includedId)) {
-                            continue;
-                        }
-                        // make sure the included ID is in fact present on the feature group branch
-                        if (!pushedFgConfig.configStack.includes(includedId)) {
-                            throw new ProvisioningException(Errors.featureNotInScope(includedId,
-                                    pushedFgConfig.fg.getId() == null ? "'anonymous'" : pushedFgConfig.fg.getId().toString(),
-                                    currentOrigin.gav));
-                        }
-                        resolvedFeatures |= resolveFeature(pushedFgConfig.configStack, includedFc);
-                    }
-                }
-            }
-        } finally {
-            setOrigin(originalFp);
-        }
-        return resolvedFeatures;
-    }
-
-    private ResolvedFeatureGroupConfig resolveFeatureGroupConfig(FeatureGroupSupport fg)
-            throws ProvisioningException {
-        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(configStack, fg, currentOrigin.gav);
+        final ResolvedFeatureGroupConfig resolvedFgc = new ResolvedFeatureGroupConfig(configStack, fg, fgOrigin);
         resolvedFgc.inheritFeatures = fg.isInheritFeatures();
         if(fg.hasExcludedSpecs()) {
-            resolvedFgc.excludedSpecs = resolveSpecIds(currentOrigin.gav, fg.getExcludedSpecs());
+            resolvedFgc.excludedSpecs = resolveSpecIds(resolvedFgc.excludedSpecs, fg.getExcludedSpecs());
         }
         if(fg.hasIncludedSpecs()) {
-            resolvedFgc.includedSpecs = resolveSpecIds(currentOrigin.gav, fg.getIncludedSpecs());
+            resolvedFgc.includedSpecs = resolveSpecIds(resolvedFgc.includedSpecs, fg.getIncludedSpecs());
         }
         if(fg.hasExcludedFeatures()) {
-            resolvedFgc.excludedFeatures = resolveExcludedIds(fg.getExcludedFeatures());
+            resolvedFgc.excludedFeatures = resolveExcludedIds(resolvedFgc.excludedFeatures, fg.getExcludedFeatures());
         }
         if(fg.hasIncludedFeatures()) {
-            resolvedFgc.includedFeatures = resolveIncludedIds(fg.getIncludedFeatures());
+            resolvedFgc.includedFeatures = resolveIncludedIds(resolvedFgc.includedFeatures, fg.getIncludedFeatures());
+        }
+        if(fg.hasExternalFeatureGroups()) {
+            final FeaturePackRuntimeBuilder originalOrigin = currentOrigin;
+            for (Map.Entry<String, FeatureGroup> entry : fg.getExternalFeatureGroups().entrySet()) {
+                final FeatureGroup extFg = entry.getValue();
+                setOrigin(entry.getKey());
+                try {
+                    if (extFg.hasExcludedSpecs()) {
+                        resolvedFgc.excludedSpecs = resolveSpecIds(resolvedFgc.excludedSpecs, extFg.getExcludedSpecs());
+                    }
+                    if (extFg.hasIncludedSpecs()) {
+                        resolvedFgc.includedSpecs = resolveSpecIds(resolvedFgc.includedSpecs, extFg.getIncludedSpecs());
+                    }
+                    if (extFg.hasExcludedFeatures()) {
+                        resolvedFgc.excludedFeatures = resolveExcludedIds(resolvedFgc.excludedFeatures, extFg.getExcludedFeatures());
+                    }
+                    if (extFg.hasIncludedFeatures()) {
+                        resolvedFgc.includedFeatures = resolveIncludedIds(resolvedFgc.includedFeatures, extFg.getIncludedFeatures());
+                    }
+                } finally {
+                    setOrigin(originalOrigin);
+                }
+            }
         }
         return resolvedFgc;
     }
 
-    private Map<ResolvedFeatureId, FeatureConfig> resolveIncludedIds(Map<FeatureId, FeatureConfig> features) throws ProvisioningException {
-        if (features.size() == 1) {
-            final Map.Entry<FeatureId, FeatureConfig> included = features.entrySet().iterator().next();
-            final FeatureConfig fc = new FeatureConfig(included.getValue());
-            final ResolvedFeatureSpec resolvedSpec = getFeatureSpec(fc.getSpecId().getName());
-            if (parentFeature != null) {
-                return Collections.singletonMap(resolvedSpec.resolveIdFromForeignKey(parentFeature.id, fc.getParentRef(), fc.getParams()), fc);
-            }
-            return Collections.singletonMap(resolvedSpec.resolveFeatureId(fc.getParams()), fc);
+    boolean processIncludedFeatures(final ResolvedFeatureGroupConfig pushedFgConfig)
+            throws ProvisioningException {
+        if (pushedFgConfig.includedFeatures.isEmpty()) {
+            return false;
         }
-        final Map<ResolvedFeatureId, FeatureConfig> tmp = new HashMap<>(features.size());
+        boolean resolvedFeatures = false;
+        for (Map.Entry<ResolvedFeatureId, FeatureConfig> feature : pushedFgConfig.includedFeatures.entrySet()) {
+            final FeatureConfig includedFc = feature.getValue();
+            if (includedFc != null && includedFc.hasParams()) {
+                final ResolvedFeatureId includedId = feature.getKey();
+                if (pushedFgConfig.configStack.isFilteredOut(includedId.specId, includedId)) {
+                    continue;
+                }
+                // make sure the included ID is in fact present on the feature group branch
+                if (!pushedFgConfig.configStack.includes(includedId)) {
+                    throw new ProvisioningException(Errors.featureNotInScope(includedId,
+                            pushedFgConfig.fg.getId() == null ? "'anonymous'" : pushedFgConfig.fg.getId().toString(),
+                            currentOrigin == null ? null : currentOrigin.gav));
+                }
+                resolvedFeatures |= resolveFeature(pushedFgConfig.configStack, includedFc);
+            }
+        }
+        return resolvedFeatures;
+    }
+
+    private Map<ResolvedFeatureId, FeatureConfig> resolveIncludedIds(Map<ResolvedFeatureId, FeatureConfig> includedFeatures, Map<FeatureId, FeatureConfig> features) throws ProvisioningException {
         for (Map.Entry<FeatureId, FeatureConfig> included : features.entrySet()) {
             final FeatureConfig fc = new FeatureConfig(included.getValue());
             final ResolvedFeatureSpec resolvedSpec = getFeatureSpec(fc.getSpecId().getName());
             if (parentFeature != null) {
-                tmp.put(resolvedSpec.resolveIdFromForeignKey(parentFeature.id, fc.getParentRef(), fc.getParams()), fc);
+                includedFeatures = PmCollections.put(includedFeatures, resolvedSpec.resolveIdFromForeignKey(parentFeature.id, fc.getParentRef(), fc.getParams()), fc);
             } else {
-                tmp.put(resolvedSpec.resolveFeatureId(fc.getParams()), fc);
+                includedFeatures = PmCollections.put(includedFeatures, resolvedSpec.resolveFeatureId(fc.getParams()), fc);
             }
         }
-        return tmp;
+        return includedFeatures;
     }
 
-    private Set<ResolvedFeatureId> resolveExcludedIds(Map<FeatureId, String> features) throws ProvisioningException {
-        if (features.size() == 1) {
-            final Map.Entry<FeatureId, String> excluded = features.entrySet().iterator().next();
-            final FeatureId excludedId = excluded.getKey();
-            final ResolvedFeatureSpec resolvedSpec = getFeatureSpec(excludedId.getSpec().getName());
-            if(parentFeature != null) {
-                return Collections.singleton(resolvedSpec.resolveIdFromForeignKey(parentFeature.id, excluded.getValue(), excludedId.getParams()));
-            }
-            return Collections.singleton(resolvedSpec.resolveFeatureId(excludedId.getParams()));
-        }
-        final Set<ResolvedFeatureId> tmp = new HashSet<>(features.size());
+    private Set<ResolvedFeatureId> resolveExcludedIds(Set<ResolvedFeatureId> resolvedIds, Map<FeatureId, String> features) throws ProvisioningException {
         for (Map.Entry<FeatureId, String> excluded : features.entrySet()) {
             final FeatureId excludedId = excluded.getKey();
             final ResolvedFeatureSpec resolvedSpec = getFeatureSpec(excludedId.getSpec().getName());
             if(parentFeature != null) {
-                tmp.add(resolvedSpec.resolveIdFromForeignKey(parentFeature.id, excluded.getValue(), excludedId.getParams()));
+                resolvedIds = PmCollections.add(resolvedIds, resolvedSpec.resolveIdFromForeignKey(parentFeature.id, excluded.getValue(), excludedId.getParams()));
             } else {
-                tmp.add(resolvedSpec.resolveFeatureId(excludedId.getParams()));
+                resolvedIds = PmCollections.add(resolvedIds, resolvedSpec.resolveFeatureId(excludedId.getParams()));
             }
         }
-        return tmp;
+        return resolvedIds;
     }
 
-    private static Set<ResolvedSpecId> resolveSpecIds(ArtifactCoords.Gav gav, Set<SpecId> specs) throws ProvisioningException {
-        if(specs.size() == 1) {
-            final SpecId specId = specs.iterator().next();
-            return Collections.singleton(new ResolvedSpecId(gav, specId.getName()));
-        }
-        final Set<ResolvedSpecId> tmp = new HashSet<>(specs.size());
+    private Set<ResolvedSpecId> resolveSpecIds(Set<ResolvedSpecId> resolvedIds, Set<SpecId> specs) throws ProvisioningException {
         for (SpecId specId : specs) {
-            tmp.add(new ResolvedSpecId(gav, specId.getName()));
+            resolvedIds = PmCollections.add(resolvedIds, getFeatureSpec(specId.getName()).id);
         }
-        return tmp;
+        return resolvedIds;
     }
 
     private boolean processConfigItemContainer(ConfigItemContainer ciContainer) throws ProvisioningException {
@@ -706,10 +683,8 @@ public class ProvisioningRuntimeBuilder {
                     if (item.isGroup()) {
                         final FeatureGroup nestedFg = (FeatureGroup) item;
                         resolvedFeatures |= processFeatureGroup(nestedFg);
-                    } else if(currentOrigin != null) {
-                        resolvedFeatures |= resolveFeature(configStack, (FeatureConfig) item);
                     } else {
-                        throw new ProvisioningDescriptionException(Errors.featureOriginNotSpecified(configStack.id, (FeatureConfig) item));
+                        resolvedFeatures |= resolveFeature(configStack, (FeatureConfig) item);
                     }
                 } catch (ProvisioningException e) {
                     if(currentOrigin == null) {
@@ -748,6 +723,10 @@ public class ProvisioningRuntimeBuilder {
             }
             if (fc.hasResetParams()) {
                 parentFeature.resetAllParams(fc.getResetParams());
+            }
+
+            if (!currentOrigin.ordered) {
+                orderFpRtBuilder(currentOrigin);
             }
         } finally {
             currentOrigin = originalOrigin;
@@ -1110,26 +1089,34 @@ public class ProvisioningRuntimeBuilder {
     private FeatureGroup getFeatureGroupSpec(String name) throws ProvisioningException {
         final FeatureGroup fg = getFeatureGroupSpec(currentOrigin, name, Collections.emptySet());
         if(fg == null) {
-            throw new ProvisioningDescriptionException("Failed to locate feature group '" + name + "' in " + currentOrigin.gav + " and its dependencies.");
+            throw new ProvisioningDescriptionException("Failed to locate feature group '" + name + "' in " + (currentOrigin == null ? "the provisioning configuration" : currentOrigin.gav + " and its dependencies"));
         }
         return fg;
     }
 
     private FeatureGroup getFeatureGroupSpec(FeaturePackRuntimeBuilder origin, String name, Set<ArtifactCoords.Ga> visitedGas) throws ProvisioningException {
-        FeatureGroup fg = origin.getFeatureGroupSpec(name);
-        if(fg != null) {
-            currentOrigin = origin;
-            return fg;
+        final FeaturePackDepsConfig fpDeps;
+        if(origin != null) {
+            final FeatureGroup fg = origin.getFeatureGroupSpec(name);
+            if(fg != null) {
+                currentOrigin = origin;
+                return fg;
+            }
+            fpDeps = origin.spec;
+            visitedGas = PmCollections.add(visitedGas, origin.gav.toGa());
+        } else {
+            fpDeps = config;
         }
-        if (!origin.spec.hasFeaturePackDeps()) {
+
+        if (!fpDeps.hasFeaturePackDeps()) {
             return null;
         }
-        visitedGas = PmCollections.add(visitedGas, origin.gav.toGa());
-        for (FeaturePackConfig fpDep : origin.spec.getFeaturePackDeps()) {
+
+        for (FeaturePackConfig fpDep : fpDeps.getFeaturePackDeps()) {
             if (visitedGas.contains(fpDep.getGav().toGa())) {
                 continue;
             }
-            fg = getFeatureGroupSpec(getOrLoadFpBuilder(fpDep.getGav()), name, visitedGas);
+            final FeatureGroup fg = getFeatureGroupSpec(getOrLoadFpBuilder(fpDep.getGav()), name, visitedGas);
             if (fg != null) {
                 return fg;
             }
@@ -1158,22 +1145,30 @@ public class ProvisioningRuntimeBuilder {
     }
 
     private ResolvedFeatureSpec getFeatureSpec(FeaturePackRuntimeBuilder origin, String name, Set<ArtifactCoords.Ga> visitedGas, boolean switchOrigin) throws ProvisioningException {
-        ResolvedFeatureSpec fs = origin.getFeatureSpec(name);
-        if(fs != null) {
-            if(switchOrigin) {
-                currentOrigin = origin;
+        final FeaturePackDepsConfig fpDeps;
+        if (origin != null) {
+            final ResolvedFeatureSpec fs = origin.getFeatureSpec(name);
+            if (fs != null) {
+                if (switchOrigin) {
+                    currentOrigin = origin;
+                }
+                return fs;
             }
-            return fs;
+            fpDeps = origin.spec;
+            visitedGas = PmCollections.add(visitedGas, origin.gav.toGa());
+        } else {
+            fpDeps = config;
         }
-        if (!origin.spec.hasFeaturePackDeps()) {
+
+        if (!fpDeps.hasFeaturePackDeps()) {
             return null;
         }
-        visitedGas = PmCollections.add(visitedGas, origin.gav.toGa());
-        for (FeaturePackConfig fpDep : origin.spec.getFeaturePackDeps()) {
+
+        for (FeaturePackConfig fpDep : fpDeps.getFeaturePackDeps()) {
             if (visitedGas.contains(fpDep.getGav().toGa())) {
                 continue;
             }
-            fs = getFeatureSpec(getOrLoadFpBuilder(fpDep.getGav()), name, visitedGas, switchOrigin);
+            final ResolvedFeatureSpec fs = getFeatureSpec(getOrLoadFpBuilder(fpDep.getGav()), name, visitedGas, switchOrigin);
             if (fs != null) {
                 return fs;
             }

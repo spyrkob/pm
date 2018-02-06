@@ -91,6 +91,7 @@ public class OriginInsideFeatureGroupSpecTestCase extends PmInstallFeaturePackTe
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP1_GAV))
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP3_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "id", "1"))

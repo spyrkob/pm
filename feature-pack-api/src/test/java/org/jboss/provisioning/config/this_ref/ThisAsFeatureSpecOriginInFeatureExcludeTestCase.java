@@ -100,6 +100,7 @@ public class ThisAsFeatureSpecOriginInFeatureExcludeTestCase extends PmProvision
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP1_GAV).build())
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP2_GAV).build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.builder(FP2_GAV, "specD").setParam("d", "dOne").build())
                                 .build())
