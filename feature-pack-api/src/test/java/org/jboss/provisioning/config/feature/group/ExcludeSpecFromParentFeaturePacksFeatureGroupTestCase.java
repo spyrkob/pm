@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -114,6 +114,7 @@ public class ExcludeSpecFromParentFeaturePacksFeatureGroupTestCase extends PmIns
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP1_GAV))
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder().setName("config1")
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specB", "name", "bOne"))

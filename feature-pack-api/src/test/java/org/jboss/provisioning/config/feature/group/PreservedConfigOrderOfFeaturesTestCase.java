@@ -118,6 +118,7 @@ public class PreservedConfigOrderOfFeaturesTestCase extends PmInstallFeaturePack
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP1_GAV))
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP1_GAV, "specA", "name", "config1")).build())

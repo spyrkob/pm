@@ -77,6 +77,7 @@ public class ResolveFirstFeatureSpecFromSiblingDepsTestCase extends PmInstallFea
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.forGav(FP2_GAV))
                 .addFeaturePack(ProvisionedFeaturePack.forGav(FP3_GAV))
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .addFeature(ProvisionedFeatureBuilder.builder(ResolvedFeatureId.create(FP2_GAV, "specA", "id", "1"))

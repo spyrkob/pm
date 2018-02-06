@@ -111,6 +111,7 @@ public class ThisAsFeatureSpecOriginTestCase extends PmProvisionConfigTestBase {
     @Override
     protected ProvisionedState provisionedState() throws ProvisioningException {
         return ProvisionedState.builder()
+                .addFeaturePack(ProvisionedFeaturePack.builder(FP1_GAV).build())
                 .addFeaturePack(ProvisionedFeaturePack.builder(FP2_GAV).build())
                 .addConfig(ProvisionedConfigBuilder.builder()
                         .setProperty("prop1", "value1")
