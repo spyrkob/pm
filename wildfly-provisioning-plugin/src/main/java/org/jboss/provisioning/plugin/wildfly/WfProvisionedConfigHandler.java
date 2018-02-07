@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -66,7 +67,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     private static final ArtifactCoords.Ga WF_CORE_GA = ArtifactCoords.newGa("org.wildfly.core", "wildfly-core-feature-pack-new");
     private static final byte LOOK_FOR_HOST = 1;
-    private static final byte LOOK_FOR_HOST_IN_SPEC = 1;
+    private static final byte LOOK_FOR_HOST_IN_SPEC = 2;
+    private static final byte TMP_HOST = 3;
 
     private static final String UNDEFINED = "undefined";
     private static final String LIST_UNDEFINED = '[' + PM_UNDEFINED + ']';
@@ -272,7 +274,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                         continue;
                     }
                     if(PM_UNDEFINED.equals(value) || LIST_UNDEFINED.equals(value)) {
-                        value = UNDEFINED;
+                        continue;
                     }
                     buf.append('/').append(addrParams.get(i++)).append('=').append(value);
 
@@ -289,7 +291,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                                     continue;
                                 }
                                 if (PM_UNDEFINED.equals(value)|| LIST_UNDEFINED.equals(value)) {
-                                    value = UNDEFINED;
+                                    //value = UNDEFINED;
+                                    continue;
                                 }
                                 if (comma) {
                                     buf.append(',');
@@ -422,6 +425,9 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                     .append(hostConfig).append(" --domain-config=").append(logFile).append(" --jboss-home=")
                     .append(runtime.getStagedDir());
 
+            hostName = "tmp";
+            lookForHost = TMP_HOST;
+
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name, int position) {
@@ -451,7 +457,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name, int position) {
-                    return position > 0 || !"profile".equals(name);
+                    //return position > 0 || !"profile".equals(name);
+                    return !"profile".equals(name);
                 }
             };
         } else {
@@ -509,12 +516,12 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         }
 
         if (ops.isEmpty()) {
-            messageWriter.verbose("      " + feature.getResolvedParams());
+            messageWriter.verbose("      %s", feature.getResolvedParams());
             return;
         }
         for(ManagedOp op : ops) {
             final String line = op.toCommandLine(feature);
-            messageWriter.verbose("      " + line);
+            messageWriter.verbose("      %s", line);
             writeOp(line);
         }
     }
@@ -538,15 +545,18 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             reset();
             return;
         }
-        if(hostName != null) {
-            embedBuf.append(" --temp-host-controller-name=").append(hostName);
-        }
         final Path script = runtime.getTmpPath("cli", scriptName);
         try {
             Files.createDirectories(script.getParent());
             try(BufferedWriter opsWriter = Files.newBufferedWriter(script)) {
                 opsWriter.write(embedBuf.toString());
                 opsWriter.newLine();
+                if(hostName != null && lookForHost == TMP_HOST) {
+                    opsWriter.write("/host=");
+                    opsWriter.write(hostName);
+                    opsWriter.write(":add");
+                    opsWriter.newLine();
+                }
                 for(String op : opList) {
                     opsWriter.write(op);
                     opsWriter.newLine();
@@ -554,6 +564,13 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
         } catch (IOException e) {
             throw new ProvisioningException(Errors.writeFile(script), e);
+        }
+
+        try {
+            IoUtils.copy(script, Paths.get("/home/aloubyansky/pm-scripts/").resolve(script.getFileName()));
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
 
         messageWriter.verbose(" Generating %s configuration", script.getFileName().toString());
