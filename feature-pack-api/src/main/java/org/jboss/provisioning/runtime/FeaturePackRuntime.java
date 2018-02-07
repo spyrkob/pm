@@ -16,6 +16,8 @@
  */
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,10 +27,13 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
  *
