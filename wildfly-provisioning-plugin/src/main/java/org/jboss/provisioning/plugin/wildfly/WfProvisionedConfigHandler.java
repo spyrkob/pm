@@ -269,11 +269,8 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                 int i = 0;
                 while(i < addrParams.size()) {
                     String value = feature.getConfigParam(addrParams.get(i++));
-                    if (value == null) {
-                        continue;
-                    }
-                    if(PM_UNDEFINED.equals(value) || LIST_UNDEFINED.equals(value)) {
-                        continue;
+                    if (value == null || PM_UNDEFINED.equals(value) || LIST_UNDEFINED.equals(value)) {
+                        continue; // TODO perhaps throw an error in case it's undefined
                     }
                     buf.append('/').append(addrParams.get(i++)).append('=').append(value);
 
@@ -456,7 +453,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             paramFilter = new NameFilter() {
                 @Override
                 public boolean accepts(String name, int position) {
-                    //return position > 0 || !"profile".equals(name);
+                    //return position > 0 || !"profile".equals(name); // TODO check whether the position is still required
                     return !"profile".equals(name);
                 }
             };
@@ -544,6 +541,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             reset();
             return;
         }
+
         final Path script = runtime.getTmpPath("cli", scriptName);
         try {
             Files.createDirectories(script.getParent());

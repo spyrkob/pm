@@ -32,17 +32,23 @@ import org.wildfly.core.launcher.CliCommandBuilder;
  */
 public class CliScriptRunner {
 
-    public static void runCliScript(Path installHome, Path modules, Path script, MessageWriter messageWriter) throws ProvisioningException {
+    public static void runCliScript(Path installHome, Path script, MessageWriter messageWriter) throws ProvisioningException {
         final CliCommandBuilder builder = CliCommandBuilder
                 .of(installHome)
-                .addModuleDir(modules.toString())
                 .addCliArgument("--no-operation-validation")
+                .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
         messageWriter.verbose("Executing jboss console: %", builder.build());
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 
-        execute(processBuilder, messageWriter);
+        execute(processBuilder, messageWriter);//                try {
+//                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
+//                    IoUtils.copy(script, scriptCopy);
+//                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
+//                } catch(IOException e) {
+//                    e.printStackTrace();
+//                }
     }
 
     private static void execute(final ProcessBuilder processBuilder, MessageWriter messageWriter) throws ProvisioningException {
@@ -92,24 +98,5 @@ public class CliScriptRunner {
         } catch (IOException e) {
             throw new ProvisioningException("CLI process failed", e);
         }
-    }
-
-    public static void runCliScript(Path installHome, Path script, MessageWriter messageWriter) throws ProvisioningException {
-        final CliCommandBuilder builder = CliCommandBuilder
-                .of(installHome)
-                .addCliArgument("--no-operation-validation")
-                .addCliArgument("--echo-command")
-                .addCliArgument("--file=" + script);
-        messageWriter.verbose("Executing jboss console: %", builder.build());
-        final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
-        processBuilder.environment().put("JBOSS_HOME", installHome.toString());
-
-        execute(processBuilder, messageWriter);//                try {
-//                    final Path scriptCopy = Paths.get("/home/olubyans/pm-test").resolve(script.getFileName());
-//                    IoUtils.copy(script, scriptCopy);
-//                    buf.append(" (the failed script was copied to ").append(scriptCopy).append(')');
-//                } catch(IOException e) {
-//                    e.printStackTrace();
-//                }
     }
 }
