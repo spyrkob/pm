@@ -149,7 +149,7 @@ public class FeatureSpecExporter {
             ModelNode annotationNode = feature.require("annotation");
             FeatureAnnotation annotation = new FeatureAnnotation(annotationNode.require("name").asString());
             for (Property property : annotationNode.asPropertyList()) {
-                annotation.setAttr(property.getName(), property.getValue().asString());
+                annotation.setElement(property.getName(), property.getValue().asString());
             }
             return annotation;
         }

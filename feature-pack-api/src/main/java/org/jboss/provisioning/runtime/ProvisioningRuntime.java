@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
-import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
@@ -133,7 +132,7 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
             for(ConfigId includedConfig : fpConfig.getIncludedConfigs()) {
                 builder.includeDefaultConfig(includedConfig);
             }
-            builders.put(getDefaultName(fpConfig.getGav()), builder);
+            builders.put(FeaturePackConfig.getDefaultOriginName(fpConfig.getGav()), builder);
         }
         runtime.exportDiffResultToFeaturePack(fpBuilder, builders, installationHome);
         for(Entry<String,FeaturePackConfig.Builder> entry : builders.entrySet()) {
@@ -150,17 +149,6 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         }
         fpBuilder.getInstaller().install();
         runtime.artifactResolver.install(gav.toArtifactCoords(), fpRepoManager.resolve(gav.toArtifactCoords()));
-    }
-
-    private static String getDefaultName(Gav gav) {
-        StringJoiner buf = new StringJoiner(":");
-        if (gav.getGroupId() != null) {
-            buf.add(gav.getGroupId());
-        }
-        if (gav.getArtifactId() != null) {
-            buf.add(gav.getArtifactId());
-        }
-        return buf.toString();
     }
 
     public static void diff(ProvisioningRuntime runtime, Path target, Path customizedInstallation) throws ProvisioningException, IOException {

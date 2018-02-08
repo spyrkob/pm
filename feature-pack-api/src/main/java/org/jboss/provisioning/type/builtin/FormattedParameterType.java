@@ -17,8 +17,6 @@
 package org.jboss.provisioning.type.builtin;
 
 import java.util.Collection;
-import org.jboss.provisioning.Constants;
-
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.runtime.CapabilityResolver;
@@ -103,9 +101,5 @@ public class FormattedParameterType implements FeatureParameterType {
         }
         capResolver.multiply(col);
         return true;
-    }
-
-    private boolean checkCollection(Collection<?> values) {
-        return (values.isEmpty() || (values.size() == 1 && Constants.PM_UNDEFINED.equals(values.iterator().next())));
     }
 }
