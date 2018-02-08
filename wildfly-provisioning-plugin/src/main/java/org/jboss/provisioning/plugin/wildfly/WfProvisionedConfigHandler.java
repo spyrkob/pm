@@ -76,15 +76,15 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     private List<ManagedOp> createWriteAttributeManagedOperation(ResolvedFeatureSpec spec, FeatureAnnotation annotation) throws ProvisioningException {
         List<ManagedOp> operations = new ArrayList<>();
 
-        final Set<String> skipIfFiltered = parseSet(annotation.getElem(WfConstants.SKIP_IF_FILTERED));
+        final Set<String> skipIfFiltered = parseSet(annotation.getElement(WfConstants.SKIP_IF_FILTERED));
 
-        String elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
+        String elemValue = annotation.getElement(WfConstants.ADDR_PARAMS);
         if (elemValue == null) {
             throw new ProvisioningException("Required element " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
         }
         List<String> addrParams  = null;
         try {
-            addrParams = parseList(annotation.getElemAsList(WfConstants.ADDR_PARAMS), paramFilter, skipIfFiltered, annotation.getElemAsList(WfConstants.ADDR_PARAMS_MAPPING));
+            addrParams = parseList(annotation.getElementAsList(WfConstants.ADDR_PARAMS), paramFilter, skipIfFiltered, annotation.getElementAsList(WfConstants.ADDR_PARAMS_MAPPING));
         } catch (ProvisioningDescriptionException e) {
             throw new ProvisioningDescriptionException("Saw an empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
                     + elemValue + " of " + spec.getId());
@@ -93,7 +93,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             return Collections.emptyList();
         }
 
-        elemValue = annotation.getElem(WfConstants.OP_PARAMS, Constants.PM_UNDEFINED);
+        elemValue = annotation.getElement(WfConstants.OP_PARAMS, Constants.PM_UNDEFINED);
         if (Constants.PM_UNDEFINED.equals(elemValue)) {
             if (spec.hasParams()) {
                 final Set<String> allParams = spec.getParamNames();
@@ -117,7 +117,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
                                 final ManagedOp mop = new ManagedOp();
                                 mop.name = annotation.getName();
                                 mop.op = WRITE_ATTR;
-                                mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
+                                mop.addrPref = annotation.getElement(WfConstants.ADDR_PREF);
                                 mop.addrParams = addrParams;
                                 mop.opParams = new ArrayList<>(2);
                                 mop.opParams.add(paramName);
@@ -136,13 +136,13 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
         } else {
             try {
-                final List<String> params = parseList(annotation.getElemAsList(WfConstants.OP_PARAMS, PM_UNDEFINED), paramFilter, skipIfFiltered, annotation.getElemAsList(WfConstants.OP_PARAMS_MAPPING));
+                final List<String> params = parseList(annotation.getElementAsList(WfConstants.OP_PARAMS, PM_UNDEFINED), paramFilter, skipIfFiltered, annotation.getElementAsList(WfConstants.OP_PARAMS_MAPPING));
                 for (int i = 0; i < params.size(); i++) {
                     if (i % 2 == 0) {
                         final ManagedOp mop = new ManagedOp();
                         mop.name = annotation.getName();
                         mop.op = WRITE_ATTR;
-                        mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
+                        mop.addrPref = annotation.getElement(WfConstants.ADDR_PREF);
                         mop.addrParams = addrParams;
                         mop.opParams = new ArrayList<>(2);
                         mop.opParams.add(params.get(i));
@@ -171,17 +171,17 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
         mop.reset();
         mop.name = annotation.getName();
         mop.op = operation;
-        mop.addrPref = annotation.getElem(WfConstants.ADDR_PREF);
+        mop.addrPref = annotation.getElement(WfConstants.ADDR_PREF);
 
-        final Set<String> skipIfFiltered = parseSet(annotation.getElem(WfConstants.SKIP_IF_FILTERED));
+        final Set<String> skipIfFiltered = parseSet(annotation.getElement(WfConstants.SKIP_IF_FILTERED));
 
-        String elemValue = annotation.getElem(WfConstants.ADDR_PARAMS);
+        String elemValue = annotation.getElement(WfConstants.ADDR_PARAMS);
         if (elemValue == null) {
             throw new ProvisioningException("Required element " + WfConstants.ADDR_PARAMS + " is missing for " + spec.getId());
         }
 
         try {
-            mop.addrParams = parseList(annotation.getElemAsList(WfConstants.ADDR_PARAMS), paramFilter, skipIfFiltered, annotation.getElemAsList(WfConstants.ADDR_PARAMS_MAPPING));
+            mop.addrParams = parseList(annotation.getElementAsList(WfConstants.ADDR_PARAMS), paramFilter, skipIfFiltered, annotation.getElementAsList(WfConstants.ADDR_PARAMS_MAPPING));
         } catch (ProvisioningDescriptionException e) {
             throw new ProvisioningDescriptionException("Saw an empty parameter name in annotation " + WfConstants.ADDR_PARAMS + "="
                     + elemValue + " of " + spec.getId());
@@ -190,7 +190,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             return Collections.emptyList();
         }
 
-        elemValue = annotation.getElem(WfConstants.OP_PARAMS, PM_UNDEFINED);
+        elemValue = annotation.getElement(WfConstants.OP_PARAMS, PM_UNDEFINED);
         if (PM_UNDEFINED.equals(elemValue)) {
             if (spec.hasParams()) {
                 final Set<String> allParams = spec.getParamNames();
@@ -223,7 +223,7 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
         } else {
             try {
-                mop.opParams = parseList(annotation.getElemAsList(WfConstants.OP_PARAMS, PM_UNDEFINED), paramFilter, skipIfFiltered, annotation.getElemAsList(WfConstants.OP_PARAMS_MAPPING));
+                mop.opParams = parseList(annotation.getElementAsList(WfConstants.OP_PARAMS, PM_UNDEFINED), paramFilter, skipIfFiltered, annotation.getElementAsList(WfConstants.OP_PARAMS_MAPPING));
             } catch (ProvisioningDescriptionException e) {
                 throw new ProvisioningDescriptionException("Saw empty parameter name in note " + WfConstants.ADDR_PARAMS
                         + "=" + elemValue + " of " + spec.getId());
@@ -469,13 +469,13 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
 
     @Override
     public void nextFeaturePack(ArtifactCoords.Gav fpGav) throws ProvisioningException {
-        messageWriter.verbose("  " + fpGav);
+        messageWriter.verbose("  %s", fpGav);
     }
 
     @Override
     public void nextSpec(ResolvedFeatureSpec spec) throws ProvisioningException {
         ops.clear();
-        messageWriter.verbose("    SPEC " + spec.getName());
+        messageWriter.verbose("    SPEC %s", spec.getName());
         if(lookForHost == LOOK_FOR_HOST && HOST.equals(spec.getName()) && spec.getId().getGav().toGa().equals(WF_CORE_GA)) {
             lookForHost = LOOK_FOR_HOST_IN_SPEC;
         }
@@ -490,10 +490,10 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
     }
 
     private List<ManagedOp> nextAnnotation(final ResolvedFeatureSpec spec, final FeatureAnnotation annotation) throws ProvisioningException {
-        if (annotation.hasAttr(WfConstants.LINE)) {
+        if (annotation.hasElement(WfConstants.LINE)) {
             final ManagedOp mop = new ManagedOp();
             mop.reset();
-            mop.line = annotation.getElem(WfConstants.LINE);
+            mop.line = annotation.getElement(WfConstants.LINE);
             return Collections.singletonList(mop);
         }
         switch (annotation.getName()) {

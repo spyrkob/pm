@@ -38,7 +38,7 @@ public class CliScriptRunner {
                 .addModuleDir(modules.toString())
                 .addCliArgument("--no-operation-validation")
                 .addCliArgument("--file=" + script);
-        messageWriter.verbose("Executing jboss console: " + builder.build());
+        messageWriter.verbose("Executing jboss console: %", builder.build());
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 
@@ -100,7 +100,7 @@ public class CliScriptRunner {
                 .addCliArgument("--no-operation-validation")
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
-        messageWriter.verbose("Executing jboss console: " + builder.build());
+        messageWriter.verbose("Executing jboss console: %", builder.build());
         final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 

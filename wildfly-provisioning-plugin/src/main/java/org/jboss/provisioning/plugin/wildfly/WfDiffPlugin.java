@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLStreamException;
@@ -46,6 +45,7 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.ConfigId;
 import org.jboss.provisioning.config.ConfigModel;
 import org.jboss.provisioning.config.FeatureConfig;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.diff.FileSystemDiff;
 import org.jboss.provisioning.plugin.DiffPlugin;
 import org.jboss.provisioning.runtime.FeaturePackRuntime;
@@ -119,17 +119,6 @@ public class WfDiffPlugin implements DiffPlugin {
         }
     }
 
-    private String getDefaultName(Gav gav) {
-        StringJoiner buf = new StringJoiner(":");
-        if (gav.getGroupId() != null) {
-            buf.add(gav.getGroupId());
-        }
-        if (gav.getArtifactId() != null) {
-            buf.add(gav.getArtifactId());
-        }
-        return buf.toString();
-    }
-
     private PathFilter getFilter(ProvisioningRuntime runtime) {
         if ("diff-to-feature-pack".equals(runtime.getOperation())) {
             return FILTER_FP;
@@ -181,21 +170,21 @@ public class WfDiffPlugin implements DiffPlugin {
         for (FeaturePackRuntime fp : runtime.getFeaturePacks()) {
             ResolvedFeatureSpec spec = fp.getResolvedFeatureSpec(name);
             if (spec != null) {
-                return new DependencySpec(getDefaultName(fp.getSpec().getGav()), fp.getGav(), spec.getSpec());
+                return new DependencySpec(FeaturePackConfig.getDefaultOriginName(fp.getSpec().getGav()), fp.getGav(), spec.getSpec());
             }
         }
         for (FeaturePackRuntime fp : runtime.getFeaturePacks()) {
             FeatureSpec spec = fp.getFeatureSpec(name);
             if (spec != null) {
-                return new DependencySpec(getDefaultName(fp.getSpec().getGav()), fp.getGav(), spec);
+                return new DependencySpec(FeaturePackConfig.getDefaultOriginName(fp.getSpec().getGav()), fp.getGav(), spec);
             }
         }
         return null;
     }
 
     private void resolveAddressParams(FeatureConfig featureConfig, Map<String, String> address, FeatureAnnotation annotation) {
-        List<String> addressParams = annotation.getElemAsList(ADDR_PARAMS);
-        List<String> addressParamMappings = annotation.getElemAsList(ADDR_PARAMS_MAPPING);
+        List<String> addressParams = annotation.getElementAsList(ADDR_PARAMS);
+        List<String> addressParamMappings = annotation.getElementAsList(ADDR_PARAMS_MAPPING);
         if (addressParamMappings == null || addressParamMappings.isEmpty()) {
             addressParamMappings = addressParams;
         }
@@ -211,8 +200,8 @@ public class WfDiffPlugin implements DiffPlugin {
     }
 
     private void resolveParams(FeatureConfig featureConfig, Map<String, String> params, FeatureAnnotation annotation) {
-        List<String> addressParams = annotation.getElemAsList(OP_PARAMS);
-        List<String> addressParamMappings = annotation.getElemAsList(OP_PARAMS_MAPPING);
+        List<String> addressParams = annotation.getElementAsList(OP_PARAMS);
+        List<String> addressParamMappings = annotation.getElementAsList(OP_PARAMS_MAPPING);
         if (addressParamMappings == null || addressParamMappings.isEmpty()) {
             addressParamMappings = addressParams;
         }

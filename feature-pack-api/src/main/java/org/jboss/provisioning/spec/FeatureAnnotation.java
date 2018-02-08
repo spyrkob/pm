@@ -42,36 +42,36 @@ public class FeatureAnnotation {
         return name;
     }
 
-    public FeatureAnnotation setAttr(String name, String value) {
+    public FeatureAnnotation setElement(String name, String value) {
         elems = PmCollections.put(elems, name, value);
         return this;
     }
 
-    public boolean hasAttrs() {
+    public boolean hasElements() {
         return !elems.isEmpty();
     }
 
-    public Map<String, String> getAttrs() {
+    public Map<String, String> getElements() {
         return elems;
     }
 
-    public boolean hasAttr(String name) {
+    public boolean hasElement(String name) {
         return elems.containsKey(name);
     }
 
-    public String getElem(String name) {
+    public String getElement(String name) {
         return elems.get(name);
     }
 
-    public List<String> getElemAsList(String name) {
-        return parseList(elems.get(name));
-    }
-
-    public String getElem(String name, String defaultValue) {
+    public String getElement(String name, String defaultValue) {
         return elems.getOrDefault(name, defaultValue);
     }
 
-    public List<String> getElemAsList(String name, String defaultValue) {
+    public List<String> getElementAsList(String name) {
+        return parseList(elems.get(name));
+    }
+
+    public List<String> getElementAsList(String name, String defaultValue) {
         return parseList(elems.getOrDefault(name, defaultValue));
     }
 

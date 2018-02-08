@@ -323,7 +323,7 @@ class FeatureSpecXmlParser10 implements PlugableXmlParser<FeatureSpec.Builder> {
             throw ParsingUtils.missingAttributes(reader.getLocation(), Collections.singleton(Attribute.NAME));
         }
         ParsingUtils.parseNoContent(reader);
-        fa.setAttr(name, value);
+        fa.setElement(name, value);
     }
 
     private void parseDependencies(XMLExtendedStreamReader reader, FeatureSpec.Builder specBuilder) throws XMLStreamException {

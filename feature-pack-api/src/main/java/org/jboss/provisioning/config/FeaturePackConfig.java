@@ -109,6 +109,10 @@ public class FeaturePackConfig extends ConfigCustomizations {
         return new Builder(gav).build();
     }
 
+    public static String getDefaultOriginName(ArtifactCoords.Gav gav) {
+        return gav.toGa().toString();
+    }
+
     private final ArtifactCoords.Gav gav;
     protected final boolean inheritPackages;
     protected final Set<String> excludedPackages;
