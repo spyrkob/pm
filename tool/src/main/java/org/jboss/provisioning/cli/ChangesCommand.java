@@ -21,11 +21,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.io.Resource;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Option;
+import org.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -52,7 +50,7 @@ public class ChangesCommand extends FromInstallationCommand {
     @Option(name = "server-config", required = false, defaultValue = "standalone.xml",
             description = "Server configuration file to use for the provisionned server.")
     protected String serverConfig;
-    @Option(name="target", completer=FileOptionCompleter.class, required=true,
+    @Option(name = "target", required = true,
             description="Directory to export the changes to.")
     protected Resource exportDirArg;
 

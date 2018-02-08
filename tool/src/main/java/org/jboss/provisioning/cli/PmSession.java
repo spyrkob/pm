@@ -16,13 +16,13 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.readline.AeshContext;
+import org.aesh.readline.Prompt;
 
 /**
  *
@@ -31,7 +31,8 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 public class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession> {
 
     private Prompt prompt;
-
+    private PrintStream out;
+    private PrintStream err;
     void updatePrompt(AeshContext aeshCtx) {
         prompt = new Prompt(new StringBuilder().append('[')
                 .append(aeshCtx.getCurrentWorkingDirectory().getName())
@@ -59,5 +60,21 @@ public class PmSession extends DelegatingCommandInvocation implements CommandInv
         commandInvocation.setPrompt(prompt);
         this.delegate = commandInvocation;
         return this;
+    }
+
+    void setOut(PrintStream out) {
+        this.out = out;
+    }
+
+    void setErr(PrintStream err) {
+        this.err = err;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public PrintStream getErr() {
+        return err;
     }
 }

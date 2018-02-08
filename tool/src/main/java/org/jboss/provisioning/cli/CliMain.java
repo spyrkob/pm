@@ -16,19 +16,18 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.io.File;
 import java.util.logging.LogManager;
-
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.extensions.exit.Exit;
-import org.jboss.aesh.extensions.less.aesh.Less;
-import org.jboss.aesh.extensions.ls.Ls;
-import org.jboss.aesh.extensions.mkdir.Mkdir;
-import org.jboss.aesh.extensions.pwd.Pwd;
-import org.jboss.aesh.extensions.rm.Rm;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.extensions.exit.Exit;
+import org.aesh.extensions.ls.Ls;
+import org.aesh.extensions.mkdir.Mkdir;
+import org.aesh.extensions.pwd.Pwd;
+import org.aesh.extensions.rm.Rm;
+import org.aesh.readline.ReadlineConsole;
 
 /**
  *
@@ -37,34 +36,38 @@ import org.jboss.aesh.extensions.rm.Rm;
 public class CliMain {
 
     public static void main(String[] args) throws Exception {
-        final Settings settings = new SettingsBuilder().logging(overrideLogging()).create();
-
         final PmSession pmSession = new PmSession();
-        pmSession.updatePrompt(settings.getAeshContext());
-
-        final CommandInvocationServices ciServices = new CommandInvocationServices();
-        ciServices.registerDefaultProvider(pmSession);
-
-        final AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings).prompt(pmSession.getPrompt())
-                // provisioning commands
-                .addCommand(new InstallCommand())
-                .addCommand(new ProvisionedSpecCommand())
-                .addCommand(new ProvisionSpecCommand())
-                .addCommand(new DiffCommand())
-                .addCommand(new ChangesCommand())
-                .addCommand(new UpgradeCommand())
-                .addCommand(new UninstallCommand())
-                // filesystem-related commands
-                .addCommand(new CdCommand())
-                .addCommand(new Exit())
-                .addCommand(new Less())
-                .addCommand(new Ls())
-                .addCommand(new Mkdir())
-                .addCommand(new Rm())
-                .addCommand(new Pwd())
-                .commandInvocationProvider(ciServices)
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(InstallCommand.class)
+                .command(ProvisionedSpecCommand.class)
+                .command(ProvisionSpecCommand.class)
+                .command(DiffCommand.class)
+                .command(ChangesCommand.class)
+                .command(UpgradeCommand.class)
+                .command(UninstallCommand.class)
+                .command(CdCommand.class)
+                .command(Exit.class)
+                .command(Ls.class)
+                .command(Mkdir.class)
+                .command(Rm.class)
+                .command(Pwd.class)
                 .create();
-        aeshConsole.start();
+
+        File history = new File(System.getProperty("user.home"), ".pm-history");
+        final Settings settings = SettingsBuilder.builder().
+                logging(overrideLogging()).
+                commandRegistry(registry).
+                persistHistory(true).
+                historyFile(history).
+                echoCtrl(false).
+                commandInvocationProvider(pmSession).
+                build();
+        pmSession.updatePrompt(settings.aeshContext());
+        pmSession.setOut(settings.stdOut());
+        pmSession.setErr(settings.stdErr());
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(pmSession.getPrompt());
+        console.start();
     }
 
     private static boolean overrideLogging() {

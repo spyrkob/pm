@@ -16,9 +16,9 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.console.command.CommandResult;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 
 /**
  *
@@ -34,7 +34,7 @@ public abstract class PmSessionCommand implements Command<PmSession> {
         } catch (Throwable t) {
             //t.printStackTrace();
             if(t instanceof RuntimeException) {
-                t.printStackTrace(session.getShell().err());
+                t.printStackTrace(session.getErr());
             }
 
             session.print("Error: ");

@@ -16,11 +16,11 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.cl.GroupCommandDefinition;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.invocation.CommandInvocation;
 
 /**
  *

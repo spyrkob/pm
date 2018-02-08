@@ -17,9 +17,8 @@
 package org.jboss.provisioning.cli;
 
 import java.nio.file.Path;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.terminal.Shell;
+import org.aesh.command.option.Option;
+import org.aesh.io.Resource;
 import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -29,24 +28,25 @@ import org.jboss.provisioning.ProvisioningManager;
  */
 abstract class FromInstallationCommand extends PmSessionCommand {
 
-    @Option(name = "src", completer = FileOptionCompleter.class, required = true,
+    @Option(name = "src", required = true,
             description = "Customized source installation directory.")
-    protected String srcDirArg;
+    protected Resource srcDirArg;
 
     @Option(name = "verbose", shortName = 'v', hasValue = false,
             description = "Whether or not the output should be verbose")
     boolean verbose;
 
     protected Path getTargetDir(PmSession session) {
-        return srcDirArg == null ? session.getWorkDir() : session.getWorkDir().resolve(srcDirArg);
+        return srcDirArg == null ? session.getWorkDir()
+                : session.getWorkDir().resolve(srcDirArg.resolve(session.getAeshContext().
+                        getCurrentWorkingDirectory()).get(0).getAbsolutePath());
     }
 
     protected ProvisioningManager getManager(PmSession session) {
-        final Shell shell = session.getShell();
         return ProvisioningManager.builder()
                 .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
                 .setInstallationHome(getTargetDir(session))
-                .setMessageWriter(new DefaultMessageWriter(shell.out(), shell.out(), verbose))
+                .setMessageWriter(new DefaultMessageWriter(session.getOut(), session.getErr(), verbose))
                 .build();
     }
 }

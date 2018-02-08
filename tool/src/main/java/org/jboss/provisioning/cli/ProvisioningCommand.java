@@ -17,9 +17,8 @@
 package org.jboss.provisioning.cli;
 
 import java.nio.file.Path;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.terminal.Shell;
+import org.aesh.command.impl.completer.FileOptionCompleter;
+import org.aesh.command.option.Option;
 import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -42,11 +41,10 @@ public abstract class ProvisioningCommand extends PmSessionCommand {
     }
 
     protected ProvisioningManager getManager(PmSession session) {
-        final Shell shell = session.getShell();
         return ProvisioningManager.builder()
                 .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
                 .setInstallationHome(getTargetDir(session))
-                .setMessageWriter(new DefaultMessageWriter(shell.out(), shell.out(), verbose))
+                .setMessageWriter(new DefaultMessageWriter(session.getOut(), session.getErr(), verbose))
                 .build();
     }
 }

@@ -16,18 +16,19 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.cl.parser.CommandLineParserException;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.console.command.CommandNotFoundException;
-import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.terminal.Shell;
+import java.io.IOException;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.Executor;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.shell.Shell;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.readline.AeshContext;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.action.KeyAction;
 
 /**
  *
@@ -36,16 +37,6 @@ import org.jboss.aesh.terminal.Shell;
 class DelegatingCommandInvocation implements CommandInvocation {
 
     protected CommandInvocation delegate;
-
-    @Override
-    public ControlOperator getControlOperator() {
-        return delegate.getControlOperator();
-    }
-
-    @Override
-    public CommandRegistry getCommandRegistry() {
-        return delegate.getCommandRegistry();
-    }
 
     @Override
     public Shell getShell() {
@@ -78,36 +69,6 @@ class DelegatingCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public CommandOperation getInput() throws InterruptedException {
-        return delegate.getInput();
-    }
-
-    @Override
-    public String getInputLine() throws InterruptedException {
-        return delegate.getInputLine();
-    }
-
-    @Override
-    public int getPid() {
-        return delegate.getPid();
-    }
-
-    @Override
-    public void putProcessInBackground() {
-        delegate.putProcessInBackground();
-    }
-
-    @Override
-    public void putProcessInForeground() {
-        delegate.putProcessInForeground();
-    }
-
-    @Override
-    public void executeCommand(String input) {
-        delegate.executeCommand(input);
-    }
-
-    @Override
     public void print(String msg) {
         delegate.print(msg);
     }
@@ -118,18 +79,42 @@ class DelegatingCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public boolean isEchoing() {
-        return delegate.isEchoing();
+    public CommandInvocationConfiguration getConfiguration() {
+        return delegate.getConfiguration();
     }
 
     @Override
-    public void setEcho(boolean echo) {
-        delegate.setEcho(echo);
+    public KeyAction input() throws InterruptedException {
+        return delegate.input();
     }
 
     @Override
-    public Command<?> getPopulatedCommand(String commandLine) throws CommandNotFoundException, CommandException,
-            CommandLineParserException, OptionValidatorException {
-        return delegate.getPopulatedCommand(commandLine);
+    public String inputLine() throws InterruptedException {
+        return delegate.inputLine();
+    }
+
+    @Override
+    public String inputLine(Prompt prompt) throws InterruptedException {
+        return delegate.inputLine(prompt);
+    }
+
+    @Override
+    public void executeCommand(String input) throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException, IOException {
+        delegate.executeCommand(input);
+    }
+
+    @Override
+    public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException {
+        return delegate.buildExecutor(line);
+    }
+
+    @Override
+    public void print(String msg, boolean paging) {
+        delegate.print(msg, paging);
+    }
+
+    @Override
+    public void println(String msg, boolean paging) {
+        delegate.println(msg, paging);
     }
 }

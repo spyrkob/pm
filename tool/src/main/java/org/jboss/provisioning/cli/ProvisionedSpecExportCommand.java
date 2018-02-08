@@ -19,12 +19,10 @@ package org.jboss.provisioning.cli;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Argument;
+import org.aesh.io.Resource;
 
-import org.jboss.aesh.cl.Arguments;
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -34,19 +32,16 @@ import org.jboss.provisioning.ProvisioningException;
 @CommandDefinition(name="export", description="Saves current provisioned spec into the specified file.")
 public class ProvisionedSpecExportCommand extends ProvisioningCommand {
 
-    @Arguments(completer=FileOptionCompleter.class, description="File to save the provisioned spec too.")
-    private List<Resource> fileArg;
+    @Argument(description = "File to save the provisioned spec too.", required = true)
+    private Resource fileArg;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        if(fileArg == null || fileArg.isEmpty()) {
+        if (fileArg == null) {
             throw new CommandExecutionException("Missing required file path argument.");
         }
-        if(fileArg.size() > 1) {
-            throw new CommandExecutionException("The command expects only one argument.");
-        }
 
-        final Resource specResource = fileArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
+        final Resource specResource = fileArg.resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
         final Path targetFile = Paths.get(specResource.getAbsolutePath());
 
         try {

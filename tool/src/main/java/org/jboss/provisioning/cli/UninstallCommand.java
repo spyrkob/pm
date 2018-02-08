@@ -16,33 +16,29 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.util.List;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Argument;
 
-import org.jboss.aesh.cl.Arguments;
-import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
-
 
 /**
  *
  * @author Alexey Loubyansky
  */
-@CommandDefinition(name="uninstall", description="Uninstalls specified feature-packs")
-class UninstallCommand extends ProvisioningCommand {
+@CommandDefinition(name = "uninstall", description = "Uninstalls specified feature-pack")
+public class UninstallCommand extends ProvisioningCommand {
 
-    @Arguments(completer=GavCompleter.class)
-    private List<String> coords;
+    @Argument(completer = GavCompleter.class, required = true)
+    private String coord;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
 
         final ProvisioningManager manager = getManager(session);
         try {
-            for(String coord : coords) {
-                manager.uninstall(ArtifactCoords.newGav(coord));
-            }
+            manager.uninstall(ArtifactCoords.newGav(coord));
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);
         }

@@ -16,7 +16,7 @@
  */
 package org.jboss.provisioning.cli;
 
-import org.jboss.aesh.cl.CommandDefinition;
+import org.aesh.command.CommandDefinition;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;

@@ -23,9 +23,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.console.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
 
 /**
  *

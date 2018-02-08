@@ -19,9 +19,9 @@ package org.jboss.provisioning.cli;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Option;
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 
