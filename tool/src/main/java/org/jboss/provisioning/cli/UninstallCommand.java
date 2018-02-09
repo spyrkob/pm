@@ -35,7 +35,16 @@ public class UninstallCommand extends ProvisioningCommand {
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-
+        if (coord == null) {
+            throw new CommandExecutionException("feature-pack must be set");
+        }
+        // Is it a stream?
+        // For now keep duality. TODO
+        // We should retrieve the stream information in the current instalation.
+        ArtifactCoords coords = session.getUniverses().resolveStream(coord);
+        if (coords != null) {
+            coord = coords.toString();
+        }
         final ProvisioningManager manager = getManager(session);
         try {
             manager.uninstall(ArtifactCoords.newGav(coord));

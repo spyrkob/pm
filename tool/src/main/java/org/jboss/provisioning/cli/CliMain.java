@@ -16,7 +16,6 @@
  */
 package org.jboss.provisioning.cli;
 
-import java.io.File;
 import java.util.logging.LogManager;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
@@ -36,9 +35,10 @@ import org.aesh.readline.ReadlineConsole;
 public class CliMain {
 
     public static void main(String[] args) throws Exception {
-        final PmSession pmSession = new PmSession();
+        Configuration config = Configuration.parse();
+        final PmSession pmSession = new PmSession(config);
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(InstallCommand.class)
+                .command(new InstallCommand())
                 .command(ProvisionedSpecCommand.class)
                 .command(ProvisionSpecCommand.class)
                 .command(DiffCommand.class)
@@ -51,15 +51,16 @@ public class CliMain {
                 .command(Mkdir.class)
                 .command(Rm.class)
                 .command(Pwd.class)
+                .command(UniverseCommand.class)
                 .create();
 
-        File history = new File(System.getProperty("user.home"), ".pm-history");
         final Settings settings = SettingsBuilder.builder().
                 logging(overrideLogging()).
                 commandRegistry(registry).
                 persistHistory(true).
-                historyFile(history).
+                historyFile(config.getHistoryFile()).
                 echoCtrl(false).
+                completerInvocationProvider(pmSession).
                 commandInvocationProvider(pmSession).
                 build();
         pmSession.updatePrompt(settings.aeshContext());
