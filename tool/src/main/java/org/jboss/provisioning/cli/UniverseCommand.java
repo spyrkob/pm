@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
+ * Copyright 2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,15 @@ import org.aesh.command.invocation.CommandInvocation;
 
 /**
  *
- * @author Alexey Loubyansky
+ * @author jdenise@redhat.com
  */
-@GroupCommandDefinition(description = "", name = "state", groupCommands={ProvisionedSpecDisplayCommand.class,ProvisionedSpecExportCommand.class, DiffCommand.class})
-public class ProvisionedSpecCommand implements Command<CommandInvocation> {
+@GroupCommandDefinition(description = "", name = "universe", groupCommands = {UniverseListCommand.class})
+public class UniverseCommand implements Command<CommandInvocation> {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         commandInvocation.println("subcommand missing");
         return CommandResult.FAILURE;
     }
+
 }

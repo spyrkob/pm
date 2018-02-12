@@ -17,27 +17,26 @@
 package org.jboss.provisioning.cli;
 
 import java.util.List;
-
-import org.jboss.aesh.cl.Arguments;
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.io.Resource;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Argument;
+import org.aesh.io.Resource;
+import org.aesh.readline.AeshContext;
 
 /**
  *
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name="cd", description="Changes the current work dir to the specified location")
-class CdCommand extends PmSessionCommand {
+public class CdCommand extends PmSessionCommand {
 
-    @Arguments
-    private List<Resource> arguments;
+    @Argument
+    private Resource argument;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
         final AeshContext aeshCtx = session.getAeshContext();
-        if (arguments != null) {
-            final List<Resource> files = arguments.get(0).resolve(aeshCtx.getCurrentWorkingDirectory());
+        if (argument != null) {
+            final List<Resource> files = argument.resolve(aeshCtx.getCurrentWorkingDirectory());
             if (files.get(0).isDirectory()) {
                 aeshCtx.setCurrentWorkingDirectory(files.get(0));
             }

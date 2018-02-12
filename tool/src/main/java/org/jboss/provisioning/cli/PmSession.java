@@ -16,21 +16,51 @@
  */
 package org.jboss.provisioning.cli;
 
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocationProvider;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.readline.AeshContext;
+import org.aesh.readline.Prompt;
 
 /**
  *
  * @author Alexey Loubyansky
  */
-public class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession> {
+public class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession>, CompleterInvocationProvider<PmCompleterInvocation> {
 
     private Prompt prompt;
+    private PrintStream out;
+    private PrintStream err;
+    private final Configuration config;
+    private final Universes universes;
+
+    public PmSession(Configuration config) throws Exception {
+        this.config = config;
+        //Build the universes
+        this.universes = Universes.buildUniverses(MavenArtifactRepositoryManager.getInstance(), config.getUniversesLocations());
+    }
+
+    public Configuration getPmConfiguration() {
+        return config;
+    }
+
+    public Universes getUniverses() {
+        return universes;
+    }
+
+    // TO REMOVE when we have an universe for sure.
+    public boolean hasPopulatedUniverse() {
+        for (Universe u : universes.getUniverses()) {
+            if (!u.getStreamLocations().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     void updatePrompt(AeshContext aeshCtx) {
         prompt = new Prompt(new StringBuilder().append('[')
@@ -59,5 +89,26 @@ public class PmSession extends DelegatingCommandInvocation implements CommandInv
         commandInvocation.setPrompt(prompt);
         this.delegate = commandInvocation;
         return this;
+    }
+
+    void setOut(PrintStream out) {
+        this.out = out;
+    }
+
+    void setErr(PrintStream err) {
+        this.err = err;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public PrintStream getErr() {
+        return err;
+    }
+
+    @Override
+    public PmCompleterInvocation enhanceCompleterInvocation(CompleterInvocation completerInvocation) {
+        return new PmCompleterInvocation(completerInvocation, this);
     }
 }

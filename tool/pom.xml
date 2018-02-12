@@ -60,12 +60,12 @@
     </dependency>
   
     <dependency>
-      <groupId>org.jboss.aesh</groupId>
-      <artifactId>aesh</artifactId>
+        <groupId>org.aesh</groupId>
+        <artifactId>aesh</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.aesh</groupId>
-      <artifactId>aesh-extensions</artifactId>
+        <groupId>org.aesh</groupId>
+        <artifactId>aesh-extensions</artifactId>
     </dependency>
 
     <dependency>
@@ -122,14 +122,14 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.jboss.aesh:aesh</artifact>
+                    <artifact>org.aesh:aesh</artifact>
                   <includes>
                     <include>org/**</include>
                     <include>*.txt</include>
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.jboss.aesh:aesh-extensions</artifact>
+                    <artifact>org.aesh:aesh-extensions</artifact>
                   <includes>
                     <include>org/**</include>
                     <include>*.txt</include>

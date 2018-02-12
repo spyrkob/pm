@@ -21,11 +21,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Option;
+import org.aesh.io.Resource;
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
 
 /**
@@ -54,7 +53,7 @@ public class DiffCommand extends FromInstallationCommand {
     @Option(name = "gav", required=true, completer=GavCompleter.class,
             description = "Feature pack GAV coordinates.")
     protected String coord;
-    @Option(name="target", completer=FileOptionCompleter.class, required=true,
+    @Option(name = "target", required = true,
             description="Directory to save the feature pack to.")
     protected Resource exportDirArg;
 

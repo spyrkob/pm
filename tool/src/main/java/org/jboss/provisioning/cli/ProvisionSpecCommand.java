@@ -19,12 +19,10 @@ package org.jboss.provisioning.cli;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Argument;
+import org.aesh.io.Resource;
 
-import org.jboss.aesh.cl.Arguments;
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.io.Resource;
 import org.jboss.provisioning.ProvisioningException;
 
 
@@ -35,20 +33,17 @@ import org.jboss.provisioning.ProvisioningException;
 @CommandDefinition(name="provision", description="(Re)Provisions the installation according to the specification provided in an XML file")
 public class ProvisionSpecCommand extends ProvisioningCommand {
 
-    @Arguments(completer=FileOptionCompleter.class, description="File describing the desired provisioned state.")
-    private List<Resource> specArg;
+    @Argument(description = "File describing the desired provisioned state.", required = true)
+    private Resource specArg;
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
 
-        if(specArg == null || specArg.isEmpty()) {
+        if (specArg == null) {
             throw new CommandExecutionException("Missing required file path argument.");
         }
-        if(specArg.size() > 1) {
-            throw new CommandExecutionException("The command expects only one argument.");
-        }
 
-        final Resource specResource = specArg.get(0).resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
+        final Resource specResource = specArg.resolve(session.getAeshContext().getCurrentWorkingDirectory()).get(0);
         final Path provisioningFile = Paths.get(specResource.getAbsolutePath());
         if(!Files.exists(provisioningFile)) {
             throw new CommandExecutionException("Failed to locate provisioning file " + provisioningFile.toAbsolutePath());
