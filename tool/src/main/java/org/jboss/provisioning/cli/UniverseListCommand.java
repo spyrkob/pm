@@ -32,9 +32,11 @@ public class UniverseListCommand implements Command<PmSession> {
     @Override
     public CommandResult execute(PmSession commandInvocation) throws CommandException, InterruptedException {
         for (Universe universe : commandInvocation.getUniverses().getUniverses()) {
-            commandInvocation.println("Universe " + universe.getLocation().getName() + ", coordinates " + universe.getLocation().getCoordinates());
+            commandInvocation.println("Universe " + universe.getLocation().getName()
+                    + ", coordinates " + universe.getLocation().getCoordinates());
             for (StreamLocation loc : universe.getStreamLocations()) {
-                commandInvocation.println("   " + loc.getName() + ", coordinates " + loc.getCoordinates());
+                commandInvocation.println("   " + loc.getName() + ", coordinates "
+                        + loc.getCoordinates() + ", version range " + loc.getVersionRange());
             }
         }
         return CommandResult.SUCCESS;

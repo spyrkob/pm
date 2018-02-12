@@ -23,10 +23,11 @@ import org.jboss.provisioning.ArtifactCoords;
  * @author jdenise@redhat.com
  */
 public class UniverseLocation {
+    private static final String UNIVERSE_VERSION_RANGE = "[0,)";
     public static UniverseLocation DEFAULT = new UniverseLocation("default",
-            ArtifactCoords.newInstance("org.jboss.universe", "universe", "1.0-SNAPSHOT", "jar"));
+            ArtifactCoords.newInstance("org.jboss.universe", "universe", null, "jar"));
     private final String name;
-    private final ArtifactCoords coords;
+    private ArtifactCoords coords;
 
     public UniverseLocation(String name, ArtifactCoords coords) {
         this.name = name;
@@ -39,5 +40,19 @@ public class UniverseLocation {
 
     public ArtifactCoords getCoordinates() {
         return coords;
+    }
+
+    public String getVersionRange() {
+        return UNIVERSE_VERSION_RANGE;
+    }
+
+    /**
+     * Version has been retrieved.
+       *
+     * @param version The latest version of the universe location.
+     */
+    public void updateLatestVersion(String version) {
+        this.coords = new ArtifactCoords(coords.getGroupId(), coords.getArtifactId(),
+                version, coords.getClassifier(), coords.getExtension());
     }
 }

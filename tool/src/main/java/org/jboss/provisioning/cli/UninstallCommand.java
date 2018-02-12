@@ -20,6 +20,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.option.Argument;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -41,7 +42,12 @@ public class UninstallCommand extends ProvisioningCommand {
         // Is it a stream?
         // For now keep duality. TODO
         // We should retrieve the stream information in the current instalation.
-        ArtifactCoords coords = session.getUniverses().resolveStream(coord);
+        ArtifactCoords coords;
+        try {
+            coords = session.getUniverses().resolveStream(coord);
+        } catch (ArtifactException ex) {
+            throw new CommandExecutionException("Stream resolution failed", ex);
+        }
         if (coords != null) {
             coord = coords.toString();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,6 +50,7 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningException;
@@ -158,6 +159,11 @@ public class FeaturePackProvisioningMojo extends AbstractMojo {
                             } catch (DeploymentException ex) {
                                 throw new org.jboss.provisioning.ArtifactException(ex.getMessage(), ex);
                             }
+                        }
+
+                        @Override
+                        public String getHighestVersion(ArtifactCoords coords, String range) throws ArtifactException {
+                            throw new UnsupportedOperationException("Not supported operation.");
                         }
                     })
                     .setMessageWriter(messageWriter)

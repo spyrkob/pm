@@ -46,6 +46,7 @@
     <module>feature-pack-api</module>
     <module>feature-pack-build-maven-plugin</module>
     <module>tool</module>
+    <module>universe</module>
     <module>wildfly-provisioning-plugin</module>
     <module>wildfly-feature-pack-maven-plugin</module>
   </modules>

@@ -95,4 +95,9 @@ public class FeaturePackRepositoryManager implements ArtifactRepositoryManager {
         fileName.append('.').append(coords.getExtension());
         return p.resolve(fileName.toString());
     }
+
+    @Override
+    public String getHighestVersion(ArtifactCoords coords, String range) throws ArtifactException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
