@@ -22,7 +22,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -564,13 +563,6 @@ class WfProvisionedConfigHandler implements ProvisionedConfigHandler {
             }
         } catch (IOException e) {
             throw new ProvisioningException(Errors.writeFile(script), e);
-        }
-
-        try {
-            IoUtils.copy(script, Paths.get("/home/aloubyansky/pm-scripts/").resolve(script.getFileName()));
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
         }
 
         messageWriter.verbose(" Generating %s configuration", script.getFileName().toString());
