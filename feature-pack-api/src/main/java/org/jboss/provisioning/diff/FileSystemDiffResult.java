@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.diff;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.Set;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.provisioning.ProvisioningException;
+import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.repomanager.FeaturePackBuilder;
 import org.jboss.provisioning.repomanager.PackageBuilder;
 import org.jboss.provisioning.runtime.ProvisioningRuntime;
@@ -80,7 +82,7 @@ public class FileSystemDiffResult {
         return this;
     }
 
-    public void toFeaturePack(FeaturePackBuilder fpBuilder, ProvisioningRuntime runtime, Path installationHome) throws ProvisioningException {
+    public void toFeaturePack(FeaturePackBuilder fpBuilder, Map<String, FeaturePackConfig.Builder> builders, ProvisioningRuntime runtime, Path installationHome) throws ProvisioningException {
         PackageBuilder addedFilesPackage = fpBuilder.newPackage("added_files").setDefault();
         for (Path src : getAddedFiles()) {
             addedFilesPackage.addPath(src.toString(), installationHome.resolve(src));

@@ -49,6 +49,12 @@
     <dependency>
       <groupId>org.wildfly.core</groupId>
       <artifactId>wildfly-cli</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.aesh</groupId>
+          <artifactId>aesh-readline</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.wildfly.core</groupId>

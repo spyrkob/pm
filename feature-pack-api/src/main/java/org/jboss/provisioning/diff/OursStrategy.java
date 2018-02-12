@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.diff;
 
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class OursStrategy extends FileSystemMerge {
         try {
             Files.createDirectories(target.getParent());
             Files.copy(src, target, StandardCopyOption.REPLACE_EXISTING);
+            messageWriter.verbose("Because of patch failure: file %s has been copied to %s", src, target);
         } catch (IOException ioex) {
             throw new RuntimeException("Couldn't copy file " + src, ioex);
         }

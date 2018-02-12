@@ -47,9 +47,9 @@ public class FeatureSpecXmlParsingTestCase {
     @Test
     public void testFull() throws Exception {
         assertEquals(FeatureSpec.builder("full")
-                .addAnnotation(new FeatureAnnotation("a1").setAttr("e1", "v1").setAttr("e2", "v2"))
+                .addAnnotation(new FeatureAnnotation("a1").setElement("e1", "v1").setElement("e2", "v2"))
                 .addAnnotation(new FeatureAnnotation("a2"))
-                .addAnnotation(new FeatureAnnotation("a1").setAttr("e1", "v3").setAttr("e2", "v4"))
+                .addAnnotation(new FeatureAnnotation("a1").setElement("e1", "v3").setElement("e2", "v4"))
                 .addFeatureRef(FeatureReferenceSpec.create("spec1", "spec1", false))
                 .addFeatureRef(FeatureReferenceSpec.builder("spec1").setName("spec1-ref").setNillable(false).setInclude(true).build())
                 .addFeatureRef(FeatureReferenceSpec.builder("spec2")

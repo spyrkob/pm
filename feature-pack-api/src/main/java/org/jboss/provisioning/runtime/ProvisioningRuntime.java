@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.runtime;
 
 import java.io.IOException;
@@ -24,9 +23,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
@@ -35,8 +36,6 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.ArtifactException;
-import org.jboss.provisioning.ArtifactRepositoryManager;
-import org.jboss.provisioning.Constants;
 import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningDescriptionException;
@@ -44,9 +43,6 @@ import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.config.FeaturePackConfig;
 import org.jboss.provisioning.config.ProvisioningConfig;
 import org.jboss.provisioning.diff.FileSystemDiffResult;
-import org.jboss.provisioning.plugin.DiffPlugin;
-import org.jboss.provisioning.plugin.ProvisioningPlugin;
-import org.jboss.provisioning.plugin.UpgradePlugin;
 import org.jboss.provisioning.repomanager.FeaturePackBuilder;
 import org.jboss.provisioning.repomanager.FeaturePackRepositoryManager;
 import org.jboss.provisioning.state.FeaturePackSet;
@@ -56,6 +52,13 @@ import org.jboss.provisioning.util.IoUtils;
 import org.jboss.provisioning.util.PathsUtils;
 import org.jboss.provisioning.xml.ProvisionedStateXmlWriter;
 import org.jboss.provisioning.xml.ProvisioningXmlWriter;
+import org.jboss.provisioning.ArtifactRepositoryManager;
+import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.config.ConfigId;
+import org.jboss.provisioning.config.ConfigModel;
+import org.jboss.provisioning.plugin.DiffPlugin;
+import org.jboss.provisioning.plugin.ProvisioningPlugin;
+import org.jboss.provisioning.plugin.UpgradePlugin;
 
 /**
  *
@@ -113,10 +116,28 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         FeaturePackRepositoryManager fpRepoManager = FeaturePackRepositoryManager.newInstance(location);
         Gav gav = ArtifactCoords.newGav(runtime.getParameter("gav"));
         FeaturePackBuilder fpBuilder = fpRepoManager.installer().newFeaturePack(gav);
+        Map<String, FeaturePackConfig.Builder> builders = new HashMap<>();
         for (FeaturePackConfig fpConfig : runtime.getProvisioningConfig().getFeaturePackDeps()) {
-            fpBuilder.addDependency(fpConfig);
+            FeaturePackConfig.Builder builder = FeaturePackConfig.builder(fpConfig.getGav());
+            for(ConfigModel configSpec : fpConfig.getDefinedConfigs()) {
+                builder.addConfig(configSpec);
+            }
+            builder.excludeAllPackages(fpConfig.getExcludedPackages());
+            builder.setInheritConfigs(fpConfig.isInheritConfigs());
+            builder.setInheritModelOnlyConfigs(fpConfig.isInheritModelOnlyConfigs());
+            builder.setInheritPackages(fpConfig.isInheritPackages());
+            for(Entry<String, Boolean> excludedModel : fpConfig.getFullModelsExcluded().entrySet()) {
+                builder.excludeConfigModel(excludedModel.getKey(), excludedModel.getValue());
+            }
+            for(ConfigId includedConfig : fpConfig.getIncludedConfigs()) {
+                builder.includeDefaultConfig(includedConfig);
+            }
+            builders.put(FeaturePackConfig.getDefaultOriginName(fpConfig.getGav()), builder);
         }
-        runtime.exportDiffResultToFeaturePack(fpBuilder, installationHome);
+        runtime.exportDiffResultToFeaturePack(fpBuilder, builders, installationHome);
+        for(Entry<String,FeaturePackConfig.Builder> entry : builders.entrySet()) {
+            fpBuilder.addDependency(entry.getKey(), entry.getValue().build());
+        }
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(runtime.pluginsDir)) {
             for(Path file : stream) {
                 if((Files.isRegularFile(file))) {
@@ -161,8 +182,8 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
     private final MessageWriter messageWriter;
     private List<ProvisionedConfig> configs = Collections.emptyList();
     private FileSystemDiffResult diff = FileSystemDiffResult.empty();
-    private ClassLoader pluginsClassLoader;
     private final String operation;
+    private ClassLoader pluginsClassLoader;
 
     ProvisioningRuntime(ProvisioningRuntimeBuilder builder, final MessageWriter messageWriter) throws ProvisioningException {
         this.startTime = builder.startTime;
@@ -295,14 +316,14 @@ public class ProvisioningRuntime implements FeaturePackSet<FeaturePackRuntime>, 
         return diff;
     }
 
-    public void exportDiffResultToFeaturePack(FeaturePackBuilder fpBuilder, Path installationHome) throws ProvisioningException {
+    public void exportDiffResultToFeaturePack(FeaturePackBuilder fpBuilder, Map<String, FeaturePackConfig.Builder> builders, Path installationHome) throws ProvisioningException {
         ClassLoader pluginClassLoader = getPluginClassloader();
         if (pluginClassLoader != null) {
             final Thread thread = Thread.currentThread();
             final ClassLoader ocl = thread.getContextClassLoader();
             try {
                 thread.setContextClassLoader(pluginClassLoader);
-                diff.toFeaturePack(fpBuilder, this, installationHome);
+                diff.toFeaturePack(fpBuilder, builders, this, installationHome);
             } finally {
                 thread.setContextClassLoader(ocl);
             }

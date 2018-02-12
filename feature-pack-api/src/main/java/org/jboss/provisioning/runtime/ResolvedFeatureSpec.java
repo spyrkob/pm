@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning.runtime;
 
 import java.util.ArrayList;
@@ -84,6 +83,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
 
     public String getName() {
         return id.name;
+    }
+
+    public FeatureSpec getSpec() {
+        return xmlSpec;
     }
 
     public boolean hasAnnotations() {
@@ -629,4 +632,10 @@ public class ResolvedFeatureSpec extends CapabilityProvider {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "ResolvedFeatureSpec{" + "id=" + id + ", xmlSpec=" + xmlSpec + ", resolvedRefTargets=" + resolvedRefTargets + ", resolvedDeps=" + resolvedDeps + '}';
+    }
+
 }

@@ -61,36 +61,40 @@ public class ProvisioningLayout {
 
         public ProvisioningLayout build() throws ProvisioningDescriptionException {
             for(FeaturePackLayout fp : featurePacks.values()) {
-                if(fp.hasExternalPackageDependencies()) {
-                    final FeaturePackSpec fpSpec = fp.getSpec();
-                    for(PackageSpec pkg : fp.getPackages()) {
-                        if(pkg.hasExternalPackageDeps()) {
-                            for(String depName : pkg.getPackageOrigins()) {
-                                final FeaturePackConfig fpDepConfig;
-                                try {
-                                    fpDepConfig = fpSpec.getFeaturePackDep(depName);
-                                } catch(ProvisioningDescriptionException e) {
-                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), depName), e);
+                if(!fp.externalPkgDeps) {
+                    continue;
+                }
+
+                final FeaturePackSpec fpSpec = fp.getSpec();
+                for (PackageSpec pkg : fp.getPackages()) {
+                    if (pkg.hasExternalPackageDeps()) {
+                        for (String origin : pkg.getPackageOrigins()) {
+                            final FeaturePackConfig fpDepConfig;
+                            try {
+                                fpDepConfig = fpSpec.getFeaturePackDep(origin);
+                            } catch (ProvisioningDescriptionException e) {
+                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(fpSpec.getGav(), pkg.getName(), origin), e);
+                            }
+                            final FeaturePackLayout fpDepLayout = featurePacks.get(fpDepConfig.getGav().toGa());
+                            if (fpDepLayout == null) {
+                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDepConfig.getGav()));
+                            }
+                            for (PackageDependencySpec pkgDep : pkg.getExternalPackageDeps(origin)) {
+                                final String pkgDepName = pkgDep.getName();
+                                if (!fpDepLayout.hasPackage(pkgDepName)) {
+                                    throw new ProvisioningDescriptionException(Errors.unsatisfiedExternalPackageDependency(
+                                            fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
                                 }
-                                final FeaturePackLayout fpDepLayout = featurePacks.get(fpDepConfig.getGav().toGa());
-                                if(fpDepLayout == null) {
-                                    throw new ProvisioningDescriptionException(Errors.unknownFeaturePack(fpDepConfig.getGav()));
-                                }
-                                for(PackageDependencySpec pkgDep : pkg.getExternalPackageDeps(depName)) {
-                                    final String pkgDepName = pkgDep.getName();
-                                    if(!fpDepLayout.hasPackage(pkgDepName)) {
-                                        throw new ProvisioningDescriptionException(
-                                                Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
-                                    }
-                                    if(fpDepConfig.isPackageExcluded(pkgDepName) && !pkgDep.isOptional()) {
-                                        throw new ProvisioningDescriptionException(
-                                                Errors.unsatisfiedExternalPackageDependency(fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
-                                    }
+                                if (fpDepConfig.isPackageExcluded(pkgDepName) && !pkgDep.isOptional()) {
+                                    throw new ProvisioningDescriptionException(Errors.unsatisfiedExternalPackageDependency(
+                                            fpSpec.getGav(), pkg.getName(), fpDepConfig.getGav(), pkgDep.getName()));
                                 }
                             }
                         }
                     }
                 }
+
+                // TODO verify not resolved packages
             }
             return new ProvisioningLayout(this);
         }

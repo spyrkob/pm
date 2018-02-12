@@ -16,6 +16,8 @@
  */
 package org.jboss.provisioning.runtime;
 
+import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,10 +27,13 @@ import java.util.Set;
 
 import org.jboss.provisioning.ArtifactCoords.Gav;
 import org.jboss.provisioning.Constants;
+import org.jboss.provisioning.Errors;
 import org.jboss.provisioning.ProvisioningDescriptionException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.spec.FeaturePackSpec;
+import org.jboss.provisioning.spec.FeatureSpec;
 import org.jboss.provisioning.state.FeaturePack;
+import org.jboss.provisioning.xml.FeatureSpecXmlParser;
 
 /**
  *
@@ -101,7 +106,22 @@ public class FeaturePackRuntime implements FeaturePack<PackageRuntime> {
         return featureSpecs.values();
     }
 
-    public ResolvedFeatureSpec getFeatureSpec(String name) {
+    public FeatureSpec getFeatureSpec(String name) throws ProvisioningDescriptionException {
+        if (featureSpecs.containsKey(name)) {
+            return featureSpecs.get(name).xmlSpec;
+        }
+        final Path specXml = dir.resolve(Constants.FEATURES).resolve(name).resolve(Constants.SPEC_XML);
+        if (Files.exists(specXml)) {
+            try (BufferedReader reader = Files.newBufferedReader(specXml)) {
+                return FeatureSpecXmlParser.getInstance().parse(reader);
+            } catch (Exception e) {
+                throw new ProvisioningDescriptionException(Errors.parseXml(specXml), e);
+            }
+        }
+        return null;
+    }
+
+    public ResolvedFeatureSpec getResolvedFeatureSpec(String name) throws ProvisioningDescriptionException {
         return featureSpecs.get(name);
     }
 

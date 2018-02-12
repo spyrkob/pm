@@ -59,44 +59,7 @@ public class FeaturePackLayout {
         }
 
         public FeaturePackLayout build() throws ProvisioningDescriptionException {
-            final FeaturePackSpec builtSpec = spec.build();
-            for(String name : builtSpec.getDefaultPackageNames()) {
-                if(!packages.containsKey(name)) {
-                    throw new ProvisioningDescriptionException(Errors.unknownPackage(builtSpec.getGav(), name));
-                }
-            }
-            boolean externalPackageDependencies = false;
-            // package dependency consistency check
-            if (!packages.isEmpty()) {
-                for (PackageSpec pkg : packages.values()) {
-                    if (pkg.hasLocalPackageDeps()) {
-                        List<String> notFound = null;
-                        for(PackageDependencySpec pkgDep : pkg.getLocalPackageDeps()) {
-                            final PackageSpec depSpec = packages.get(pkgDep.getName());
-                            if(depSpec == null) {
-                                if(notFound == null) {
-                                    notFound = new ArrayList<>();
-                                }
-                                notFound.add(pkgDep.getName());
-                            }
-                        }
-                        if (notFound != null) {
-                            throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(builtSpec.getGav(), pkg.getName(), notFound));
-                        }
-                    }
-                    if(pkg.hasExternalPackageDeps()) {
-                        for(String origin : pkg.getPackageOrigins()) {
-                            try {
-                                builtSpec.getFeaturePackDep(origin);
-                            } catch(ProvisioningDescriptionException e) {
-                                throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(builtSpec.getGav(), pkg.getName(), origin), e);
-                            }
-                        }
-                        externalPackageDependencies = true;
-                    }
-                }
-            }
-            return new FeaturePackLayout(builtSpec, PmCollections.unmodifiable(packages), externalPackageDependencies);
+            return new FeaturePackLayout(this);
         }
     }
 
@@ -106,12 +69,51 @@ public class FeaturePackLayout {
 
     private final FeaturePackSpec spec;
     private final Map<String, PackageSpec> packages;
-    private final boolean externalPackageDependencies;
+    final List<String> unresolvedLocalPkgs;
+    final boolean externalPkgDeps;
 
-    private FeaturePackLayout(FeaturePackSpec spec, Map<String, PackageSpec> packages, boolean externalPackageDependencies) {
-        this.spec = spec;
-        this.packages = packages;
-        this.externalPackageDependencies = externalPackageDependencies;
+    private FeaturePackLayout(Builder builder) throws ProvisioningDescriptionException {
+        spec = builder.spec.build();
+        this.packages = PmCollections.unmodifiable(builder.packages);
+        for(String name : spec.getDefaultPackageNames()) {
+            if(!packages.containsKey(name)) {
+                throw new ProvisioningDescriptionException(Errors.unknownPackage(spec.getGav(), name));
+            }
+        }
+
+        List<String> notFound = Collections.emptyList();
+        boolean externalPkgDeps = false;
+        // package dependency check
+        if (!packages.isEmpty()) {
+            for (PackageSpec pkg : packages.values()) {
+                if (pkg.hasLocalPackageDeps()) {
+                    for(PackageDependencySpec pkgDep : pkg.getLocalPackageDeps()) {
+                        final PackageSpec depSpec = packages.get(pkgDep.getName());
+                        if(depSpec == null) {
+                            if(notFound.isEmpty()) {
+                                notFound = new ArrayList<>();
+                            }
+                            notFound.add(pkgDep.getName());
+                        }
+                    }
+                    if(!spec.hasFeaturePackDeps() && !notFound.isEmpty()) {
+                        throw new ProvisioningDescriptionException(Errors.unsatisfiedPackageDependencies(spec.getGav(), pkg.getName(), notFound));
+                    }
+                }
+                if(pkg.hasExternalPackageDeps()) {
+                    for(String origin : pkg.getPackageOrigins()) {
+                        try {
+                            spec.getFeaturePackDep(origin);
+                        } catch(ProvisioningDescriptionException e) {
+                            throw new ProvisioningDescriptionException(Errors.unknownFeaturePackDependencyName(spec.getGav(), pkg.getName(), origin), e);
+                        }
+                    }
+                    externalPkgDeps = true;
+                }
+            }
+        }
+        this.externalPkgDeps = externalPkgDeps;
+        this.unresolvedLocalPkgs = PmCollections.unmodifiable(notFound);
     }
 
     public ArtifactCoords.Gav getGav() {
@@ -140,9 +142,5 @@ public class FeaturePackLayout {
 
     public Collection<PackageSpec> getPackages() {
         return packages.values();
-    }
-
-    public boolean hasExternalPackageDependencies() {
-        return externalPackageDependencies;
     }
 }

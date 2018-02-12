@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.jboss.provisioning.plugin.wildfly;
 
 import java.io.IOException;
@@ -53,18 +54,35 @@ public class EmbeddedServer {
      * @throws ProvisioningException
      */
     public void execute(boolean validate, List<String> commands) throws ProvisioningException {
+        Path script = createEmbeddedStandaloneScript("standalone.xml", commands);
+        messageWriter.verbose("Cli script %s ", script);
+        CliScriptRunner.runCliScript(installDir, script, messageWriter);
+    }
+
+    public static Path createEmbeddedStandaloneScript(String config, List<String> commands) throws ProvisioningException {
         List<String> allCommands = new ArrayList<>();
-        allCommands.add(startEmbeddedServerCommand("standalone.xml"));
+        allCommands.add(startEmbeddedServerCommand(config));
         allCommands.addAll(commands);
         allCommands.add("stop-embedded-server");
         try {
             Path script = Files.createTempFile("", ".cli");
             Files.write(script, allCommands);
-            messageWriter.verbose("Cli script %s ", script);
-            CliScriptRunner.runCliScript(installDir, script, messageWriter);
+            return script;
         } catch (IOException e) {
-            messageWriter.error(e, "Error using console");
-            messageWriter.verbose(e, null);
+            throw new ProvisioningException(e);
+        }
+    }
+
+    public static Path createEmbeddedHostControllerScript(String domainConfig, String hostConfig, List<String> commands) throws ProvisioningException {
+        List<String> allCommands = new ArrayList<>();
+        allCommands.add(startEmbeddedHostControllerCommand(domainConfig, hostConfig));
+        allCommands.addAll(commands);
+        allCommands.add("stop-embedded-host-controller");
+        try {
+            Path script = Files.createTempFile("", ".cli");
+            Files.write(script, allCommands);
+            return script;
+        } catch (IOException e) {
             throw new ProvisioningException(e);
         }
     }
@@ -74,6 +92,18 @@ public class EmbeddedServer {
          if(config != null && ! config.isEmpty()) {
              localConfig = config;
          }
-         return String.format("embed-server --admin-only --server-config=%s", localConfig);
+         return String.format("embed-server --admin-only --std-out=echo --server-config=%s", localConfig);
+    }
+
+    public static String startEmbeddedHostControllerCommand(String domainConfig, String hostConfig) {
+         String localDomainConfig = "domain.xml";
+         if(domainConfig != null && ! domainConfig.isEmpty()) {
+             localDomainConfig = domainConfig;
+         }
+         String localHostConfig = "host.xml";
+         if(hostConfig != null && ! hostConfig.isEmpty()) {
+             localHostConfig = hostConfig;
+         }
+         return String.format("embed-host-controller --std-out=echo --domain-config=%s --host-config=%s", localDomainConfig, localHostConfig);
     }
 }

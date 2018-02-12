@@ -54,7 +54,7 @@ public class ProvisioningXmlParserTestCase {
          * urn:wildfly:pm-provisioning:1.0.1 used in provisioning-1.0.1.xml is not registered in ProvisioningXmlParser
          */
         validator.validateAndParse("xml/provisioning/provisioning-1.0.1.xml",
-                "cvc-elt.1: Cannot find the declaration of element 'installation'.",
+                "Cannot find the declaration of element 'installation'.",
                 "Message: Unexpected element '{urn:wildfly:pm-provisioning:1.0.1}installation'");
     }
 

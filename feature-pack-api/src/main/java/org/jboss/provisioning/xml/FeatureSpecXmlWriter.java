@@ -56,8 +56,9 @@ public class FeatureSpecXmlWriter extends BaseXmlWriter<FeatureSpec> {
         if(featureSpec.hasAnnotations()) {
             for (FeatureAnnotation fa : featureSpec.getAnnotations()) {
                 final ElementNode annotationE = addElement(specE, Element.ANNOTATION);
-                if (fa.hasAttrs()) {
-                    for (Map.Entry<String, String> entry : fa.getAttrs().entrySet()) {
+                addAttribute(annotationE, Attribute.NAME, fa.getName());
+                if (fa.hasElements()) {
+                    for (Map.Entry<String, String> entry : fa.getElements().entrySet()) {
                         final ElementNode elemE = addElement(annotationE, Element.ELEM);
                         addAttribute(elemE, Attribute.NAME, entry.getKey());
                         if (entry.getValue() != null) {
