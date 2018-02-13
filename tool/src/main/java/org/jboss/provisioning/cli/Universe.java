@@ -31,6 +31,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -44,15 +45,25 @@ public class Universe {
 
     public static final String NS = "urn:jboss:universe:1.0";
     private static final String UNIVERSE = "universe";
+    private static final String UNIVERSE_FILE = "universe.xml";
+
+    private static final String STREAM = "stream";
+    private static final String GROUP_ID = "group-id";
+    private static final String ARTIFACT_ID = "artifact-id";
+    private static final String VERSION_RANGE = "version-range";
+    private static final String NAME = "name";
 
     public static class StreamLocation {
 
         private final String name;
-        private final ArtifactCoords coordinates;
+        private ArtifactCoords coordinates;
+        private final String versionRange;
+        private boolean resolved;
 
-        private StreamLocation(String name, ArtifactCoords coordinates) {
+        private StreamLocation(String name, ArtifactCoords coordinates, String versionRange) {
             this.name = name;
             this.coordinates = coordinates;
+            this.versionRange = versionRange;
         }
 
         /**
@@ -67,6 +78,28 @@ public class Universe {
          */
         public ArtifactCoords getCoordinates() {
             return coordinates;
+        }
+
+        /**
+         * @return the versionRange
+         */
+        public String getVersionRange() {
+            return versionRange;
+        }
+
+        private void resolve(ArtifactRepositoryManager manager) throws ArtifactException {
+            if (!resolved) {
+                String latestVersion = manager.getHighestVersion(coordinates, versionRange);
+                if (latestVersion != null) {
+                    coordinates = new ArtifactCoords(coordinates.getGroupId(), coordinates.getArtifactId(),
+                            latestVersion, coordinates.getClassifier(), coordinates.getExtension());
+                }
+                resolved = true;
+            }
+        }
+
+        private boolean resolved() {
+            return resolved;
         }
     }
 
@@ -87,20 +120,21 @@ public class Universe {
                 int tag = reader.nextTag();
                 if (tag == XMLStreamConstants.START_ELEMENT) {
                     final String localName = reader.getLocalName();
-                    if (localName.equals("stream")) {
+                    if (localName.equals(STREAM)) {
                         // For now, stream reference the feature pack directly.
-                        String groupId = reader.getAttributeValue(null, "group-id");
-                        String artefactId = reader.getAttributeValue(null, "artefact-id");
-                        // TODO, NO NEED FOR VERSION MUST REMOVE
-                        String version = reader.getAttributeValue(null, "version");
-                        String name = reader.getAttributeValue(null, "name");
-                        universe.addStreamLocation(new StreamLocation(name, ArtifactCoords.newGav(groupId, artefactId, version).toArtifactCoords()));
+                        String groupId = reader.getAttributeValue(null, GROUP_ID);
+                        String artifactId = reader.getAttributeValue(null, ARTIFACT_ID);
+                        // TODO, NO NEED FOR VERSION RANGE MUST REMOVE AT SOME POINT
+                        String versionRange = reader.getAttributeValue(null, VERSION_RANGE);
+                        String name = reader.getAttributeValue(null, NAME);
+                        universe.addStreamLocation(new StreamLocation(name,
+                                ArtifactCoords.newInstance(groupId, artifactId, null, null), versionRange));
                     } else {
                         throw new XMLStreamException("Unexpected element: " + localName);
                     }
                 } else if (tag == XMLStreamConstants.END_ELEMENT) {
                     final String localName = reader.getLocalName();
-                    if (localName.equals("universe")) {
+                    if (localName.equals(UNIVERSE)) {
                         universeEnded = true;
                     }
                 }
@@ -110,9 +144,11 @@ public class Universe {
 
     private final Map<String, StreamLocation> streamLocations = new HashMap<>();
     private final UniverseLocation location;
+    private final ArtifactRepositoryManager manager;
 
-    private Universe(UniverseLocation location) {
+    private Universe(UniverseLocation location, ArtifactRepositoryManager manager) {
         this.location = location;
+        this.manager = manager;
     }
 
     private void addStreamLocation(StreamLocation location) {
@@ -127,23 +163,35 @@ public class Universe {
         return Collections.unmodifiableCollection(streamLocations.values());
     }
 
-    public ArtifactCoords resolveStream(String name) {
+    public ArtifactCoords resolveStream(String name) throws ArtifactException {
         StreamLocation loc = streamLocations.get(name);
         if (loc == null) {
             throw new RuntimeException("Unknown stream " + name);
+        }
+        if (!loc.resolved()) {
+            loc.resolve(manager);
         }
         return loc.getCoordinates();
     }
 
     static Universe buildUniverse(ArtifactRepositoryManager manager,
             UniverseLocation location) throws Exception {
-        Universe universe = new Universe(location);
+        String version = location.getCoordinates().getVersion();
+        if (version == null || version.isEmpty()) {
+            String latestVersion
+                    = manager.getHighestVersion(location.getCoordinates(),
+                            location.getVersionRange());
+            if (latestVersion != null) {
+                location.updateLatestVersion(latestVersion);
+            }
+        }
+        Universe universe = new Universe(location, manager);
         Path p = manager.resolve(location.getCoordinates());
         try (JarFile jarFile = new JarFile(p.toFile())) {
             final Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 final JarEntry entry = entries.nextElement();
-                if (entry.getName().equals("universe.xml")) {
+                if (entry.getName().equals(UNIVERSE_FILE)) {
                     InputStream input = jarFile.getInputStream(entry);
                     return parse(input, universe);
                 }

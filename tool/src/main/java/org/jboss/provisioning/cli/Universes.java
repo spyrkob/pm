@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ArtifactRepositoryManager;
 
 /**
@@ -30,14 +31,17 @@ public class Universes {
 
     private final List<Universe> universes = new ArrayList<>();
 
-    private Universes() {
+    private ArtifactRepositoryManager manager;
+
+    private Universes(ArtifactRepositoryManager manager) {
+        this.manager = manager;
     }
 
     public List<Universe> getUniverses() {
         return Collections.unmodifiableList(universes);
     }
 
-    public ArtifactCoords resolveStream(String name) {
+    public ArtifactCoords resolveStream(String name) throws ArtifactException {
         for (Universe universe : universes) {
             ArtifactCoords coords = universe.resolveStream(name);
             if (coords != null) {
@@ -53,7 +57,7 @@ public class Universes {
 
     static Universes buildUniverses(ArtifactRepositoryManager manager,
             List<UniverseLocation> locations) throws Exception {
-        Universes universes = new Universes();
+        Universes universes = new Universes(manager);
         try {
             for (UniverseLocation loc : locations) {
                 universes.addUniverse(Universe.buildUniverse(manager, loc));

@@ -20,6 +20,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.option.Argument;
 
 import org.jboss.provisioning.ArtifactCoords;
+import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -40,8 +41,16 @@ public class InstallCommand extends ProvisioningCommand {
         }
         // Is it a stream?
         // For now keep duality. TODO
-        ArtifactCoords coords = session.getUniverses().resolveStream(coord);
+        ArtifactCoords coords;
+        try {
+            coords = session.getUniverses().resolveStream(coord);
+        } catch (ArtifactException ex) {
+            throw new CommandExecutionException("Stream resolution failed", ex);
+        }
+        session.println("Installing " + coord);
+
         if (coords != null) {
+            session.println("Actual maven artifact " + coords);
             coord = coords.toString();
         }
         final ProvisioningManager manager = getManager(session);
