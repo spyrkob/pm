@@ -67,7 +67,7 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
         }
         if(deps.size() == 1) {
             if(deps.containsKey(dep.getName())) {
-                deps = externalPkgDeps.put(origin, Collections.singletonMap(dep.getName(), dep));
+                deps = Collections.singletonMap(origin, dep);
             } else {
                 final Map.Entry<String, PackageDependencySpec> first = deps.entrySet().iterator().next();
                 deps = new HashMap<>(2);
@@ -80,9 +80,10 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
                 externalPkgDeps.put(origin, deps);
             }
             return (T) this;
+        } else {
+            deps.put(dep.getName(), dep);
+            return (T) this;
         }
-        deps.put(dep.getName(), dep);
-        return (T) this;
     }
 
     public boolean hasPackageDeps() {

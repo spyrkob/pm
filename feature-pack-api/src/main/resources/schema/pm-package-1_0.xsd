@@ -87,7 +87,7 @@
     <xs:annotation>
       <xs:documentation>
         Describes an external package dependency.
-        I.e a dependency on packages the belong to another feature-pack.
+        I.e a dependency on packages that belong to another feature-pack.
         External dependencies are assumed to be required dependencies.
       </xs:documentation>
     </xs:annotation>
