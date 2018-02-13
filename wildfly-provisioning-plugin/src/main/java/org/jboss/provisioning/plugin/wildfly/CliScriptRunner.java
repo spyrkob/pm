@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.jboss.provisioning.MessageWriter;
 import org.jboss.provisioning.ProvisioningException;
 import org.wildfly.core.launcher.CliCommandBuilder;
@@ -38,8 +40,9 @@ public class CliScriptRunner {
                 .addCliArgument("--no-operation-validation")
                 .addCliArgument("--echo-command")
                 .addCliArgument("--file=" + script);
-        messageWriter.verbose("Executing jboss console: %", builder.build());
-        final ProcessBuilder processBuilder = new ProcessBuilder(builder.build()).redirectErrorStream(true);
+        List<String> arguments = builder.build();
+        messageWriter.verbose("Executing jboss console: %s", arguments.stream().collect(Collectors.joining(" ")));
+        final ProcessBuilder processBuilder = new ProcessBuilder(arguments).redirectErrorStream(true);
         processBuilder.environment().put("JBOSS_HOME", installHome.toString());
 
         execute(processBuilder, messageWriter);//                try {
