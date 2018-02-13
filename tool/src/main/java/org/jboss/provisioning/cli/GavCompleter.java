@@ -36,15 +36,6 @@ public class GavCompleter implements OptionCompleter<PmCompleterInvocation> {
 
     @Override
     public void complete(PmCompleterInvocation ci) {
-
-        // For now keep the dual completer, universe being not yet deployed
-        // outside of prototypal context
-        PmSession session = ci.getPmSession();
-        if (session.hasPopulatedUniverse()) {
-            new StreamCompleter().complete(ci);
-            return;
-        }
-
         Path path = repoHome;
         if(!Files.isDirectory(path)) {
             return;
