@@ -166,7 +166,7 @@ public class Universe {
     public ArtifactCoords resolveStream(String name) throws ArtifactException {
         StreamLocation loc = streamLocations.get(name);
         if (loc == null) {
-            throw new RuntimeException("Unknown stream " + name);
+            throw new ArtifactException("Unknown stream " + name);
         }
         if (!loc.resolved()) {
             loc.resolve(manager);

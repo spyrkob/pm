@@ -17,10 +17,6 @@
 package org.jboss.provisioning.cli;
 
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.option.Argument;
-
-import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -29,33 +25,13 @@ import org.jboss.provisioning.ProvisioningManager;
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name = "install", description = "Installs specified feature-pack")
-public class InstallCommand extends ProvisioningCommand {
-
-    @Argument(completer = GavCompleter.class, required = true)
-    private String coord;
+public class InstallCommand extends FeaturePackCommand {
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        if (coord == null) {
-            throw new CommandExecutionException("feature-pack must be set");
-        }
-        // Is it a stream?
-        // For now keep duality. TODO
-        ArtifactCoords coords;
-        try {
-            coords = session.getUniverses().resolveStream(coord);
-        } catch (ArtifactException ex) {
-            throw new CommandExecutionException("Stream resolution failed", ex);
-        }
-        session.println("Installing " + coord);
-
-        if (coords != null) {
-            session.println("Actual maven artifact " + coords);
-            coord = coords.toString();
-        }
         final ProvisioningManager manager = getManager(session);
         try {
-            manager.install(ArtifactCoords.newGav(coord));
+            manager.install(getGav(session));
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);
         }

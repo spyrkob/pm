@@ -17,10 +17,6 @@
 package org.jboss.provisioning.cli;
 
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.option.Argument;
-
-import org.jboss.provisioning.ArtifactCoords;
-import org.jboss.provisioning.ArtifactException;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -29,31 +25,13 @@ import org.jboss.provisioning.ProvisioningManager;
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name = "uninstall", description = "Uninstalls specified feature-pack")
-public class UninstallCommand extends ProvisioningCommand {
-
-    @Argument(completer = GavCompleter.class, required = true)
-    private String coord;
+public class UninstallCommand extends FeaturePackCommand {
 
     @Override
     protected void runCommand(PmSession session) throws CommandExecutionException {
-        if (coord == null) {
-            throw new CommandExecutionException("feature-pack must be set");
-        }
-        // Is it a stream?
-        // For now keep duality. TODO
-        // We should retrieve the stream information in the current instalation.
-        ArtifactCoords coords;
-        try {
-            coords = session.getUniverses().resolveStream(coord);
-        } catch (ArtifactException ex) {
-            throw new CommandExecutionException("Stream resolution failed", ex);
-        }
-        if (coords != null) {
-            coord = coords.toString();
-        }
         final ProvisioningManager manager = getManager(session);
         try {
-            manager.uninstall(ArtifactCoords.newGav(coord));
+            manager.uninstall(getGav(session));
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);
         }
