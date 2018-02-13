@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016-2018 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jboss.provisioning;
 
 import java.io.PrintStream;
@@ -44,7 +43,7 @@ public interface MessageWriter extends AutoCloseable {
      * </p>
      *
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
@@ -58,7 +57,7 @@ public interface MessageWriter extends AutoCloseable {
      * Prints a message if {@link #isVerboseEnabled()} is {@code true}. If the {@code cause} is not {@code null} the
      * {@linkplain Throwable#printStackTrace(PrintStream) stack trace} will be written as well.
      *
-     * @param cause   the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param message the message to print, may be {@code null}
      */
     void verbose(Throwable cause, CharSequence message);
@@ -71,9 +70,9 @@ public interface MessageWriter extends AutoCloseable {
      * without first checking {@link #isVerboseEnabled()} for performance.
      * </p>
      *
-     * @param cause  the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
@@ -96,7 +95,7 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an informational message.
      *
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
@@ -108,7 +107,7 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an informational message. If the {@code cause} is not {@code null} the
      * {@linkplain Throwable#printStackTrace(PrintStream) stack trace} will be written as well.
      *
-     * @param cause   the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param message the message to print, may be {@code null}
      */
     void print(Throwable cause, CharSequence message);
@@ -117,9 +116,9 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an informational message. If the {@code cause} is not {@code null} the
      * {@linkplain Throwable#printStackTrace(PrintStream) stack trace} will be written as well.
      *
-     * @param cause  the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
@@ -140,7 +139,7 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an error message.
      *
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
@@ -152,7 +151,7 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an error message. If the {@code cause} is not {@code null} the
      * {@linkplain Throwable#printStackTrace(PrintStream) stack trace} will be written as well.
      *
-     * @param cause   the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param message the message to print, may be {@code null}
      */
     void error(Throwable cause, CharSequence message);
@@ -161,9 +160,9 @@ public interface MessageWriter extends AutoCloseable {
      * Prints an error message. If the {@code cause} is not {@code null} the
      * {@linkplain Throwable#printStackTrace(PrintStream) stack trace} will be written as well.
      *
-     * @param cause  the cause of an error or {@code null}
+     * @param cause the cause of an error or {@code null}
      * @param format the format
-     * @param args   the arguments for the format
+     * @param args the arguments for the format
      *
      * @see java.util.Formatter
      */
