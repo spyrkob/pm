@@ -17,6 +17,7 @@
 package org.jboss.provisioning.cli;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.Executor;
@@ -31,12 +32,37 @@ import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 
 /**
+ * A CommandInvocation instance that provides access to a PmSession.
  *
  * @author Alexey Loubyansky
  */
-class DelegatingCommandInvocation implements CommandInvocation {
+public class PmCommandInvocation implements CommandInvocation {
 
-    protected CommandInvocation delegate;
+    private final CommandInvocation delegate;
+
+    private final PmSession session;
+    private final PrintStream out;
+    private final PrintStream err;
+
+    PmCommandInvocation(PmSession session, PrintStream out, PrintStream err,
+            CommandInvocation delegate) {
+        this.session = session;
+        this.out = out;
+        this.err = err;
+        this.delegate = delegate;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public PrintStream getErr() {
+        return err;
+    }
+
+    public PmSession getPmSession() {
+        return session;
+    }
 
     @Override
     public Shell getShell() {

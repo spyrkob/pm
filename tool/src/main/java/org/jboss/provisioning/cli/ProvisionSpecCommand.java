@@ -37,7 +37,7 @@ public class ProvisionSpecCommand extends ProvisioningCommand {
     private Resource specArg;
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
 
         if (specArg == null) {
             throw new CommandExecutionException("Missing required file path argument.");

@@ -55,7 +55,7 @@ public class ChangesCommand extends FromInstallationCommand {
     protected Resource exportDirArg;
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
 
         Map<String, String> parameters = new HashMap<>(5);
         if (host != null) {

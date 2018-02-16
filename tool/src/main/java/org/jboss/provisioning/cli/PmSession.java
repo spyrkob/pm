@@ -30,9 +30,8 @@ import org.aesh.readline.Prompt;
  *
  * @author Alexey Loubyansky
  */
-public class PmSession extends DelegatingCommandInvocation implements CommandInvocationProvider<PmSession>, CompleterInvocationProvider<PmCompleterInvocation> {
+public class PmSession implements CommandInvocationProvider<PmCommandInvocation>, CompleterInvocationProvider<PmCompleterInvocation> {
 
-    private Prompt prompt;
     private PrintStream out;
     private PrintStream err;
     private final Configuration config;
@@ -62,33 +61,19 @@ public class PmSession extends DelegatingCommandInvocation implements CommandInv
         return false;
     }
 
-    void updatePrompt(AeshContext aeshCtx) {
-        prompt = new Prompt(new StringBuilder().append('[')
+    static Prompt buildPrompt(AeshContext aeshCtx) {
+        return new Prompt(new StringBuilder().append('[')
                 .append(aeshCtx.getCurrentWorkingDirectory().getName())
                 .append("]$ ").toString());
-        if(delegate != null) {
-            setPrompt(prompt);
-        }
+    }
+
+    static Path getWorkDir(AeshContext aeshCtx) {
+        return Paths.get(aeshCtx.getCurrentWorkingDirectory().getAbsolutePath());
     }
 
     @Override
-    public Prompt getPrompt() {
-        return prompt;
-    }
-
-    Path getWorkDir() {
-        return Paths.get(getAeshContext().getCurrentWorkingDirectory().getAbsolutePath());
-    }
-
-    Path resolvePath(String path) {
-        return getWorkDir().resolve(path);
-    }
-
-    @Override
-    public PmSession enhanceCommandInvocation(CommandInvocation commandInvocation) {
-        commandInvocation.setPrompt(prompt);
-        this.delegate = commandInvocation;
-        return this;
+    public PmCommandInvocation enhanceCommandInvocation(CommandInvocation commandInvocation) {
+        return new PmCommandInvocation(this, out, err, commandInvocation);
     }
 
     void setOut(PrintStream out) {
@@ -97,14 +82,6 @@ public class PmSession extends DelegatingCommandInvocation implements CommandInv
 
     void setErr(PrintStream err) {
         this.err = err;
-    }
-
-    public PrintStream getOut() {
-        return out;
-    }
-
-    public PrintStream getErr() {
-        return err;
     }
 
     @Override

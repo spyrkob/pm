@@ -28,10 +28,10 @@ import org.jboss.provisioning.ProvisioningManager;
 public class InstallCommand extends FeaturePackCommand {
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
         final ProvisioningManager manager = getManager(session);
         try {
-            manager.install(getGav(session));
+            manager.install(getGav(session.getPmSession()));
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);
         }

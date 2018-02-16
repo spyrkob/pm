@@ -19,6 +19,7 @@ package org.jboss.provisioning.cli;
 import java.nio.file.Path;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.option.Option;
+import org.aesh.readline.AeshContext;
 import org.jboss.provisioning.DefaultMessageWriter;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -36,14 +37,15 @@ public abstract class ProvisioningCommand extends PmSessionCommand {
             description = "Whether or not the output should be verbose")
     boolean verbose;
 
-    protected Path getTargetDir(PmSession session) {
-        return targetDirArg == null ? session.getWorkDir() : session.getWorkDir().resolve(targetDirArg);
+    protected Path getTargetDir(AeshContext context) {
+        Path workDir = PmSession.getWorkDir(context);
+        return targetDirArg == null ? PmSession.getWorkDir(context) : workDir.resolve(targetDirArg);
     }
 
-    protected ProvisioningManager getManager(PmSession session) {
+    protected ProvisioningManager getManager(PmCommandInvocation session) {
         return ProvisioningManager.builder()
                 .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
-                .setInstallationHome(getTargetDir(session))
+                .setInstallationHome(getTargetDir(session.getAeshContext()))
                 .setMessageWriter(new DefaultMessageWriter(session.getOut(), session.getErr(), verbose))
                 .build();
     }

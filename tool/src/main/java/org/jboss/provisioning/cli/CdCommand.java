@@ -33,7 +33,7 @@ public class CdCommand extends PmSessionCommand {
     private Resource argument;
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
         final AeshContext aeshCtx = session.getAeshContext();
         if (argument != null) {
             final List<Resource> files = argument.resolve(aeshCtx.getCurrentWorkingDirectory());
@@ -41,6 +41,6 @@ public class CdCommand extends PmSessionCommand {
                 aeshCtx.setCurrentWorkingDirectory(files.get(0));
             }
         }
-        session.updatePrompt(session.getAeshContext());
+        session.setPrompt(PmSession.buildPrompt(aeshCtx));
     }
 }

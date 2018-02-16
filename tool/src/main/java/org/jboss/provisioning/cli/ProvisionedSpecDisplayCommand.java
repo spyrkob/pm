@@ -31,7 +31,7 @@ import org.jboss.provisioning.state.ProvisionedState;
 public class ProvisionedSpecDisplayCommand extends ProvisioningCommand {
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
         if(verbose) {
             final ProvisionedState provisionedState;
             try {

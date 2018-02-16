@@ -36,17 +36,19 @@ abstract class FromInstallationCommand extends PmSessionCommand {
             description = "Whether or not the output should be verbose")
     boolean verbose;
 
-    protected Path getTargetDir(PmSession session) {
-        return srcDirArg == null ? session.getWorkDir()
-                : session.getWorkDir().resolve(srcDirArg.resolve(session.getAeshContext().
+    protected Path getTargetDir(PmCommandInvocation session) {
+        Path workDir = PmSession.getWorkDir(session.getAeshContext());
+        return srcDirArg == null ? workDir
+                : workDir.resolve(srcDirArg.resolve(session.getAeshContext().
                         getCurrentWorkingDirectory()).get(0).getAbsolutePath());
     }
 
-    protected ProvisioningManager getManager(PmSession session) {
+    protected ProvisioningManager getManager(PmCommandInvocation session) {
         return ProvisioningManager.builder()
                 .setArtifactResolver(MavenArtifactRepositoryManager.getInstance())
                 .setInstallationHome(getTargetDir(session))
-                .setMessageWriter(new DefaultMessageWriter(session.getOut(), session.getErr(), verbose))
+                .setMessageWriter(new DefaultMessageWriter(session.getOut(),
+                        session.getErr(), verbose))
                 .build();
     }
 }

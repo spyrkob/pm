@@ -24,10 +24,10 @@ import org.aesh.command.CommandResult;
  *
  * @author Alexey Loubyansky
  */
-public abstract class PmSessionCommand implements Command<PmSession> {
+public abstract class PmSessionCommand implements Command<PmCommandInvocation> {
 
     @Override
-    public CommandResult execute(PmSession session) throws CommandException {
+    public CommandResult execute(PmCommandInvocation session) throws CommandException {
         try {
             runCommand(session);
             return CommandResult.SUCCESS;
@@ -55,7 +55,7 @@ public abstract class PmSessionCommand implements Command<PmSession> {
         }
     }
 
-    private void println(PmSession session, Throwable t) {
+    private void println(PmCommandInvocation session, Throwable t) {
         if(t.getLocalizedMessage() == null) {
             session.println(t.getClass().getName());
         } else {
@@ -63,5 +63,5 @@ public abstract class PmSessionCommand implements Command<PmSession> {
         }
     }
 
-    protected abstract void runCommand(PmSession session) throws CommandExecutionException;
+    protected abstract void runCommand(PmCommandInvocation session) throws CommandExecutionException;
 }
