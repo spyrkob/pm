@@ -17,6 +17,8 @@
 package org.jboss.provisioning.cli;
 
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Argument;
+import org.jboss.provisioning.ArtifactCoords;
 import org.jboss.provisioning.ProvisioningException;
 import org.jboss.provisioning.ProvisioningManager;
 
@@ -25,15 +27,27 @@ import org.jboss.provisioning.ProvisioningManager;
  * @author Alexey Loubyansky
  */
 @CommandDefinition(name = "uninstall", description = "Uninstalls specified feature-pack")
-public class UninstallCommand extends FeaturePackCommand {
+public class UninstallCommand extends ProvisioningCommand {
+
+    @Argument(completer = InstalledStreamCompleter.class)
+    protected String streamName;
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
         final ProvisioningManager manager = getManager(session);
         try {
-            manager.uninstall(getGav(session));
+            manager.uninstall(getGav(session.getPmSession()));
         } catch (ProvisioningException e) {
             throw new CommandExecutionException("Provisioning failed", e);
         }
+    }
+
+    private ArtifactCoords.Gav getGav(PmSession session) throws CommandExecutionException {
+        if (streamName == null) {
+            throw new CommandExecutionException("No feature-pack provided");
+        }
+        // Would require to retrieve the gav from the stream name.
+        // For now we have the gave, so just re-use that.
+        return ArtifactCoords.newGav(streamName);
     }
 }

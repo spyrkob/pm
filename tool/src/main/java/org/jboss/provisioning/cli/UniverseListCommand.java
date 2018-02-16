@@ -27,11 +27,11 @@ import org.jboss.provisioning.cli.Universe.StreamLocation;
  * @author jdenise@redhat.com
  */
 @CommandDefinition(name = "list", description = "List universes and streams")
-public class UniverseListCommand implements Command<PmSession> {
+public class UniverseListCommand implements Command<PmCommandInvocation> {
 
     @Override
-    public CommandResult execute(PmSession commandInvocation) throws CommandException, InterruptedException {
-        for (Universe universe : commandInvocation.getUniverses().getUniverses()) {
+    public CommandResult execute(PmCommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        for (Universe universe : commandInvocation.getPmSession().getUniverses().getUniverses()) {
             commandInvocation.println("Universe " + universe.getLocation().getName()
                     + ", coordinates " + universe.getLocation().getCoordinates());
             for (StreamLocation loc : universe.getStreamLocations()) {

@@ -63,11 +63,10 @@ public class CliMain {
                 completerInvocationProvider(pmSession).
                 commandInvocationProvider(pmSession).
                 build();
-        pmSession.updatePrompt(settings.aeshContext());
         pmSession.setOut(settings.stdOut());
         pmSession.setErr(settings.stdErr());
         ReadlineConsole console = new ReadlineConsole(settings);
-        console.setPrompt(pmSession.getPrompt());
+        console.setPrompt(PmSession.buildPrompt(settings.aeshContext()));
         console.start();
     }
 

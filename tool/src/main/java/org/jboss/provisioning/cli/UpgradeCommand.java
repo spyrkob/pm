@@ -54,7 +54,7 @@ public class UpgradeCommand extends FromInstallationCommand {
     protected String coord;
 
     @Override
-    protected void runCommand(PmSession session) throws CommandExecutionException {
+    protected void runCommand(PmCommandInvocation session) throws CommandExecutionException {
         Map<String, String> parameters = new HashMap<>(5);
         if (host != null) {
             parameters.put("host", host);

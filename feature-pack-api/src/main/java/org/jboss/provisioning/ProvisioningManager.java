@@ -231,28 +231,7 @@ public class ProvisioningManager {
     }
 
     private void doProvision(ProvisioningConfig provisioningConfig, ArtifactCoords.Ga uninstallGa) throws ProvisioningException {
-        if(Files.exists(installationHome)) {
-            if(!Files.isDirectory(installationHome)) {
-                throw new ProvisioningException(Errors.notADir(installationHome));
-            }
-            try(DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
-                boolean usableDir = true;
-                final Iterator<Path> i = stream.iterator();
-                while(i.hasNext() ) {
-                    if(i.next().getFileName().toString().equals(Constants.PROVISIONED_STATE_DIR)) {
-                        usableDir = true;
-                        break;
-                    } else {
-                        usableDir = false;
-                    }
-                }
-                if(!usableDir) {
-                    throw new ProvisioningException(Errors.homeDirNotUsable(installationHome));
-                }
-            } catch (IOException e) {
-                throw new ProvisioningException(Errors.readDirectory(installationHome));
-            }
-        }
+        checkInstallationDir(installationHome);
 
         if(!provisioningConfig.hasFeaturePackDeps()) {
             emptyHomeDir();
@@ -299,6 +278,30 @@ public class ProvisioningManager {
         return builder.build();
     }
 
+    public static void checkInstallationDir(Path installationHome) throws ProvisioningException {
+        if (Files.exists(installationHome)) {
+            if (!Files.isDirectory(installationHome)) {
+                throw new ProvisioningException(Errors.notADir(installationHome));
+            }
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(installationHome)) {
+                boolean usableDir = true;
+                final Iterator<Path> i = stream.iterator();
+                while (i.hasNext()) {
+                    if (i.next().getFileName().toString().equals(Constants.PROVISIONED_STATE_DIR)) {
+                        usableDir = true;
+                        break;
+                    } else {
+                        usableDir = false;
+                    }
+                }
+                if (!usableDir) {
+                    throw new ProvisioningException(Errors.homeDirNotUsable(installationHome));
+                }
+            } catch (IOException e) {
+                throw new ProvisioningException(Errors.readDirectory(installationHome));
+            }
+        }
+    }
     /**
      * Provision the state described in the specified XML file.
      *
