@@ -58,8 +58,8 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="origin" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="packages" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="origin" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="packages" type="dependencyPackagesType" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attributeGroup ref="gavAttributes"/>
   </xs:complexType>
