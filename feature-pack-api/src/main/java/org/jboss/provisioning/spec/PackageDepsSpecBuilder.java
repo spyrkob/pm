@@ -80,10 +80,9 @@ public abstract class PackageDepsSpecBuilder<T extends PackageDepsSpecBuilder<T>
                 externalPkgDeps.put(origin, deps);
             }
             return (T) this;
-        } else {
-            deps.put(dep.getName(), dep);
-            return (T) this;
         }
+        deps.put(dep.getName(), dep);
+        return (T) this;
     }
 
     public boolean hasPackageDeps() {
